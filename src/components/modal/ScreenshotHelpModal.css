@@ -1,0 +1,248 @@
+/* ===== ScreenshotHelpModal 스타일 ===== */
+
+/* 모달 전체 컨테이너 */
+.screenshot-help-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 20px;
+  padding: 0;
+  max-width: 800px;
+  width: 90%;
+  max-height: calc(90vh - 60px); /* 상하 여백을 고려한 최대 높이 조정 */
+  overflow-y: auto;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  margin-top: 30px; /* 상단 여백 */
+  margin-bottom: 30px; /* 하단 여백 */
+  border: none; /* 테두리 제거 */
+}
+
+/* 스크롤바 숨기기 */
+.screenshot-help-modal::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.screenshot-help-modal {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* 모달 내부 컨테이너 */
+.screenshot-help-container {
+  padding: 0;
+}
+
+/* 모달 헤더 */
+.screenshot-help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px 20px 0 0;
+  color: white;
+}
+
+.screenshot-help-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+/* 헤더 닫기 버튼 */
+.screenshot-help-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screenshot-help-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* 모달 내용 */
+.screenshot-help-content {
+  padding: 2rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* 도움말 섹션 */
+.help-section {
+  margin-bottom: 2rem;
+}
+
+.help-section h3 {
+  color: #2c3e50;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e1e8ed;
+}
+
+/* 방법 카드 */
+.method-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e1e8ed;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.method-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 키보드 키 스타일 */
+.keyboard-key {
+  background: #2c3e50;
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 텍스트 스타일 */
+.method-card p {
+  color: #34495e;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.method-card ul, .method-card ol {
+  color: #34495e;
+  font-size: 1rem;
+  line-height: 1.8;
+  padding-left: 1.5rem;
+}
+
+.method-card li {
+  margin-bottom: 0.5rem;
+}
+
+/* 팁 카드 */
+.tips-card {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid #c8e6c9;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.tips-card ul {
+  color: #2e7d32;
+  font-size: 1rem;
+  line-height: 1.8;
+  padding-left: 1.5rem;
+}
+
+.tips-card li {
+  margin-bottom: 0.5rem;
+}
+
+/* 모달 푸터 */
+.screenshot-help-footer {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 2rem 2rem 2rem;
+  border-top: 2px solid #e1e8ed;
+  background: #f8f9fa;
+  border-radius: 0 0 20px 20px;
+}
+
+/* 확인 버튼 */
+.screenshot-help-ok-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.screenshot-help-ok-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* 모달 오버레이 */
+.screenshot-help-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 9998;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .screenshot-help-modal {
+    width: 95%;
+    max-height: 95vh;
+    margin-top: 50px; /* 모바일에서는 조금 줄인 여백 */
+  }
+  
+  .screenshot-help-content {
+    padding: 1.5rem;
+  }
+  
+  .screenshot-help-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .screenshot-help-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .help-section h3 {
+    font-size: 1.2rem;
+  }
+  
+  .method-card {
+    padding: 1rem;
+  }
+  
+  .method-title {
+    font-size: 1.1rem;
+  }
+  
+  .screenshot-help-ok-btn {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+  }
+} 

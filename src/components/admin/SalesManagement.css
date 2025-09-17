@@ -1,0 +1,324 @@
+/* 매출관리 스타일 */
+.sales-management {
+  width: 100%;
+}
+
+.sales-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sales-header h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.period-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.period-select {
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.9rem;
+  min-width: 100px;
+}
+
+.period-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+/* 매출 요약 카드 */
+.sales-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  border-left: 4px solid;
+}
+
+.summary-card.income {
+  border-left-color: #48bb78;
+}
+
+.summary-card.expense {
+  border-left-color: #f56565;
+}
+
+.summary-card.profit {
+  border-left-color: #4299e1;
+}
+
+.summary-card h3 {
+  margin: 0 0 1rem 0;
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.summary-card .amount {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.summary-card.income .amount {
+  color: #48bb78;
+}
+
+.summary-card.expense .amount {
+  color: #f56565;
+}
+
+.summary-card.profit .amount {
+  color: #4299e1;
+}
+
+/* 매출 테이블 */
+.sales-table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  overflow-x: auto; /* 가로 스크롤 추가 */
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.add-sales-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.add-sales-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.sales-table {
+  width: 100%;
+  min-width: 800px; /* 최소 너비 설정 */
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.sales-table th {
+  background: #f7fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.sales-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.sales-table tr:hover {
+  background: #f8f9fa;
+}
+
+.sales-table tr.income {
+  background: #f0fff4;
+}
+
+.sales-table tr.expense {
+  background: #fff5f5;
+}
+
+.sales-table tr.income:hover {
+  background: #e6fffa;
+}
+
+.sales-table tr.expense:hover {
+  background: #fed7d7;
+}
+
+/* 구분 배지 */
+.type-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.type-badge.income {
+  background: #d4edda;
+  color: #155724;
+}
+
+.type-badge.expense {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* 금액 스타일 */
+.amount.income {
+  color: #48bb78;
+  font-weight: 600;
+}
+
+.amount.expense {
+  color: #f56565;
+  font-weight: 600;
+}
+
+/* 작업 버튼 */
+.action-buttons {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background: #f7fafc;
+  transform: scale(1.1);
+}
+
+.action-btn.edit:hover {
+  background: #e6fffa;
+}
+
+.action-btn.delete:hover {
+  background: #fed7d7;
+}
+
+/* 로딩 및 빈 데이터 */
+.loading,
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #4a5568;
+}
+
+.no-data p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #718096;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .sales-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .sales-summary {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .add-sales-btn {
+    width: 100%;
+  }
+  
+  .sales-table {
+    font-size: 0.8rem;
+  }
+  
+  .sales-table th,
+  .sales-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .action-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sales-table {
+    font-size: 0.75rem;
+  }
+  
+  .sales-table th,
+  .sales-table td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .type-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    min-width: 50px;
+  }
+  
+  .period-select {
+    width: 100%;
+  }
+}

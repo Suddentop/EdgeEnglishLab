@@ -1,0 +1,996 @@
+.quiz-generator,
+.vocabulary-generator,
+.vocabulary-quiz-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 1rem auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.07);
+  padding: 2.5rem 1.2rem 3.5rem 1.2rem;
+}
+
+.generator-header h2,
+.vocabulary-generator h2,
+.vocabulary-quiz-container h2 {
+  font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #000000;
+  margin-bottom: 1.5rem;
+  letter-spacing: -1px;
+}
+
+.input-type-section {
+  margin: 15px 0;
+  padding: 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  justify-content: center;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.ai-option-section {
+  display: flex;
+  gap: 2.5rem;
+  background: #f7f8fc;
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(44,62,80,0.04);
+}
+
+.input-type-section label {
+  display: flex;
+  align-items: center;
+  padding: 0px 6px;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background-color 0.2s;
+  flex: 1;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  margin: 0;
+}
+
+.input-type-section input[type="radio"] {
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.input-type-section label span {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 2px;
+}
+
+.screenshot-help-btn {
+  background: #007bff;
+  color: white;
+  border: 2px solid #0056b3;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+  transition: all 0.2s ease;
+}
+
+.screenshot-help-btn:hover {
+  background: #0056b3;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+}
+
+/* 태블릿 화면 (768px ~ 1024px) */
+@media (max-width: 1024px) {
+  .input-type-section {
+    height: 48px;
+    margin: 12px 0;
+  }
+  
+  .input-type-section label {
+    padding: 0px 4px;
+    font-size: 0.9rem;
+  }
+  
+  .input-type-section label span {
+    padding: 1px;
+  }
+  
+  .screenshot-help-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    margin-left: 4px;
+  }
+}
+
+/* 모바일 화면 (768px 이하) */
+@media (max-width: 768px) {
+  .input-type-section {
+    flex-direction: column;
+    height: auto;
+    gap: 0;
+    margin: 10px 0;
+    padding: 4px;
+  }
+  
+  .input-type-section label {
+    flex: none;
+    height: 44px;
+    padding: 8px 12px;
+    margin-bottom: 1px;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .input-type-section label:last-child {
+    margin-bottom: 0;
+  }
+  
+  .input-type-section label span {
+    font-size: 0.85rem;
+    padding: 0;
+  }
+  
+  .screenshot-help-btn {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    margin-left: 6px;
+  }
+}
+
+/* 작은 모바일 화면 (480px 이하) */
+@media (max-width: 480px) {
+  .input-type-section {
+    margin: 8px 0;
+    padding: 2px;
+  }
+  
+  .input-type-section label {
+    height: 40px;
+    padding: 6px 10px;
+    margin-bottom: 0px;
+    font-size: 0.8rem;
+  }
+  
+  .input-type-section label span {
+    font-size: 0.8rem;
+  }
+  
+  .screenshot-help-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    margin-left: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+  .input-type-section {
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+}
+
+.input-type-section label, .ai-option-section label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.08rem;
+  font-weight: 500;
+  color: #000000;
+  cursor: pointer;
+}
+
+.screenshot-help-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.screenshot-help-btn:hover {
+  background: #5a67d8;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-right: 2rem;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.option-text {
+  font-weight: 600;
+  color: #4a90e2;
+}
+
+.option-description {
+  font-size: 0.98rem;
+  color: #7a7a9a;
+  margin-left: 1.8rem;
+  margin-bottom: 0.2rem;
+}
+
+.service-unavailable {
+  color: #e74c3c;
+  font-size: 0.95rem;
+  margin-left: 1.8rem;
+}
+
+.input-guide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  background: #f7f8fc;
+  border: 2.5px dashed #b3c6e0;
+  border-radius: 16px;
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  text-align: center;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+.input-guide.paste-focused {
+  border: 2.5px solid #6a5acd !important;
+  background: #f3f0ff !important;
+  box-shadow: 0 0 0 4px rgba(106,90,205,0.08);
+}
+.input-guide .drop-icon {
+  font-size: 2.7rem;
+  color: #6a5acd;
+  margin-bottom: 0.2rem;
+}
+.input-guide .drop-text {
+  font-size: 1.13rem;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.1rem;
+}
+.input-guide .drop-desc {
+  font-size: 0.98rem;
+  color: #7a7a9a;
+  margin-bottom: 0.2rem;
+}
+.input-guide .preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  flex-direction: row;
+}
+.input-guide .preview-img {
+  max-width: 100px;
+  max-height: 70px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.input-guide .loading-text {
+  color: #6a5acd;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.input-guide .error-text {
+  color: #e74c3c;
+  font-size: 1.05rem;
+  margin-top: 0.5rem;
+}
+
+.input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 0.5rem;
+}
+
+.input-label {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.2rem;
+}
+
+.text-input {
+  width: 100%;
+  min-height: 160px;
+  padding: 1.1rem;
+  border: 1.5px solid #cfd8ea;
+  border-radius: 10px;
+  font-size: 1.08rem;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
+  background: #f7f8fc;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  box-shadow: 0 1px 4px rgba(44,62,80,0.04);
+  color: #2d3748;
+  resize: none;
+}
+.text-input:focus {
+  outline: none;
+  border-color: #6a5acd;
+  box-shadow: 0 0 0 3px rgba(106, 90, 205, 0.10);
+}
+
+.text-info {
+  font-size: 0.98rem;
+  color: #7a7a9a;
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+}
+.warning {
+  color: #e67e22;
+  font-weight: 500;
+}
+
+.tooltip {
+  color: #e74c3c;
+  font-size: 0.98rem;
+  margin-top: 0.2rem;
+}
+
+.error-message {
+  color: #e74c3c;
+  background: #fff0f0;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-size: 1.05rem;
+  margin-top: 0.5rem;
+  border: 1.2px solid #f5b7b1;
+}
+
+.generate-button {
+  margin-top: 1.5rem;
+  padding: 1rem 0;
+  width: 100%;
+  background: linear-gradient(90deg, #4a90e2 0%, #6a5acd 100%);
+  color: #fff;
+  font-size: 1.18rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.generate-button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #6a5acd 0%, #4a90e2 100%);
+  box-shadow: 0 4px 16px rgba(44,62,80,0.12);
+}
+.generate-button:disabled {
+  background: #cfd8ea;
+  color: #a0a0b0;
+  cursor: not-allowed;
+}
+
+.input-type-section input[type="radio"],
+.ai-option-section input[type="radio"] {
+  accent-color: #6a5acd;
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.3em;
+}
+
+@media (max-width: 1400px) {
+  .quiz-generator,
+  .vocabulary-generator,
+  .vocabulary-quiz-container {
+    max-width: 98vw;
+  }
+}
+@media (max-width: 900px) {
+  .quiz-generator,
+  .vocabulary-generator,
+  .vocabulary-quiz-container {
+    max-width: 100vw;
+    padding: 1.2rem 0.5rem 2rem 0.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .quiz-generator,
+  .vocabulary-generator,
+  .vocabulary-quiz-container {
+    max-width: 100vw;
+    padding: 0.7rem 0.2rem 1.2rem 0.2rem;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .input-type-section, .ai-option-section {
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 0.7rem 0.7rem;
+  }
+  .input-section {
+    gap: 0.4rem;
+  }
+  .generate-button {
+    min-width: 100%;
+    width: 100%;
+    height: 38px;
+    font-size: 0.98rem;
+    padding: 0 6px;
+  }
+  .button-group {
+    flex-direction: row !important;
+    gap: 8px;
+    margin-top: 20px;
+  }
+}
+
+.file-upload-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.2rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  flex-wrap: nowrap;
+}
+
+.file-upload-btn {
+  display: inline-block;
+  background: linear-gradient(90deg, #6a5acd 0%, #4a90e2 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 8px;
+  min-width: 90px;
+  height: 2.6rem;
+  box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  position: relative;
+  text-align: center;
+  flex-shrink: 0;
+}
+.file-upload-btn:hover {
+  background: linear-gradient(90deg, #4a90e2 0%, #6a5acd 100%);
+  box-shadow: 0 4px 16px rgba(44,62,80,0.12);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.file-upload-status {
+  display: inline-flex;
+  align-items: center;
+  min-width: 140px;
+  background: #f7f8fc;
+  color: #000000;
+  font-size: 0.92rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  border: 1.2px solid #e3e6f0;
+  box-shadow: 0 1.5px 6px rgba(44,62,80,0.04);
+  vertical-align: middle;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+  height: 2.6rem;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 300px;
+}
+.file-upload-status:before {
+  content: '\1F4C1';
+  font-size: 1.08rem;
+  margin-right: 0.4rem;
+  opacity: 0.7;
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .file-upload-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+    margin: 0.8rem 0;
+    padding: 0;
+  }
+  .file-upload-btn, .file-upload-status {
+    width: 100%;
+    min-width: 0;
+    font-size: 0.95rem;
+    padding: 0.7rem 1rem;
+    height: 2.8rem;
+  }
+  .input-guide .preview-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0.8rem 0 0;
+  }
+  .input-guide .preview-img {
+    max-width: 120px;
+    max-height: 80px;
+  }
+  .input-guide .loading-text {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .input-guide {
+    padding: 0.8rem;
+    min-height: 100px;
+  }
+  .file-upload-row {
+    padding: 0;
+    gap: 0.6rem;
+  }
+  .file-upload-btn, .file-upload-status {
+    padding: 0.6rem 0.8rem;
+    height: 2.6rem;
+    font-size: 0.9rem;
+  }
+  .input-guide .preview-img {
+    max-width: 100px;
+    max-height: 70px;
+  }
+}
+
+/* 화면용 스타일 */
+.quiz-generator {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.2rem 3.5rem 1.2rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.07);
+  font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+}
+
+.button-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  justify-content: center;
+}
+
+.generate-button {
+  min-width: 120px;
+  height: 44px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #4a90e2 0%, #6a5acd 100%);
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  box-shadow: 0 1px 4px 0 rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.generate-button:hover {
+  background: linear-gradient(90deg, #6a5acd 0%, #4a90e2 100%);
+}
+.generate-button:active {
+  background: linear-gradient(90deg, #6a5acd 0%, #4a90e2 100%);
+}
+.generate-button:disabled {
+  background: #cfd8ea;
+  color: #aaa;
+  cursor: not-allowed;
+}
+/* 정답 보기 버튼만 노란색 단색 */
+.generate-button.yellow {
+  background: #FFD600;
+  color: #222;
+  font-weight: 800;
+}
+.generate-button.yellow:hover {
+  background: #ffe066;
+}
+.generate-button.yellow:active {
+  background: #ffd600;
+}
+
+.blank-inference-problem {
+  margin-bottom: 2.5rem;
+}
+
+.problem-instruction {
+  font-weight: 800;
+  font-size: 1.18rem;
+  background: #222;
+  color: #fff;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  margin-bottom: 0.6rem;
+  display: inline-block;
+}
+
+.problem-passage {
+  font-size: 1.08rem;
+  line-height: 1.7;
+  margin: 1.2rem 0;
+  background: #FFF3CD;
+  border-radius: 8px;
+  padding: 1.2rem;
+  border: 1.5px solid #e3e6f0;
+  font-family: inherit;
+}
+
+.problem-options label {
+  display: block;
+  font-size: 1.08rem;
+  margin: 0.4rem 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.problem-answer, .print-answer {
+  margin-top: 1.2rem;
+  color: #FFD600;
+  font-weight: 700;
+}
+
+/* 아래 인쇄 관련 스타일 전체 제거 (빈칸 추론 등 별도 CSS로 이동) */
+/*
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .print-only, .print-only * {
+    visibility: visible !important;
+  }
+  .print-only {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100vw;
+    min-height: 100vh;
+    background: #fff;
+    z-index: 9999;
+    padding: 2.5rem 1.2rem 3.5rem 1.2rem;
+    font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+  }
+  .print-only .problem-instruction {
+    font-weight: 800;
+    font-size: 1.18rem;
+    background: #222;
+    color: #fff;
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+    margin-bottom: 1.2rem;
+    display: inline-block;
+  }
+  .print-only .problem-passage {
+    font-size: 1.08rem;
+    line-height: 1.7;
+    margin: 1.2rem 0;
+    background: #f7f8fc;
+    border-radius: 8px;
+    padding: 1.2rem;
+    border: 1.5px solid #e3e6f0;
+    font-family: inherit;
+  }
+  .print-only .print-answer {
+    margin-top: 1.2rem;
+    color: #FFD600;
+    font-weight: 700;
+  }
+  .print-only .copyright-footer {
+    font-size: 0.8rem;
+    color: #444;
+    text-align: center;
+    margin-top: 2.5rem;
+    font-weight: 600;
+  }
+}
+*/
+
+/* 인쇄용 전용 영역 - 화면에서는 숨김 */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 0;
+  }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .quiz-generator h2,
+  .generator-header h2,
+  .vocabulary-generator h2,
+  .vocabulary-quiz-container h2 {
+    font-size: 2rem !important;
+  }
+  /* .quiz-generator,
+  .quiz-generator *:not(h2):not(.generator-header h2),
+  .vocabulary-generator,
+  .vocabulary-generator *:not(h2):not(.generator-header h2),
+  .vocabulary-quiz-container,
+  .vocabulary-quiz-container *:not(h2):not(.generator-header h2) {
+    font-size: 70% !important; - 제거됨
+  } */
+  .quiz-generator,
+  .vocabulary-generator,
+  .vocabulary-quiz-container {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    box-sizing: border-box;
+  }
+  .print-header-margin {
+    margin-top: 1cm !important;
+  }
+  /* 정답지(only-print) 폰트 크기 축소 - 제거됨 */
+  /* .only-print {
+    font-size: 0.90em !important;
+  }
+  .only-print * {
+    font-size: 0.90em !important;
+  } */
+  /* 인쇄(문제/정답) 헤더 부분 글씨 크기 확대 */
+  .only-print .print-header {
+    font-size: 1.18em !important;
+  }
+  .only-print .print-header-title {
+    font-size: 1.25em !important;
+  }
+  .only-print .print-header-tagline {
+    font-size: 1.15em !important;
+  }
+
+  /* 본문 해석 섹션 페이지 나누기 방지 */
+  .translation-section {
+    page-break-inside: avoid;
+  }
+}
+
+/* 포인트 관련 스타일 */
+.points-container {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.points-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-direction: row; /* 가로 배치 명시 */
+}
+
+.points-text {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+.points-details {
+  display: flex;
+  flex-direction: row; /* 세로에서 가로로 변경 */
+  gap: 1rem; /* 가로 배치에 맞게 간격 조정 */
+  align-items: center; /* 가로 배치에 맞게 중앙 정렬 */
+}
+
+.current-points-display {
+  font-weight: 500;
+  color: #059669;
+  font-size: 0.9rem;
+  background: rgba(5, 150, 105, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.deduction-info {
+  font-weight: 500;
+  color: #dc2626;
+  font-size: 0.85rem;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+/* 입력 라벨 행 스타일 */
+.input-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0rem;
+  gap: 1rem;
+}
+
+.input-label {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.warning {
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  flex-shrink: 1;
+}
+
+/* 반응형 디자인: 모바일에서는 세로 배치 */
+@media (max-width: 768px) {
+  .points-info {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .points-details {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .points-container {
+    text-align: center;
+  }
+  
+  /* 모바일에서 경고 메시지 줄바꿈 */
+  .input-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .input-label {
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* 태블릿 화면에서도 경고 메시지 줄바꿈 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .input-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .input-label {
+    margin-bottom: 0.25rem;
+  }
+  
+  /* 태블릿에서 포인트 컨테이너 중앙정렬 */
+  .points-info {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .points-details {
+    align-items: center;
+  }
+  
+  .points-container {
+    text-align: center;
+  }
+}
+
+/* 화면 중앙 모래시계 오버레이 */
+.centered-hourglass-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.centered-hourglass-content {
+  background: white;
+  padding: 2rem 3rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.centered-hourglass-spinner {
+  font-size: 3rem;
+  animation: hourglass-rotate 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+@keyframes hourglass-rotate {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 인쇄용 problem-passage 배경색 설정 - 2페이지 한글해석만 연한 녹색 */
+@media print {
+  .only-print .problem-passage.translation {
+    background: #F1F8E9 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 1페이지 영어 본문은 연한 노란색으로 강제 설정 */
+  .only-print .problem-passage:not(.translation) {
+    background: #fff3cd !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+} 

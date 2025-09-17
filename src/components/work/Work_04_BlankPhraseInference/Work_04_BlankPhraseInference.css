@@ -1,0 +1,639 @@
+/* Work_04_BlankPhraseInference 유형 스타일 */
+
+/* 최외각 컨테이너 스타일 */
+.quiz-generator {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto 3.5rem auto; /* 상단 여백 제거, 하단 여백만 유지 */
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.07);
+  padding: 2.5rem 1.2rem 3.5rem 1.2rem;
+}
+
+/* 문제 결과 화면 여백 조정 */
+.quiz-display {
+  margin-top: 0; /* 문제생성 전과 동일한 상단 여백 */
+}
+
+.generator-header h2 {
+  font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #000000;
+  margin-bottom: 1.5rem;
+  letter-spacing: -1px;
+}
+
+.input-type-section {
+  margin: 15px 0;
+  padding: 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  justify-content: center;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+
+.help-button:hover {
+  background: #e3f2fd !important;
+  border-color: #1565c0 !important;
+  color: #1565c0 !important;
+}
+
+.input-type-section label {
+  display: flex;
+  align-items: center;
+  padding: 0px 6px;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background-color 0.2s;
+  flex: 1;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  margin: 0;
+}
+
+.input-type-section input[type="radio"] {
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.input-type-section label span {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 2px;
+}
+
+.screenshot-help-btn {
+  background: #007bff;
+  color: white;
+  border: 2px solid #0056b3;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+  transition: all 0.2s ease;
+}
+
+.screenshot-help-btn:hover {
+  background: #0056b3;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+}
+
+/* 태블릿 화면 (768px ~ 1024px) */
+@media (max-width: 1024px) {
+  .input-type-section {
+    height: 48px;
+    margin: 12px 0;
+  }
+  
+  .input-type-section label {
+    padding: 0px 4px;
+    font-size: 0.9rem;
+  }
+  
+  .input-type-section label span {
+    padding: 1px;
+  }
+  
+  .screenshot-help-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    margin-left: 4px;
+  }
+}
+
+/* 모바일 화면 (768px 이하) */
+@media (max-width: 768px) {
+  .input-type-section {
+    flex-direction: column;
+    height: auto;
+    gap: 0;
+    margin: 10px 0;
+    padding: 4px;
+  }
+  
+  .input-type-section label {
+    flex: none;
+    height: 44px;
+    padding: 8px 12px;
+    margin-bottom: 1px;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .input-type-section label:last-child {
+    margin-bottom: 0;
+  }
+  
+  .input-type-section label span {
+    font-size: 0.85rem;
+    padding: 0;
+  }
+  
+  .screenshot-help-btn {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    margin-left: 6px;
+  }
+}
+
+/* 작은 모바일 화면 (480px 이하) */
+@media (max-width: 480px) {
+  .input-type-section {
+    margin: 8px 0;
+    padding: 2px;
+  }
+  
+  .input-type-section label {
+    height: 40px;
+    padding: 6px 10px;
+    margin-bottom: 0px;
+    font-size: 0.8rem;
+  }
+  
+  .input-type-section label span {
+    font-size: 0.8rem;
+  }
+  
+  .screenshot-help-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    margin-left: 4px;
+  }
+}
+
+.input-section {
+  margin-bottom: 1.5rem;
+}
+
+.text-input {
+  width: 100%;
+  min-height: 80px;
+  font-size: 1.1rem;
+  padding: 0.7rem;
+  border-radius: 8px;
+  border: 1.5px solid #e3e6f0;
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+  resize: none;
+}
+
+.generate-button {
+  background: #6a5acd;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 2.2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1.2rem;
+  transition: background 0.2s;
+}
+
+.generate-button:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+}
+
+.text-info {
+  font-size: 0.95rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
+.warning {
+  color: #e74c3c;
+  margin-left: 1rem;
+}
+
+/* 개선된 파일 업로드 스타일 */
+.input-guide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  background: #f7f8fc;
+  border: 2.5px dashed #b3c6e0;
+  border-radius: 16px;
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  text-align: center;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+
+.input-guide.paste-focused {
+  border: 2.5px solid #6a5acd !important;
+  background: #f3f0ff !important;
+  box-shadow: 0 0 0 4px rgba(106,90,205,0.08);
+}
+
+.input-guide .drop-icon {
+  font-size: 2.7rem;
+  color: #6a5acd;
+  margin-bottom: 0.2rem;
+}
+
+.input-guide .drop-text {
+  font-size: 1.13rem;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.1rem;
+}
+
+.input-guide .drop-desc {
+  font-size: 0.98rem;
+  color: #7a7a9a;
+  margin-bottom: 0.2rem;
+}
+
+.input-guide .preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+}
+
+.input-guide .preview-img {
+  max-width: 100px;
+  max-height: 70px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.input-guide .loading-text {
+  color: #6a5acd;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.input-guide .error-text {
+  color: #e74c3c;
+  font-size: 1.05rem;
+  margin-top: 0.5rem;
+}
+
+.file-upload-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.2rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  flex-wrap: nowrap;
+}
+
+.file-upload-btn {
+  display: inline-block;
+  background: linear-gradient(90deg, #6a5acd 0%, #4a90e2 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 8px;
+  min-width: 90px;
+  height: 2.6rem;
+  box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  position: relative;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.file-upload-btn:hover {
+  background: linear-gradient(90deg, #4a90e2 0%, #6a5acd 100%);
+  box-shadow: 0 4px 16px rgba(44,62,80,0.12);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.file-upload-status {
+  display: inline-flex;
+  align-items: center;
+  min-width: 140px;
+  background: #f7f8fc;
+  color: #000000;
+  font-size: 0.92rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  border: 1.2px solid #e3e6f0;
+  box-shadow: 0 1.5px 6px rgba(44,62,80,0.04);
+  vertical-align: middle;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+  height: 2.6rem;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 300px;
+}
+
+.file-upload-status:before {
+  content: '\1F4C1';
+  font-size: 1.08rem;
+  margin-right: 0.4rem;
+  opacity: 0.7;
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .file-upload-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+    margin: 0.8rem 0;
+    padding: 0;
+  }
+  .file-upload-btn, .file-upload-status {
+    width: 100%;
+    min-width: 0;
+    font-size: 0.95rem;
+    padding: 0.7rem 1rem;
+    height: 2.8rem;
+  }
+  .input-guide .preview-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0.8rem 0 0;
+  }
+  .input-guide .preview-img {
+    max-width: 120px;
+    max-height: 80px;
+  }
+  .input-guide .loading-text {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .input-guide {
+    padding: 0.8rem;
+    min-height: 100px;
+  }
+  .file-upload-row {
+    padding: 0;
+    gap: 0.6rem;
+  }
+  .file-upload-btn, .file-upload-status {
+    padding: 0.6rem 0.8rem;
+    height: 2.6rem;
+    font-size: 0.9rem;
+  }
+  .input-guide .preview-img {
+    max-width: 100px;
+    max-height: 70px;
+  }
+}
+
+/* 입력 라벨 행 스타일 */
+.input-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0rem;
+  gap: 1rem;
+}
+
+.input-label {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.warning {
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  flex-shrink: 1;
+}
+
+/* 반응형 디자인: 모바일에서는 줄바꿈 */
+@media (max-width: 768px) {
+  .input-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .input-label {
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* 태블릿 화면에서도 줄바꿈 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .input-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .input-label {
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* 포인트 관련 스타일 */
+.points-container {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.points-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-direction: row; /* 가로 배치 명시 */
+}
+
+.points-text {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+.points-details {
+  display: flex;
+  flex-direction: row; /* 세로에서 가로로 변경 */
+  gap: 1rem; /* 가로 배치에 맞게 간격 조정 */
+  align-items: center; /* 가로 배치에 맞게 중앙 정렬 */
+}
+
+.current-points-display {
+  font-weight: 500;
+  color: #059669;
+  font-size: 0.9rem;
+  background: rgba(5, 150, 105, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.deduction-info {
+  font-weight: 500;
+  color: #dc2626;
+  font-size: 0.85rem;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+/* 화면 중앙 모래시계 오버레이 */
+.centered-hourglass-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.centered-hourglass-content {
+  background: white;
+  padding: 2rem 3rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.centered-hourglass-spinner {
+  font-size: 3rem;
+  animation: hourglass-rotate 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+@keyframes hourglass-rotate {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 유형#04 전용 인쇄 스타일 - 독립적 관리 */
+@media print {
+  /* 유형#04 인쇄(정답) 1페이지 문제본문 컨테이너 - 연한 노란색 */
+  .work04-print-answer-passage {
+    background: #FFF3CD !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 유형#04 인쇄(정답) 2페이지 본문해석 컨테이너 - 연한 녹색 */
+  .work04-print-answer-translation {
+    background: #F1F8E9 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 유형#04 인쇄(문제) 1페이지 문제본문 컨테이너 - 연한 노란색 */
+  .work04-print-problem-passage {
+    background: #FFF3CD !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* 반응형 디자인: 모바일에서는 세로 배치 */
+@media (max-width: 768px) {
+  .points-info {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .points-details {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .points-container {
+    text-align: center;
+  }
+}
+
+/* 태블릿 화면에서도 중앙정렬 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .points-info {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .points-details {
+    align-items: center;
+  }
+  
+  .points-container {
+    text-align: center;
+  }
+} 

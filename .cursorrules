@@ -1,0 +1,36 @@
+# EngQuiz 프로젝트 AI 참고 규칙
+
+## 프로젝트 개요
+- 영어 퀴즈 생성 및 관리 웹 애플리케이션
+- React + TypeScript + Firebase 기반
+- 전화번호 기반 회원가입/로그인 시스템
+
+## 인증 시스템
+- 카카오/구글 로그인 제거됨
+- 전화번호를 로그인 ID로 사용
+- Firebase Authentication + Firestore 사용
+- 전화번호는 `{phoneNumber}@engquiz.local` 형식으로 이메일 변환하여 저장
+
+## 파일 구조 규칙
+- Work 컴포넌트: `Work_(유형번호)_(문제출제대표명).tsx` 형식
+- 각 TSX 컴포넌트는 동일한 이름의 CSS 파일과 쌍으로 구성
+- 컴포넌트별 스타일 격리 유지
+
+## 코딩 규칙
+- DRY 원칙 준수 (중복 코드 방지)
+- 가독성 우선, 성능 고려
+- TypeScript 타입 안전성 확보
+- 에러 처리 및 사용자 피드백 제공
+
+## Firebase 설정
+- Authentication: 이메일/비밀번호 방식 (전화번호를 이메일로 변환)
+- Firestore: 사용자 정보 저장 (users 컬렉션)
+- Functions: 기본 구조만 유지 (카카오 관련 함수 제거됨)
+
+## 환경 변수
+- Firebase 설정만 유지
+- 카카오 관련 환경 변수 제거됨
+
+## 배포
+- 프로젝트 루트: `firebase init`, `firebase deploy`
+- functions 폴더: `npm install`, `firebase deploy --only functions` 

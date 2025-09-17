@@ -1,0 +1,534 @@
+.quiz-generator {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.generator-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.generator-header h2 {
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+}
+
+.generator-header p {
+  color: #666;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.input-type-section {
+  margin: 15px 0;
+  padding: 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  justify-content: center;
+  height: 56px;
+  box-sizing: border-box;
+}
+
+.input-type-section label {
+  display: flex;
+  align-items: center;
+  padding: 0px 6px;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background-color 0.2s;
+  flex: 1;
+  justify-content: center;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  margin: 0;
+}
+
+.input-type-section input[type="radio"] {
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.input-type-section label span {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 2px;
+}
+
+.screenshot-help-btn {
+  background: #007bff;
+  color: white;
+  border: 2px solid #0056b3;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+  transition: all 0.2s ease;
+}
+
+.screenshot-help-btn:hover {
+  background: #0056b3;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+}
+
+/* 태블릿 화면 (768px ~ 1024px) */
+@media (max-width: 1024px) {
+  .input-type-section {
+    height: 48px;
+    margin: 12px 0;
+  }
+  
+  .input-type-section label {
+    padding: 0px 4px;
+    font-size: 0.9rem;
+  }
+  
+  .input-type-section label span {
+    padding: 1px;
+  }
+  
+  .screenshot-help-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    margin-left: 4px;
+  }
+}
+
+/* 모바일 화면 (768px 이하) */
+@media (max-width: 768px) {
+  .input-type-section {
+    flex-direction: column;
+    height: auto;
+    gap: 0;
+    margin: 10px 0;
+    padding: 4px;
+  }
+  
+  .input-type-section label {
+    flex: none;
+    height: 44px;
+    padding: 8px 12px;
+    margin-bottom: 1px;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .input-type-section label:last-child {
+    margin-bottom: 0;
+  }
+  
+  .input-type-section label span {
+    font-size: 0.85rem;
+    padding: 0;
+  }
+  
+  .screenshot-help-btn {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    margin-left: 6px;
+  }
+}
+
+/* 작은 모바일 화면 (480px 이하) */
+@media (max-width: 480px) {
+  .input-type-section {
+    margin: 8px 0;
+    padding: 2px;
+  }
+  
+  .input-type-section label {
+    height: 40px;
+    padding: 6px 10px;
+    margin-bottom: 0px;
+    font-size: 0.8rem;
+  }
+  
+  .input-type-section label span {
+    font-size: 0.8rem;
+  }
+  
+  .screenshot-help-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    margin-left: 4px;
+  }
+}
+
+.input-type-section h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.input-mode-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.input-mode-buttons button {
+  padding: 0.8rem 1.5rem;
+  border: 2px solid #e0e0e0;
+  background: white;
+  color: #666;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.input-mode-buttons button:hover {
+  border-color: #1976d2;
+  color: #1976d2;
+}
+
+.input-mode-buttons button.active {
+  background: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+.input-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.text-input label,
+.image-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.text-input textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.text-input textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.text-input textarea.paste-focused {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.image-input input[type="file"] {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px dashed #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.image-input input[type="file"]:hover {
+  border-color: #1976d2;
+}
+
+.image-preview {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.action-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.point-info {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.point-info strong {
+  color: #1976d2;
+  font-weight: 700;
+}
+
+.generate-button {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.generate-button:hover:not(:disabled) {
+  background: #1565c0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.generate-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.help-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.help-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.help-button:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+
+.problem-instruction {
+  background: #222;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: none;
+}
+
+.answer-input-section {
+  margin-top: 1.5rem;
+}
+
+.answer-input-section label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.answer-input-section textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.answer-input-section textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.problem-answer {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.problem-answer span {
+  display: block;
+}
+
+.print-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.print-buttons button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.print-buttons button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* 인쇄용 스타일 */
+.only-print {
+  display: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .only-print {
+    display: block !important;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  .a4-page-template {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 20mm;
+    box-sizing: border-box;
+    page-break-after: always;
+    background: white;
+  }
+  
+  .a4-page-template:last-child {
+    page-break-after: avoid;
+  }
+  
+  .a4-page-header {
+    margin-bottom: 20px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+  }
+  
+  .a4-page-content {
+    flex: 1;
+  }
+  
+  .quiz-content {
+    height: 100%;
+  }
+  
+  .problem-instruction {
+    background: #222 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .quiz-generator {
+    padding: 1rem;
+  }
+  
+  .generator-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .input-mode-buttons {
+    flex-direction: column;
+  }
+  
+  .input-mode-buttons button {
+    width: 100%;
+  }
+  
+  .action-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .print-buttons {
+    justify-content: center;
+  }
+  
+  .print-buttons button {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz-generator {
+    padding: 0.5rem;
+  }
+  
+  .generator-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .input-section,
+  .action-section {
+    padding: 1rem;
+  }
+  
+  .print-buttons {
+    flex-direction: column;
+  }
+  
+  .print-buttons button {
+    width: 100%;
+  }
+}

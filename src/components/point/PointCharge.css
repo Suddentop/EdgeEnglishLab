@@ -1,0 +1,362 @@
+/* 포인트 충전 메인 컨테이너 */
+.point-charge {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.point-charge-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.point-charge-header h2 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.point-charge-header p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 1rem;
+}
+
+.current-points {
+  color: #2b6cb0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* 포인트 충전 콘텐츠 */
+.point-charge-content {
+  display: grid;
+  gap: 2rem;
+}
+
+/* 충전 금액 선택 섹션 */
+.charge-amount-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.charge-amount-section h3 {
+  margin: 0 0 1.5rem 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* 미리 정의된 금액 버튼들 */
+.predefined-amounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.amount-button {
+  padding: 1rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.amount-button:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.amount-button.selected {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+.amount-button .amount {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.amount-button .points {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* 직접 입력 섹션 */
+.custom-amount-section {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.custom-amount-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #4a5568;
+  transition: all 0.3s ease;
+}
+
+.custom-amount-button:hover,
+.custom-amount-button.active {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.custom-amount-input {
+  margin-top: 1rem;
+  position: relative;
+}
+
+.custom-amount-input input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.custom-amount-input input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.custom-amount-input .currency {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #718096;
+  font-weight: 500;
+}
+
+.custom-points {
+  margin-top: 0.5rem;
+  text-align: center;
+  color: #38a169;
+  font-weight: 600;
+}
+
+/* 선택된 금액 정보 */
+.selected-amount-info {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.amount-detail,
+.points-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.amount-detail:last-child,
+.points-detail:last-child {
+  margin-bottom: 0;
+}
+
+.amount-value {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.points-value {
+  color: #38a169;
+  font-weight: 600;
+}
+
+/* 결제 정보 */
+.payment-info {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.payment-info h3 {
+  margin: 0 0 1.5rem 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item span:first-child {
+  color: #718096;
+}
+
+.info-item span:last-child {
+  color: #2d3748;
+  font-weight: 500;
+}
+
+/* 메시지 */
+.message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.message.success {
+  background: #f0fff4;
+  color: #22543d;
+  border: 1px solid #9ae6b4;
+}
+
+.message.error {
+  background: #fed7d7;
+  color: #742a2a;
+  border: 1px solid #fc8181;
+}
+
+/* 충전 버튼 */
+.charge-button {
+  width: 100%;
+  padding: 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem;
+}
+
+.charge-button:hover:not(:disabled) {
+  background: #5a6fd8;
+}
+
+.charge-button:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
+/* 안내사항 */
+.charge-notice {
+  background: #fffbeb;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #f6e05e;
+  margin-top: 1rem;
+}
+
+.charge-notice h4 {
+  margin: 0 0 1rem 0;
+  color: #744210;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.charge-notice ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #744210;
+}
+
+.charge-notice li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.charge-notice li:last-child {
+  margin-bottom: 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .point-charge {
+    padding: 1rem;
+  }
+  
+  .point-charge-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .charge-amount-section,
+  .payment-info,
+  .charge-notice {
+    padding: 1.5rem;
+  }
+  
+  .predefined-amounts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .amount-button {
+    padding: 0.75rem;
+  }
+  
+  .amount-button .amount {
+    font-size: 0.9rem;
+  }
+  
+  .amount-button .points {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .point-charge {
+    padding: 0.5rem;
+  }
+  
+  .point-charge-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .charge-amount-section,
+  .payment-info,
+  .charge-notice {
+    padding: 1rem;
+  }
+  
+  .predefined-amounts {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .amount-button {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .charge-button {
+    font-size: 1rem;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}

@@ -1,0 +1,237 @@
+/* 관리자 레이아웃 스타일 */
+.admin-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  /* 네비게이션바와 겹치지 않도록 상단 여백 제거 */
+  margin-top: 0px;
+  /* 최외각 컨테이너 라운드 효과 */
+  border-radius: 20px;
+}
+
+.admin-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 1600px; /* PC에서 3열 카드 표시를 위해 적절한 크기로 설정 - 포인트 관리 확장 고려 */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.admin-header h1 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.admin-header p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 1.1rem;
+}
+
+.admin-container {
+  display: block;
+  max-width: 1600px; /* PC에서 3열 카드 표시를 위해 적절한 크기로 설정 - 포인트 관리 확장 고려 */
+  margin: 0 auto;
+}
+
+/* 단일 컨테이너 모드 */
+.admin-container-single {
+  display: block;
+}
+
+/* 상단 탭 바 */
+.admin-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.9);
+  border-radius: 16px;
+  padding: 0.5rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  margin-bottom: 1rem;
+}
+
+.admin-tab-btn {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #4a5568;
+  cursor: pointer;
+}
+
+.admin-tab-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.admin-nav-item {
+  background: none;
+  border: none;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-nav-item:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  transform: translateX(4px);
+}
+
+.admin-nav-item.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.admin-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  min-height: 600px;
+  margin-top: 0.75rem;
+}
+
+.admin-access-denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+  padding: 2rem;
+}
+
+.admin-access-denied h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.admin-access-denied p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .admin-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    max-width: calc(100% - 4rem);
+  }
+  
+  .admin-header {
+    max-width: calc(100% - 4rem);
+  }
+  
+  .admin-sidebar {
+    order: 2;
+  }
+  
+  .admin-content {
+    order: 1;
+  }
+  
+  .admin-tabs {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .admin-tab-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    padding: 1rem;
+  }
+  
+  .admin-header {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    max-width: calc(100% - 2rem);
+  }
+  
+  .admin-header h1 {
+    font-size: 2rem;
+  }
+  
+  .admin-content {
+    padding: 1.5rem;
+    margin: 0 0.5rem;
+  }
+  
+  .admin-nav-item {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  
+  .admin-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .admin-tab-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-layout {
+    padding: 0.75rem;
+  }
+  
+  .admin-header {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    max-width: calc(100% - 1.5rem);
+  }
+  
+  .admin-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .admin-content {
+    padding: 1rem;
+    margin: 0 0.5rem;
+  }
+  
+  .admin-nav-item {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .admin-tabs {
+    padding: 0.25rem;
+  }
+  
+  .admin-tab-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}

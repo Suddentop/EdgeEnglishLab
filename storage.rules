@@ -1,0 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // feedback-images 폴더: 로그인한 사용자만 읽기/쓰기 가능
+    match /feedback-images/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // 기타 파일들: 로그인한 사용자만 접근 가능
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+} 

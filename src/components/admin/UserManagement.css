@@ -1,0 +1,562 @@
+/* 회원관리 스타일 */
+.user-management {
+  width: 100%;
+}
+
+.user-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.user-management-header h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.search-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0; /* flexbox에서 축소 허용 */
+  padding: 0 0.5rem; /* 좌우 패딩 추가 */
+  box-sizing: border-box; /* 패딩 포함한 크기 계산 */
+  max-width: 100%; /* 최대 너비 제한 */
+  overflow: hidden; /* 넘치는 요소 숨김 */
+}
+
+.search-type-select,
+.status-filter-select {
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.9rem;
+  min-width: 80px; /* 최소 너비 줄임 */
+  max-width: 120px; /* 최대 너비 제한 */
+  flex-shrink: 1; /* 필요시 축소 허용 */
+  box-sizing: border-box; /* 패딩 포함한 크기 계산 */
+}
+
+.search-input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-width: 150px; /* 최소 너비 줄임 */
+  max-width: 250px; /* 최대 너비 줄임 */
+  flex: 1;
+  flex-shrink: 1; /* 필요시 축소 허용 */
+  box-sizing: border-box; /* 패딩 포함한 크기 계산 */
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.search-button {
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px; /* 터치하기 쉬운 최소 크기 */
+  white-space: nowrap; /* 버튼 텍스트 줄바꿈 방지 */
+  flex-shrink: 0; /* 버튼은 축소하지 않음 */
+  box-sizing: border-box; /* 패딩 포함한 크기 계산 */
+}
+
+.search-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.user-table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  overflow-x: auto; /* 가로 스크롤 추가 */
+}
+
+.user-table {
+  width: 100%;
+  min-width: 800px; /* 최소 너비 설정 */
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.user-table th {
+  background: #f7fafc;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* 가입일 열(5번째)과 상태 열(6번째) 헤더 배경색을 흰색으로 설정 */
+.user-table-container .user-table thead tr th:nth-child(5),
+.user-table-container .user-table thead tr th:nth-child(6) {
+  background: #f7fafc !important;
+  color: #2d3748 !important;
+}
+
+/* 가입일과 상태 헤더에 추가된 클래스로 배경색 설정 */
+.join-date-header,
+.status-header {
+  background: #f7fafc !important;
+  color: #2d3748 !important;
+}
+
+/* 가입일 열(5번째)과 상태 열(6번째) 데이터 셀 배경색도 동일하게 설정 */
+.user-table-container .user-table tbody tr td:nth-child(5),
+.user-table-container .user-table tbody tr td:nth-child(6) {
+  background: white !important;
+}
+
+.user-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.user-table tr:hover {
+  background: #f8f9fa;
+}
+
+.user-table tr.inactive-user {
+  background: #fef2f2;
+  opacity: 0.7;
+}
+
+.user-table tr.inactive-user:hover {
+  background: #fee2e2;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.status-badge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.role-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.role-badge.user {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.role-badge.admin {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background: #f7fafc;
+  transform: scale(1.1);
+}
+
+.action-btn.edit:hover {
+  background: #e6fffa;
+}
+
+.action-btn.toggle:hover {
+  background: #fef5e7;
+}
+
+.action-btn.password:hover {
+  background: #e6f3ff;
+}
+
+.action-btn.delete:hover {
+  background: #fed7d7;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #4a5568;
+}
+
+.load-more-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.load-more-btn:hover:not(:disabled) {
+  background: #edf2f7;
+}
+
+.load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  /* 스크롤바 숨기기 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.modal-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #718096;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+  background: #f7fafc;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: #e53e3e;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c53030;
+  transform: translateY(-1px);
+}
+
+.warning {
+  color: #e53e3e;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .user-management-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-controls {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+    padding: 0 1rem; /* 모바일에서 더 많은 패딩 */
+    flex: none;
+    width: 100%;
+  }
+  
+  .search-input {
+    min-width: auto;
+    max-width: none;
+    width: 100%;
+    font-size: 1rem;
+    padding: 0.875rem 1rem;
+  }
+  
+  .search-type-select,
+  .status-filter-select {
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .search-button {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-management-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 1.5rem;
+  }
+  
+  .search-controls {
+    padding: 0 0.5rem; /* 작은 화면에서 패딩 조정 */
+    flex: none;
+    width: 100%;
+  }
+  
+  .user-table {
+    font-size: 0.85rem;
+    min-width: 900px; /* 모바일에서도 충분한 너비 보장 */
+  }
+  
+  .user-table th,
+  .user-table td {
+    padding: 0.875rem 0.75rem;
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  }
+  
+  .user-table th {
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .action-btn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    padding: 0.5rem;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .modal-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-management-header {
+    margin-bottom: 1rem;
+  }
+  
+  .search-controls {
+    padding: 0 0.25rem; /* 매우 작은 화면에서 패딩 최소화 */
+    gap: 0.5rem;
+    flex: none;
+    width: 100%;
+  }
+  
+  .search-input {
+    font-size: 0.9rem;
+    padding: 0.75rem 0.875rem;
+  }
+  
+  .search-type-select,
+  .status-filter-select {
+    font-size: 0.9rem;
+    padding: 0.75rem 0.875rem;
+  }
+  
+  .search-button {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .user-table {
+    font-size: 0.8rem;
+    min-width: 950px; /* 작은 화면에서도 충분한 너비 */
+  }
+  
+  .user-table th,
+  .user-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .status-badge,
+  .role-badge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    min-width: 55px;
+  }
+}

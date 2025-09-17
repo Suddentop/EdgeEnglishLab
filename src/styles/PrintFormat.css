@@ -1,0 +1,526 @@
+@media screen {
+  .print-header {
+    display: none !important;
+  }
+  .print-gap {
+    display: none !important;
+  }
+  .only-print {
+    display: none !important;
+  }
+  .print-header-margin {
+    display: none !important;
+  }
+  .print-answer-mode {
+    display: none !important;
+  }
+  .quiz-print-body {
+    display: none !important;
+  }
+  .print-footer {
+    display: none !important;
+  }
+}
+
+@media print {
+  .print-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-width: 0;
+    background: linear-gradient(90deg, #2d3a60 0%, #6a5acd 100%);
+    padding: 0.8rem 1.4rem 0.8rem 1.4rem;
+    margin: 1cm 0 1.2rem 0;
+    box-sizing: border-box;
+    box-shadow: 0 4px 24px rgba(44,62,80,0.25);
+    position: relative;
+    z-index: 9999;
+  }
+  .print-header-margin {
+    display: block;
+  }
+  .only-print {
+    display: block;
+  }
+  .print-answer-mode {
+    display: block;
+  }
+  .quiz-print-body {
+    display: block;
+  }
+  .print-footer {
+    display: block;
+  }
+  .print-header-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    margin-right: 1.5rem;
+  }
+  .print-header-texts {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .print-header-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    margin-right: 0.7rem;
+    font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
+  }
+  .print-header-tagline {
+    font-size: 1rem;
+    color: #e0e6f7;
+    font-weight: 400;
+    font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
+    border-left: 2px solid rgba(255,255,255,0.3);
+    padding-left: 0.7rem;
+  }
+  .print-gap {
+    display: block;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+  }
+  .print-header + * {
+    margin-top: 0;
+  }
+  .App,
+  .App-main {
+    padding-top: 0;
+    margin-top: 0;
+  }
+  .no-print {
+    display: none;
+  }
+  .only-print {
+    display: block;
+  }
+  
+  /* 브라우저 기본 인쇄 헤더/푸터 완전 숨기기 */
+  @page {
+    margin: 0;
+    size: A4;
+  }
+  
+  /* 인쇄 시 상위 컨테이너 여백 제거 */
+  .App, .App-main, .main-content, .work-container {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* 인쇄 시 모든 기본 헤더/푸터 숨기기 */
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* 인쇄 시 날짜, 시간, URL, 페이지 번호 완전 숨기기 */
+  @media print {
+    html, body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    /* 브라우저 기본 인쇄 헤더/푸터 완전 숨기기 */
+    @page {
+      margin: 0;
+      size: A4;
+    }
+    
+    /* 모든 기본 인쇄 요소 숨기기 */
+    * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+  
+  /* 유형#01 전용 인쇄 헤더 스타일 */
+  .print-header-work01 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: #fff;
+    padding: 0.3rem 0;
+    margin: 0;
+    box-sizing: border-box;
+    border-bottom: none;
+  }
+  
+  .print-header-text-work01 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #000;
+    font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
+  }
+  
+  /* 유형#01 인쇄 페이지 전용 스타일 - !important로 전역 스타일 오버라이드 */
+  .only-print .problem-instruction {
+    font-size: 1rem !important;
+    box-shadow: none !important;
+    padding: 0.7rem 0.6rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important; /* 하단 마진을 1.5rem으로 설정 */
+  }
+  
+  /* 2-2페이지와 3-2페이지의 본문해석 컨테이너 간격 강제 설정 */
+  .only-print .a4-page-template .problem-instruction {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .only-print .problem-passage {
+    font-size: 1rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.3rem !important;
+  }
+  
+  .only-print .problem-options {
+    font-size: 1rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0.6rem !important;
+    padding-right: 0.6rem !important;
+  }
+  
+  .only-print .shuffled-paragraph {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .option {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .answer-section {
+    font-size: 1rem !important;
+  }
+  
+  /* 정답 페이지 전용 스타일 - 인라인 스타일 오버라이드 */
+  .only-print .paragraph-simple {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .paragraph-simple div {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .paragraph-simple strong {
+    font-size: 1rem !important;
+  }
+  
+  /* 유형#03 인쇄 페이지 전용 스타일 - 강제 1rem 적용 */
+  .only-print .vocabulary-generator,
+  .only-print .vocabulary-generator *,
+  .only-print .vocabulary-quiz-container,
+  .only-print .vocabulary-quiz-container * {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .quiz-content,
+  .only-print .quiz-content * {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .a4-page-template,
+  .only-print .a4-page-template * {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .a4-page-content,
+  .only-print .a4-page-content * {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .a4-page-content {
+    padding: 0 1cm 1cm 1cm !important;
+  }
+  
+  /* A4 페이지 템플릿 스타일 */
+  .a4-page-template {
+    width: 21cm;
+    height: 29.7cm;
+    margin: 0;
+    padding: 0;
+    background: white;
+    box-sizing: border-box;
+    page-break-inside: avoid;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid red; /* A4 페이지 전체 테두리 - 여백 확인용 */
+    left: 0;
+    top: 0;
+  }
+  
+  /* 자동 페이지 분할 설정 - 내용 길이에 따라 동적 분할 */
+  .only-print .a4-page-template {
+    page-break-after: auto;
+    page-break-before: auto;
+    page-break-inside: avoid;
+  }
+  
+  .a4-page-header {
+    width: 100%;
+    height: 1.5cm;
+    flex-shrink: 0;
+    padding: 0.5cm 0.3cm 0 0.3cm;
+    box-sizing: border-box;
+  }
+  
+  .a4-page-content {
+    width: 100%;
+    flex: 1;
+    padding: 0 1cm 1cm 1cm;
+    box-sizing: border-box;
+    overflow: visible;
+    page-break-inside: auto;
+    break-inside: auto;
+    -webkit-column-break-inside: auto;
+    height: auto;
+    min-height: auto;
+  }
+  
+  /* 내용이 넘칠 때 자동 페이지 분할 */
+  .only-print .problem-passage,
+  .only-print .problem-options {
+    page-break-inside: auto;
+  }
+  
+  /* 4지선다 옵션 그룹은 함께 유지 */
+  .only-print .problem-options {
+    page-break-before: auto;
+    page-break-after: auto;
+  }
+  
+  .only-print .shuffled-paragraph {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .only-print .option {
+    page-break-inside: avoid !important;
+    margin-bottom: 0.3rem !important;
+  }
+  
+  /* 다중 페이지 구성을 위한 페이지 브레이크 */
+  .only-print .a4-page-template:not(:last-child) {
+    page-break-after: always;
+    break-after: page;
+  }
+  
+  .only-print .a4-page-template:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  /* Work_11 전용 페이지 분할 스타일 */
+  .only-print .work11-page-template {
+    page-break-after: auto;
+    break-after: auto;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  .only-print .work11-page-template:not(:last-child) {
+    page-break-after: always;
+    break-after: page;
+  }
+  
+  .only-print .work11-page-template:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  /* Work_11 문장 컨테이너 스타일 */
+  .only-print .work11-print-problem-sentence {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* 페이지 설정 - 브라우저 기본 여백 완전 제거 */
+  @page {
+    size: A4;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* 모든 브라우저에서 인쇄 여백 제거 */
+  @page :first {
+    margin: 0;
+    padding: 0;
+  }
+  
+  @page :left {
+    margin: 0;
+    padding: 0;
+  }
+  
+  @page :right {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* A4 템플릿이 새 페이지에 자동 생성되도록 강제 설정 */
+  @page {
+    @top-center {
+      content: "";
+    }
+    @bottom-center {
+      content: "";
+    }
+  }
+  
+  /* 브라우저별 페이지 분할 최적화 */
+  @media print {
+    html, body {
+      height: auto;
+      overflow: visible;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+    
+    .only-print {
+      height: auto;
+      overflow: visible;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      position: relative;
+      left: 0;
+      right: 0;
+      top: 0;
+    }
+    
+    /* 인쇄 시 자동 페이지 생성을 위한 설정 */
+    .a4-page-template {
+      break-inside: auto;
+      -webkit-region-break-inside: auto;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      left: 0;
+      right: 0;
+      top: 0;
+    }
+    
+    .a4-page-content {
+      break-inside: auto;
+      -webkit-region-break-inside: auto;
+    }
+  }
+  
+  /* A4 페이지 렌더러 스타일 */
+  .a4-page-renderer {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* 화면에서는 템플릿 숨기기 */
+  @media screen {
+    .a4-page-template {
+      display: none !important;
+    }
+    .a4-page-renderer {
+      display: none !important;
+    }
+    .a4-multi-page-container {
+      display: none !important;
+    }
+  }
+  
+  /* 더 나은 페이지 분할을 위한 스타일 */
+  .a4-multi-page-container {
+    width: 100%;
+  }
+  
+  /* 인쇄시 헤더 반복 - 각 페이지마다 헤더가 나타나도록 */
+  .a4-page-template .a4-page-header {
+    position: running(page-header);
+  }
+  
+  /* 긴 콘텐츠에 대한 자동 페이지 분할 설정 */
+  @media print {
+    .a4-page-content {
+      page-break-inside: auto;
+    }
+    
+    /* 각 문제 요소별 페이지 분할 규칙 */
+    .problem-instruction {
+      page-break-after: avoid;
+      page-break-inside: avoid;
+    }
+    
+    .problem-passage {
+      page-break-before: auto;
+      page-break-after: auto;
+      page-break-inside: auto;
+    }
+    
+    .shuffled-paragraph {
+      page-break-inside: avoid;
+      margin-bottom: 0.8rem;
+      orphans: 2;
+      widows: 2;
+    }
+    
+    .problem-options {
+      page-break-before: auto;
+      page-break-inside: auto;
+    }
+    
+    .option {
+      page-break-inside: avoid;
+      margin-bottom: 0.5rem;
+    }
+    
+    /* 답안 섹션 */
+    .answer-section {
+      page-break-before: avoid;
+      page-break-inside: avoid;
+    }
+    
+    /* 빈 페이지 방지 */
+    .a4-page-template:empty {
+      display: none;
+    }
+    
+    /* A4 템플릿 페이지 분할 */
+    .only-print .a4-page-template {
+      page-break-inside: avoid;
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+    }
+    
+    /* A4 콘텐츠는 자유롭게 분할 가능 */
+    .only-print .a4-page-content {
+      page-break-inside: auto;
+      break-inside: auto;
+      -webkit-column-break-inside: auto;
+    }
+    
+    /* 4지선다 옵션 그룹은 함께 유지 */
+    .only-print .problem-options {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+  }
+} 

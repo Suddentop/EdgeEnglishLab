@@ -1,0 +1,1139 @@
+/* 포인트관리 스타일 */
+.point-management {
+  width: 100%;
+}
+
+.point-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.point-header h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.point-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+/* 메시지 스타일 */
+.message {
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* 포인트 콘텐츠 */
+.point-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.user-points-section,
+.transactions-section {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.user-points-section h3,
+.transactions-section h3 {
+  margin: 0;
+  padding: 1.5rem 2rem;
+  background: #f7fafc;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* 포인트 테이블 */
+.user-points-table,
+.transactions-table,
+.work-types-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 모바일에서 테이블 스크롤 개선 */
+@media (max-width: 768px) {
+  .user-points-table,
+  .transactions-table,
+  .work-types-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  
+  .user-points-table::-webkit-scrollbar,
+  .transactions-table::-webkit-scrollbar,
+  .work-types-table::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .user-points-table::-webkit-scrollbar-track,
+  .transactions-table::-webkit-scrollbar-track,
+  .work-types-table::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  .user-points-table::-webkit-scrollbar-thumb,
+  .transactions-table::-webkit-scrollbar-thumb,
+  .work-types-table::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  .user-points-table::-webkit-scrollbar-thumb:hover,
+  .transactions-table::-webkit-scrollbar-thumb:hover,
+  .work-types-table::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+  
+  /* 모바일에서 테이블 최소 너비 설정 */
+  .work-types-table .point-table {
+    min-width: 700px;
+  }
+  
+  .user-points-table .point-table,
+  .transactions-table .transaction-table {
+    min-width: 600px;
+  }
+}
+
+.point-table,
+.transaction-table {
+  width: 100%;
+  min-width: 800px; /* 최소 너비 설정 */
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.point-table th,
+.point-table td,
+.transaction-table th,
+.transaction-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.point-table th,
+.transaction-table th {
+  background: #f7fafc;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.point-table tr:hover,
+.transaction-table tr:hover {
+  background: #f8f9fa;
+}
+
+/* 현재포인트와 누적충전 열 스타일 */
+.current-points {
+  background: white !important;
+  color: #2d3748 !important;
+  font-weight: 600;
+  text-align: center !important;
+  border-radius: 6px;
+}
+
+.total-paid {
+  background: white !important;
+  color: #2d3748 !important;
+  font-weight: 600;
+  text-align: center !important;
+  border-radius: 6px;
+}
+
+/* 현재포인트와 누적충전 열의 헤더도 중앙정렬 */
+.point-table th:nth-child(5),
+.point-table th:nth-child(6),
+.point-table th:nth-child(7) {
+  text-align: center !important;
+}
+
+/* 현재포인트와 누적충전 열의 데이터 셀도 강제로 중앙정렬 */
+.point-table tbody tr td:nth-child(5),
+.point-table tbody tr td:nth-child(6) {
+  text-align: center !important;
+}
+
+/* 포인트 수정 버튼 */
+.modify-button {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.modify-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* 거래 내역 테이블 */
+.transaction-type {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.transaction-type.add {
+  background: #d4edda;
+  color: #155724;
+}
+
+.transaction-type.subtract {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.transaction-type.charge {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.amount.add {
+  color: #48bb78;
+  font-weight: 600;
+}
+
+.amount.subtract {
+  color: #f56565;
+  font-weight: 600;
+}
+
+.amount.charge {
+  color: #4299e1;
+  font-weight: 600;
+}
+
+/* 금액 스타일 */
+.amount.add,
+.amount.subtract,
+.amount.charge {
+  color: #4299e1;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* 포인트 열 스타일 */
+.points.add,
+.points.subtract,
+.points.charge {
+  color: #48bb78;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* 모달 스타일 */
+.point-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.point-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  margin: 1rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #718096;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+  background: #f7fafc;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.current-points-display {
+  background: #f7fafc;
+  color: #4a5568;
+  cursor: not-allowed;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding: 0 2rem 2rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .point-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .point-stats {
+    justify-content: center;
+  }
+  
+  .point-table,
+  .transaction-table {
+    font-size: 0.8rem;
+  }
+  
+  .point-table th,
+  .point-table td,
+  .transaction-table th,
+  .transaction-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .modify-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .point-modal-content {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .modal-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    padding: 0 1.5rem 1.5rem;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}
+
+/* 태블릿 반응형 스타일 */
+@media (max-width: 1024px) {
+  .point-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .point-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .point-management-tabs {
+    gap: 0.25rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .tab-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  
+  .point-table,
+  .transaction-table {
+    font-size: 0.85rem;
+  }
+  
+  .point-table th,
+  .point-table td,
+  .transaction-table th,
+  .transaction-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .work-types-table {
+    padding: 0.75rem 1rem;
+  }
+  
+  .work-types-table .point-table th,
+  .work-types-table .point-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .work-type-name {
+    width: 100px;
+    min-width: 100px;
+  }
+  
+  .work-type-description {
+    min-width: 200px;
+  }
+  
+  .current-points {
+    width: 80px;
+    min-width: 80px;
+  }
+  
+  .point-input-group {
+    width: 100px;
+    min-width: 100px;
+  }
+  
+  .point-input {
+    width: 60px;
+    font-size: 0.8rem;
+  }
+}
+
+/* 모바일 반응형 스타일 */
+@media (max-width: 768px) {
+  .point-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .point-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .stat-item {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .point-management-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .tab-btn {
+    width: 100%;
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+  
+  .point-table,
+  .transaction-table {
+    font-size: 0.75rem;
+  }
+  
+  .point-table th,
+  .point-table td,
+  .transaction-table th,
+  .transaction-table td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .work-types-table {
+    padding: 0.5rem;
+  }
+  
+  .work-types-table .point-table th,
+  .work-types-table .point-table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  .work-type-name {
+    width: 80px;
+    min-width: 80px;
+    font-size: 0.8rem;
+  }
+  
+  .work-type-description {
+    min-width: 150px;
+    font-size: 0.8rem;
+  }
+  
+  .current-points {
+    width: 60px;
+    min-width: 60px;
+    font-size: 0.8rem;
+  }
+  
+  .point-input-group {
+    width: 80px;
+    min-width: 80px;
+  }
+  
+  .point-input {
+    width: 50px;
+    font-size: 0.75rem;
+    padding: 0.25rem;
+  }
+  
+  .point-unit {
+    font-size: 0.8rem;
+  }
+  
+  .section-description {
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .work-types-section h3 {
+    font-size: 1.1rem;
+    padding: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .point-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .point-table,
+  .transaction-table {
+    font-size: 0.7rem;
+  }
+  
+  .point-table th,
+  .point-table td,
+  .transaction-table th,
+  .transaction-table td {
+    padding: 0.4rem 0.2rem;
+  }
+  
+  .work-types-table .point-table th,
+  .work-types-table .point-table td {
+    padding: 0.4rem 0.2rem;
+    font-size: 0.7rem;
+  }
+  
+  .work-type-name {
+    width: 70px;
+    min-width: 70px;
+    font-size: 0.75rem;
+  }
+  
+  .work-type-description {
+    min-width: 120px;
+    font-size: 0.75rem;
+  }
+  
+  .current-points {
+    width: 50px;
+    min-width: 50px;
+    font-size: 0.75rem;
+  }
+  
+  .point-input-group {
+    width: 70px;
+    min-width: 70px;
+  }
+  
+  .point-input {
+    width: 40px;
+    font-size: 0.7rem;
+    padding: 0.2rem;
+  }
+  
+  .point-unit {
+    font-size: 0.75rem;
+  }
+  
+  .transaction-type {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    min-width: 45px;
+  }
+  
+  .stat-item {
+    gap: 0.2rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.1rem;
+  }
+  
+  .section-description {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .work-types-section h3 {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* 모바일에서 테이블 스크롤 개선 */
+  .work-types-table {
+    padding: 0.25rem;
+  }
+  
+  .work-types-table .point-table {
+    min-width: 600px;
+  }
+  
+  /* 모바일에서 탭 버튼 최적화 */
+  .point-management-tabs {
+    gap: 0.25rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .tab-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* 탭 스타일 */
+.point-management-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.tab-btn:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.tab-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* 유형별 포인트 설정 */
+.work-types-section {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.work-types-section h3 {
+  margin: 0;
+  padding: 1.5rem 2rem;
+  background: #f7fafc;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.section-description {
+  color: #718096;
+  margin: 0;
+  padding: 1rem 2rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.work-types-table {
+  overflow-x: auto;
+  padding: 0;
+  width: 100%;
+}
+
+/* 유형별 포인트 설정 테이블이 다른 탭들과 동일한 너비를 사용하도록 */
+.work-types-table .point-table {
+  width: 100%;
+  min-width: 800px;
+  table-layout: auto;
+}
+
+.point-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 120px;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.point-input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.point-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* 모바일에서 포인트 입력 필드 최적화 */
+@media (max-width: 768px) {
+  .point-input {
+    font-size: 16px; /* iOS에서 줌 방지 */
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .point-input-group {
+    gap: 0.25rem;
+  }
+  
+  .point-unit {
+    font-size: 0.85rem;
+  }
+}
+
+.point-unit {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.work-type-name {
+  font-weight: 600;
+  color: #1e293b;
+  width: 120px;
+  min-width: 120px;
+}
+
+.work-type-description {
+  color: #64748b;
+  font-size: 0.9rem;
+  width: auto;
+  min-width: 300px;
+}
+
+.current-points {
+  width: 100px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.point-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 120px;
+  min-width: 120px;
+  justify-content: center;
+}
+
+/* 유형별 포인트 설정 테이블 헤더 스타일 */
+.work-types-table .point-table th {
+  background: #f7fafc;
+  font-weight: 600;
+  color: #2d3748;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.work-types-table .point-table th:nth-child(3) {
+  text-align: center;
+}
+
+.work-types-table .point-table th:nth-child(4) {
+  text-align: center;
+}
+
+/* 유형별 포인트 설정 테이블 데이터 셀 스타일 */
+.work-types-table .point-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.work-types-table .point-table tr:hover {
+  background: #f8f9fa;
+}
+
+/* 유형별 포인트 설정 테이블이 다른 탭들과 동일한 스타일을 사용하도록 */
+.work-types-section {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  width: 100%;
+}
+
+/* 테이블이 적절한 여백을 가지도록 조정 */
+.work-types-table {
+  overflow-x: auto;
+  padding: 1rem 2rem;
+  width: 100%;
+}
+
+.work-types-table .point-table {
+  width: 100%;
+  min-width: 800px;
+  table-layout: auto;
+}
+
+/* 검색 섹션 */
+.search-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.search-inputs {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-type-select {
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9rem;
+  min-width: 120px;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.search-button {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.search-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.reset-button {
+  padding: 0.5rem 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.reset-button:hover {
+  background: #545b62;
+}
+
+/* 페이지네이션 */
+.pagination-section {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding: 1rem;
+}
+
+.pagination-info {
+  margin-bottom: 1rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.prev-page-button,
+.next-page-button {
+  padding: 0.5rem 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  min-width: 60px;
+}
+
+.prev-page-button:hover:not(:disabled),
+.next-page-button:hover:not(:disabled) {
+  background: #545b62;
+  transform: translateY(-1px);
+}
+
+.prev-page-button:disabled,
+.next-page-button:disabled {
+  background: #dee2e6;
+  color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.page-number-button {
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  min-width: 40px;
+}
+
+.page-number-button:hover:not(.active) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+.page-number-button.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  font-weight: 500;
+}
+
+.page-number-button.active:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
+/* 데이터 없음 */
+.no-data {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+}
+
+.no-data p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* 유형별 포인트 설정 테이블 */
+.work-type-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.work-type-table th,
+.work-type-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 0.9rem;
+}
+
+.work-type-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  padding: 0.6rem 0.75rem;
+}
+
+.work-type-table tr:hover {
+  background: #f8f9fa;
+}
+
+.work-type-table tr:last-child td {
+  border-bottom: none;
+}
