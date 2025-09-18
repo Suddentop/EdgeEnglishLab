@@ -4031,7 +4031,7 @@ ${inputText}`;
                       <div key={sentenceIndex} style={{
                         marginBottom: '1rem',
                         padding: '0.8rem',
-                        backgroundColor: '#fff',
+                        backgroundColor: '#F1F8E9',
                         borderRadius: '6px',
                         border: '1px solid #c8e6c9'
                       }}>

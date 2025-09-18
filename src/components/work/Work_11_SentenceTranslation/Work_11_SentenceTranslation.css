@@ -709,11 +709,27 @@
     print-color-adjust: exact !important;
   }
   
-  /* 유형#11 인쇄(정답) 페이지 문장 컨테이너 - 연한 회색 (기존 유지) */
+  /* 유형#11 인쇄(정답) 페이지 문장 컨테이너 - 연한 녹색으로 변경 */
   .work11-print-answer-sentence {
-    background: #f9f9f9 !important;
+    background: #F1F8E9 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+  
+  /* 유형#11 인쇄(정답) 페이지 문장과 해석 간격 강제 설정 */
+  .work11-print-answer-sentence > div:first-child {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .work11-print-answer-sentence > div:last-child {
+    margin-top: 0.3rem !important;
+  }
+  
+  /* 유형#11 인쇄(정답) 컨테이너가 절대 잘리지 않도록 설정 */
+  .work11-print-answer-sentence {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
   }
   
   /* 유형#11 인쇄(정답) 페이지 해석 컨테이너 - 연한 녹색 (기존 유지) */

@@ -2431,10 +2431,10 @@ const PrintFormatPackage01Work11: React.FC<{
                   <div key={index} style={{
                     marginBottom: '1rem',
                     padding: '0.5rem 1rem',
-                    backgroundColor: '#FFF3CD',
-                borderRadius: '8px',
+                    backgroundColor: '#F1F8E9',
+                    borderRadius: '8px',
                     border: '1px solid #e3f2fd'
-              }}>
+                  }}>
                     <div style={{fontWeight: 'normal', marginBottom: '0.5rem', color: '#000'}}>
                       {index + 1}. {work11Data.sentences[index]}
               </div>

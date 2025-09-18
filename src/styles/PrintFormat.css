@@ -354,6 +354,15 @@
     margin-bottom: 1.5rem;
   }
   
+  /* Work_11 인쇄(정답) 페이지 문장과 해석 간격 강제 오버라이드 */
+  .only-print .work11-print-answer-sentence > div:first-child {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .only-print .work11-print-answer-sentence > div:nth-child(2) {
+    margin-top: 0.3rem !important;
+  }
+  
   /* 페이지 설정 - 브라우저 기본 여백 완전 제거 */
   @page {
     size: A4;

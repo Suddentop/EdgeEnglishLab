@@ -459,7 +459,10 @@ const Work_13_BlankFillWord: React.FC = () => {
                 justifyContent: 'center',
                 border: 'none',
                 borderRadius: '8px',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                color: 'white',
+                boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
               }}>
                 <span className="print-icon" aria-hidden>🖨️</span>
                 <span>인쇄 (<span style={{color: '#FFD600'}}>정답</span>)</span>
