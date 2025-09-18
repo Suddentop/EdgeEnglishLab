@@ -234,7 +234,7 @@
   transition: all var(--transition-normal);
   padding: 0.25rem 0;
   border: 1px solid var(--secondary-200);
-  max-height: 60vh;
+  max-height: calc(100vh - 150px);
   overflow-y: auto;
   overflow-x: hidden;
 }
