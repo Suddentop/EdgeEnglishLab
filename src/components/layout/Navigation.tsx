@@ -6,21 +6,21 @@ import './Navigation.css';
 import { isAdmin } from '../../utils/adminUtils';
 
 const WORK_MENUS = [
+  { label: '📦 패키지 퀴즈 (01~14 통합)', path: '/package-quiz' },
   { label: '01. 문단 순서 맞추기', path: '/work_01_article-order' },
-  { label: '02. 독해 문제', path: '/work_02_reading-comprehension' },
-  { label: '03. 빈칸(단어) 문제', path: '/work_03_vocabulary-word' },
-  { label: '04. 빈칸(구) 문제', path: '/work_04_blank-phrase-inference' },
-  { label: '05. 빈칸(문장) 문제', path: '/work_05_blank-sentence-inference' },
+  { label: '02. 유사단어 독해', path: '/work_02_reading-comprehension' },
+  { label: '03. 빈칸(단어) 찾기', path: '/work_03_vocabulary-word' },
+  { label: '04. 빈칸(구) 찾기', path: '/work_04_blank-phrase-inference' },
+  { label: '05. 빈칸(문장) 찾기', path: '/work_05_blank-sentence-inference' },
   { label: '06. 문장 위치 찾기', path: '/work_06_sentence-position' },
   { label: '07. 주제 추론', path: '/work_07_main-idea-inference' },
   { label: '08. 제목 추론', path: '/work_08_title-inference' },
-  { label: '09. 어법 오류 문제', path: '/work_09_grammar-error' },
-  { label: '10. 다중 어법 오류 문제', path: '/work_10_multi-grammar-error' },
+  { label: '09. 어법 오류 찾기', path: '/work_09_grammar-error' },
+  { label: '10. 다중 어법 오류 찾기', path: '/work_10_multi-grammar-error' },
   { label: '11. 본문 문장별 해석', path: '/work_11_sentence-translation' },
-  { label: '12. 단어 학습 문제', path: '/work_12_word-study' },
-  { label: '13. 빈칸 채우기 문제(단어-주관식)', path: '/work_13_blank-fill-word' },
-  { label: '14. 빈칸 채우기 문제(문장-주관식)', path: '/work_14_blank-fill-sentence' },
-  { label: '📦 패키지 퀴즈 (01~14 통합)', path: '/package-quiz' }
+  { label: '12. 단어 학습', path: '/work_12_word-study' },
+  { label: '13. 빈칸 채우기 (단어-주관식)', path: '/work_13_blank-fill-word' },
+  { label: '14. 빈칸 채우기 (문장-주관식)', path: '/work_14_blank-fill-sentence' }
 ];
 
 const Navigation: React.FC = () => {

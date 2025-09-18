@@ -186,7 +186,7 @@
   color: white;
   font-weight: 700;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   padding: var(--spacing-sm) var(--spacing-lg);
   cursor: pointer;
   font-size: 1rem;
@@ -221,10 +221,10 @@
   position: absolute;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
-  min-width: max-content;
-  width: max-content;
+  min-width: 320px;
+  width: 320px;
   box-shadow: var(--shadow-xl);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   margin-top: 0;
   top: 100%;
   z-index: 1000;
@@ -234,6 +234,9 @@
   transition: all var(--transition-normal);
   padding: 0.25rem 0;
   border: 1px solid var(--secondary-200);
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .dropdown:not(:hover) .dropdown-content {
   opacity: 0;
@@ -459,7 +462,7 @@
   font-weight: 700;
   box-shadow: var(--shadow-md);
   padding: 0.6rem 1.2rem;
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   cursor: pointer;
   transition: all var(--transition-fast);
   font-size: 1rem;
@@ -695,4 +698,30 @@ body, #root, .App {
 /* 문제생성 하위 메뉴들 들여쓰기 */
 .mobile-sub-item {
   padding-left: 1.5rem;
+}
+
+/* 드롭다운 메뉴 커스텀 스크롤바 스타일 */
+.dropdown-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 0;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-600) 100%);
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+}
+
+.dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-700) 100%);
+}
+
+/* Firefox용 스크롤바 스타일 */
+.dropdown-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-500) rgba(0, 0, 0, 0.05);
 } 
