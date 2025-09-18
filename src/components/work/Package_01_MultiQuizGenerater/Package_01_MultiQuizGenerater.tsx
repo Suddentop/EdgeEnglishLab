@@ -3961,37 +3961,51 @@ ${inputText}`;
                     margin: '1.2rem 0'
                   }}>
                     {quizItem.work11Data?.sentences.map((sentence, sentenceIndex) => (
-                      <div key={sentenceIndex} style={{
-                        marginBottom: '1.5rem',
-                        padding: '1rem',
-                        backgroundColor: '#FFF3CD',
+                      <div key={sentenceIndex} className="sentence-item" style={{
+                        background: '#FFF3CD',
                         borderRadius: '8px',
-                        border: '1px solid #dee2e6'
+                        padding: '0.3rem 1.2rem',
+                        border: '1.5px solid #e3e6f0',
+                        marginBottom: '1rem',
+                        fontFamily: 'inherit',
+                        transition: 'border-color 0.2s',
+                        boxShadow: '0 1px 4px rgba(44,62,80,0.04)'
                       }}>
-                        <div style={{
-                          fontSize: '1rem',
-                          fontWeight: '600',
-                          color: '#1976d2',
+                        <div className="sentence-header" style={{
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: '0.5rem',
                           marginBottom: '0.5rem'
                         }}>
-                          {sentenceIndex + 1}. 영어 문장
+                          <span className="sentence-number" style={{
+                            fontWeight: '700',
+                            color: '#6a5acd',
+                            fontSize: '1.08rem',
+                            flexShrink: 0,
+                            verticalAlign: 'baseline',
+                            lineHeight: 1
+                          }}>{sentenceIndex + 1}.</span>
+                          <span className="sentence-content" style={{
+                            fontSize: '1.05rem',
+                            lineHeight: '1.2',
+                            color: '#232946',
+                            fontFamily: 'Noto Sans KR, Segoe UI, Apple SD Gothic Neo, Arial, sans-serif',
+                            flex: 1,
+                            verticalAlign: 'baseline'
+                          }}>{sentence}</span>
                         </div>
-                        <div style={{
-                          fontSize: '1.08rem',
-                          lineHeight: 1.6,
-                          marginBottom: '0.8rem',
-                          color: '#333',
-                          fontFamily: 'inherit'
+                        <div className="translation-container" style={{
+                          marginBottom: '0.3rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
                         }}>
-                          {sentence}
-                        </div>
-                        <div style={{
-                          fontSize: '1rem',
-                          fontWeight: '600',
-                          color: '#1976d2',
-                          marginBottom: '0.5rem'
-                        }}>
-                          해석: _________________________________________________
+                          <span className="translation-label" style={{
+                            fontWeight: '600',
+                            color: '#4a5568',
+                            fontFamily: 'Noto Sans KR, Segoe UI, Apple SD Gothic Neo, Arial, sans-serif',
+                            whiteSpace: 'nowrap'
+                          }}>해석:</span>
                         </div>
                       </div>
                     ))}
