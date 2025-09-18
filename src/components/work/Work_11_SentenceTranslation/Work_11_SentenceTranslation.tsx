@@ -718,8 +718,10 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
         {printMode === 'no-answer' && (
           <div className="only-print">
             {(() => {
-              // 패키지#01과 동일한 동적 페이지 분할 로직 적용
-              const calculateOptimalPageSplit = (items: any[], pageHeight: number = 1100, includeAnswer: boolean = false) => {
+              if (!quizData?.sentences) return null;
+              
+              // 개선된 동적 페이지 분할 로직 적용 (인쇄(정답)과 완전 동일한 설정)
+              const calculateOptimalPageSplit = (items: any[], pageHeight: number = 1200, includeAnswer: boolean = false) => {
                 const pages: number[][] = [];
                 let currentPage: number[] = [];
                 let currentHeight = 0;
@@ -728,33 +730,44 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
                   const sentence = quizData?.sentences[index];
                   const translation = quizData?.translations ? quizData?.translations[index] : '';
                   
-                  // 패키지#01과 동일한 높이 계산 방식
-                  const containerPadding = 16; // padding: 0.5rem 1rem = 8px 상하
+                  // 개선된 높이 계산 방식 (인쇄(정답)과 동일)
+                  const containerPadding = 10; // 실제 padding 더 작음
                   const sentenceMargin = 8; // marginBottom: 0.5rem
-                  const translationMargin = 8; // marginTop: 0.5rem
+                  const translationMargin = 6; // marginTop: 0.5rem (더 작게)
                   
-                  // 문장 길이에 따른 줄 수 계산 (패키지#01과 동일)
-                  const sentenceLines = Math.ceil(sentence.length / 65);
-                  const translationLines = includeAnswer ? Math.ceil(translation.length / 65) : 0;
+                  // 문장 길이에 따른 줄 수 계산 (더 현실적으로 조정)
+                  const sentenceLines = Math.ceil(sentence.length / 90); // 90자/줄로 증가 (더 현실적)
+                  const translationLines = includeAnswer ? Math.ceil(translation.length / 55) : 0; // 한글 55자/줄
                   
-                  const sentenceHeight = sentenceLines * 19;
-                  const translationHeight = includeAnswer ? translationLines * 19 : 0;
-                  const marginHeight = 16; // marginBottom: 1rem
+                  const sentenceHeight = sentenceLines * 20; // 20px/줄
+                  const translationHeight = includeAnswer ? translationLines * 20 : 0;
+                  const marginHeight = 12; // marginBottom: 실제 더 작음
                   
                   // no-answer 모드에서는 구분선 높이도 추가
                   const separatorHeight = includeAnswer ? 0 : 32;
                   
                   // with-answer 모드에서는 해석 부분의 추가 여백 고려
-                  const answerExtraMargin = includeAnswer ? 8 : 0;
+                  const answerExtraMargin = includeAnswer ? 4 : 0; // 더 작게 조정
                   
-                  return containerPadding + sentenceMargin + sentenceHeight + translationMargin + translationHeight + separatorHeight + marginHeight + answerExtraMargin;
+                  const calculatedHeight = containerPadding + sentenceMargin + sentenceHeight + translationMargin + translationHeight + separatorHeight + marginHeight + answerExtraMargin;
+                  
+                  // 디버깅용 로그 (인쇄(정답)과 동일)
+                  console.log(`📏 문장 ${index + 1} 높이 계산 (문제모드):`, {
+                    sentence: sentence.substring(0, 30) + '...',
+                    sentenceLength: sentence.length,
+                    sentenceLines,
+                    translationLines: 0, // 문제 모드에서는 해석 없음
+                    calculatedHeight
+                  });
+                  
+                  return calculatedHeight;
                 };
 
                 for (let i = 0; i < items.length; i++) {
                   const itemHeight = getBoxHeight(i);
                   
-                  // 패키지#01과 동일한 페이지 임계값
-                  const pageThreshold = includeAnswer ? 0.85 : 0.9;
+                  // 개선된 페이지 임계값 (인쇄(정답)과 동일)
+                  const pageThreshold = includeAnswer ? 0.92 : 0.92; // 문제 모드도 92% 활용
                   if (currentHeight + itemHeight <= pageHeight * pageThreshold) {
                     currentPage.push(i);
                     currentHeight += itemHeight;
@@ -780,7 +793,7 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
                     const lastPageHeight = lastPage.reduce((sum, idx) => sum + getBoxHeight(idx), 0);
                     const secondLastPageHeight = secondLastPage.reduce((sum, idx) => sum + getBoxHeight(idx), 0);
                     
-                    const mergeThreshold = includeAnswer ? 0.9 : 0.85;
+                    const mergeThreshold = includeAnswer ? 0.88 : 0.88; // 문제 모드도 88% 병합 (정답과 동일)
                     if (secondLastPageHeight + lastPageHeight <= pageHeight * mergeThreshold) {
                       pages[pages.length - 2] = [...secondLastPage, ...lastPage];
                       pages.pop();
@@ -797,7 +810,7 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
                     const nextItemHeight = getBoxHeight(nextPage[0]);
                     const currentPageHeight = currentPage.reduce((sum, idx) => sum + getBoxHeight(idx), 0);
                     
-                    const moveThreshold = includeAnswer ? 0.9 : 0.85;
+                    const moveThreshold = includeAnswer ? 0.88 : 0.88; // 문제 모드도 88% 이동 임계값 (정답과 동일)
                     if (currentPageHeight + nextItemHeight <= pageHeight * moveThreshold) {
                       currentPage.push(nextPage[0]);
                       nextPage.shift();
@@ -818,7 +831,16 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
                 return pages;
               };
 
-              const pages = calculateOptimalPageSplit(quizData?.sentences, 1100, false);
+              // 개선된 설정으로 동적 페이지 분할 실행 (인쇄(정답)과 동일)
+              const pages = calculateOptimalPageSplit(quizData?.sentences, 1200, false);
+              
+              console.log('🔍 유형#11 동적 분할 (문제 모드):', {
+                totalSentences: quizData.sentences.length,
+                totalPages: pages.length,
+                includeAnswer: false,
+                pageHeight: 1200,
+                distribution: pages.map((page, idx) => `페이지${idx + 1}: ${page.length}개 문장`)
+              });
               
               // 동적 페이지 분할 결과에 따라 렌더링
               return pages.map((pageItems, pageIndex) => (
@@ -1006,42 +1028,105 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
         {printMode === 'with-answer' && (
           <div className="only-print print-answer-mode">
             {(() => {
-              // 안전한 고정 페이지 분할로 복구 (빈 페이지 방지)
-              const maxSentencesPerPage = 6; // 1페이지당 최대 6개 문장 (안전한 분할)
-              const totalSentences = quizData?.sentences?.length || 0;
-              const totalPages = Math.ceil(totalSentences / maxSentencesPerPage);
+              if (!quizData?.sentences) return null;
               
-              console.log('🔍 안전한 고정 분할:', {
-                totalSentences,
-                maxSentencesPerPage,
-                totalPages
-              });
-              
-              const pages = [];
-              for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                const startIndex = pageIndex * maxSentencesPerPage;
-                const endIndex = Math.min(startIndex + maxSentencesPerPage, totalSentences);
-                const pageItems = [];
-                
-                for (let i = startIndex; i < endIndex; i++) {
-                  pageItems.push(i);
+              // 수정된 동적 페이지 분할 로직 (정답 포함, 스크린샷 기반 조정)
+              const calculateOptimalPageSplit = (items: any[], pageHeight: number = 900, includeAnswer: boolean = false) => {
+                const pages: number[][] = [];
+                let currentPage: number[] = [];
+                let currentHeight = 0;
+
+                const getBoxHeight = (index: number) => {
+                  const sentence = quizData?.sentences[index];
+                  const translation = quizData?.translations ? quizData?.translations[index] : '';
+                  
+                  // 스크린샷 기반으로 더 정확하게 조정된 높이 계산
+                  const containerPadding = 10; // 실제 padding 더 작음
+                  const sentenceMargin = 8; // marginBottom: 0.5rem
+                  const translationMargin = 6; // marginTop: 0.5rem (더 작게)
+                  
+                  // 문장 길이에 따른 줄 수 계산 (더 현실적으로 조정)
+                  const sentenceLines = Math.ceil(sentence.length / 90); // 90자/줄로 증가 (더 현실적)
+                  const translationLines = includeAnswer ? Math.ceil(translation.length / 55) : 0; // 한글 55자/줄
+                  
+                  const sentenceHeight = sentenceLines * 20; // 20px/줄
+                  const translationHeight = includeAnswer ? translationLines * 20 : 0;
+                  const marginHeight = 12; // marginBottom: 실제 더 작음
+                  
+                  // no-answer 모드에서는 구분선 높이도 추가
+                  const separatorHeight = includeAnswer ? 0 : 32;
+                  
+                  // with-answer 모드에서는 해석 부분의 추가 여백 고려
+                  const answerExtraMargin = includeAnswer ? 4 : 0; // 더 작게 조정
+                  
+                  const calculatedHeight = containerPadding + sentenceMargin + sentenceHeight + translationMargin + translationHeight + separatorHeight + marginHeight + answerExtraMargin;
+                  
+                  // 디버깅용 로그
+                  console.log(`📏 문장 ${index + 1} 높이 계산:`, {
+                    sentence: sentence.substring(0, 30) + '...',
+                    sentenceLength: sentence.length,
+                    sentenceLines,
+                    translationLines,
+                    calculatedHeight
+                  });
+                  
+                  return calculatedHeight;
+                };
+
+                for (let i = 0; i < items.length; i++) {
+                  const itemHeight = getBoxHeight(i);
+                  
+                  // 페이지 임계값을 더 관대하게 조정
+                  const pageThreshold = includeAnswer ? 0.92 : 0.95; // 92% 활용 (더 관대하게)
+                  if (currentHeight + itemHeight <= pageHeight * pageThreshold) {
+                    currentPage.push(i);
+                    currentHeight += itemHeight;
+                  } else {
+                    if (currentPage.length > 0) {
+                      pages.push([...currentPage]);
+                    }
+                    currentPage = [i];
+                    currentHeight = itemHeight;
+                  }
                 }
-                
-                if (pageItems.length > 0) {
-                  pages.push(pageItems);
+
+                if (currentPage.length > 0) {
+                  pages.push(currentPage);
                 }
-              }
+
+                // 패키지#01과 동일한 페이지 최적화 로직
+                if (pages.length > 1) {
+                  const lastPage = pages[pages.length - 1];
+                  const secondLastPage = pages[pages.length - 2];
+                  
+                  if (lastPage.length <= 2) {
+                    const lastPageHeight = lastPage.reduce((sum, idx) => sum + getBoxHeight(idx), 0);
+                    const secondLastPageHeight = secondLastPage.reduce((sum, idx) => sum + getBoxHeight(idx), 0);
+                    
+                    const mergeThreshold = includeAnswer ? 0.88 : 0.9; // 더 관대한 병합 임계값
+                    if (secondLastPageHeight + lastPageHeight <= pageHeight * mergeThreshold) {
+                      pages[pages.length - 2] = [...secondLastPage, ...lastPage];
+                      pages.pop();
+                    }
+                  }
+                }
+
+                return pages;
+              };
               
-              console.log('🔍 고정 분할 결과:', {
+              // 동적 페이지 분할 실행 (정답 모드: 해석 포함)
+              // 페이지 높이를 더 크게 조정 (스크린샷에서 보이는 여백 고려)
+              const pages = calculateOptimalPageSplit(quizData.sentences, 1200, true);
+              
+              console.log('🔍 유형#11 동적 분할 (정답 모드):', {
+                totalSentences: quizData.sentences.length,
                 totalPages: pages.length,
-                pages: pages.map((page, idx) => ({ 
-                  page: idx + 1, 
-                  sentences: page.length,
-                  items: page
-                }))
+                includeAnswer: true,
+                pageHeight: 1200,
+                distribution: pages.map((page, idx) => `페이지${idx + 1}: ${page.length}개 문장`)
               });
               
-              // 고정 페이지 분할 결과에 따라 렌더링
+              // 동적 페이지 분할 결과에 따라 렌더링
               return pages.map((pageItems, pageIndex) => (
                 <div key={pageIndex} className="a4-page-template">
                   <div className="a4-page-header">
