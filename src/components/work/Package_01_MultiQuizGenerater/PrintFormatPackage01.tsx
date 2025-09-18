@@ -2232,8 +2232,8 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                   </div>
                 ))}
                 <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700, fontSize:'0.9rem'}}>
-                  정답: {`①②③④⑤`[work10Data.answerIndex] || `${work10Data.answerIndex + 1}`} {work10Data.options[work10Data.answerIndex]} (틀린 단어: {work10Data.wrongIndexes.map(index => 
-                    `${'①②③④⑤⑥⑦⑧'[index]}${work10Data.originalWords[index]} → ${work10Data.transformedWords[index]}`
+                  정답: {`①②③④⑤`[work10Data.answerIndex] || `${work10Data.answerIndex + 1}`} {work10Data.options[work10Data.answerIndex]} (어법상 틀린 단어: {work10Data.wrongIndexes.map(index => 
+                    `${'①②③④⑤⑥⑦⑧'[index]}${work10Data.transformedWords[index]} → ${work10Data.originalWords[index]}`
                   ).join(', ')})
                 </div>
               </div>

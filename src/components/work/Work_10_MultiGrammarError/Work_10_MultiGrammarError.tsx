@@ -543,7 +543,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
               <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
                 정답: {quiz.options[quiz.answerIndex]}개
                 <div style={{marginTop:'0.7rem', color:'#1976d2', fontWeight:400, fontSize:'1rem'}}>
-                  어법상 틀린 단어 : {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]} (원래 단어: ${quiz.originalWords[idx]})`).join(', ')}
+                  어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
                 </div>
                 <div className="translation-section" style={{marginTop:'1.2rem'}}>
                   <h3 style={{fontSize:'1.05rem', color:'#1976d2', marginBottom:'0.5rem'}}>본문 해석</h3>
@@ -670,7 +670,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                         ))}
                       </div>
                       <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:400, fontSize:'1rem !important'}}>
-                        어법상 틀린 단어 : {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]} (원래 단어: ${quiz.originalWords[idx]})`).join(', ')}
+                        어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
                       </div>
                     </div>
                   </div>
@@ -721,7 +721,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                         ))}
                       </div>
                       <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:400, fontSize:'1rem !important'}}>
-                        어법상 틀린 단어 : {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]} (원래 단어: ${quiz.originalWords[idx]})`).join(', ')}
+                        어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
                       </div>
                     </div>
                   </div>

@@ -3883,8 +3883,8 @@ ${inputText}`;
                       color: '#666',
                       lineHeight: 1.5
                     }}>
-                      틀린 단어: {quizItem.work10Data?.wrongIndexes.map(index => 
-                        `${'①②③④⑤⑥⑦⑧'[index]}${quizItem.work10Data?.originalWords[index]} → ${quizItem.work10Data?.transformedWords[index]}`
+                      어법상 틀린 단어: {quizItem.work10Data?.wrongIndexes.map(index => 
+                        `${'①②③④⑤⑥⑦⑧'[index]}${quizItem.work10Data?.transformedWords[index]} → ${quizItem.work10Data?.originalWords[index]}`
                       ).join(', ')}
                     </div>
                   </div>
