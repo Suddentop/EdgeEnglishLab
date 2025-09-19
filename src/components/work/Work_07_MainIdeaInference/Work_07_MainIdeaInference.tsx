@@ -814,9 +814,6 @@ ${passage}
                             </div>
                             <div style={{fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500}}>
                               {quiz.optionTranslations && quiz.optionTranslations[i] ? quiz.optionTranslations[i] : '해석 없음'}
-                              {quiz.answerIndex === i && (
-                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                              )}
                             </div>
                           </div>
                         ))}
@@ -870,9 +867,6 @@ ${passage}
                             </div>
                             <div style={{fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500}}>
                               {quiz.optionTranslations && quiz.optionTranslations[i] ? quiz.optionTranslations[i] : '해석 없음'}
-                              {quiz.answerIndex === i && (
-                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                              )}
                             </div>
                           </div>
                         ))}

@@ -373,7 +373,6 @@
 
 .text-input {
   width: 100%;
-  min-height: 80px;
   font-size: 1.1rem;
   padding: 0.7rem;
   border-radius: 8px;
@@ -381,6 +380,7 @@
   margin-bottom: 0.5rem;
   font-family: inherit;
   resize: none;
+  box-sizing: border-box;
 }
 
 .text-info {
@@ -738,6 +738,111 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  
+  /* 유형#11 인쇄(문제) 페이지 구분선 및 여백 제거 */
+  .work11-print-problem-sentence > div:last-child {
+    border-bottom: none !important;
+    height: 1rem !important;
+    margin-top: 0.3rem !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* 컨테이너 테두리 기본 스타일 */
+  .work11-print-problem-sentence,
+  .work11-print-answer-sentence {
+    border-width: 1px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 컨테이너 하단 패딩 제거 */
+  .work11-print-problem-sentence,
+  .work11-print-answer-sentence {
+    padding-bottom: 0 !important;
+  }
+}
+
+/* 유형#11 새로운 동적 페이지네이션 스타일 */
+.work11-dynamic-print-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.work11-dynamic-page-template {
+  width: 21cm;
+  height: 29.7cm;
+  margin: 0;
+  padding: 0;
+  background: white;
+  box-sizing: border-box;
+  page-break-inside: avoid;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 화면에서는 동적 페이지 템플릿 숨기기 */
+@media screen {
+  .work11-dynamic-page-template {
+    display: none !important;
+  }
+  .work11-dynamic-print-container {
+    display: none !important;
+  }
+}
+
+/* 인쇄시에만 동적 페이지 템플릿 표시 */
+@media print {
+  .work11-dynamic-page-template {
+    display: flex !important;
+  }
+  .work11-dynamic-print-container {
+    display: block !important;
+  }
+  
+  /* 동적 페이지네이션 페이지 분할 */
+  .work11-dynamic-page-template:not(:last-child) {
+    page-break-after: always;
+    break-after: page;
+  }
+  
+  .work11-dynamic-page-template:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  /* 동적 페이지네이션 컨테이너 스타일 */
+  .work11-dynamic-page-template .work11-print-problem-sentence,
+  .work11-dynamic-page-template .work11-print-answer-sentence {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* 동적 페이지네이션 문제 모드 구분선 및 여백 제거 */
+  .work11-dynamic-page-template .work11-print-problem-sentence > div:last-child {
+    border-bottom: none !important;
+    height: 1rem !important;
+    margin-top: 0.3rem !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* 동적 페이지네이션 컨테이너 테두리 기본 스타일 */
+  .work11-dynamic-page-template .work11-print-problem-sentence,
+  .work11-dynamic-page-template .work11-print-answer-sentence {
+    border-width: 1px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 동적 페이지네이션 컨테이너 하단 패딩 제거 */
+  .work11-dynamic-page-template .work11-print-problem-sentence,
+  .work11-dynamic-page-template .work11-print-answer-sentence {
+    padding-bottom: 0 !important;
+  }
 }
 
 /* 인쇄 관련 */
@@ -955,4 +1060,22 @@
     max-width: 100px;
     max-height: 70px;
   }
+}
+
+/* 문제 모드 컨테이너: 영어 문장 아래 한 줄 정도의 공간만 남기기 */
+.work11-print-problem-sentence {
+  /* 컨테이너 높이를 자동으로 조정하되, 해석 공간은 최소화 */
+}
+
+.work11-dynamic-page-template .work11-print-problem-sentence {
+  /* 컨테이너 높이를 자동으로 조정하되, 해석 공간은 최소화 */
+}
+
+/* 정답 모드: 한글 해석 문장 하단에 여백 추가 */
+.work11-print-answer-sentence > div:last-child {
+  padding-bottom: 0.5rem !important;
+}
+
+.work11-dynamic-page-template .work11-print-answer-sentence > div:last-child {
+  padding-bottom: 0.5rem !important;
 } 

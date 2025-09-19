@@ -28,6 +28,75 @@ type InputMode = typeof INPUT_MODES[number]['key'];
 
 type PrintMode = 'none' | 'no-answer' | 'with-answer';
 
+// A4 페이지 높이 계산 상수
+const A4_CONFIG = {
+  PAGE_HEIGHT: 29.7, // cm
+  HEADER_HEIGHT: 0.8, // cm (실제 헤더 높이 - 더 작게 조정)
+  CONTENT_MARGIN: 1.2, // cm (상단 0.2cm + 하단 1cm)
+  INSTRUCTION_HEIGHT: 0.6, // cm (문제 설명 컨테이너 - 더 작게 조정)
+  INSTRUCTION_MARGIN: 0.3, // cm (문제 설명 하단 마진 - 더 작게 조정)
+  TRANSLATION_HEADER_HEIGHT: 0.5, // cm (본문 해석 헤더 - 더 작게 조정)
+  TRANSLATION_HEADER_MARGIN: 0.3, // cm (본문 해석 헤더 하단 마진 - 더 작게 조정)
+};
+
+// 텍스트 높이 계산 함수
+function calculateTextHeight(text: string, fontSize: number = 16, lineHeight: number = 1.5, maxWidth: number = 19): number {
+  const charWidth = 0.52; // cm (한글 기준, 더 정확한 계산)
+  const charsPerLine = Math.floor(maxWidth / charWidth);
+  const lines = Math.ceil(text.length / charsPerLine);
+  const lineHeightCm = (fontSize * lineHeight) / 37.8; // px를 cm로 변환
+  return lines * lineHeightCm;
+}
+
+// 컨테이너 높이 계산 함수
+function calculateContainerHeight(text: string, padding: number = 1, fontSize: number = 16): number {
+  const textHeight = calculateTextHeight(text, fontSize);
+  const paddingCm = (padding * 16) / 37.8; // rem을 cm로 변환
+  // 실제 렌더링에서 패딩이 더 작게 적용되므로 조정
+  return textHeight + (paddingCm * 1.2); // 상하 패딩 더 작게 조정
+}
+
+// 페이지 분할 여부 계산 함수
+function shouldSplitPage(quiz: BlankFillItem): boolean {
+  if (!quiz) return false;
+  
+  // 사용 가능한 높이 계산 (더 관대한 기준 적용)
+  const availableHeight = A4_CONFIG.PAGE_HEIGHT - A4_CONFIG.HEADER_HEIGHT - A4_CONFIG.CONTENT_MARGIN;
+  
+  // 문제 설명 컨테이너 높이
+  const instructionHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN;
+  
+  // 본문 컨테이너 높이
+  const passageHeight = calculateContainerHeight(quiz.blankedText, 1, 16);
+  
+  // 본문 해석 헤더 높이
+  const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT + A4_CONFIG.TRANSLATION_HEADER_MARGIN;
+  
+  // 본문 해석 컨테이너 높이
+  const translationHeight = calculateContainerHeight(quiz.translation, 1, 16);
+  
+  // 총 높이 계산
+  const totalHeight = instructionHeight + passageHeight + translationHeaderHeight + translationHeight;
+  
+  // 여유 공간 설정 (0.5cm 여유로 더 작게 조정)
+  const safetyMargin = 0.5; // cm
+  const shouldSplit = totalHeight > (availableHeight - safetyMargin);
+  
+  console.log('📏 페이지 분할 계산:', {
+    availableHeight: availableHeight.toFixed(2) + 'cm',
+    instructionHeight: instructionHeight.toFixed(2) + 'cm',
+    passageHeight: passageHeight.toFixed(2) + 'cm',
+    translationHeaderHeight: translationHeaderHeight.toFixed(2) + 'cm',
+    translationHeight: translationHeight.toFixed(2) + 'cm',
+    totalHeight: totalHeight.toFixed(2) + 'cm',
+    safetyMargin: safetyMargin.toFixed(2) + 'cm',
+    effectiveAvailableHeight: (availableHeight - safetyMargin).toFixed(2) + 'cm',
+    shouldSplit
+  });
+  
+  return shouldSplit;
+}
+
 const Work_13_BlankFillWord: React.FC = () => {
   const { userData, loading } = useAuth();
   const [inputMode, setInputMode] = useState<InputMode>('text');
@@ -40,7 +109,8 @@ const Work_13_BlankFillWord: React.FC = () => {
   const [userAnswer, setUserAnswer] = useState('');
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
   const [printMode, setPrintMode] = useState<PrintMode>('none');
-  const [needsSecondPage, setNeedsSecondPage] = useState(false);
+  // 동적 페이지 분할 계산
+  const shouldSplit = quiz ? shouldSplitPage(quiz) : false;
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isPasteFocused, setIsPasteFocused] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -88,16 +158,7 @@ const Work_13_BlankFillWord: React.FC = () => {
     if (quiz) {
       window.scrollTo(0, 0);
       
-      // 본문 길이 체크 (2000자 이상이면 2페이지로 분리)
-      const checkContentLength = () => {
-        if (inputText && inputText.length >= 2000) {
-          setNeedsSecondPage(true);
-        } else {
-          setNeedsSecondPage(false);
-        }
-      };
-      
-      checkContentLength();
+      // 페이지 분할은 동적 계산 함수 shouldSplitPage()에서 처리
     }
   }, [quiz]);
 
@@ -411,6 +472,13 @@ const Work_13_BlankFillWord: React.FC = () => {
     setImageFile(null);
     setImagePreview(null);
     setIsPasteFocused(false);
+    setIsLoading(false);
+    setIsExtractingText(false);
+    setPrintMode('none');
+    setShowPointModal(false);
+    setPointsToDeduct(0);
+    // 화면을 최상단으로 스크롤
+    window.scrollTo(0, 0);
   };  // 문제 풀이/출력 화면
   if (quiz) {
     return (
@@ -492,7 +560,7 @@ const Work_13_BlankFillWord: React.FC = () => {
         {/* 인쇄용: 문제만 */}
         {printMode === 'no-answer' && (
           <div className="only-print">
-            {needsSecondPage ? (
+            {shouldSplit ? (
               // 1페이지 구성: 문제제목 + 본문 (본문 2000자 이상)
               <div className="a4-page-template">
                 <div className="a4-page-header">
@@ -532,46 +600,60 @@ const Work_13_BlankFillWord: React.FC = () => {
         )}        {/* 인쇄용: 정답포함 */}
         {printMode === 'with-answer' && quiz && (
           <div className="only-print print-answer-mode">
-            {needsSecondPage ? (
-              // 1페이지 구성: 문제제목 + 본문(정답포함) + 본문해석 (본문 2000자 이상)
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                      <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
-                      <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
-                    </div>
-                      <div className="work13-print-answer-text" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        {(() => {
-                          const text = quiz.blankedText;
-                          const parts = text.split(/(\(_{15}\))/);
-                          let answerIndex = 0;
-                          return parts.map((part, index) => {
-                            if (part === '(_______________)') {
-                              const answer = quiz.correctAnswers?.[answerIndex] || '정답 없음';
-                              answerIndex++;
-                              return (
-                                <span key={index} style={{color: '#1976d2', fontWeight: 'bold'}}>
-                                  ({answer})
-                                </span>
-                              );
-                            }
-                            return part;
-                          });
-                        })()}
+            {shouldSplit ? (
+              // 2페이지 구성: 문제제목 + 본문(정답포함), 본문해석 (본문 2000자 이상)
+              <>
+                {/* 1페이지: 문제제목 + 본문(정답포함) */}
+                <div className="a4-page-template">
+                  <div className="a4-page-header">
+                    <PrintHeaderWork01 />
+                  </div>
+                  <div className="a4-page-content">
+                    <div className="quiz-content">
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                        <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
+                        <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
                       </div>
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'0', marginBottom:'3rem', display:'block', width:'100%'}}>
-                      본문 해석
-                    </div>
-                    <div className="work13-print-translation" style={{fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'2px solid #e3e6f0', marginTop:'1rem'}}>
-                      {quiz.translation}
+                        <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                          {(() => {
+                            const text = quiz.blankedText;
+                            const parts = text.split(/(\(_{15}\))/);
+                            let answerIndex = 0;
+                            return parts.map((part, index) => {
+                              if (part === '(_______________)') {
+                                const answer = quiz.correctAnswers?.[answerIndex] || '정답 없음';
+                                answerIndex++;
+                                return (
+                                  <span key={index} style={{color: '#1976d2', fontWeight: 'bold'}}>
+                                    ({answer})
+                                  </span>
+                                );
+                              }
+                              return part;
+                            });
+                          })()}
+                        </div>
                     </div>
                   </div>
                 </div>
-              </div>
+
+                {/* 2페이지: 본문 해석 */}
+                <div className="a4-page-template">
+                  <div className="a4-page-header">
+                    <PrintHeaderWork01 />
+                  </div>
+                  <div className="a4-page-content">
+                    <div className="quiz-content">
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                        본문 해석
+                      </div>
+                      <div className="work13-print-translation" style={{fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'2px solid #e3e6f0', marginTop:'0'}}>
+                        {quiz.translation}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
             ) : (
               // 1페이지 구성: 문제제목 + 본문(정답포함) + 본문해석 (본문 2000자 미만)
               <div className="a4-page-template">
@@ -584,7 +666,7 @@ const Work_13_BlankFillWord: React.FC = () => {
                       <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
                       <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
                     </div>
-                      <div className="work13-print-answer-text" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'1.5rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {(() => {
                           const text = quiz.blankedText;
                           const parts = text.split(/(\(_{15}\))/);
