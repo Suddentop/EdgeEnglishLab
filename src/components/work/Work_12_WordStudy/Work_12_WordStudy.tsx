@@ -916,6 +916,8 @@ ${englishWords.join(', ')}
     setImagePreview(null);
     setIsPasteFocused(false);
     setExtractedWords([]);
+    setIsLoading(false);
+    setIsExtractingText(false);
   };
 
   // 문제 풀이/출력 화면

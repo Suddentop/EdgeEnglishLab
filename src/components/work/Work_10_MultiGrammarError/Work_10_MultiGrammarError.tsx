@@ -454,6 +454,8 @@ const Work_10_MultiGrammarError: React.FC = () => {
     setImageFile(null);
     setImagePreview(null);
     setIsPasteFocused(false);
+    setIsLoading(false);
+    setIsExtractingText(false);
   };
 
   // 본문 내 <u>...</u>와 번호(①~⑧)는 AI가 반환한 passage 그대로 사용

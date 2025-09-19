@@ -344,8 +344,8 @@
     margin-bottom: 0.3rem !important;
   }
   
-  /* 다중 페이지 구성을 위한 페이지 브레이크 */
-  .only-print .a4-page-template:not(:last-child) {
+  /* 다중 페이지 구성을 위한 페이지 브레이크 - 첫 번째 페이지는 자동 분할 */
+  .only-print .a4-page-template:not(:first-child):not(:last-child) {
     page-break-after: always !important;
     break-after: page !important;
   }

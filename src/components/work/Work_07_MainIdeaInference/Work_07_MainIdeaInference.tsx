@@ -605,6 +605,8 @@ ${passage}
     setImageFile(null);
     setImagePreview(null);
     setIsPasteFocused(false);
+    setIsLoading(false);
+    setIsExtractingText(false);
   };
 
   if (quiz) {

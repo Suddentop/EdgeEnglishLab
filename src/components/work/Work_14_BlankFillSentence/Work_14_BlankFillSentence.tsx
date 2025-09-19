@@ -451,6 +451,8 @@ const Work_14_FillSentence: React.FC = () => {
     setImageFile(null);
     setImagePreview(null);
     setIsPasteFocused(false);
+    setIsLoading(false);
+    setIsExtractingText(false);
   };
 
   // 빈칸을 그대로 표시 (HTML 변환 없이)

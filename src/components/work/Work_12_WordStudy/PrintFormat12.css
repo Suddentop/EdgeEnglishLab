@@ -271,6 +271,11 @@
     color: #000000;
   }
 
+  /* No. 열 가운데 정렬 */
+  .word-list-table-work12 td:first-child {
+    text-align: center;
+  }
+
   .word-list-table-work12 tr:nth-child(even) {
     background: #f8f9fa;
   }

@@ -1624,7 +1624,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
 
   // 인쇄용 문제 (정답 포함) - 본문해석 포함
   if (printMode === 'with-answer') {
-    // 2페이지 분할 여부 결정: 본문 + 정답 + 해석의 총 길이가 2000자 이상이면 분할
+    // 2페이지 분할 여부 결정: 본문 + 객관식 + 해석의 총 길이가 길어서 한 페이지에 넣을 수 없을 때 분할
     const getContentLength = () => {
       const passageLength = work07Data.passage ? work07Data.passage.length : 0;
       const optionsLength = work07Data.options ? work07Data.options.reduce((total, option) => total + option.length, 0) : 0;
@@ -1632,7 +1632,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
       return passageLength + optionsLength + translationLength;
     };
 
-    const needsSecondPage = getContentLength() >= 2000;
+    const needsSecondPage = getContentLength() >= 4000;
 
     if (needsSecondPage) {
       // 2페이지 구성: 1페이지(문제+정답), 2페이지(해석)
@@ -1645,16 +1645,18 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.5rem 0.4rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.3rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem'}}>
+                <div className="problem-passage" style={{marginTop:'0.6rem', fontSize:'0.9rem'}}>
                   {work07Data.passage}
                 </div>
-                <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '1rem 0', padding: '0'}}>
-                  정답: {String.fromCharCode(65 + work07Data.answerIndex)}. {work07Data.options[work07Data.answerIndex]}
-                </div>
+                {work07Data.options.map((option, index) => (
+                  <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.3rem', paddingLeft:'0.4rem', paddingRight:'0.4rem'}}>
+                    {String.fromCharCode(65 + index)}. {option}{index === work07Data.answerIndex ? ' (정답)' : ''}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1687,26 +1689,23 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.5rem 0.4rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.3rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem'}}>
+                <div className="problem-passage" style={{marginTop:'0.6rem', fontSize:'0.9rem'}}>
                   {work07Data.passage}
                 </div>
                   {work07Data.options.map((option, index) => (
-                  <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
-                      {String.fromCharCode(65 + index)}. {option}
+                  <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.3rem', paddingLeft:'0.4rem', paddingRight:'0.4rem'}}>
+                      {String.fromCharCode(65 + index)}. {option}{index === work07Data.answerIndex ? ' (정답)' : ''}
                     </div>
                   ))}
-                <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '1rem 0', padding: '0'}}>
-                  정답: {String.fromCharCode(65 + work07Data.answerIndex)}. {work07Data.options[work07Data.answerIndex]}
-                </div>
-                <div className="translation-section" style={{marginTop:'1.5rem'}}>
-                  <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'block', width:'100%'}}>
+                <div className="translation-section" style={{marginTop:'0.8rem'}}>
+                  <div className="problem-instruction" style={{fontWeight: '800', fontSize: '0.9rem', background: '#222', color: '#fff', padding: '0.5rem 0.4rem', borderRadius: '8px', marginBottom: '0.6rem', display: 'block', width:'100%'}}>
                     본문 해석
                   </div>
-                  <div className="translation-content" style={{fontSize:'0.9rem', lineHeight:'1.6', padding:'1rem', border:'1px solid #ddd', borderRadius:'8px', backgroundColor:'#f9f9f9'}}>
+                  <div className="translation-content" style={{fontSize:'0.9rem', lineHeight:'1.5', padding:'0.8rem', border:'1px solid #ddd', borderRadius:'8px', backgroundColor:'#F1F8E9'}}>
                     {translatedText}
                   </div>
                 </div>
@@ -1859,6 +1858,11 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
                 <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem'}}>
                   {work08Data.passage}
                 </div>
+                {work08Data.options.map((option, index) => (
+                  <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
+                    {String.fromCharCode(65 + index)}. {option}
+                  </div>
+                ))}
                 <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '1rem 0', padding: '0'}}>
                   정답: {String.fromCharCode(65 + work08Data.answerIndex)}. {work08Data.options[work08Data.answerIndex]}
                 </div>
@@ -1901,6 +1905,11 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
                 <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem'}}>
                   {work08Data.passage}
                 </div>
+                {work08Data.options.map((option, index) => (
+                  <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
+                    {String.fromCharCode(65 + index)}. {option}
+                  </div>
+                ))}
                 <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '1rem 0', padding: '0'}}>
                   정답: {String.fromCharCode(65 + work08Data.answerIndex)}. {work08Data.options[work08Data.answerIndex]}
                 </div>
@@ -1908,7 +1917,7 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
                   <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'block', width:'100%'}}>
                     본문 해석
                   </div>
-                  <div className="translation-content" style={{fontSize:'0.9rem', lineHeight:'1.6', padding:'1rem', border:'1px solid #ddd', borderRadius:'8px', backgroundColor:'#f9f9f9'}}>
+                  <div className="translation-content" style={{fontSize:'0.9rem', lineHeight:'1.6', padding:'1rem', border:'1px solid #ddd', borderRadius:'8px', backgroundColor:'#F1F8E9'}}>
                     {translatedText}
                   </div>
                 </div>

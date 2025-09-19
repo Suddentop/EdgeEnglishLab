@@ -207,8 +207,20 @@ const Work_05_BlankSentenceInference: React.FC = () => {
     excludedSentences.push(match[1].trim());
   }
 
-  // 별도 번역 함수 추가 (유형#01과 동일)
+  // 별도 번역 함수 추가 (유형#01과 동일) - 개선된 버전
   async function translateToKorean(englishText: string, apiKey: string): Promise<string> {
+    console.log('번역 시작:', { textLength: englishText.length, hasApiKey: !!apiKey });
+    
+    if (!apiKey) {
+      console.error('API 키가 없습니다.');
+      return 'API 키가 설정되지 않았습니다.';
+    }
+
+    if (!englishText || englishText.trim().length === 0) {
+      console.error('번역할 텍스트가 없습니다.');
+      return '번역할 텍스트가 없습니다.';
+    }
+
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -219,23 +231,49 @@ const Work_05_BlankSentenceInference: React.FC = () => {
         body: JSON.stringify({
           model: 'gpt-3.5-turbo',
           messages: [
-            { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
-            { role: 'user', content: `다음 영어 본문을 자연스러운 한국어로 번역해주세요:\n\n${englishText}` }
+            { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations. Always provide complete and accurate translations.' },
+            { role: 'user', content: `다음 영어 본문을 자연스러운 한국어로 번역해주세요. 번역은 완전하고 정확해야 합니다:\n\n${englishText}` }
           ],
           max_tokens: 800,
           temperature: 0.3
         })
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP 오류: ${response.status} ${response.statusText}`);
+      }
+      
       const data = await response.json();
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        return data.choices[0].message.content.trim();
+      console.log('번역 API 응답:', { hasChoices: !!data.choices, choiceCount: data.choices?.length });
+      
+      if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+        const translation = data.choices[0].message.content.trim();
+        console.log('번역 성공:', { translationLength: translation.length, preview: translation.substring(0, 100) });
+        
+        if (translation.length === 0) {
+          throw new Error('번역 결과가 비어있습니다.');
+        }
+        
+        return translation;
       } else {
+        console.error('AI 응답 구조 오류:', data);
         throw new Error('AI 응답 형식이 올바르지 않습니다.');
       }
-    } catch (error) {
-      console.error('번역 오류:', error);
-      return '번역을 생성할 수 없습니다.';
+    } catch (error: any) {
+      console.error('번역 오류 상세:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+      
+      // 오류 유형에 따른 구체적인 메시지 반환
+      if (error.message.includes('HTTP 오류')) {
+        return `번역 서비스 오류: ${error.message}`;
+      } else if (error.message.includes('API 키')) {
+        return 'API 키 오류로 인해 번역할 수 없습니다.';
+      } else {
+        return `번역 생성 중 오류가 발생했습니다: ${error.message}`;
+      }
     }
   }
 
@@ -305,9 +343,22 @@ const Work_05_BlankSentenceInference: React.FC = () => {
       throw new Error('AI 응답에 필수 필드가 누락되었습니다.');
     }
     
-    // 별도 번역 함수로 본문 번역 처리
-    const translation = await translateToKorean(passage, apiKey);
-    result.translation = translation;
+    // 별도 번역 함수로 본문 번역 처리 - 개선된 버전
+    console.log('본문 번역 시작:', { passageLength: passage.length });
+    try {
+      const translation = await translateToKorean(passage, apiKey);
+      console.log('번역 결과 저장:', { translationLength: translation.length, hasTranslation: !!translation });
+      
+      if (translation && translation.trim().length > 0) {
+        result.translation = translation;
+      } else {
+        console.warn('번역 결과가 비어있어 기본값 사용');
+        result.translation = '번역을 생성할 수 없습니다. 관리자에게 문의하세요.';
+      }
+    } catch (translationError: any) {
+      console.error('번역 처리 중 오류:', translationError);
+      result.translation = `번역 생성 중 오류가 발생했습니다: ${translationError.message}`;
+    }
     
     return result;
   }
@@ -505,6 +556,8 @@ const Work_05_BlankSentenceInference: React.FC = () => {
     setImageFile(null);
     setImagePreview(null);
     setIsPasteFocused(false);
+    setIsLoading(false);
+    setIsExtractingText(false);
   };
 
   if (quiz) {
@@ -730,7 +783,9 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                         본문 해석
                       </div>
                       <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
+                        {quiz.translation && quiz.translation.trim().length > 0 
+                          ? quiz.translation 
+                          : '본문 해석이 생성되지 않았습니다.'}
                       </div>
                     </div>
                   </div>
@@ -777,7 +832,9 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                         본문 해석
                       </div>
                       <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
+                        {quiz.translation && quiz.translation.trim().length > 0 
+                          ? quiz.translation 
+                          : '본문 해석이 생성되지 않았습니다.'}
                       </div>
                     </div>
                   </div>

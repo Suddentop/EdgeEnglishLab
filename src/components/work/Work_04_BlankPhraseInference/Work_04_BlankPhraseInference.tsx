@@ -476,6 +476,8 @@ const Work_04_BlankPhraseInference: React.FC = () => {
     setImageFile(null);
     setImagePreview(null);
     setIsPasteFocused(false);
+    setIsLoading(false);
+    setIsExtractingText(false);
   };
 
   if (quiz) {

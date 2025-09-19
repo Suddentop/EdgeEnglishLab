@@ -143,7 +143,7 @@ export const WordListTableWork12: React.FC<WordListTableWork12Props> = ({
             <td className={showAnswers ? 'answer-cell' : ''}>
               {showAnswers
                 ? (quizType === 'english-to-korean' ? word.korean : word.english)
-                : (word.korean.includes('_') || word.english.includes('_') ? '' : '________________')
+                : (word.korean.includes('_') || word.english.includes('_') ? '' : '')
               }
             </td>
             {showDifficulty && (
