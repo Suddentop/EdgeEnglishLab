@@ -3,6 +3,7 @@ import PrintHeaderPackage01 from './PrintHeaderPackage01';
 import { SentenceTranslationQuiz } from '../../../types/types';
 import { Quiz } from '../../../types/types';
 import { Work02QuizData } from '../../../services/work02Service';
+import Work11DynamicPrintPages from '../Work11DynamicPrintPages';
 
 interface WordReplacement {
   original: string;
@@ -2266,198 +2267,24 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
   return null;
 };
 
-// Work_11 문장 번역 문제 인쇄 컴포넌트
+// Work_11 문장 번역 문제 인쇄 컴포넌트 - 새로운 동적 페이지네이션 사용
 const PrintFormatPackage01Work11: React.FC<{
   work11Data: SentenceTranslationQuiz;
   printMode: 'no-answer' | 'with-answer';
 }> = ({ work11Data, printMode }) => {
   if (!work11Data) return null;
 
-  const convertMarkdownUnderlineToU = (text: string): string => {
-    return text.replace(/<u>(.*?)<\/u>/g, '<u>$1</u>');
-  };
-
-  // 동적 페이지 분할을 위한 최적화 함수
-  const calculateOptimalPageSplit = (items: any[], pageHeight: number = 900, includeAnswer: boolean = false) => {
-    const pages: number[][] = [];
-    let currentPage: number[] = [];
-    let currentHeight = 0;
-
-    const getBoxHeight = (index: number) => {
-      const sentence = work11Data.sentences[index];
-      const translation = work11Data.translations[index];
-      
-      // 실제 CSS 스타일에 맞는 정확한 높이 계산
-      const containerPadding = 16; // padding: 0.5rem 1rem = 8px 상하
-      const sentenceMargin = 8; // marginBottom: 0.5rem
-      const translationMargin = 8; // marginTop: 0.5rem
-      
-      // 문장 길이에 따른 줄 수 계산 (더 정확하게)
-      const sentenceLines = Math.ceil(sentence.length / 65);
-      const translationLines = includeAnswer ? Math.ceil(translation.length / 65) : 0;
-      
-      const sentenceHeight = sentenceLines * 19;
-      const translationHeight = includeAnswer ? translationLines * 19 : 0;
-      const marginHeight = 16; // marginBottom: 1rem
-      
-      // no-answer 모드에서는 구분선 높이도 추가
-      const separatorHeight = includeAnswer ? 0 : 32;
-      
-      // with-answer 모드에서는 해석 부분의 추가 여백 고려
-      const answerExtraMargin = includeAnswer ? 8 : 0;
-      
-      return containerPadding + sentenceMargin + sentenceHeight + translationMargin + translationHeight + separatorHeight + marginHeight + answerExtraMargin;
-    };
-
-    for (let i = 0; i < items.length; i++) {
-      const itemHeight = getBoxHeight(i);
-      
-      // with-answer 모드에서는 더 보수적으로 페이지 분할
-      const pageThreshold = includeAnswer ? 0.85 : 0.9;
-      if (currentHeight + itemHeight <= pageHeight * pageThreshold) {
-        currentPage.push(i);
-        currentHeight += itemHeight;
-      } else {
-        if (currentPage.length > 0) {
-          pages.push([...currentPage]);
-        }
-        currentPage = [i];
-        currentHeight = itemHeight;
-      }
-    }
-
-    if (currentPage.length > 0) {
-      pages.push(currentPage);
-    }
-
-    // 마지막 페이지가 1-2개 항목만 있고, 이전 페이지에 공간이 있으면 병합
-    if (pages.length > 1) {
-      const lastPage = pages[pages.length - 1];
-      const secondLastPage = pages[pages.length - 2];
-      
-      if (lastPage.length <= 2) {
-        const lastPageHeight = lastPage.reduce((sum, idx) => sum + getBoxHeight(idx), 0);
-        const secondLastPageHeight = secondLastPage.reduce((sum, idx) => sum + getBoxHeight(idx), 0);
-        
-        const mergeThreshold = includeAnswer ? 0.8 : 0.85;
-        if (secondLastPageHeight + lastPageHeight <= pageHeight * mergeThreshold) {
-          pages[pages.length - 2] = [...secondLastPage, ...lastPage];
-          pages.pop();
-        }
-      }
-    }
-
-    // 각 페이지에서 다음 페이지의 첫 항목을 현재 페이지로 이동할 수 있는지 확인
-    for (let i = 0; i < pages.length - 1; i++) {
-      const currentPage = pages[i];
-      const nextPage = pages[i + 1];
-      
-      if (nextPage.length > 0) {
-        const nextItemHeight = getBoxHeight(nextPage[0]);
-        const currentPageHeight = currentPage.reduce((sum, idx) => sum + getBoxHeight(idx), 0);
-        
-        const moveThreshold = includeAnswer ? 0.8 : 0.85;
-        if (currentPageHeight + nextItemHeight <= pageHeight * moveThreshold) {
-          currentPage.push(nextPage[0]);
-          nextPage.shift();
-        }
-      }
-    }
-
-    return pages;
-  };
-
-  if (printMode === 'no-answer') {
-    const pages = calculateOptimalPageSplit(work11Data.sentences, 1100, false);
-    
-    return (
-      <div className="only-print work-11-print">
-        {pages.map((pageItems, pageIndex) => (
-          <div key={pageIndex} className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                  <span>다음 영어 문장들을 한국어로 번역하세요.</span>
-                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#11</span>
-                </div>
-                <div style={{marginTop:'0.9rem'}}>
-                {pageItems.map((index) => (
-                  <div key={index} style={{
-                    marginBottom: '1rem',
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#FFF3CD',
-              borderRadius: '8px',
-                    border: '1px solid #e3f2fd'
-                  }}>
-                    <div style={{fontWeight: 'normal', marginBottom: '0.5rem', color: '#000'}}>
-                      {index + 1}. {work11Data.sentences[index]}
-              </div>
-              <div style={{
-                      height: '2rem',
-                      borderBottom: '1px solid #ccc',
-                      marginBottom: '0.5rem'
-                    }}></div>
-              </div>
-                ))}
-                </div>
-            </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  } else {
-    // with-answer 모드 - 해석이 포함되므로 더 작은 페이지 높이 사용
-    const pages = calculateOptimalPageSplit(work11Data.sentences, 900, true);
-    
-    return (
-      <div className="only-print work-11-print">
-        {pages.map((pageItems, pageIndex) => (
-          <div key={pageIndex} className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                  <span>다음 영어 문장들을 한국어로 번역하세요.</span>
-                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#11</span>
-                </div>
-                <div style={{marginTop:'0.9rem'}}>
-                {pageItems.map((index) => (
-                  <div key={index} style={{
-                    marginBottom: '1rem',
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#F1F8E9',
-                    borderRadius: '8px',
-                    border: '1px solid #e3f2fd'
-                  }}>
-                    <div style={{fontWeight: 'normal', marginBottom: '0.5rem', color: '#000'}}>
-                      {index + 1}. {work11Data.sentences[index]}
-              </div>
-                    <div style={{
-                      fontSize: '1rem !important',
-                      lineHeight: '1.6',
-                      color: '#1976d2',
-                      fontWeight: '500',
-                      marginTop: '0.5rem'
-                    }}>
-                      <span style={{fontWeight: 'bold', color: '#1976d2'}}>해석: </span>
-                      {work11Data.translations[index]}
-              </div>
-            </div>
-                ))}
-                </div>
-          </div>
-            </div>
-          </div>
-        ))}
-        </div>
-      );
-  }
+  return (
+    <div className="only-print work-11-print">
+      <Work11DynamicPrintPages
+        sentences={work11Data.sentences}
+        translations={work11Data.translations}
+        includeAnswer={printMode === 'with-answer'}
+        printMode={printMode}
+        customHeader={<PrintHeaderPackage01 />}
+      />
+    </div>
+  );
 };
 
 // Work_13 빈칸 채우기 문제 (단어-주관식) 인쇄 컴포넌트

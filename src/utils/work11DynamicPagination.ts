@@ -146,9 +146,10 @@ export function calculateContainerHeight(
 /**
  * A4 페이지의 사용 가능한 높이 계산
  * @param pageNumber 페이지 번호 (1부터 시작)
+ * @param includeAnswer 정답 포함 여부 (정답 모드에서는 더 보수적으로 계산)
  * @returns 사용 가능한 높이 (cm)
  */
-function calculateAvailableHeight(pageNumber: number): number {
+function calculateAvailableHeight(pageNumber: number, includeAnswer: boolean = false): number {
   // 실제 렌더링 구조에 맞춘 정확한 높이 계산
   const A4_HEIGHT = 29.7; // A4 페이지 전체 높이
   const HEADER_HEIGHT = 1.5; // 헤더 높이
@@ -156,13 +157,21 @@ function calculateAvailableHeight(pageNumber: number): number {
   const BOTTOM_MARGIN = 1.0; // 하단 마진
   
   // 사용 가능한 높이 = 전체 높이 - 헤더 - 문제 설명 - 하단 마진
-  const availableHeight = A4_HEIGHT - HEADER_HEIGHT - INSTRUCTION_HEIGHT - BOTTOM_MARGIN;
+  let availableHeight = A4_HEIGHT - HEADER_HEIGHT - INSTRUCTION_HEIGHT - BOTTOM_MARGIN;
+  
+  // 정답 모드에서는 더 보수적으로 계산 (안전 마진 추가)
+  if (includeAnswer) {
+    const safetyMargin = 1.0; // 정답 모드에서 1cm 안전 마진
+    availableHeight -= safetyMargin;
+  }
   
   console.log(`📏 페이지 ${pageNumber} 사용 가능 높이 계산:`, {
     A4_HEIGHT,
     HEADER_HEIGHT,
     INSTRUCTION_HEIGHT,
     BOTTOM_MARGIN,
+    includeAnswer,
+    safetyMargin: includeAnswer ? '1.0cm' : '0cm',
     availableHeight: availableHeight.toFixed(2) + 'cm'
   });
   
@@ -215,11 +224,11 @@ export function performDynamicPagination(
   console.log('🚀 동적 페이지네이션 시작:', {
     totalContainers: containerInfos.length,
     includeAnswer,
-    availableHeightPerPage: calculateAvailableHeight(1)
+    availableHeightPerPage: calculateAvailableHeight(1, includeAnswer)
   });
   
   while (remainingContainers.length > 0) {
-    const availableHeight = calculateAvailableHeight(pageNumber);
+    const availableHeight = calculateAvailableHeight(pageNumber, includeAnswer);
     const pageContainers: ContainerInfo[] = [];
     let currentHeight = 0;
     
@@ -261,7 +270,7 @@ export function performDynamicPagination(
         containers: pageContainers,
         totalHeight: currentHeight,
         availableHeight,
-        isFull: currentHeight >= availableHeight * 0.85 // 85% 이상 사용시 풀페이지로 간주 (완화)
+        isFull: currentHeight >= availableHeight * (includeAnswer ? 0.80 : 0.85) // 정답 모드에서는 80%, 문제 모드에서는 85%
       };
       
       pages.push(pageLayout);

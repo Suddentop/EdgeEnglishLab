@@ -1078,4 +1078,32 @@
 
 .work11-dynamic-page-template .work11-print-answer-sentence > div:last-child {
   padding-bottom: 0.5rem !important;
+}
+
+/* 정답 모드에서 모든 구분선 완전 제거 */
+.work11-print-answer-sentence > div:last-child::before,
+.work11-print-answer-sentence > div:last-child::after {
+  display: none !important;
+}
+
+.work11-dynamic-page-template .work11-print-answer-sentence > div:last-child::before,
+.work11-dynamic-page-template .work11-print-answer-sentence > div:last-child::after {
+  display: none !important;
+}
+
+/* 정답 모드에서 모든 border 관련 스타일 제거 */
+.work11-print-answer-sentence > div:last-child {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.work11-dynamic-page-template .work11-print-answer-sentence > div:last-child {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
 } 

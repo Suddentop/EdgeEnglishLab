@@ -13,6 +13,7 @@ interface Work11DynamicPrintPagesProps {
   translations: string[];
   includeAnswer: boolean;
   printMode: 'no-answer' | 'with-answer';
+  customHeader?: React.ReactNode; // 패키지#01용 커스텀 헤더
 }
 
 /**
@@ -23,7 +24,8 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
   sentences,
   translations,
   includeAnswer,
-  printMode
+  printMode,
+  customHeader
 }) => {
   console.log('🖨️ Work11DynamicPrintPages 렌더링:', {
     sentencesCount: sentences.length,
@@ -121,7 +123,12 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
             color: '#1976d2',
             fontWeight: '500',
             marginTop: '0.3rem',
-            paddingBottom: '0.5rem' // 한글 해석 문장 하단에 여백 추가
+            paddingBottom: '0.5rem', // 한글 해석 문장 하단에 여백 추가
+            border: 'none !important', // 모든 테두리 제거
+            borderTop: 'none !important',
+            borderBottom: 'none !important',
+            borderLeft: 'none !important',
+            borderRight: 'none !important'
           }}>
             <span style={{fontWeight: 'bold', color: '#1976d2'}}>
               해석: 
@@ -181,7 +188,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           padding: '0.5cm 0.3cm 0 0.3cm',
           boxSizing: 'border-box'
         }}>
-          <PrintHeaderWork01 />
+          {customHeader || <PrintHeaderWork01 />}
         </div>
 
         
