@@ -5,7 +5,7 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PrintHeader from '../../common/PrintHeader';
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
-import Work11DynamicPrintPages from '../Work11DynamicPrintPages';
+import Work11DynamicPrintPages from './Work11DynamicPrintPages';
 import './Work_11_SentenceTranslation.css';
 import '../../../styles/PrintFormat.css';
 

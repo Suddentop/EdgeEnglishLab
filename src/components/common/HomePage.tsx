@@ -113,7 +113,7 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
     <div className="homepage">
       <section className="hero-section">
         <div className="hero-content">
-          <h1 className="hero-title">교육 전문가를 위한 AI 영어 문제 생성 플랫폼</h1>
+          <h1 className="hero-title">영어 교육 전문가를 위한 AI 영어 문제 생성 플랫폼</h1>
           <p className="hero-description">
             학원과 강사님들의 수업 준비 시간을 대폭 단축하고, 교육 품질을 한 단계 높여주는 전문적인 AI 솔루션입니다.
           </p>
@@ -137,6 +137,21 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
               <div className="stat-number">즉시</div>
               <div className="stat-label">문제지 생성</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="cta-section">
+        <div className="cta-content">
+          <h3>영어 학습 지도를 위한 새로운 툴을 경험해보세요</h3>
+          <p>AI 모델링을 통해 특화된 영어 문제 생성으로 준비 시간을 단축하고 집중력 있는 학습을 유도합니다</p>
+          <div className="cta-buttons">
+            <button 
+              className="cta-primary"
+              onClick={() => navigate('/sample-problems')}
+            >
+              샘플 문제 다운로드
+            </button>
           </div>
         </div>
       </section>
@@ -229,21 +244,6 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
             <div className="feature-icon">🏆</div>
             <h4>검증된 품질</h4>
             <p>교육 현장에서 검증된 문제 패턴과 형식을 기반으로 신뢰할 수 있는 평가 도구를 제공합니다.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="cta-section">
-        <div className="cta-content">
-          <h3>교육의 혁신을 경험해보세요</h3>
-          <p>AI 기반 영어 문제 생성으로 수업의 질을 높이고 준비 시간을 단축하세요</p>
-          <div className="cta-buttons">
-            <button 
-              className="cta-primary"
-              onClick={() => navigate('/sample-problems')}
-            >
-              샘플 문제 다운로드
-            </button>
           </div>
         </div>
       </section>

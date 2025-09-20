@@ -1,12 +1,12 @@
 import React from 'react';
-import PrintHeaderWork01 from '../common/PrintHeaderWork01';
+import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 import { 
   paginateSentences, 
   optimizePageLayout, 
   validatePaginationResult,
   type PaginationResult,
   type ContainerInfo
-} from '../../utils/work11DynamicPagination';
+} from '../../../utils/work11DynamicPagination';
 
 interface Work11DynamicPrintPagesProps {
   sentences: string[];
@@ -259,7 +259,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
   // 모든 페이지 렌더링
   return (
     <div className="work11-dynamic-print-container">
-      {optimizedResult.pages.map((pageLayout, index) => 
+      {optimizedResult.pages.map((pageLayout: any, index: number) => 
         renderPage(pageLayout, index)
       )}
     </div>

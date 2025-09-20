@@ -3,7 +3,7 @@ import PrintHeaderPackage01 from './PrintHeaderPackage01';
 import { SentenceTranslationQuiz } from '../../../types/types';
 import { Quiz } from '../../../types/types';
 import { Work02QuizData } from '../../../services/work02Service';
-import Work11DynamicPrintPages from '../Work11DynamicPrintPages';
+import Work11DynamicPrintPages from '../Work_11_SentenceTranslation/Work11DynamicPrintPages';
 
 interface WordReplacement {
   original: string;

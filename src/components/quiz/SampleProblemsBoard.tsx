@@ -47,18 +47,21 @@ const SampleProblemsBoard: React.FC = () => {
   }, [authLoading]);
 
   const problemTypes = [
-    '문단 순서 맞추기',
-    '독해 문제',
-    '빈칸(단어) 문제',
-    '빈칸(구) 문제',
-    '빈칸(문장) 문제',
-    '문장 위치 찾기',
-    '주제 추론',
-    '제목 추론',
-    '어법 오류 문제',
-    '다중 어법 오류 문제',
-    '본문 문장별 해석',
-    '단어 학습 문제'
+    '01. 문단 순서 맞추기',
+    '02. 유사 단어 본문 독해',
+    '03. 빈칸(단어) 문제',
+    '04. 빈칸(구) 문제',
+    '05. 빈칸(문장) 문제',
+    '06. 문장 위치 찾기',
+    '07. 주제 추론',
+    '08. 제목 추론',
+    '09. 어법 오류 문제',
+    '10. 다중 어법 오류 문제',
+    '11. 본문 문장별 해석',
+    '12. 단어 학습 문제',
+    '13. 빈칸 채우기 (단어-주관식)',
+    '14. 빈칸 채우기 (문장-주관식)',
+    '패키지01. 종합 문제 세트'
   ];
 
   // 샘플 문제 목록 가져오기
@@ -125,8 +128,14 @@ const SampleProblemsBoard: React.FC = () => {
         // 기존 파일 삭제
         for (const file of editingProblem.files) {
           try {
-            const fileRef = ref(storage, file.url);
-            await deleteObject(fileRef);
+            // URL에서 파일 경로 추출
+            const url = new URL(file.url);
+            const pathMatch = url.pathname.match(/\/o\/(.+)\?/);
+            if (pathMatch) {
+              const filePath = decodeURIComponent(pathMatch[1]);
+              const fileRef = ref(storage, filePath);
+              await deleteObject(fileRef);
+            }
           } catch (error) {
             console.error('Error deleting old file:', error);
           }
@@ -136,8 +145,10 @@ const SampleProblemsBoard: React.FC = () => {
           ...problemData,
           updatedAt: serverTimestamp()
         });
+        alert('문제가 성공적으로 수정되었습니다.');
       } else {
         await addDoc(collection(db, 'sampleProblems'), problemData);
+        alert('문제가 성공적으로 업로드되었습니다.');
       }
 
       setFormData({ title: '', content: '', problemType: '', files: [] });
@@ -146,6 +157,7 @@ const SampleProblemsBoard: React.FC = () => {
       fetchProblems();
     } catch (error) {
       console.error('Error saving problem:', error);
+      alert('문제 저장 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setUploading(false);
     }
@@ -159,8 +171,14 @@ const SampleProblemsBoard: React.FC = () => {
       // 파일 삭제
       for (const file of files) {
         try {
-          const fileRef = ref(storage, file.url);
-          await deleteObject(fileRef);
+          // URL에서 파일 경로 추출
+          const url = new URL(file.url);
+          const pathMatch = url.pathname.match(/\/o\/(.+)\?/);
+          if (pathMatch) {
+            const filePath = decodeURIComponent(pathMatch[1]);
+            const fileRef = ref(storage, filePath);
+            await deleteObject(fileRef);
+          }
         } catch (error) {
           console.error('Error deleting file:', error);
         }
@@ -168,8 +186,10 @@ const SampleProblemsBoard: React.FC = () => {
       
       await deleteDoc(doc(db, 'sampleProblems', problemId));
       fetchProblems();
+      alert('문제가 성공적으로 삭제되었습니다.');
     } catch (error) {
       console.error('Error deleting problem:', error);
+      alert('문제 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -287,29 +307,32 @@ const SampleProblemsBoard: React.FC = () => {
             <div className="loading-spinner-small"></div>
             <p>권한 정보를 확인하는 중...</p>
           </div>
-        ) : userData?.role === 'admin' ? (
-          <div className="admin-content">
-            <p className="admin-description">관리자가 업로드한 다양한 유형의 영어 문제를 다운로드하세요</p>
-            <div className="admin-actions">
-              <button 
-                className="upload-button"
-                onClick={() => {
-                  setEditingProblem(null);
-                  setFormData({ title: '', content: '', problemType: '', files: [] });
-                  setIsModalOpen(true);
-                }}
-              >
-                <span className="button-icon">📤</span>
-                새 문제 업로드
-              </button>
-            </div>
-          </div>
-        ) : (
+        ) : userData?.role !== 'admin' && (
           <div className="user-content">
             <p className="user-description">📝준비된 다양한 유형의 영어 문제를 다운로드 해보세요</p>
           </div>
         )}
       </div>
+
+      {/* 관리자 콘텐츠 - 주황색 컨테이너 없이 직접 배치 */}
+      {!userDataLoading && !authLoading && userData?.role === 'admin' && (
+        <>
+          <p className="admin-description">관리자가 업로드한 다양한 유형의 영어 문제를 다운로드하세요</p>
+          <div className="admin-actions">
+            <button 
+              className="upload-button"
+              onClick={() => {
+                setEditingProblem(null);
+                setFormData({ title: '', content: '', problemType: '', files: [] });
+                setIsModalOpen(true);
+              }}
+            >
+              <span className="button-icon">📤</span>
+              새 문제 업로드
+            </button>
+          </div>
+        </>
+      )}
 
       <div className="problems-grid">
         {problems.length === 0 ? (
@@ -352,17 +375,25 @@ const SampleProblemsBoard: React.FC = () => {
               ))}
             </div>
 
-            {userData?.role === 'admin' && !authLoading && currentUser && (
+            {userData?.role === 'admin' && (
               <div className="problem-actions">
                 <button 
                   className="edit-button"
-                  onClick={() => handleEdit(problem)}
+                  onClick={() => {
+                    console.log('Edit button clicked for problem:', problem.id);
+                    handleEdit(problem);
+                  }}
+                  disabled={uploading}
                 >
                   수정
                 </button>
                 <button 
                   className="delete-button"
-                  onClick={() => handleDelete(problem.id, problem.files)}
+                  onClick={() => {
+                    console.log('Delete button clicked for problem:', problem.id);
+                    handleDelete(problem.id, problem.files);
+                  }}
+                  disabled={uploading}
                 >
                   삭제
                 </button>

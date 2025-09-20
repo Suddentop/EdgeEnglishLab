@@ -6,14 +6,16 @@
   padding: 4rem 2rem 2rem 2rem;
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* 헤더 섹션 */
 .sample-problems-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
   background: #ffffff;
-  padding: 1rem 0.75rem;
+  padding: 1rem 1rem 0rem 1rem;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #e1e8ed;
@@ -56,20 +58,15 @@
   font-weight: 500;
 }
 
-/* 관리자 콘텐츠 */
-.admin-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-}
+/* 관리자 콘텐츠 - 컨테이너 제거, 직접 배치용 스타일 */
 
 .admin-description {
   font-size: 1.1rem;
-  color: #5a6c7d;
+  color: #ffffff;
   line-height: 1.5;
   max-width: 600px;
-  margin: 0;
+  margin: 1rem auto;
+  text-align: center;
 }
 
 .admin-actions {
@@ -77,28 +74,30 @@
   gap: 1rem;
   flex-wrap: wrap;
   justify-content: center;
+  margin: 1rem auto 2rem auto;
 }
 
 .upload-button {
-  background: #667eea;
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
   color: white;
-  border: none;
+  border: 2px solid #388e3c;
   padding: 1rem 2rem;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .upload-button:hover {
-  background: #5a6fd8;
+  background: linear-gradient(135deg, #388e3c, #2e7d32);
+  border-color: #1b5e20;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5);
 }
 
 .button-icon {
@@ -111,6 +110,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
+  padding: 0rem 1rem 2rem 1rem;
 }
 
 .user-description {
@@ -463,6 +463,20 @@
 .delete-button:hover {
   background: linear-gradient(135deg, #d32f2f, #f44336);
   transform: translateY(-1px);
+}
+
+.edit-button:disabled,
+.delete-button:disabled {
+  background: #bdbdbd !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  opacity: 0.6;
+}
+
+.edit-button:disabled:hover,
+.delete-button:disabled:hover {
+  background: #bdbdbd !important;
+  transform: none !important;
 }
 
 /* 모달 오버레이 */
