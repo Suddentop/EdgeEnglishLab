@@ -901,46 +901,39 @@
   width: 100% !important;
   border-collapse: collapse !important;
   background: white !important;
-  border-radius: 8px !important;
-  overflow: hidden !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid #ddd !important;
   margin-top: 1rem !important;
 }
 
 .replacements-table th {
-  background: #f8f9fa !important;
-  color: #495057 !important;
+  background: #f5f5f5 !important;
+  color: #333 !important;
   font-weight: 600 !important;
   padding: 0.8rem !important;
   text-align: center !important;
   font-size: 0.9rem !important;
-  border: 1px solid #dee2e6 !important;
+  border: 1px solid #ddd !important;
 }
 
 .replacements-table td {
   padding: 0.6rem 0.8rem !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid #ddd !important;
   text-align: left !important;
   vertical-align: middle !important;
   font-size: 0.85rem !important;
 }
 
 .replacements-table tr:last-child td {
-  border-bottom: none !important;
+  border-bottom: 1px solid #ddd !important;
 }
 
 .replacements-table tr:nth-child(even) {
-  background: rgba(248, 250, 252, 0.3) !important;
-}
-
-.replacements-table tr:hover {
-  background: rgba(102, 126, 234, 0.05) !important;
+  background: #f9f9f9 !important;
 }
 
 .original-word {
   font-weight: 600;
-  color: #2d3748;
+  color: #d97706;
   font-size: 0.95rem;
 }
 
@@ -952,7 +945,7 @@
 
 .original-meaning {
   font-size: 0.85rem;
-  color: #718096;
+  color: #666;
   font-style: italic;
 }
 
@@ -1007,73 +1000,61 @@
   }
   
   .replacements-table {
-    box-shadow: none !important;
-    border: 2px solid #333 !important;
-    border-collapse: collapse !important;
     width: 100% !important;
-    margin: 1rem 0 !important;
+    border-collapse: collapse !important;
     background: white !important;
+    border: 1px solid #ddd !important;
+    margin-top: 1rem !important;
   }
   
   .replacements-table th {
-    background: #f8f9fa !important;
-    color: #000 !important;
-    border: 1px solid #333 !important;
-    padding: 0.02rem 0.05rem !important; /* 상하 패딩 0.02, 좌우 패딩 0.05 */
-    font-weight: normal !important; /* 진하게 효과 제거 */
-    font-size: 0.4rem !important; /* 글씨 크기 0.4로 더욱 축소 */
+    background: #f5f5f5 !important;
+    color: #333 !important;
+    font-weight: 600 !important;
+    padding: 0.8rem !important;
     text-align: center !important;
-    line-height: 0.7 !important; /* 줄간격 0.7로 더 축소 */
+    font-size: 0.9rem !important;
+    border: 1px solid #ddd !important;
   }
   
   .replacements-table td {
-    border: 1px solid #333 !important;
-    background: white !important;
-    padding: 0.02rem 0.05rem !important; /* 상하 패딩 0.02, 좌우 패딩 0.05 */
+    padding: 0.6rem 0.8rem !important;
+    border: 1px solid #ddd !important;
     text-align: left !important;
-    vertical-align: top !important;
-    font-size: 0.4rem !important; /* 글씨 크기 0.4로 더욱 축소 */
-    line-height: 0.7 !important; /* 줄간격 0.7로 더 축소 */
+    vertical-align: middle !important;
+    font-size: 0.85rem !important;
   }
   
+  .replacements-table tr:last-child td {
+    border-bottom: 1px solid #ddd !important;
+  }
+
   .replacements-table tr:nth-child(even) {
-    background: #f8f9fa !important;
-  }
-  
-  .replacements-table tr:nth-child(odd) {
-    background: white !important;
-  }
-  
-  .replacements-table tr:hover {
-    background: transparent !important;
+    background: #f9f9f9 !important;
   }
   
   .original-word {
-    color: #000 !important;
-    font-weight: normal !important; /* 진하게 효과 제거 */
-    font-size: 0.4rem !important; /* 글씨 크기 0.4로 더욱 축소 */
-    line-height: 0.7 !important; /* 줄간격 0.7로 더 축소 */
+    font-weight: 600 !important;
+    color: #d97706 !important;
+    font-size: 0.95rem !important;
   }
   
   .replacement-word {
+    font-weight: 600 !important;
     color: #1976d2 !important;
-    font-weight: normal !important; /* 진하게 효과 제거 */
-    font-size: 0.4rem !important; /* 글씨 크기 0.4로 더욱 축소 */
-    line-height: 0.7 !important; /* 줄간격 0.7로 더 축소 */
+    font-size: 0.95rem !important;
   }
   
   .original-meaning {
+    font-size: 0.85rem !important;
     color: #666 !important;
-    font-size: 0.4rem !important; /* 글씨 크기 0.4로 더욱 축소 */
     font-style: italic !important;
-    line-height: 0.7 !important; /* 줄간격 0.7로 더 축소 */
   }
   
   .replacement-meaning {
+    font-size: 0.85rem !important;
     color: #1976d2 !important;
-    font-size: 0.4rem !important; /* 글씨 크기 0.4로 더욱 축소 */
     font-style: italic !important;
-    line-height: 0.7 !important; /* 줄간격 0.7로 더 축소 */
   }
   
   .arrow {

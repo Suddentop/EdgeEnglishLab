@@ -39,6 +39,79 @@ type InputMode = typeof INPUT_MODES[number]['key'];
 
 type PrintMode = 'none' | 'no-answer' | 'with-answer';
 
+// A4 페이지 높이 계산 상수 (유형#13과 동일)
+const A4_CONFIG = {
+  PAGE_HEIGHT: 29.7, // cm
+  HEADER_HEIGHT: 0.5, // cm (헤더 높이 - 더 작게 조정)
+  CONTENT_MARGIN: 1.0, // cm (상하 여백 - 더 작게 조정)
+  INSTRUCTION_HEIGHT: 0.8, // cm (문제 설명 컨테이너 - 더 작게 조정)
+  INSTRUCTION_MARGIN: 0.3, // cm (문제 설명 하단 마진)
+  TRANSLATION_HEADER_HEIGHT: 0.8, // cm (본문 해석 헤더 - 더 작게 조정)
+  TRANSLATION_HEADER_MARGIN: 0.3, // cm (본문 해석 헤더 하단 마진)
+};
+
+// 텍스트 높이 계산 함수 (유형#13과 동일)
+function calculateTextHeight(text: string, fontSize: number = 16, lineHeight: number = 1.7, maxWidth: number = 20): number {
+  if (!text || text.length === 0) return 0;
+  
+  const charWidth = 0.25; // cm (더 작게 조정하여 더 많은 글자가 한 줄에 들어가도록)
+  const charsPerLine = Math.floor(maxWidth / charWidth);
+  const lines = Math.ceil(text.length / charsPerLine);
+  const lineHeightCm = (fontSize * lineHeight) / 37.8; // px를 cm로 변환
+  
+  return lines * lineHeightCm;
+}
+
+// 컨테이너 높이 계산 함수 (유형#13과 동일)
+function calculateContainerHeight(text: string, padding: number = 1, fontSize: number = 16): number {
+  if (!text || text.length === 0) return 0.3; // 빈 텍스트의 경우 최소 높이 더 작게
+  
+  const textHeight = calculateTextHeight(text, fontSize, 1.7);
+  const paddingCm = (padding * 16) / 37.8 / 2; // 패딩을 더 작게 계산
+  return textHeight + paddingCm;
+}
+
+// 동적 페이지 분할 여부 계산 함수 (유형#13과 동일)
+function shouldSplitPage(quiz: BlankQuizData): boolean {
+  if (!quiz) return false;
+  
+  // A4페이지의 헤더를 제외한 배치 가능한 공간 계산
+  const availableHeight = A4_CONFIG.PAGE_HEIGHT - A4_CONFIG.HEADER_HEIGHT - A4_CONFIG.CONTENT_MARGIN;
+  
+  // 문제 설명 컨테이너 높이
+  const instructionHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN;
+  
+  // 본문 컨테이너 높이 (16px 기준)
+  const passageHeight = calculateContainerHeight(quiz.blankedText, 1, 16);
+  
+  // 본문 해석 제목 컨테이너 높이
+  const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT + A4_CONFIG.TRANSLATION_HEADER_MARGIN;
+  
+  // 한글 번역 컨테이너 높이 (0.875rem = 14px 기준)
+  const translationHeight = calculateContainerHeight(quiz.translation || '', 1, 14);
+  
+  // 모든 컨테이너의 총 높이 계산
+  const totalHeight = instructionHeight + passageHeight + translationHeaderHeight + translationHeight;
+  
+  // 여유 공간 설정 (보수적인 안전 마진)
+  const safetyMargin = 3.0; // cm (실제 여유 공간에 맞게 조정)
+  const shouldSplit = totalHeight > (availableHeight - safetyMargin);
+  
+  console.log('📏 유형#14 동적 페이지 분할 계산:', {
+    availableHeight: availableHeight.toFixed(2) + 'cm',
+    instructionHeight: instructionHeight.toFixed(2) + 'cm',
+    passageHeight: passageHeight.toFixed(2) + 'cm',
+    translationHeaderHeight: translationHeaderHeight.toFixed(2) + 'cm',
+    translationHeight: translationHeight.toFixed(2) + 'cm',
+    totalHeight: totalHeight.toFixed(2) + 'cm',
+    safetyMargin: safetyMargin.toFixed(2) + 'cm',
+    effectiveAvailableHeight: (availableHeight - safetyMargin).toFixed(2) + 'cm',
+    shouldSplit
+  });
+  
+  return shouldSplit;
+}
+
 // BlankQuizData는 work14AIService에서 import
 
 const Work_14_FillSentence: React.FC = () => {
@@ -53,7 +126,8 @@ const Work_14_FillSentence: React.FC = () => {
   const [selected, setSelected] = useState<number | null>(null);
   const [printMode, setPrintMode] = useState<PrintMode>('none');
   const [userAnswers, setUserAnswers] = useState<string[]>([]); // 주관식 답안들
-  const [needsSecondPage, setNeedsSecondPage] = useState(false);
+  // 동적 페이지 분할 계산
+  const shouldSplit = quiz ? shouldSplitPage(quiz) : false;
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isPasteFocused, setIsPasteFocused] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -113,21 +187,12 @@ const Work_14_FillSentence: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  // 문제 생성 후 스크롤 최상단 및 페이지 분리 체크
+  // 문제 생성 후 스크롤 최상단
   useEffect(() => {
     if (quiz) {
       window.scrollTo(0, 0);
       
-      // 본문 길이 체크 (2000자 이상이면 2페이지로 분리)
-      const checkContentLength = () => {
-        if (inputText && inputText.length >= 2000) {
-          setNeedsSecondPage(true);
-        } else {
-          setNeedsSecondPage(false);
-        }
-      };
-      
-      checkContentLength();
+      // 페이지 분할은 동적 계산 함수 shouldSplitPage()에서 처리
     }
   }, [quiz]);
 
@@ -617,7 +682,7 @@ const Work_14_FillSentence: React.FC = () => {
         {/* 인쇄용: 문제만 */}
         {printMode === 'no-answer' && (
           <div className="only-print">
-            {needsSecondPage ? (
+            {shouldSplit ? (
               // 2페이지 구성: 본문, 4지선다 (본문 2000자 이상)
               <>
                 {/* 1페이지: 문제제목 + 본문 */}
@@ -695,7 +760,7 @@ const Work_14_FillSentence: React.FC = () => {
         {/* 인쇄용: 정답포함 */}
         {printMode === 'with-answer' && quiz && (
           <div className="only-print print-answer-mode">
-            {needsSecondPage ? (
+            {shouldSplit ? (
               // 2페이지 구성: 본문, 해석 (본문 2000자 이상)
               <>
                 {/* 1페이지: 문제제목 + 본문 */}
@@ -726,7 +791,7 @@ const Work_14_FillSentence: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div  style={{marginTop:'0.9rem', fontSize:'0.9rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0'}}>
+                      <div  style={{marginTop:'0.9rem', fontSize:'0.875rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0'}}>
                         {quiz.translation ? (
                           <div>
                             {quiz.translation}
@@ -762,13 +827,13 @@ const Work_14_FillSentence: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div  style={{marginTop:'0.9rem', fontSize:'0.9rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0'}}>
+                      <div  style={{marginTop:'0.9rem', fontSize:'0.875rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0'}}>
                         {quiz.translation ? (
-                          <div style={{fontSize:'0.9rem !important', fontFamily:'inherit', color:'#222'}}>
+                          <div style={{fontSize:'0.875rem !important', fontFamily:'inherit', color:'#222'}}>
                             {quiz.translation}
                           </div>
                         ) : (
-                          <span style={{fontSize:'0.9rem !important', fontFamily:'inherit', color:'#222'}}>
+                          <span style={{fontSize:'0.875rem !important', fontFamily:'inherit', color:'#222'}}>
                             본문 해석이 생성되지 않았습니다.
                           </span>
                         )}

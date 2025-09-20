@@ -1360,7 +1360,7 @@ Korean translation:`;
                         {/* 컨테이너19: problem-instruction */}
                         본문 해석
                       </div>
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.875rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {/* 컨테이너20: problem-passage - 본문 해석 직접 포함 */}
                         {quiz.translation || '번역을 생성하는 중...'}
                       </div>
@@ -1470,7 +1470,7 @@ Korean translation:`;
                         {/* 컨테이너15: problem-instruction */}
                         본문 해석
                       </div>
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.875rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {/* 컨테이너16: problem-passage - 본문 해석 직접 포함 */}
                         {quiz.translation || '번역을 생성하는 중...'}
                       </div>
