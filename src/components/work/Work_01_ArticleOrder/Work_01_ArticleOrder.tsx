@@ -198,56 +198,54 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
     setNeedsSecondPage(totalContentLength >= 2000);
   };
 
-  // 정답 페이지용 글자 수 기반 페이지 분할 결정
+  // 정답 페이지용 2페이지 고정 구성 (본문+정답, 해석)
   const checkAnswerContentLength = () => {
     if (!quiz || !translatedText) return;
     
-    // 정답 순서대로 정렬된 단락들의 총 글자 수 계산
-    const correctOrder = quiz.choices[quiz.answerIndex];
-    const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-      ? quiz.shuffledParagraphs 
-      : (quiz.paragraphs || []);
+    // 2페이지 고정 구성으로 단순화
+    setNeedsAnswerSecondPage(true); // 항상 2페이지 (해석 페이지 포함)
+    setNeedsAnswerThirdPage(false); // 3페이지 구성 사용 안함
     
-    const totalContentLength = correctOrder.reduce((total, paragraphLabel) => {
-      const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-      if (paragraph && paragraph.content) {
-        return total + paragraph.content.length;
-      }
-      return total;
-    }, 0);
-    
-    // 1페이지 로직:
-    // - 3,000자 미만: 1페이지(A,B,C,D+정답), 2페이지(해석)
-    // - 3,000자 이상: 1페이지(A,B,C), 2페이지(D+정답), 3페이지(해석)
-    setNeedsAnswerSecondPage(true); // 항상 2페이지 이상 (해석 페이지 포함)
-    setNeedsAnswerThirdPage(totalContentLength >= 3000); // 3,000자 이상일 때만 3페이지
+    console.log('📊 인쇄(정답) 2페이지 고정 구성:', {
+      page1: '본문 + 정답 + 선택지',
+      page2: '해석 (2,700자 기준 분할)'
+    });
   };
 
-  // 2페이지(해석 페이지) 분할 결정
+  // 해석 페이지 분할 결정 (2페이지 구성에서 해석 페이지 분할)
   const checkAnswerPage2Split = () => {
     if (!quiz || !translatedText) return;
     
-    // 정답 순서대로 정렬된 단락들과 해석의 총 글자 수 계산
+    // 해석 페이지의 총 글자 수 계산 (영어 원문 + 한글 해석)
     const correctOrder = quiz.choices[quiz.answerIndex];
     const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
       ? quiz.shuffledParagraphs 
       : (quiz.paragraphs || []);
     
-    const totalAnswerPage2Length = correctOrder.reduce((total, paragraphLabel) => {
+    // 영어 원문 총 글자수
+    const totalEnglishLength = correctOrder.reduce((total, paragraphLabel) => {
       const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-      if (paragraph && paragraph.content) {
-        // 단락 내용 + 해석 내용
-        const paragraphLength = paragraph.content.length;
-        const translationLength = translatedText.length / 4; // 4등분된 해석
-        return total + paragraphLength + translationLength;
-      }
-      return total;
+      return paragraph?.content ? total + paragraph.content.length : total;
     }, 0);
     
-    // 2페이지 분할 로직:
-    // - 3,000자 미만: 1페이지에 모든 해석 내용 (A,B,C,D+해석)
-    // - 3,000자 이상: 1페이지(A,B,C+해석), 2페이지(D+해석)
-    setNeedsAnswerPage2Split(totalAnswerPage2Length >= 3000);
+    // 한글 해석 총 글자수
+    const totalTranslationLength = translatedText.length;
+    
+    // 해석 페이지 총 글자수 (영어 + 한글 + 레이아웃 여백 고려)
+    const totalInterpretationLength = totalEnglishLength + totalTranslationLength;
+    
+    // 해석 페이지 분할 로직 (2,700자 기준):
+    // - 2,700자 미만: 해석 1페이지 (A,B,C,D 모든 해석)
+    // - 2,700자 이상: 해석 2페이지 (A,B,C 해석 / D 해석)
+    setNeedsAnswerPage2Split(totalInterpretationLength >= 2700);
+    
+    console.log('📖 해석 페이지 분할 분석:', {
+      totalEnglishLength,
+      totalTranslationLength,
+      totalInterpretationLength,
+      needsSplit: totalInterpretationLength >= 2700,
+      splitStructure: totalInterpretationLength >= 2700 ? 'A,B,C / D 분할' : '통합 페이지'
+    });
   };
 
   // 퀴즈가 생성되면 내용 길이 확인
@@ -758,619 +756,236 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
           </div>
         )}
 
-        {/* 인쇄용 문제 (정답 포함) - 새로운 페이지 분할 로직 */}
+        {/* 인쇄용 문제 (정답 포함) - 2페이지 독립 구조 */}
         {printMode === 'with-answer' && (
           <div className="only-print work-01-print">
-            {needsAnswerThirdPage ? (
-              // 3페이지 구성: 본문 글자수 2,000자 이상
-              <>
-                {/* 1페이지: A, B, C 본문만 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
+            {/* 1페이지: 본문 + 정답 + 선택지 */}
+            <div className="a4-page-template">
+              <div className="a4-page-header">
+                <PrintHeaderWork01 />
+              </div>
+              <div className="a4-page-content">
+                <div className="quiz-content">
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                    <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
+                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                        <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
-                        <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
+                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem'}}>
+                    {quiz.shuffledParagraphs.map((paragraph, index) => (
+                      <div key={paragraph.id} className="shuffled-paragraph">
+                        <strong>{paragraph.label}:</strong> {paragraph.content}
                       </div>
-                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem'}}>
-                        {(() => {
-                          // 정답 순서 가져오기
-                          const correctOrder = quiz.choices[quiz.answerIndex];
-                          const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                            ? quiz.shuffledParagraphs 
-                            : (quiz.paragraphs || []);
-                          
-                          // A, B, C 단락만 표시 (첫 3개)
-                          return correctOrder.slice(0, 3).map((paragraphLabel, index) => {
-                            const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-                            if (!paragraph || !paragraph.content) return null;
-                            
-                            return (
-                              <div key={paragraph.id} className="shuffled-paragraph">
-                                <strong>{paragraph.label}:</strong> {paragraph.content}
-                              </div>
-                            );
-                          });
-                        })()}
-                      </div>
+                    ))}
+                  </div>
+                  <div className="problem-options" style={{fontSize:'1rem', marginTop:'1.5rem'}}>
+                    <div className="option option-print">
+                      {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}
                     </div>
                   </div>
+                  <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0'}}>
+                    정답: {['①', '②', '③', '④'][quiz.answerIndex]}
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                {/* 2페이지: D 본문 + 4지선다 + 정답 */}
+            {/* 2페이지: 해석 - 2,700자 기준으로 분할 */}
+            {needsAnswerPage2Split ? (
+              // 해석 2,700자 이상: A,B,C 해석 / D 해석으로 분할
+              <>
+                {/* 2-1페이지: A, B, C 해석 */}
                 <div className="a4-page-template">
                   <div className="a4-page-header">
                     <PrintHeaderWork01 />
                   </div>
                   <div className="a4-page-content">
                     <div className="quiz-content">
-                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem'}}>
-                        {(() => {
-                          // 정답 순서 가져오기
-                          const correctOrder = quiz.choices[quiz.answerIndex];
-                          const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                            ? quiz.shuffledParagraphs 
-                            : (quiz.paragraphs || []);
+                      <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'block', width:'100%'}}>
+                        본문 해석
+                      </div>
+                      
+                      {/* A, B, C 단락과 해석만 표시 */}
+                      {(() => {
+                        const correctOrder = quiz.choices[quiz.answerIndex];
+                        const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
+                          ? quiz.shuffledParagraphs 
+                          : (quiz.paragraphs || []);
+                        
+                        // A, B, C만 표시 (첫 3개)
+                        return correctOrder.slice(0, 3).map((paragraphLabel, index) => {
+                          const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
                           
-                          // D 단락만 표시 (마지막 1개)
-                          const lastParagraphLabel = correctOrder[3];
-                          const paragraph = availableParagraphs.find(p => p.label === lastParagraphLabel);
-                          
-                          if (!paragraph || !paragraph.content) return null;
+                          if (!paragraph || !paragraph.content) {
+                            return (
+                              <div key={paragraphLabel} style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
+                                단락을 찾을 수 없습니다: {paragraphLabel}
+                              </div>
+                            );
+                          }
                           
                           return (
-                            <div key={paragraph.id} className="shuffled-paragraph">
-                              <strong>{paragraph.label}:</strong> {paragraph.content}
+                            <div key={paragraphLabel} className="paragraph-simple" style={{marginBottom: '1.5rem'}}>
+                              <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
+                                <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
+                              </div>
+                              <div style={{
+                                width: '100%',
+                                minHeight: '60px',
+                                border: '1px solid #ccc',
+                                backgroundColor: '#F1F8E9',
+                                marginTop: '0.5rem',
+                                padding: '0.6rem',
+                                fontSize: '1rem',
+                                lineHeight: '1.4',
+                                color: '#333'
+                              }}>
+                                {translatedText ? (
+                                  (() => {
+                                    if (!translatedText) return '번역 중...';
+                                    // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기
+                                    const translations = translatedText.split('\n\n');
+                                    return translations[index] || '번역 없음';
+                                  })()
+                                ) : (
+                                  '번역 중...'
+                                )}
+                              </div>
                             </div>
                           );
-                        })()}
-                      </div>
-                      <div className="problem-options" style={{fontSize:'1rem', marginTop:'1.5rem'}}>
-                        <div className="option option-print">
-                          {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}
-                        </div>
-                      </div>
-                      <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0'}}>
-                        정답: {['①', '②', '③', '④'][quiz.answerIndex]}
-                      </div>
+                        });
+                      })()}
                     </div>
                   </div>
                 </div>
 
-                {/* 3페이지: 본문 해석 - 글자 수에 따라 분할 */}
-                {needsAnswerPage2Split ? (
-                  // 3페이지 분할: A,B,C+해석, D+해석
-                  <>
-                    {/* 3-1페이지: A, B, C + 해석 */}
-                    <div className="a4-page-template">
-                      <div className="a4-page-header">
-                        <PrintHeaderWork01 />
-                      </div>
-                      <div className="a4-page-content">
-                        <div className="quiz-content">
-                          <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', marginTop: '2.4rem', display: 'block', width:'100%'}}>
-                            본문 해석
-                          </div>
-                          
-                          {/* A, B, C 단락과 해석만 표시 */}
-                          {(() => {
-                            const correctOrder = quiz.choices[quiz.answerIndex];
-                            const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                              ? quiz.shuffledParagraphs 
-                              : (quiz.paragraphs || []);
-                            
-                            if (!correctOrder || !Array.isArray(correctOrder)) {
-                              return (
-                                <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                  정답 순서를 찾을 수 없습니다.
-                                </div>
-                              );
-                            }
-                            
-                            if (!availableParagraphs || availableParagraphs.length === 0) {
-                              return (
-                                <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                  사용 가능한 단락이 없습니다.
-                                </div>
-                              );
-                            }
-                            
-                            // A, B, C만 표시 (첫 3개)
-                            return correctOrder.slice(0, 3).map((paragraphLabel, index) => {
-                              const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-                              
-                              if (!paragraph || !paragraph.content) {
-                                return (
-                                  <div key={paragraphLabel} style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                                    단락을 찾을 수 없습니다: {paragraphLabel}
-                                  </div>
-                                );
-                              }
-                              
-                              return (
-                                <div key={paragraphLabel} className="paragraph-simple" style={{marginBottom: '1.5rem'}}>
-                                  <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                                    <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                                  </div>
-                                  <div style={{
-                                    width: '100%',
-                                    minHeight: '60px',
-                                    border: '1px solid #ccc',
-                                    backgroundColor: '#F1F8E9',
-                                    marginTop: '0.5rem',
-                                    padding: '0.6rem',
-                                    fontSize: '1rem',
-                                    lineHeight: '1.4',
-                                    color: '#333'
-                                  }}>
-                                  {translatedText ? (
-                                    (() => {
-                                      if (!translatedText) return '번역 중...';
-                                      // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기
-                                      const translations = translatedText.split('\n\n');
-                                      return translations[index] || '번역 없음';
-                                    })()
-                                  ) : (
-                                    '번역 중...'
-                                  )}
-                                  </div>
-                                </div>
-                              );
-                            });
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 3-2페이지: D + 해석 */}
-                    <div className="a4-page-template">
-                      <div className="a4-page-header">
-                        <PrintHeaderWork01 />
-                      </div>
-                      <div className="a4-page-content">
-                        <div className="quiz-content">
-                          <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '3rem', marginTop: '2.4rem', display: 'block', width:'100%'}}>
-                            본문 해석 (계속)
-                          </div>
-                          
-                          {/* D 단락과 해석만 표시 */}
-                          {(() => {
-                            const correctOrder = quiz.choices[quiz.answerIndex];
-                            const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                              ? quiz.shuffledParagraphs 
-                              : (quiz.paragraphs || []);
-                            
-                            if (!correctOrder || !Array.isArray(correctOrder)) {
-                              return (
-                                <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                  정답 순서를 찾을 수 없습니다.
-                                </div>
-                              );
-                            }
-                            
-                            if (!availableParagraphs || availableParagraphs.length === 0) {
-                              return (
-                                <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                  사용 가능한 단락이 없습니다.
-                                </div>
-                              );
-                            }
-                            
-                            // D만 표시 (마지막 1개)
-                            const lastParagraphLabel = correctOrder[3];
-                            const paragraph = availableParagraphs.find(p => p.label === lastParagraphLabel);
-                            
-                            if (!paragraph || !paragraph.content) {
-                              return (
-                                <div style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                                  단락을 찾을 수 없습니다: {lastParagraphLabel}
-                                </div>
-                              );
-                            }
-                            
-                            return (
-                              <div className="paragraph-simple" style={{marginBottom: '1.5rem', marginTop: '0rem'}}>
-                                <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                                  <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                                </div>
-                                <div style={{
-                                  width: '100%',
-                                  minHeight: '60px',
-                                  border: '1px solid #ccc',
-                                  backgroundColor: '#F1F8E9',
-                                  marginTop: '0.5rem',
-                                  padding: '0.6rem',
-                                  fontSize: '1rem',
-                                  lineHeight: '1.4',
-                                  color: '#333'
-                                }}>
-                                  {translatedText ? (
-                                    (() => {
-                                      if (!translatedText) return '번역 중...';
-                                      const totalLength = translatedText.length;
-                                      const partLength = Math.floor(totalLength / 4);
-                                      const startIndex = 3 * partLength;
-                                      const endIndex = totalLength;
-                                      return translatedText.substring(startIndex, endIndex).trim();
-                                    })()
-                                  ) : (
-                                    '번역 중...'
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  // 3페이지: 모든 해석 내용
-                  <div className="a4-page-template">
-                    <div className="a4-page-header">
-                      <PrintHeaderWork01 />
-                    </div>
-                    <div className="a4-page-content">
-                      <div className="quiz-content">
-                        <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'block', width:'100%'}}>
-                          본문 해석
-                        </div>
-                        
-                        {/* 정답 순서대로 각 단락과 해석 표시 */}
-                        {(() => {
-                          const correctOrder = quiz.choices[quiz.answerIndex];
-                          const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                            ? quiz.shuffledParagraphs 
-                            : (quiz.paragraphs || []);
-                          
-                          if (!correctOrder || !Array.isArray(correctOrder)) {
-                            return (
-                              <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                정답 순서를 찾을 수 없습니다.
-                              </div>
-                            );
-                          }
-                          
-                          if (!availableParagraphs || availableParagraphs.length === 0) {
-                            return (
-                              <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                사용 가능한 단락이 없습니다.
-                              </div>
-                            );
-                          }
-                          
-                          return correctOrder.map((paragraphLabel, index) => {
-                            const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-                            
-                            if (!paragraph || !paragraph.content) {
-                              return (
-                                <div key={paragraphLabel} style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                                  단락을 찾을 수 없습니다: {paragraphLabel}
-                                </div>
-                              );
-                            }
-                            
-                            return (
-                              <div key={paragraphLabel} className="paragraph-simple" style={{marginBottom: '1.5rem'}}>
-                                <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                                  <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                                </div>
-                                <div style={{
-                                  width: '100%',
-                                  minHeight: '60px',
-                                  border: '1px solid #ccc',
-                                  backgroundColor: '#F1F8E9',
-                                  marginTop: '0.5rem',
-                                  padding: '0.6rem',
-                                  fontSize: '1rem',
-                                  lineHeight: '1.4',
-                                  color: '#333'
-                                }}>
-                                  {translatedText ? (
-                                    (() => {
-                                      if (!translatedText) return '번역 중...';
-                                      // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기
-                                      const translations = translatedText.split('\n\n');
-                                      return translations[index] || '번역 없음';
-                                    })()
-                                  ) : (
-                                    '번역 중...'
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              // 2페이지 구성: 본문 글자수 2,000자 미만
-              <>
-                {/* 1페이지: A, B, C, D 본문 + 4지선다 + 정답 */}
+                {/* 2-2페이지: D 해석 */}
                 <div className="a4-page-template">
                   <div className="a4-page-header">
                     <PrintHeaderWork01 />
                   </div>
                   <div className="a4-page-content">
                     <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                        <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
-                        <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
+                      <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '3rem', display: 'block', width:'100%'}}>
+                        본문 해석 (계속)
                       </div>
-                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem'}}>
-                        {quiz.shuffledParagraphs.map((paragraph, index) => (
-                          <div key={paragraph.id} className="shuffled-paragraph">
-                            <strong>{paragraph.label}:</strong> {paragraph.content}
+                      
+                      {/* D 단락과 해석만 표시 */}
+                      {(() => {
+                        const correctOrder = quiz.choices[quiz.answerIndex];
+                        const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
+                          ? quiz.shuffledParagraphs 
+                          : (quiz.paragraphs || []);
+                        
+                        // D만 표시 (마지막 1개)
+                        const lastParagraphLabel = correctOrder[3];
+                        const paragraph = availableParagraphs.find(p => p.label === lastParagraphLabel);
+                        
+                        if (!paragraph || !paragraph.content) {
+                          return (
+                            <div style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
+                              단락을 찾을 수 없습니다: {lastParagraphLabel}
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <div className="paragraph-simple" style={{marginBottom: '1.5rem', marginTop: '0rem'}}>
+                            <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
+                              <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
+                            </div>
+                            <div style={{
+                              width: '100%',
+                              minHeight: '60px',
+                              border: '1px solid #ccc',
+                              backgroundColor: '#F1F8E9',
+                              marginTop: '0.5rem',
+                              padding: '0.6rem',
+                              fontSize: '1rem',
+                              lineHeight: '1.4',
+                              color: '#333'
+                            }}>
+                              {translatedText ? (
+                                (() => {
+                                  if (!translatedText) return '번역 중...';
+                                  // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기 (D는 인덱스 3)
+                                  const translations = translatedText.split('\n\n');
+                                  return translations[3] || '번역 없음';
+                                })()
+                              ) : (
+                                '번역 중...'
+                              )}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                      <div className="problem-options" style={{fontSize:'1rem', marginTop:'1.5rem'}}>
-                        <div className="option option-print">
-                          {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}
-                        </div>
-                      </div>
-                      <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0'}}>
-                        정답: {['①', '②', '③', '④'][quiz.answerIndex]}
-                      </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
-
-                {/* 2페이지: 본문 해석 - 글자 수에 따라 분할 */}
-                {needsAnswerPage2Split ? (
-                  // 2페이지 분할: A,B,C+해석, D+해석
-                  <>
-                    {/* 2-1페이지: A, B, C + 해석 */}
-                    <div className="a4-page-template">
-                      <div className="a4-page-header">
-                        <PrintHeaderWork01 />
-                      </div>
-                      <div className="a4-page-content">
-                        <div className="quiz-content">
-                          <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', marginTop: '2.4rem', display: 'block', width:'100%'}}>
-                            본문 해석
-                          </div>
-                          
-                          {/* A, B, C 단락과 해석만 표시 */}
-                          {(() => {
-                            const correctOrder = quiz.choices[quiz.answerIndex];
-                            const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                              ? quiz.shuffledParagraphs 
-                              : (quiz.paragraphs || []);
-                            
-                            if (!correctOrder || !Array.isArray(correctOrder)) {
-                              return (
-                                <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                  정답 순서를 찾을 수 없습니다.
-                                </div>
-                              );
-                            }
-                            
-                            if (!availableParagraphs || availableParagraphs.length === 0) {
-                              return (
-                                <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                  사용 가능한 단락이 없습니다.
-                                </div>
-                              );
-                            }
-                            
-                            // A, B, C만 표시 (첫 3개)
-                            return correctOrder.slice(0, 3).map((paragraphLabel, index) => {
-                              const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-                              
-                              if (!paragraph || !paragraph.content) {
-                                return (
-                                  <div key={paragraphLabel} style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                                    단락을 찾을 수 없습니다: {paragraphLabel}
-                                  </div>
-                                );
-                              }
-                              
-                              return (
-                                <div key={paragraphLabel} className="paragraph-simple" style={{marginBottom: '1.5rem'}}>
-                                  <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                                    <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                                  </div>
-                                  <div style={{
-                                    width: '100%',
-                                    minHeight: '60px',
-                                    border: '1px solid #ccc',
-                                    backgroundColor: '#F1F8E9',
-                                    marginTop: '0.5rem',
-                                    padding: '0.6rem',
-                                    fontSize: '1rem',
-                                    lineHeight: '1.4',
-                                    color: '#333'
-                                  }}>
-                                  {translatedText ? (
-                                    (() => {
-                                      if (!translatedText) return '번역 중...';
-                                      // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기
-                                      const translations = translatedText.split('\n\n');
-                                      return translations[index] || '번역 없음';
-                                    })()
-                                  ) : (
-                                    '번역 중...'
-                                  )}
-                                  </div>
-                                </div>
-                              );
-                            });
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 2-2페이지: D + 해석 */}
-                    <div className="a4-page-template">
-                      <div className="a4-page-header">
-                        <PrintHeaderWork01 />
-                      </div>
-                      <div className="a4-page-content">
-                        <div className="quiz-content">
-                          <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '3rem', marginTop: '2.4rem', display: 'block', width:'100%'}}>
-                            본문 해석 (계속)
-                          </div>
-                          
-                          {/* D 단락과 해석만 표시 */}
-                          {(() => {
-                            const correctOrder = quiz.choices[quiz.answerIndex];
-                            const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                              ? quiz.shuffledParagraphs 
-                              : (quiz.paragraphs || []);
-                            
-                            if (!correctOrder || !Array.isArray(correctOrder)) {
-                              return (
-                                <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                  정답 순서를 찾을 수 없습니다.
-                                </div>
-                              );
-                            }
-                            
-                            if (!availableParagraphs || availableParagraphs.length === 0) {
-                              return (
-                                <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                  사용 가능한 단락이 없습니다.
-                                </div>
-                              );
-                            }
-                            
-                            // D만 표시 (마지막 1개)
-                            const lastParagraphLabel = correctOrder[3];
-                            const paragraph = availableParagraphs.find(p => p.label === lastParagraphLabel);
-                            
-                            if (!paragraph || !paragraph.content) {
-                              return (
-                                <div style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                                  단락을 찾을 수 없습니다: {lastParagraphLabel}
-                                </div>
-                              );
-                            }
-                            
-                            return (
-                              <div className="paragraph-simple" style={{marginBottom: '1.5rem', marginTop: '0rem'}}>
-                                <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                                  <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                                </div>
-                                <div style={{
-                                  width: '100%',
-                                  minHeight: '60px',
-                                  border: '1px solid #ccc',
-                                  backgroundColor: '#F1F8E9',
-                                  marginTop: '0.5rem',
-                                  padding: '0.6rem',
-                                  fontSize: '1rem',
-                                  lineHeight: '1.4',
-                                  color: '#333'
-                                }}>
-                                  {translatedText ? (
-                                    (() => {
-                                      if (!translatedText) return '번역 중...';
-                                      const totalLength = translatedText.length;
-                                      const partLength = Math.floor(totalLength / 4);
-                                      const startIndex = 3 * partLength;
-                                      const endIndex = totalLength;
-                                      return translatedText.substring(startIndex, endIndex).trim();
-                                    })()
-                                  ) : (
-                                    '번역 중...'
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  // 1페이지: 모든 해석 내용
-                  <div className="a4-page-template">
-                    <div className="a4-page-header">
-                      <PrintHeaderWork01 />
-                    </div>
-                    <div className="a4-page-content">
-                      <div className="quiz-content">
-                        <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'block', width:'100%'}}>
-                          본문 해석
-                        </div>
-                        
-                        {/* 정답 순서대로 각 단락과 해석 표시 */}
-                        {(() => {
-                          const correctOrder = quiz.choices[quiz.answerIndex];
-                          const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                            ? quiz.shuffledParagraphs 
-                            : (quiz.paragraphs || []);
-                          
-                          if (!correctOrder || !Array.isArray(correctOrder)) {
-                            return (
-                              <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                정답 순서를 찾을 수 없습니다.
-                              </div>
-                            );
-                          }
-                          
-                          if (!availableParagraphs || availableParagraphs.length === 0) {
-                            return (
-                              <div style={{color: 'red', padding: '2rem', textAlign: 'center'}}>
-                                사용 가능한 단락이 없습니다.
-                              </div>
-                            );
-                          }
-                          
-                          return correctOrder.map((paragraphLabel, index) => {
-                            const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-                            
-                            if (!paragraph || !paragraph.content) {
-                              return (
-                                <div key={paragraphLabel} style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                                  단락을 찾을 수 없습니다: {paragraphLabel}
-                                </div>
-                              );
-                            }
-                            
-                            return (
-                              <div key={paragraphLabel} className="paragraph-simple" style={{marginBottom: '1.5rem'}}>
-                                <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                                  <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                                </div>
-                                <div style={{
-                                  width: '100%',
-                                  minHeight: '60px',
-                                  border: '1px solid #ccc',
-                                  backgroundColor: '#F1F8E9',
-                                  marginTop: '0.5rem',
-                                  padding: '0.6rem',
-                                  fontSize: '1rem',
-                                  lineHeight: '1.4',
-                                  color: '#333'
-                                }}>
-                                  {translatedText ? (
-                                    (() => {
-                                      if (!translatedText) return '번역 중...';
-                                      // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기
-                                      const translations = translatedText.split('\n\n');
-                                      return translations[index] || '번역 없음';
-                                    })()
-                                  ) : (
-                                    '번역 중...'
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </>
+            ) : (
+              // 해석 2,700자 미만: A,B,C,D 모든 해석을 1페이지에
+              <div className="a4-page-template">
+                <div className="a4-page-header">
+                  <PrintHeaderWork01 />
+                </div>
+                <div className="a4-page-content">
+                  <div className="quiz-content">
+                    <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'block', width:'100%'}}>
+                      본문 해석
+                    </div>
+                    
+                    {/* 정답 순서대로 각 단락과 해석 표시 */}
+                    {(() => {
+                      const correctOrder = quiz.choices[quiz.answerIndex];
+                      const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
+                        ? quiz.shuffledParagraphs 
+                        : (quiz.paragraphs || []);
+                      
+                      return correctOrder.map((paragraphLabel, index) => {
+                        const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
+                        
+                        if (!paragraph || !paragraph.content) {
+                          return (
+                            <div key={paragraphLabel} style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
+                              단락을 찾을 수 없습니다: {paragraphLabel}
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <div key={paragraphLabel} className="paragraph-simple" style={{marginBottom: '1.5rem'}}>
+                            <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
+                              <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
+                            </div>
+                            <div style={{
+                              width: '100%',
+                              minHeight: '60px',
+                              border: '1px solid #ccc',
+                              backgroundColor: '#F1F8E9',
+                              marginTop: '0.5rem',
+                              padding: '0.6rem',
+                              fontSize: '1rem',
+                              lineHeight: '1.4',
+                              color: '#333'
+                            }}>
+                              {translatedText ? (
+                                (() => {
+                                  if (!translatedText) return '번역 중...';
+                                  // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기
+                                  const translations = translatedText.split('\n\n');
+                                  return translations[index] || '번역 없음';
+                                })()
+                              ) : (
+                                '번역 중...'
+                              )}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -1587,4 +1202,3 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
 };
 
 export default Work_11_ArticleOrder;
-
