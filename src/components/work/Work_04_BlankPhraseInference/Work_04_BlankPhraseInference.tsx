@@ -549,10 +549,10 @@ const Work_04_BlankPhraseInference: React.FC = () => {
               <span>다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
               <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
             </div>
-            <div className="problem-passage" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#f7f8fc', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
+            <div className="problem-passage" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#f7f8fc', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit', fontWeight:400}}>
               {displayBlankedText}
             </div>
-            <div className="problem-options" style={{margin:'1.2rem 0'}}>
+            <div className="work04-problem-options" style={{margin:'1.2rem 0'}}>
               {quiz.options.map((opt, i) => (
                 <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
                   <input
@@ -592,7 +592,7 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                         <span>다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
                       </div>
-                      <div className="work04-print-answer-passage" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="work04-print-answer-passage" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
                     </div>
@@ -606,12 +606,12 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                   </div>
                   <div className="a4-page-content">
                     <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.8rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         다음 중에서 가장 적절한 것을 고르시오.
                       </div>
-                      <div className="problem-options" style={{margin:'1rem 0'}}>
+                      <div className="work04-problem-options" style={{margin:'1rem 0'}}>
                         {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                          <div key={i}>
                             {`①②③④⑤`[i] || `${i+1}.`} {opt}
                           </div>
                         ))}
@@ -628,15 +628,15 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                 </div>
                 <div className="a4-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.8rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                       다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.
                     </div>
-                    <div className="work04-print-problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div className="work04-print-problem-passage" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       {displayBlankedText}
                     </div>
-                    <div className="problem-options" style={{margin:'1rem 0'}}>
+                    <div className="work04-problem-options work04-print-options" style={{margin:'1rem 0'}}>
                       {quiz.options.map((opt, i) => (
-                        <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                        <div key={i}>
                           {`①②③④⑤`[i] || `${i+1}.`} {opt}
                         </div>
                       ))}
@@ -663,12 +663,12 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                         <span>다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
                       </div>
-                      <div className="work04-print-answer-passage" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="work04-print-answer-passage" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
-                      <div className="problem-options" style={{margin:'1rem 0'}}>
+                      <div className="work04-problem-options" style={{margin:'1rem 0'}}>
                         {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                          <div key={i}>
                             {`①②③④⑤`[i] || `${i+1}.`} {opt}
                             {quiz.answerIndex === i && (
                               <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
@@ -690,7 +690,7 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="work04-print-answer-translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="work04-print-answer-translation" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
                       </div>
                     </div>
@@ -711,12 +711,12 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                         <span>다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
                       </div>
-                      <div className="work04-print-answer-passage" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="work04-print-answer-passage" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
-                      <div className="problem-options" style={{margin:'1rem 0'}}>
+                      <div className="work04-problem-options" style={{margin:'1rem 0'}}>
                         {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                          <div key={i}>
                             {`①②③④⑤`[i] || `${i+1}.`} {opt}
                             {quiz.answerIndex === i && (
                               <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
@@ -738,7 +738,7 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="work04-print-answer-translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="work04-print-answer-translation" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
                       </div>
                     </div>

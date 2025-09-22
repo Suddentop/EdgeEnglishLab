@@ -578,27 +578,76 @@
   100% { transform: rotate(360deg); }
 }
 
+/* 유형#04 문제생성 후 화면용 problem-passage 스타일 - Work_02의 14px 강제 설정을 무시 */
+.problem-passage:not(.translation) {
+  font-size: 1.08rem !important;
+}
+
+.problem-passage:not(.translation) * {
+  font-size: 1.08rem !important;
+}
+
+/* 유형#04 문제생성 후 화면용 4지선다 스타일 - 다른 CSS 파일의 설정을 무시 */
+.work04-problem-options label {
+  font-size: 1.08rem !important;
+}
+
+.work04-problem-options div {
+  font-size: 1.08rem !important;
+}
+
+.problem-passage {
+  line-height: 1.7;
+  margin: 1.2rem 0;
+  background: #f7f8fc;
+  border-radius: 8px;
+  padding: 1.2rem;
+  font-family: inherit;
+  font-weight: 400;
+}
+
 /* 유형#04 전용 인쇄 스타일 - 독립적 관리 */
 @media print {
-  /* 유형#04 인쇄(정답) 1페이지 문제본문 컨테이너 - 연한 노란색 */
+  /* PrintFormat.css의 1rem 설정을 오버라이드 - 더 구체적인 선택자 사용 */
+  .only-print .problem-passage {
+    font-size: 0.8rem !important;
+  }
+  
+  /* 유형#04 전용 인쇄용 4지선다 스타일 - PrintFormat.css의 1rem 설정을 오버라이드 */
+  .only-print .work04-problem-options,
+  .only-print .work04-problem-options div,
+  .only-print .work04-print-options,
+  .only-print .work04-print-options div {
+    font-size: 1rem !important;
+  }
+  
+  /* 유형#04 인쇄(정답) 1페이지 문제본문 컨테이너 - 연한 노란색, 글씨크기 0.8rem */
   .work04-print-answer-passage {
     background: #FFF3CD !important;
+    font-size: 0.8rem !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* 유형#04 인쇄(정답) 2페이지 본문해석 컨테이너 - 연한 녹색 */
+  /* 유형#04 인쇄(정답) 2페이지 본문해석 컨테이너 - 연한 녹색, 글씨크기 0.8rem */
   .work04-print-answer-translation {
     background: #F1F8E9 !important;
+    font-size: 0.8rem !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* 유형#04 인쇄(문제) 1페이지 문제본문 컨테이너 - 연한 노란색 */
+  /* 유형#04 인쇄(문제) 1페이지 문제본문 컨테이너 - 연한 노란색, 글씨크기 0.8rem */
   .work04-print-problem-passage {
     background: #FFF3CD !important;
+    font-size: 0.8rem !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+  
+  /* 유형#04 인쇄용 문제지시문과 해석제목은 1rem 유지 */
+  .only-print .problem-instruction {
+    font-size: 1rem !important;
   }
 }
 
