@@ -13,6 +13,8 @@ interface WordReplacement {
   replacement: string;        // 교체된 단어/숙어
   originalMeaning: string;    // 원본 단어/숙어의 한국어 뜻
   replacementMeaning: string; // 교체된 단어/숙어의 한국어 뜻
+  originalPosition?: number;  // 원본 텍스트에서 교체된 위치
+  replacedPosition?: number;  // 교체된 텍스트에서 교체된 위치
 }
 
 interface Work_02_ReadingComprehensionData {
@@ -954,7 +956,7 @@ Korean translation:`;
     setIsPasteFocused(false);
   };
 
-  // 본문에서 교체된 단어에 밑줄 표시 - 문장별 처리 방식
+  // 본문에서 교체된 단어에 밑줄 표시 - 중복 방지 로직 포함
   const renderTextWithUnderlines = (text: string, replacements: WordReplacement[], isOriginal: boolean = true) => {
     if (!replacements || replacements.length === 0) return text;
     
@@ -965,112 +967,179 @@ Korean translation:`;
     let elementIndex = 0;
     let currentPosition = 0;
     
-    // 각 문장별로 처리
+    // 이미 사용된 교체 정보를 추적하여 중복 방지
+    const usedReplacements = new Set<string>();
+    
+    // 각 문장별로 처리하여 해당 문장의 교체된 단어만 밑줄 표시
     for (let i = 0; i < sentences.length; i++) {
       const sentence = sentences[i];
-      const replacement = replacements[i];
-      
-      if (!replacement) {
-        // 교체 정보가 없는 문장은 그대로 추가
-        resultElements.push(sentence);
-        currentPosition += sentence.length;
-        continue;
-      }
       
       // 현재 문장의 시작 위치 찾기
       const sentenceStart = text.indexOf(sentence, currentPosition);
       if (sentenceStart === -1) {
         resultElements.push(sentence);
-        currentPosition += sentence.length;
+        if (i < sentences.length - 1) resultElements.push(' ');
         continue;
       }
       
       const sentenceEnd = sentenceStart + sentence.length;
       
-      // 현재 문장 내에서만 선택된 단어 찾기
+      // 이 문장에 해당하는 교체 정보 찾기 (내용 기반 매칭, 중복 방지)
+      let replacement: WordReplacement | null = null;
+      
+      // 교체 정보 중에서 현재 문장에 포함된 단어를 찾기 (아직 사용되지 않은 것만)
+      for (const rep of replacements) {
+        const wordToFind = isOriginal ? rep.original : rep.replacement;
+        if (!wordToFind) continue;
+        
+        // 이미 사용된 교체 정보인지 확인
+        const replacementKey = `${rep.original}-${rep.replacement}`;
+        if (usedReplacements.has(replacementKey)) continue;
+        
+        if (sentence.toLowerCase().includes(wordToFind.toLowerCase())) {
+          // 단어 경계를 고려한 정확한 매칭 확인
+          const escapedWord = wordToFind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+          if (regex.test(sentence)) {
+            replacement = rep;
+            usedReplacements.add(replacementKey); // 사용된 교체 정보로 표시
+            break; // 첫 번째 매칭만 사용
+          }
+        }
+      }
+      
+      if (!replacement) {
+        // 교체 정보가 없는 문장은 그대로 추가
+        resultElements.push(sentence);
+        if (i < sentences.length - 1) resultElements.push(' ');
+        currentPosition = sentenceEnd;
+        continue;
+      }
+      
       const wordToHighlight = isOriginal ? replacement.original : replacement.replacement;
+      if (!wordToHighlight) {
+        resultElements.push(sentence);
+        if (i < sentences.length - 1) resultElements.push(' ');
+        currentPosition = sentenceEnd;
+        continue;
+      }
+      
+      // 해당 문장에서 교체된 단어의 첫 번째 매칭만 찾기
       const escapedWord = wordToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+      const regex = new RegExp(`\\b${escapedWord}\\b`, 'i'); // 대소문자 구분 없이 첫 번째 매칭만
       
-      let sentenceElements: (string | JSX.Element)[] = [];
-      let lastIndex = 0;
-      let match;
-      
-      // 문장 내에서 해당 단어 찾기
-      while ((match = regex.exec(sentence)) !== null) {
-        // 이전 위치부터 현재 단어 시작까지의 텍스트
-        if (match.index > lastIndex) {
-          sentenceElements.push(sentence.slice(lastIndex, match.index));
+      const match = regex.exec(sentence);
+      if (match) {
+        // 단어 앞부분
+        if (match.index > 0) {
+          resultElements.push(sentence.substring(0, match.index));
         }
         
         // 밑줄 표시된 단어
-        sentenceElements.push(
+        resultElements.push(
           <span key={elementIndex++} style={{textDecoration: 'underline', fontWeight: 'bold', color: '#2d5aa0'}}>
             {match[0]}
           </span>
         );
         
-        lastIndex = match.index + match[0].length;
+        // 단어 뒷부분
+        if (match.index + match[0].length < sentence.length) {
+          resultElements.push(sentence.substring(match.index + match[0].length));
+        }
+      } else {
+        // 매칭되는 단어가 없으면 그대로 추가
+        resultElements.push(sentence);
       }
       
-      // 마지막 부분
-      if (lastIndex < sentence.length) {
-        sentenceElements.push(sentence.slice(lastIndex));
+      // 문장 사이에 공백 추가
+      if (i < sentences.length - 1) {
+        resultElements.push(' ');
       }
       
-      // 문장 요소들을 결과에 추가
-      resultElements.push(...sentenceElements);
       currentPosition = sentenceEnd;
     }
     
     return resultElements.length > 0 ? resultElements : text;
   };
 
-  // 인쇄용 텍스트 렌더링 - 문장별 처리 방식
+  // 인쇄용 텍스트 렌더링 - 중복 방지 로직 포함
   const renderPrintTextWithUnderlines = (text: string, replacements: WordReplacement[], isOriginal: boolean = true) => {
     if (!replacements || replacements.length === 0) return text;
     
     // 문장 분리 (원본 본문과 동일한 방식)
     const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
     
-    let result = '';
+    // 각 문장별로 처리할 HTML 결과
+    let processedSentences: string[] = [];
     let currentPosition = 0;
     
-    // 각 문장별로 처리
+    // 이미 사용된 교체 정보를 추적하여 중복 방지
+    const usedReplacements = new Set<string>();
+    
+    // 각 문장별로 처리하여 해당 문장의 교체된 단어만 HTML 태그 적용
     for (let i = 0; i < sentences.length; i++) {
       const sentence = sentences[i];
-      const replacement = replacements[i];
-      
-      if (!replacement) {
-        // 교체 정보가 없는 문장은 그대로 추가
-        result += sentence;
-        currentPosition += sentence.length;
-        continue;
-      }
       
       // 현재 문장의 시작 위치 찾기
       const sentenceStart = text.indexOf(sentence, currentPosition);
       if (sentenceStart === -1) {
-        result += sentence;
-        currentPosition += sentence.length;
+        processedSentences.push(sentence);
         continue;
       }
       
       const sentenceEnd = sentenceStart + sentence.length;
       
-      // 현재 문장 내에서만 선택된 단어 찾기
+      // 이 문장에 해당하는 교체 정보 찾기 (내용 기반 매칭, 중복 방지)
+      let replacement: WordReplacement | null = null;
+      
+      // 교체 정보 중에서 현재 문장에 포함된 단어를 찾기 (아직 사용되지 않은 것만)
+      for (const rep of replacements) {
+        const wordToFind = isOriginal ? rep.original : rep.replacement;
+        if (!wordToFind) continue;
+        
+        // 이미 사용된 교체 정보인지 확인
+        const replacementKey = `${rep.original}-${rep.replacement}`;
+        if (usedReplacements.has(replacementKey)) continue;
+        
+        if (sentence.toLowerCase().includes(wordToFind.toLowerCase())) {
+          // 단어 경계를 고려한 정확한 매칭 확인
+          const escapedWord = wordToFind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+          if (regex.test(sentence)) {
+            replacement = rep;
+            usedReplacements.add(replacementKey); // 사용된 교체 정보로 표시
+            break; // 첫 번째 매칭만 사용
+          }
+        }
+      }
+      
+      if (!replacement) {
+        // 교체 정보가 없는 문장은 그대로 추가
+        processedSentences.push(sentence);
+        currentPosition = sentenceEnd;
+        continue;
+      }
+      
       const wordToHighlight = isOriginal ? replacement.original : replacement.replacement;
+      if (!wordToHighlight) {
+        processedSentences.push(sentence);
+        currentPosition = sentenceEnd;
+        continue;
+      }
+      
+      // 해당 문장에서 교체된 단어의 첫 번째 매칭만 찾기
       const escapedWord = wordToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+      const regex = new RegExp(`\\b${escapedWord}\\b`, 'i'); // 대소문자 구분 없이 첫 번째 매칭만
       
       // 문장 내에서 해당 단어만 HTML 태그로 감싸기
-      const modifiedSentence = sentence.replace(regex, `<u><strong>$&</strong></u>`);
-      result += modifiedSentence;
+      const processedSentence = sentence.replace(regex, `<u><strong>$&</strong></u>`);
+      processedSentences.push(processedSentence);
       
       currentPosition = sentenceEnd;
     }
     
-    return result;
+    // 처리된 문장들을 공백으로 연결하여 반환
+    return processedSentences.join(' ');
   };
 
   // 문제 풀이/출력 화면
@@ -1490,7 +1559,7 @@ Korean translation:`;
     <div className="quiz-generator" onPaste={handlePaste}>
       <div className="generator-header">
         <h2>[유형#02] 독해 문제 생성</h2>
-        <p>영어 본문에서 중요한 단어/숙어를 선정하여 유의어로 교체한 독해 문제를 생성합니다.</p>
+        <p>영어 본문에서 문맥상 의미가 있는 단어를 선정하여, 선정된 단어와 같은 의미를 가진 단어로 교체된 본문을 독해하는 문제를 생성합니다.</p>
       </div>
 
       {/* 입력 방식 선택 */}
