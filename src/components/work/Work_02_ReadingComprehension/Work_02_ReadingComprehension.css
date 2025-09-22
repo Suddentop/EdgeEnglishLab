@@ -905,22 +905,56 @@
   margin-top: 1rem !important;
 }
 
-.replacements-table th {
+/* 화면 표시용 테이블 - 전체 테두리 */
+.quiz-generator .replacements-table.no-print {
+  border: 1px solid #aaaaaa !important;
+  border-collapse: collapse !important;
+}
+
+/* 화면 표시용 테이블 헤더 */
+.quiz-generator .replacements-table.no-print th {
   background: #f5f5f5 !important;
   color: #333 !important;
   font-weight: 600 !important;
   padding: 0.8rem !important;
   text-align: center !important;
-  font-size: 0.9rem !important;
+  font-size: 12px !important;
+  border-top: 0.5px solid #aaaaaa !important;
+  border-bottom: 0.5px solid #aaaaaa !important;
+  border-left: 0.5px solid #aaaaaa !important;
+  border-right: 0.5px solid #aaaaaa !important;
+}
+
+/* 인쇄(정답)용 테이블 헤더 */
+.only-print .replacements-table th {
+  background: #f5f5f5 !important;
+  color: #333 !important;
+  font-weight: 600 !important;
+  padding: 0.225rem 0.45rem !important;
+  text-align: center !important;
+  font-size: 12px !important;
   border: 1px solid #ddd !important;
 }
 
-.replacements-table td {
+/* 화면 표시용 테이블 셀 */
+.quiz-generator .replacements-table.no-print td {
   padding: 0.6rem 0.8rem !important;
+  border-top: 0.5px solid #aaaaaa !important;
+  border-bottom: 0.5px solid #aaaaaa !important;
+  border-left: 0.5px solid #aaaaaa !important;
+  border-right: 0.5px solid #aaaaaa !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+  font-size: 12px !important;
+}
+
+/* 인쇄(정답)용 테이블 셀 */
+.only-print .replacements-table td {
+  padding: 0.225rem 0.9rem !important;
   border: 1px solid #ddd !important;
   text-align: left !important;
   vertical-align: middle !important;
-  font-size: 0.85rem !important;
+  font-size: 12px !important;
 }
 
 .replacements-table tr:last-child td {
@@ -934,23 +968,23 @@
 .original-word {
   font-weight: 600;
   color: #d97706;
-  font-size: 0.95rem;
+  font-size: 12px;
 }
 
 .replacement-word {
   font-weight: 600;
   color: #1976d2;
-  font-size: 0.95rem;
+  font-size: 12px;
 }
 
 .original-meaning {
-  font-size: 0.85rem;
+  font-size: 12px;
   color: #666;
   font-style: italic;
 }
 
 .replacement-meaning {
-  font-size: 0.85rem;
+  font-size: 12px;
   color: #1976d2;
   font-style: italic;
 }
@@ -968,24 +1002,38 @@
     gap: 0.8rem !important;
   }
   
-  .replacements-table th,
-  .replacements-table td {
+  /* 모바일 화면 표시용 테이블 */
+  .quiz-generator .replacements-table.no-print {
+    border: 1px solid #aaaaaa !important;
+    border-collapse: collapse !important;
+  }
+  
+  .quiz-generator .replacements-table.no-print th,
+  .quiz-generator .replacements-table.no-print td {
     padding: 0.5rem 0.4rem !important;
-    font-size: 0.8rem !important;
+    font-size: 12px !important;
+    border: 0.5px solid #aaaaaa !important;
+  }
+  
+  /* 모바일 인쇄(정답)용 테이블 */
+  .only-print .replacements-table th,
+  .only-print .replacements-table td {
+    padding: 0.1125rem 0.45rem !important;
+    font-size: 12px !important;
   }
   
   .replacements-table th {
-    font-size: 0.85rem !important;
+    font-size: 12px !important;
   }
   
   .original-word,
   .replacement-word {
-    font-size: 0.8rem;
+    font-size: 12px;
   }
   
   .original-meaning,
   .replacement-meaning {
-    font-size: 0.7rem;
+    font-size: 12px;
   }
 }
 
@@ -1007,22 +1055,24 @@
     margin-top: 1rem !important;
   }
   
-  .replacements-table th {
+  .quiz-generator .replacements-table th,
+  .only-print .replacements-table th {
     background: #f5f5f5 !important;
     color: #333 !important;
     font-weight: 600 !important;
-    padding: 0.8rem !important;
+    padding: 0.225rem 0.45rem !important;
     text-align: center !important;
-    font-size: 0.9rem !important;
+    font-size: 12px !important;
     border: 1px solid #ddd !important;
   }
   
-  .replacements-table td {
-    padding: 0.6rem 0.8rem !important;
+  .quiz-generator .replacements-table td,
+  .only-print .replacements-table td {
+    padding: 0.225rem 0.9rem !important;
     border: 1px solid #ddd !important;
     text-align: left !important;
     vertical-align: middle !important;
-    font-size: 0.85rem !important;
+    font-size: 12px !important;
   }
   
   .replacements-table tr:last-child td {
@@ -1036,23 +1086,23 @@
   .original-word {
     font-weight: 600 !important;
     color: #d97706 !important;
-    font-size: 0.95rem !important;
+    font-size: 12px !important;
   }
   
   .replacement-word {
     font-weight: 600 !important;
     color: #1976d2 !important;
-    font-size: 0.95rem !important;
+    font-size: 12px !important;
   }
   
   .original-meaning {
-    font-size: 0.85rem !important;
+    font-size: 12px !important;
     color: #666 !important;
     font-style: italic !important;
   }
   
   .replacement-meaning {
-    font-size: 0.85rem !important;
+    font-size: 12px !important;
     color: #1976d2 !important;
     font-style: italic !important;
   }
@@ -1083,6 +1133,26 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  
+  /* 본문 영역 글씨크기 설정 - 영어 본문 */
+  .only-print .problem-passage:not(.translation) {
+    font-size: 14px !important;
+  }
+  
+  /* 본문 영역 내부의 모든 요소들도 14px로 강제 설정 - 영어 본문 */
+  .only-print .problem-passage:not(.translation) * {
+    font-size: 14px !important;
+  }
+  
+  /* 한글해석 영역 글씨크기 설정 - 2페이지 */
+  .only-print .problem-passage.translation {
+    font-size: 14px !important;
+  }
+  
+  /* 한글해석 영역 내부의 모든 요소들도 14px로 강제 설정 - 2페이지 */
+  .only-print .problem-passage.translation * {
+    font-size: 14px !important;
+  }
 }
 
 /* Work_02 전용 문제 제목 스타일 강제 적용 */
@@ -1101,6 +1171,50 @@
   min-height: auto !important;
   line-height: normal !important;
   box-sizing: border-box !important;
+}
+
+/* 화면 표시용 테이블 - 원래 크기 유지 + 세밀한 테두리 */
+.quiz-generator table.replacements-table.no-print,
+table.replacements-table.no-print,
+.replacements-table.no-print {
+  border: 1px solid #aaaaaa !important;
+  border-collapse: collapse !important;
+}
+
+.quiz-generator table.replacements-table.no-print th,
+table.replacements-table.no-print th,
+.replacements-table.no-print th {
+  padding: 0.8rem !important;
+  line-height: 1.4 !important;
+  border: 0.5px solid #aaaaaa !important;
+}
+
+.quiz-generator table.replacements-table.no-print td,
+table.replacements-table.no-print td,
+.replacements-table.no-print td {
+  padding: 0.6rem 0.8rem !important;
+  line-height: 1.4 !important;
+  border: 0.5px solid #aaaaaa !important;
+}
+
+/* 인쇄(정답)용 테이블만 - 조정된 크기 */
+.only-print .replacements-table th {
+  padding: 0.225rem 0.45rem !important;
+  line-height: 1.4 !important;
+}
+
+.only-print .replacements-table td {
+  padding: 0.225rem 0.9rem !important;
+  line-height: 1.4 !important;
+}
+
+/* 본문 영역 글씨크기 강제 통일 (일반 화면용) */
+.problem-passage:not(.translation) {
+  font-size: 14px !important;
+}
+
+.problem-passage:not(.translation) * {
+  font-size: 14px !important;
 }
 
 /* 인쇄 시에도 동일하게 적용 */

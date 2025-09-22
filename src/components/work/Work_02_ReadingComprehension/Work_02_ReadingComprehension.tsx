@@ -1300,7 +1300,7 @@ Korean translation:`;
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                   문제: 다음 본문을 읽고 해석하세요
                 </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'14px', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                 </div>
               </div>
               </div>
@@ -1330,7 +1330,7 @@ Korean translation:`;
                         {/* 컨테이너6: problem-instruction */}
                         문제: 다음 본문을 읽고 해석하세요
                       </div>
-                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'14px', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                         {/* 컨테이너7: problem-passage - 본문 텍스트 직접 포함 */}
                       </div>
                     </div>
@@ -1455,7 +1455,7 @@ Korean translation:`;
                         {/* 컨테이너6: problem-instruction */}
                         문제: 다음 본문을 읽고 해석하세요
                       </div>
-                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'14px', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                         {/* 컨테이너7: problem-passage - 본문 텍스트 직접 포함 */}
                       </div>
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%'}}>
