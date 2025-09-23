@@ -613,12 +613,27 @@
     font-size: 0.8rem !important;
   }
   
+  /* 유형#04 전용 인쇄용 4지선다 컨테이너 스타일 */
+  .only-print .work04-options-container {
+    margin: 2rem 0 0.4rem 0 !important; /* 상단 여백을 2rem으로 증가 (100% 증가) */
+    padding: 0.5rem !important; /* 내부 여백을 1rem에서 0.5rem으로 50% 줄임 */
+    background: #f8f9fa !important;
+    border-radius: 8px !important;
+    border: 1px solid #dee2e6 !important;
+  }
+  
   /* 유형#04 전용 인쇄용 4지선다 스타일 - PrintFormat.css의 1rem 설정을 오버라이드 */
   .only-print .work04-problem-options,
+  .only-print .work04-print-options {
+    font-size: 1rem !important;
+    margin: 0 !important; /* 컨테이너 내부에서는 마진 제거 */
+  }
+  
   .only-print .work04-problem-options div,
-  .only-print .work04-print-options,
   .only-print .work04-print-options div {
     font-size: 1rem !important;
+    line-height: 1.8 !important;
+    margin: 0.4rem 0 !important;
   }
   
   /* 유형#04 인쇄(정답) 1페이지 문제본문 컨테이너 - 연한 노란색, 글씨크기 0.8rem */

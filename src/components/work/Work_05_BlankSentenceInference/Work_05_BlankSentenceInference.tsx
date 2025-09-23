@@ -84,9 +84,9 @@ const Work_05_BlankSentenceInference: React.FC = () => {
     }
   }, [quiz]);
 
-  // 본문 길이에 따른 페이지 분할 결정
+  // 본문 길이에 따른 페이지 분할 결정 (1,200자 이하일 때는 분할하지 않음)
   useEffect(() => {
-    setNeedsSecondPage(inputText.length >= 2000);
+    setNeedsSecondPage(inputText.length > 1200);
   }, [inputText]);
 
   const handleInputModeChange = (mode: InputMode) => {
@@ -671,7 +671,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.
                       </div>
-                      <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className={inputText.length >= 1700 ? 'work05-long-text' : ''} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
                     </div>
@@ -710,7 +710,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                       다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.
                     </div>
-                    <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div className={inputText.length >= 1700 ? 'work05-long-text' : ''} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       {displayBlankedText}
                     </div>
                     <div className="problem-options" style={{margin:'1rem 0'}}>
@@ -741,7 +741,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.
                       </div>
-                      <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className={inputText.length >= 1700 ? 'work05-long-text' : ''} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
                     </div>
@@ -782,7 +782,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className={`problem-passage translation ${inputText.length >= 1700 ? 'work05-long-text' : ''}`} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation && quiz.translation.trim().length > 0 
                           ? quiz.translation 
                           : '본문 해석이 생성되지 않았습니다.'}
@@ -804,7 +804,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.
                       </div>
-                      <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className={inputText.length >= 1700 ? 'work05-long-text' : ''} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
                       <div className="problem-options" style={{margin:'1rem 0'}}>
@@ -831,7 +831,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className={`problem-passage translation ${inputText.length >= 1700 ? 'work05-long-text' : ''}`} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation && quiz.translation.trim().length > 0 
                           ? quiz.translation 
                           : '본문 해석이 생성되지 않았습니다.'}

@@ -609,12 +609,14 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.8rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         다음 중에서 가장 적절한 것을 고르시오.
                       </div>
-                      <div className="work04-problem-options" style={{margin:'1rem 0'}}>
-                        {quiz.options.map((opt, i) => (
-                          <div key={i}>
-                            {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                          </div>
-                        ))}
+                      <div className="work04-options-container">
+                        <div className="work04-problem-options" style={{margin:'1rem 0'}}>
+                          {quiz.options.map((opt, i) => (
+                            <div key={i}>
+                              {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -634,12 +636,14 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                     <div className="work04-print-problem-passage" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       {displayBlankedText}
                     </div>
-                    <div className="work04-problem-options work04-print-options" style={{margin:'1rem 0'}}>
-                      {quiz.options.map((opt, i) => (
-                        <div key={i}>
-                          {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                        </div>
-                      ))}
+                    <div className="work04-options-container">
+                      <div className="work04-problem-options work04-print-options" style={{margin:'1rem 0'}}>
+                        {quiz.options.map((opt, i) => (
+                          <div key={i}>
+                            {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -666,15 +670,17 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                       <div className="work04-print-answer-passage" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
-                      <div className="work04-problem-options" style={{margin:'1rem 0'}}>
-                        {quiz.options.map((opt, i) => (
-                          <div key={i}>
-                            {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                            {quiz.answerIndex === i && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                            )}
-                          </div>
-                        ))}
+                      <div className="work04-options-container">
+                        <div className="work04-problem-options" style={{margin:'1rem 0'}}>
+                          {quiz.options.map((opt, i) => (
+                            <div key={i}>
+                              {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                              {quiz.answerIndex === i && (
+                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -714,15 +720,17 @@ const Work_04_BlankPhraseInference: React.FC = () => {
                       <div className="work04-print-answer-passage" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
-                      <div className="work04-problem-options" style={{margin:'1rem 0'}}>
-                        {quiz.options.map((opt, i) => (
-                          <div key={i}>
-                            {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                            {quiz.answerIndex === i && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                            )}
-                          </div>
-                        ))}
+                      <div className="work04-options-container">
+                        <div className="work04-problem-options" style={{margin:'1rem 0'}}>
+                          {quiz.options.map((opt, i) => (
+                            <div key={i}>
+                              {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                              {quiz.answerIndex === i && (
+                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -695,6 +695,53 @@
   }
 }
 
+/* 유형#05 전용 인쇄 스타일 - 1700자 이상일 때 본문 글씨크기 0.8rem */
+@media print {
+  .work05-long-text {
+    font-size: 0.8rem !important;
+  }
+  
+  .work05-long-text * {
+    font-size: 0.8rem !important;
+  }
+  
+  /* 유형#05 페이지 분할 최적화 - 1페이지에 최대한 많은 내용 포함 */
+  .only-print .a4-page-content {
+    page-break-inside: auto !important;
+  }
+  
+  .only-print .problem-passage {
+    page-break-inside: auto !important;
+    page-break-after: auto !important;
+  }
+  
+  .only-print .problem-options {
+    page-break-inside: avoid !important;
+    page-break-before: auto !important;
+    page-break-after: auto !important;
+  }
+  
+  /* 유형#05 해석 부분 페이지 분할 최적화 */
+  .only-print .problem-passage.translation {
+    page-break-inside: auto !important;
+    page-break-before: auto !important;
+    page-break-after: auto !important;
+  }
+  
+  /* 유형#05 퀴즈 콘텐츠 전체 최적화 */
+  .only-print .quiz-content {
+    page-break-inside: auto !important;
+  }
+  
+  /* 유형#05 전용 인쇄용 4지선다 스타일 - PrintFormat.css의 1rem 설정을 오버라이드 */
+  .only-print .problem-options,
+  .only-print .problem-options div {
+    font-size: 1rem !important;
+    line-height: 1.8 !important;
+    margin: 0.4rem 0 !important;
+  }
+}
+
 /* 반응형 디자인: 모바일에서는 세로 배치 */
 @media (max-width: 768px) {
   .points-info {
