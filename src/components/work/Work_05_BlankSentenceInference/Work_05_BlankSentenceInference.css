@@ -734,11 +734,54 @@
   }
   
   /* 유형#05 전용 인쇄용 4지선다 스타일 - PrintFormat.css의 1rem 설정을 오버라이드 */
-  .only-print .problem-options,
-  .only-print .problem-options div {
+  .only-print .problem-options {
     font-size: 1rem !important;
-    line-height: 1.8 !important;
-    margin: 0.4rem 0 !important;
+    margin: 1.5rem 0 0.2rem 0 !important; /* 상단 여백 1.5rem 추가 */
+    page-break-inside: auto !important; /* 4지선다를 1페이지에 유지 */
+    page-break-before: auto !important; /* 강제 페이지 분할 방지 */
+    page-break-after: auto !important; /* 강제 페이지 분할 방지 */
+  }
+  
+  /* 유형#05 인쇄용 4지선다 컨테이너 */
+  .only-print .problem-options > div {
+    line-height: 1.5 !important;
+    margin: 0.1rem 0 !important; /* 0.2rem에서 50% 줄임 */
+    page-break-inside: avoid !important; /* 개별 선택지는 분할 방지 */
+  }
+  
+  /* 유형#05 인쇄용 4지선다 영어 문장 - 더 구체적인 선택자 */
+  .only-print .problem-options > div > .option-english {
+    font-size: 1rem !important;
+    color: #222 !important;
+  }
+  
+  /* 유형#05 인쇄용 한글 해석 - 더 구체적인 선택자 */
+  .only-print .problem-options > div > .option-translation {
+    font-size: 0.8rem !important;
+    color: #666 !important;
+    margin-top: 0.1rem !important; /* 0.2rem에서 50% 줄임 */
+    margin-left: 1.5rem !important;
+    font-style: italic !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* 유형#05 인쇄용 본문 해석 - 4지선다와 같은 페이지에 배치될 때 */
+  .only-print .problem-passage.translation {
+    page-break-inside: auto !important; /* 해석은 필요시 분할 허용 */
+    page-break-before: avoid !important; /* 강제 페이지 분할 방지 */
+    margin-top: 1.5rem !important; /* 4지선다와 해석 사이 여백 줄임 */
+    line-height: 1.6 !important; /* 해석 줄간격 조정 */
+  }
+  
+  /* 4지선다와 해석이 같은 페이지에 있을 때 전체 컨테이너 분할 방지 */
+  .only-print .quiz-content {
+    page-break-inside: auto !important; /* 필요시 분할 허용 */
+  }
+  
+  /* 2페이지에서 4지선다와 해석이 함께 있을 때 최적화 */
+  .only-print .a4-page-template .quiz-content {
+    min-height: auto !important;
+    max-height: none !important;
   }
 }
 
