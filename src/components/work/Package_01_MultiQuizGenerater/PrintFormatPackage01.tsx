@@ -1401,7 +1401,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
               <div className="option option-print" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
                   {['①', '②', '③', '④', '⑤'][work05Data.answerIndex]} {work05Data.options[work05Data.answerIndex]}
               </div>
-              <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0'}}>
+              <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0', marginBottom: '2rem'}}>
                 정답: {['①', '②', '③', '④', '⑤'][work05Data.answerIndex]}
               </div>
             </div>
@@ -1415,10 +1415,10 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+              <div className="problem-instruction work05-print-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'1.2rem', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                 본문 해석
               </div>
-              <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+              <div className="problem-passage translation work05-print-translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {translatedText || '번역을 생성하는 중...'}
               </div>
             </div>
