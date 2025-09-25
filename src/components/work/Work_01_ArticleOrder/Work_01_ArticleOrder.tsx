@@ -777,13 +777,9 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
                       </div>
                     ))}
                   </div>
-                  <div className="problem-options" style={{fontSize:'1rem', marginTop:'1.5rem'}}>
-                    <div className="option option-print">
-                      {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}
-                    </div>
-                  </div>
-                  <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0'}}>
-                    정답: {['①', '②', '③', '④'][quiz.answerIndex]}
+                  <div style={{color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '1.5rem 0', padding: '0.8rem 1rem', background: '#fff', border: '1px solid #ddd', borderRadius: '5px'}}>
+                    {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}
+                    <span style={{color: '#1976d2', fontWeight: 800, marginLeft: '8px'}}>(정답)</span>
                   </div>
                 </div>
               </div>

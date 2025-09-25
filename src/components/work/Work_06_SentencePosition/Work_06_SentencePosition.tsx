@@ -134,25 +134,24 @@ const Work_06_SentencePosition: React.FC = () => {
     const numberedPassageHeight = calculateElementHeight(quiz.numberedPassage, 16, 1.7, 32);
     
     // 4. 정답 표시 높이
-    const answerHeight = calculateElementHeight(`정답: ①②③④⑤[${quiz.answerIndex}]`, 16, 1.2, 20);
+    const answerHeight = calculateElementHeight(`정답: ①②③④⑤[${quiz.answerIndex}]`, 16, 1.2, 20) + 24; // marginBottom 1.5rem (24px) 추가
     
     // 5. 본문 해석 컨테이너 높이
-    const translationInstructionHeight = calculateElementHeight('본문 해석', 16, 1.2, 14);
     const translationHeight = calculateElementHeight(quiz.translation || '', 16, 1.6, 32);
-    const translationContainerHeight = translationInstructionHeight + translationHeight + 24; // "본문 해석" 제목과 내용 사이 여백 24px (1.5rem)
+    const translationContainerHeight = translationHeight; // 제목 제거로 높이 계산 단순화
     
     // 6. 인쇄(정답) 1페이지 높이 계산 (문제제목 + 주요문장박스 + 번호본문 + 정답)
     const answerPage1Height = problemTitleHeight + missingSentenceBoxHeight + numberedPassageHeight + answerHeight;
     
     // 7. 1페이지에 정답 + 해석이 들어갈 수 있는지 확인
-    const canFitAnswerWithTranslation = (answerPage1Height + translationContainerHeight + 64) <= CONTENT_HEIGHT_PX; // 정답과 "본문 해석" 제목 사이 여백 64px (4rem)
+    const canFitAnswerWithTranslation = (answerPage1Height + translationContainerHeight + 32) <= CONTENT_HEIGHT_PX; // 정답과 해석 사이 여백 32px (2rem)
     
     // 8. 인쇄(정답) 페이지 분할 결정
     const needsSecondPageForAnswer = answerPage1Height > CONTENT_HEIGHT_PX;
     
     // 9. 2페이지에 정답 + 해석이 들어갈 수 있는지 확인 (1페이지에 안 들어가는 경우에만)
     const canFitTranslationWithAnswer = needsSecondPageForAnswer && 
-      (answerHeight + translationContainerHeight + 64) <= CONTENT_HEIGHT_PX; // 정답과 "본문 해석" 제목 사이 여백 64px (4rem)
+      (answerHeight + translationContainerHeight + 32) <= CONTENT_HEIGHT_PX; // 정답과 해석 사이 여백 32px (2rem)
     
     console.log('=== 유형#06 인쇄(정답) 페이지 분할 로직 ===');
     console.log('전체 페이지 높이:', Math.round(CONTENT_HEIGHT_PX), 'px');
@@ -1148,7 +1147,7 @@ ${passage}`;
       instruction: {fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'},
       missingSentenceBox: {border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'},
       numberedPassage: {fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'},
-      answer: {marginTop:'1.2rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'},
+      answer: {marginTop:'1.2rem', marginBottom:'1.5rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'},
       translation: {marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
     };
 
@@ -1198,9 +1197,6 @@ ${passage}`;
         </div>
         <div className="a4-page-content">
           <div className="quiz-content">
-            <div className="problem-instruction" style={commonStyles.instruction}>
-              본문 해석
-            </div>
             <div className="problem-passage translation" style={commonStyles.translation}>
               {quiz.translation && quiz.translation.trim().length > 0 
                 ? quiz.translation 
@@ -1226,9 +1222,6 @@ ${passage}`;
             </div>
             
             {/* 본문 해석 추가 */}
-            <div className="problem-instruction" style={commonStyles.instruction}>
-              본문 해석
-            </div>
             <div className="problem-passage translation" style={commonStyles.translation}>
               {quiz.translation && quiz.translation.trim().length > 0 
                 ? quiz.translation 
@@ -1264,14 +1257,13 @@ ${passage}`;
     const problemTitleHeight = calculateElementHeight('아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.', 16, 1.2, 14);
     const missingSentenceBoxHeight = calculateElementHeight(`주요 문장: ${quiz.missingSentence}`, 16, 1.2, 32);
     const numberedPassageHeight = calculateElementHeight(quiz.numberedPassage, 16, 1.7, 32);
-    const answerHeight = calculateElementHeight(`정답: ①②③④⑤[${quiz.answerIndex}]`, 16, 1.2, 20);
+    const answerHeight = calculateElementHeight(`정답: ①②③④⑤[${quiz.answerIndex}]`, 16, 1.2, 20) + 24; // marginBottom 1.5rem (24px) 추가
     const answerPage1Height = problemTitleHeight + missingSentenceBoxHeight + numberedPassageHeight + answerHeight;
     const needsSecondPageForAnswer = answerPage1Height > CONTENT_HEIGHT_PX;
     
     // 해석 컨테이너 높이 계산
-    const translationInstructionHeight = calculateElementHeight('본문 해석', 16, 1.2, 14);
     const translationHeight = calculateElementHeight(quiz.translation || '', 16, 1.6, 32);
-    const translationContainerHeight = translationInstructionHeight + translationHeight + 24; // "본문 해석" 제목과 내용 사이 여백 24px (1.5rem)
+    const translationContainerHeight = translationHeight; // 제목 제거로 높이 계산 단순화
     
     // 1페이지에 정답+해석이 들어갈 수 있는지 먼저 확인
     if (pageLayoutInfo.canFitAnswerWithTranslation) {
@@ -1298,9 +1290,6 @@ ${passage}`;
                 </div>
                 
                 {/* 본문 해석 추가 */}
-                <div className="problem-instruction" style={commonStyles.instruction}>
-                  본문 해석
-                </div>
                 <div className="problem-passage translation" style={commonStyles.translation}>
                   {quiz.translation && quiz.translation.trim().length > 0 
                     ? quiz.translation 

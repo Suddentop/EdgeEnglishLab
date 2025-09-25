@@ -945,13 +945,10 @@ ${passage}`;
                           <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
                             {`①②③④⑤`[i] || `${i+1}.`} {opt}
                             {quiz.answerIndex === i && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>정답: ③ {opt} / 원래(정상) 단어/구: {quiz.original}</span>
                             )}
                           </div>
                         ))}
-                      </div>
-                      <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
-                        정답: {answerNumber} {quiz.options[quiz.answerIndex]} / 원래(정상) 단어/구: {quiz.original}
                       </div>
                     </div>
                   </div>
@@ -967,7 +964,7 @@ ${passage}`;
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
                       </div>
                     </div>
@@ -996,13 +993,10 @@ ${passage}`;
                           <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
                             {`①②③④⑤`[i] || `${i+1}.`} {opt}
                             {quiz.answerIndex === i && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>정답: ③ {opt} / 원래(정상) 단어/구: {quiz.original}</span>
                             )}
                           </div>
                         ))}
-                      </div>
-                      <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
-                        정답: {answerNumber} {quiz.options[quiz.answerIndex]} / 원래(정상) 단어/구: {quiz.original}
                       </div>
                     </div>
                   </div>
@@ -1018,7 +1012,7 @@ ${passage}`;
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
                       </div>
                     </div>

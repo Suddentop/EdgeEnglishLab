@@ -1425,10 +1425,6 @@ Korean translation:`;
                     {/* 컨테이너17: a4-page-content */}
                     <div className="quiz-content">
                       {/* 컨테이너18: quiz-content */}
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        {/* 컨테이너19: problem-instruction */}
-                        본문 해석
-                      </div>
                       <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.875rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {/* 컨테이너20: problem-passage - 본문 해석 직접 포함 */}
                         {quiz.translation || '번역을 생성하는 중...'}
@@ -1535,10 +1531,6 @@ Korean translation:`;
                     {/* 컨테이너13: a4-page-content */}
                     <div className="quiz-content">
                       {/* 컨테이너14: quiz-content */}
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        {/* 컨테이너15: problem-instruction */}
-                        본문 해석
-                      </div>
                       <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.875rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {/* 컨테이너16: problem-passage - 본문 해석 직접 포함 */}
                         {quiz.translation || '번역을 생성하는 중...'}
