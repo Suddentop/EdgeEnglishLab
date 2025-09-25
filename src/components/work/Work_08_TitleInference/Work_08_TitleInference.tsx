@@ -675,13 +675,10 @@ ${passage}
                                 <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                               )}
                             </div>
-                            <div style={{fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500}}>
+                            <div style={{fontSize:'0.8rem', marginTop:'0.2rem', marginLeft:'1rem', color:'#333', fontWeight:500}}>
                               {quiz.optionTranslations && quiz.optionTranslations[i] && quiz.optionTranslations[i].trim() !== '' 
                                 ? quiz.optionTranslations[i] 
                                 : '해석 생성 중...'}
-                              {quiz.answerIndex === i && (
-                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                              )}
                             </div>
                           </div>
                         ))}
@@ -733,13 +730,10 @@ ${passage}
                                 <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                               )}
                             </div>
-                            <div style={{fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500}}>
+                            <div style={{fontSize:'0.8rem', marginTop:'0.2rem', marginLeft:'1rem', color:'#333', fontWeight:500}}>
                               {quiz.optionTranslations && quiz.optionTranslations[i] && quiz.optionTranslations[i].trim() !== '' 
                                 ? quiz.optionTranslations[i] 
                                 : '해석 생성 중...'}
-                              {quiz.answerIndex === i && (
-                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                              )}
                             </div>
                           </div>
                         ))}
@@ -871,7 +865,7 @@ ${passage}
       <div className="input-section">
         <div className="input-label-row">
           <label htmlFor="title-inference-text" className="input-label">
-            영어 본문 직접 붙여넣기:
+            영어 본문 직접 붙여넣기: (2,000자 미만 권장)
           </label>
           {inputText.length < 100 && (
             <span className="warning">⚠️ 더 긴 본문을 입력하면 더 좋은 결과를 얻을 수 있습니다.</span>

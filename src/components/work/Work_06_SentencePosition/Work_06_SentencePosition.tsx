@@ -82,6 +82,101 @@ const Work_06_SentencePosition: React.FC = () => {
     }
   }, [quiz]);
 
+  // 동적 페이지 분할 결정을 위한 상태
+  const [pageLayoutInfo, setPageLayoutInfo] = useState({
+    needsSecondPage: false,
+    canFitTranslationWithAnswer: false,
+    canFitAnswerWithTranslation: false,
+    page1Content: '',
+    page2Content: '',
+    page3Content: ''
+  });
+
+  // 인쇄(정답) 페이지 분할 로직만 독립적으로 계산
+  useEffect(() => {
+    if (!inputText || !quiz) return;
+
+    // A4 페이지 기준 설정 (실제 인쇄 크기)
+    const A4_HEIGHT_MM = 297; // A4 높이 (mm)
+    const A4_WIDTH_MM = 210;  // A4 너비 (mm)
+    const MARGIN_TOP_MM = 20;  // 상단 여백
+    const MARGIN_BOTTOM_MM = 20; // 하단 여백
+    const HEADER_HEIGHT_MM = 15; // 헤더 높이
+    const FOOTER_HEIGHT_MM = 10; // 푸터 높이
+    
+    // 실제 사용 가능한 컨텐츠 영역 높이
+    const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM - HEADER_HEIGHT_MM - FOOTER_HEIGHT_MM;
+    
+    // mm를 픽셀로 변환 (1mm ≈ 3.78px, 96dpi 기준)
+    const MM_TO_PX = 3.78;
+    const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
+    
+    // 각 요소별 높이 계산 함수
+    const calculateElementHeight = (text: string, fontSize: number, lineHeight: number, padding: number = 0) => {
+      const availableWidth = A4_WIDTH_MM * MM_TO_PX * 0.9; // 90% 사용 (여백 10%)
+      const charWidth = fontSize * 0.55; // 문자 폭 추정
+      const charsPerLine = Math.floor(availableWidth / charWidth);
+      const lines = Math.ceil(text.length / charsPerLine);
+      return (lines * fontSize * lineHeight) + padding;
+    };
+
+    // ========================================
+    // 인쇄(정답) 페이지 분할 로직만 독립적으로 계산
+    // ========================================
+    
+    // 1. 문제제목 컨테이너 높이
+    const problemTitleHeight = calculateElementHeight('아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.', 16, 1.2, 14);
+    
+    // 2. 주요문장 박스 높이
+    const missingSentenceBoxHeight = calculateElementHeight(`주요 문장: ${quiz.missingSentence}`, 16, 1.2, 32);
+    
+    // 3. 번호가 매겨진 본문 높이
+    const numberedPassageHeight = calculateElementHeight(quiz.numberedPassage, 16, 1.7, 32);
+    
+    // 4. 정답 표시 높이
+    const answerHeight = calculateElementHeight(`정답: ①②③④⑤[${quiz.answerIndex}]`, 16, 1.2, 20);
+    
+    // 5. 본문 해석 컨테이너 높이
+    const translationInstructionHeight = calculateElementHeight('본문 해석', 16, 1.2, 14);
+    const translationHeight = calculateElementHeight(quiz.translation || '', 16, 1.6, 32);
+    const translationContainerHeight = translationInstructionHeight + translationHeight + 24; // "본문 해석" 제목과 내용 사이 여백 24px (1.5rem)
+    
+    // 6. 인쇄(정답) 1페이지 높이 계산 (문제제목 + 주요문장박스 + 번호본문 + 정답)
+    const answerPage1Height = problemTitleHeight + missingSentenceBoxHeight + numberedPassageHeight + answerHeight;
+    
+    // 7. 1페이지에 정답 + 해석이 들어갈 수 있는지 확인
+    const canFitAnswerWithTranslation = (answerPage1Height + translationContainerHeight + 64) <= CONTENT_HEIGHT_PX; // 정답과 "본문 해석" 제목 사이 여백 64px (4rem)
+    
+    // 8. 인쇄(정답) 페이지 분할 결정
+    const needsSecondPageForAnswer = answerPage1Height > CONTENT_HEIGHT_PX;
+    
+    // 9. 2페이지에 정답 + 해석이 들어갈 수 있는지 확인 (1페이지에 안 들어가는 경우에만)
+    const canFitTranslationWithAnswer = needsSecondPageForAnswer && 
+      (answerHeight + translationContainerHeight + 64) <= CONTENT_HEIGHT_PX; // 정답과 "본문 해석" 제목 사이 여백 64px (4rem)
+    
+    console.log('=== 유형#06 인쇄(정답) 페이지 분할 로직 ===');
+    console.log('전체 페이지 높이:', Math.round(CONTENT_HEIGHT_PX), 'px');
+    console.log('문제제목 높이:', Math.round(problemTitleHeight), 'px');
+    console.log('주요문장박스 높이:', Math.round(missingSentenceBoxHeight), 'px');
+    console.log('번호본문 높이:', Math.round(numberedPassageHeight), 'px');
+    console.log('정답 높이:', Math.round(answerHeight), 'px');
+    console.log('해석 컨테이너 높이:', Math.round(translationContainerHeight), 'px');
+    console.log('1페이지 높이:', Math.round(answerPage1Height), 'px');
+    console.log('1페이지에 정답+해석 포함 가능:', canFitAnswerWithTranslation);
+    console.log('2페이지 분할:', needsSecondPageForAnswer);
+    console.log('2페이지에 해석 포함 가능:', canFitTranslationWithAnswer);
+    console.log('=====================================');
+
+    setPageLayoutInfo({
+      needsSecondPage: false, // 인쇄(문제)는 항상 1페이지
+      canFitTranslationWithAnswer,
+      canFitAnswerWithTranslation,
+      page1Content: `정답: ${Math.round(answerPage1Height)}px / ${Math.round(CONTENT_HEIGHT_PX)}px`,
+      page2Content: `분할: ${needsSecondPageForAnswer ? '2페이지' : '1페이지'}`,
+      page3Content: `해석 포함: ${canFitTranslationWithAnswer ? '2페이지에 함께' : '3페이지 분리'}`
+    });
+  }, [inputText, quiz]);
+
   const handleInputModeChange = (mode: InputMode) => {
     setInputMode(mode);
     setInputText('');
@@ -703,18 +798,35 @@ ${passage}`;
     
     // 정확한 매칭이 없는 경우 유사한 문장 찾기
     if (actualTopicSentenceIndex === -1) {
+      console.log('정확한 매칭 실패, 유사도 검사 시작...');
+      console.log('AI가 반환한 문장:', trimmedMissingSentence);
+      console.log('원본 문장들:', sentences);
+      
+      let bestMatch = { index: -1, similarity: 0 };
+      
       for (let i = 0; i < sentences.length; i++) {
-        // 75% 이상 일치하는 문장 찾기
         const similarity = calculateStringSimilarity(sentences[i].trim(), trimmedMissingSentence);
-        if (similarity > 0.75) {
-          actualTopicSentenceIndex = i;
-          result.missingSentence = sentences[i].trim(); // 원본 문장으로 교체
-          break;
+        console.log(`문장 ${i} 유사도:`, similarity, sentences[i].trim());
+        
+        if (similarity > bestMatch.similarity) {
+          bestMatch = { index: i, similarity };
         }
+      }
+      
+      console.log('최고 유사도 매치:', bestMatch);
+      
+      // 50% 이상 일치하는 문장이 있으면 사용 (기존 75%에서 50%로 완화)
+      if (bestMatch.similarity > 0.5) {
+        actualTopicSentenceIndex = bestMatch.index;
+        result.missingSentence = sentences[bestMatch.index].trim(); // 원본 문장으로 교체
+        console.log('유사도 매칭 성공:', result.missingSentence);
       }
     }
     
     if (actualTopicSentenceIndex === -1) {
+      console.error('모든 매칭 시도 실패');
+      console.error('AI 반환 문장:', trimmedMissingSentence);
+      console.error('원본 문장들:', sentences);
       throw new Error('제거된 주제 문장이 원본 본문에 존재하지 않습니다.');
     }
     
@@ -724,15 +836,64 @@ ${passage}`;
     return result;
   }
 
-  // 문자열 유사도 계산 함수
+  // 문자열 유사도 계산 함수 (개선된 버전)
   function calculateStringSimilarity(str1: string, str2: string): number {
-    const words1 = str1.toLowerCase().split(/\s+/);
-    const words2 = str2.toLowerCase().split(/\s+/);
+    // 1. 기본 정규화
+    const normalize = (str: string) => str.toLowerCase()
+      .replace(/[^\w\s]/g, '') // 특수문자 제거
+      .replace(/\s+/g, ' ')    // 연속 공백을 하나로
+      .trim();
+    
+    const norm1 = normalize(str1);
+    const norm2 = normalize(str2);
+    
+    // 2. 정확한 일치 확인
+    if (norm1 === norm2) return 1.0;
+    
+    // 3. 단어 기반 유사도 계산
+    const words1 = norm1.split(/\s+/).filter(w => w.length > 0);
+    const words2 = norm2.split(/\s+/).filter(w => w.length > 0);
+    
+    if (words1.length === 0 || words2.length === 0) return 0;
     
     const commonWords = words1.filter(word => words2.includes(word));
-    const totalWords = Math.max(words1.length, words2.length);
+    const wordSimilarity = commonWords.length / Math.max(words1.length, words2.length);
     
-    return commonWords.length / totalWords;
+    // 4. 부분 문자열 매칭 (긴 문장의 경우)
+    const longer = norm1.length > norm2.length ? norm1 : norm2;
+    const shorter = norm1.length > norm2.length ? norm2 : norm1;
+    
+    if (longer.includes(shorter) && shorter.length > 20) {
+      return Math.max(wordSimilarity, 0.8); // 부분 매칭 보너스
+    }
+    
+    // 5. 문자 기반 유사도 (Levenshtein 거리 기반)
+    const charSimilarity = calculateLevenshteinSimilarity(norm1, norm2);
+    
+    // 6. 최종 유사도는 단어 유사도와 문자 유사도의 평균
+    return (wordSimilarity + charSimilarity) / 2;
+  }
+  
+  // Levenshtein 거리 기반 유사도 계산
+  function calculateLevenshteinSimilarity(str1: string, str2: string): number {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,     // deletion
+          matrix[j - 1][i] + 1,     // insertion
+          matrix[j - 1][i - 1] + cost // substitution
+        );
+      }
+    }
+    
+    const maxLength = Math.max(str1.length, str2.length);
+    return maxLength === 0 ? 1 : (maxLength - matrix[str2.length][str1.length]) / maxLength;
   }
 
   // 정확한 번호 부여 함수
@@ -979,6 +1140,227 @@ ${passage}`;
     setIsExtractingText(false);
   };
 
+  // 공통 인쇄(정답) 레이아웃 렌더링 함수
+  const renderPrintWithAnswerLayout = () => {
+    if (!quiz) return null;
+
+    const commonStyles = {
+      instruction: {fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'},
+      missingSentenceBox: {border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'},
+      numberedPassage: {fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'},
+      answer: {marginTop:'1.2rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'},
+      translation: {marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
+    };
+
+    const renderProblemPage = () => (
+      <div className="a4-page-template">
+        <div className="a4-page-header">
+          <PrintHeaderWork01 />
+        </div>
+        <div className="a4-page-content">
+          <div className="quiz-content">
+            <div className="problem-instruction" style={commonStyles.instruction}>
+              아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+            </div>
+            <div className="missing-sentence-box" style={commonStyles.missingSentenceBox}>
+              <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{quiz.missingSentence}</span>
+            </div>
+            <div style={commonStyles.numberedPassage}>
+              {quiz.numberedPassage}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderAnswerPage = () => (
+      <div className="a4-page-template">
+        <div className="a4-page-header">
+          <PrintHeaderWork01 />
+        </div>
+        <div className="a4-page-content">
+          <div className="quiz-content">
+            <div className="problem-instruction" style={commonStyles.instruction}>
+              정답
+            </div>
+            <div className="problem-answer" style={commonStyles.answer}>
+              정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderTranslationPage = () => (
+      <div className="a4-page-template">
+        <div className="a4-page-header">
+          <PrintHeaderWork01 />
+        </div>
+        <div className="a4-page-content">
+          <div className="quiz-content">
+            <div className="problem-instruction" style={commonStyles.instruction}>
+              본문 해석
+            </div>
+            <div className="problem-passage translation" style={commonStyles.translation}>
+              {quiz.translation && quiz.translation.trim().length > 0 
+                ? quiz.translation 
+                : '본문 해석이 생성되지 않았습니다.'}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderAnswerWithTranslationPage = () => (
+      <div className="a4-page-template">
+        <div className="a4-page-header">
+          <PrintHeaderWork01 />
+        </div>
+        <div className="a4-page-content">
+          <div className="quiz-content">
+            <div className="problem-instruction" style={commonStyles.instruction}>
+              정답
+            </div>
+            <div className="problem-answer" style={commonStyles.answer}>
+              정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
+            </div>
+            
+            {/* 본문 해석 추가 */}
+            <div className="problem-instruction" style={commonStyles.instruction}>
+              본문 해석
+            </div>
+            <div className="problem-passage translation" style={commonStyles.translation}>
+              {quiz.translation && quiz.translation.trim().length > 0 
+                ? quiz.translation 
+                : '본문 해석이 생성되지 않았습니다.'}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    // 인쇄(정답) 페이지 독립적인 레이아웃 결정 로직
+    // pageLayoutInfo.canFitTranslationWithAnswer는 인쇄(정답) 페이지의 분할 로직에서 계산됨
+    
+    // 1페이지 높이 계산 (문제제목 + 주요문장박스 + 번호본문 + 정답)
+    const A4_HEIGHT_MM = 297;
+    const A4_WIDTH_MM = 210;
+    const MARGIN_TOP_MM = 20;
+    const MARGIN_BOTTOM_MM = 20;
+    const HEADER_HEIGHT_MM = 15;
+    const FOOTER_HEIGHT_MM = 10;
+    const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM - HEADER_HEIGHT_MM - FOOTER_HEIGHT_MM;
+    const MM_TO_PX = 3.78;
+    const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
+    
+    const calculateElementHeight = (text: string, fontSize: number, lineHeight: number, padding: number = 0) => {
+      const availableWidth = A4_WIDTH_MM * MM_TO_PX * 0.9;
+      const charWidth = fontSize * 0.55;
+      const charsPerLine = Math.floor(availableWidth / charWidth);
+      const lines = Math.ceil(text.length / charsPerLine);
+      return (lines * fontSize * lineHeight) + padding;
+    };
+    
+    const problemTitleHeight = calculateElementHeight('아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.', 16, 1.2, 14);
+    const missingSentenceBoxHeight = calculateElementHeight(`주요 문장: ${quiz.missingSentence}`, 16, 1.2, 32);
+    const numberedPassageHeight = calculateElementHeight(quiz.numberedPassage, 16, 1.7, 32);
+    const answerHeight = calculateElementHeight(`정답: ①②③④⑤[${quiz.answerIndex}]`, 16, 1.2, 20);
+    const answerPage1Height = problemTitleHeight + missingSentenceBoxHeight + numberedPassageHeight + answerHeight;
+    const needsSecondPageForAnswer = answerPage1Height > CONTENT_HEIGHT_PX;
+    
+    // 해석 컨테이너 높이 계산
+    const translationInstructionHeight = calculateElementHeight('본문 해석', 16, 1.2, 14);
+    const translationHeight = calculateElementHeight(quiz.translation || '', 16, 1.6, 32);
+    const translationContainerHeight = translationInstructionHeight + translationHeight + 24; // "본문 해석" 제목과 내용 사이 여백 24px (1.5rem)
+    
+    // 1페이지에 정답+해석이 들어갈 수 있는지 먼저 확인
+    if (pageLayoutInfo.canFitAnswerWithTranslation) {
+      // 1페이지: 본문+정답+해석 (모든 내용이 1페이지에 들어감)
+      return (
+        <>
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderWork01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={commonStyles.instruction}>
+                  아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                </div>
+                <div className="missing-sentence-box" style={commonStyles.missingSentenceBox}>
+                  <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{quiz.missingSentence}</span>
+                </div>
+                <div style={commonStyles.numberedPassage}>
+                  {quiz.numberedPassage}
+                </div>
+                <div className="problem-answer" style={commonStyles.answer}>
+                  정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
+                </div>
+                
+                {/* 본문 해석 추가 */}
+                <div className="problem-instruction" style={commonStyles.instruction}>
+                  본문 해석
+                </div>
+                <div className="problem-passage translation" style={commonStyles.translation}>
+                  {quiz.translation && quiz.translation.trim().length > 0 
+                    ? quiz.translation 
+                    : '본문 해석이 생성되지 않았습니다.'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    } else if (needsSecondPageForAnswer) {
+      if (pageLayoutInfo.canFitTranslationWithAnswer) {
+        // 2페이지: 본문, 정답+해석
+        return (
+          <>
+            {renderProblemPage()}
+            {renderAnswerWithTranslationPage()}
+          </>
+        );
+      } else {
+        // 3페이지: 본문, 정답, 해석
+        return (
+          <>
+            {renderProblemPage()}
+            {renderAnswerPage()}
+            {renderTranslationPage()}
+          </>
+        );
+      }
+    } else {
+      // 2페이지: 본문+정답, 해석
+      return (
+        <>
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderWork01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={commonStyles.instruction}>
+                  아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                </div>
+                <div className="missing-sentence-box" style={commonStyles.missingSentenceBox}>
+                  <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{quiz.missingSentence}</span>
+                </div>
+                <div style={commonStyles.numberedPassage}>
+                  {quiz.numberedPassage}
+                </div>
+                <div className="problem-answer" style={commonStyles.answer}>
+                  정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
+                </div>
+              </div>
+            </div>
+          </div>
+          {renderTranslationPage()}
+        </>
+      );
+    }
+  };
+
   if (quiz) {
     return (
       <div>
@@ -1072,50 +1454,9 @@ ${passage}`;
             </div>
           </div>
         )}
-        {printMode === 'with-answer' && (
+        {printMode === 'with-answer' && quiz && (
           <div className="only-print print-answer-mode">
-            {/* 2페이지 구성: 문제+정답, 본문해석 */}
-            <>
-              {/* 1페이지: 문제제목 + 주요문장 + 본문 + 정답 */}
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                      아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
-                    </div>
-                    <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
-                      <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{quiz.missingSentence}</span>
-                    </div>
-                    <div style={{fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
-                      {quiz.numberedPassage}
-                    </div>
-                    <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
-                      정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2페이지: 본문 해석 */}
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                      본문 해석
-                    </div>
-                    <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                      {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
+            {renderPrintWithAnswerLayout()}
           </div>
         )}
       </div>
