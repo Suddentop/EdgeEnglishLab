@@ -770,8 +770,17 @@ ${englishWords.join(', ')}
           // parseResult가 배열인 경우 (기존 방식)
           words = parseResult as WordItem[];
         }
-      } else if ((inputMode === 'image' || inputMode === 'capture') && imageFile) {
+      } else if (inputMode === 'image' && imageFile) {
         words = await extractWordsFromImage(imageFile);
+      } else if (inputMode === 'capture') {
+        // 캡처 이미지에서 추출된 텍스트가 수정되었을 수 있으므로 inputText 사용
+        if (!inputText.trim()) throw new Error('영어 본문을 입력해주세요.');
+        const parseResult = parseWordsFromText(inputText.trim());
+        if (Array.isArray(parseResult)) {
+          words = parseResult;
+        } else {
+          words = parseResult.words;
+        }
       } else {
         throw new Error('이미지를 첨부해주세요.');
       }
