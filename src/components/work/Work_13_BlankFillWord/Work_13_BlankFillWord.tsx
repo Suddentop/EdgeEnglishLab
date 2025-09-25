@@ -546,7 +546,7 @@ const Work_13_BlankFillWord: React.FC = () => {
               <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
               <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
             </div>
-          <div className="problem-text" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit', border:'2px solid #e3e6f0'}}>
+          <div className="problem-text" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
               {quiz.blankedText}
             </div>
 
@@ -609,17 +609,17 @@ const Work_13_BlankFillWord: React.FC = () => {
               // 2페이지 구성: 문제제목 + 본문(정답포함), 본문해석 (본문 2000자 이상)
               <>
                 {/* 1페이지: 문제제목 + 본문(정답포함) */}
-                <div className="a4-page-template" style={{border: '3px solid #FF0000'}}>
-                  <div className="a4-page-header" style={{border: '2px solid #00FF00'}}>
+                <div className="a4-page-template">
+                  <div className="a4-page-header">
                     <PrintHeaderWork01 />
                   </div>
-                  <div className="a4-page-content" style={{border: '2px solid #0000FF'}}>
-                    <div className="quiz-content" style={{border: '2px solid #FF00FF'}}>
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%', border: '2px solid #FFFF00'}}>
+                  <div className="a4-page-content">
+                    <div className="quiz-content">
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                         <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
                       </div>
-                        <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border: '2px solid #00FFFF'}}>
+                        <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                           {(() => {
                             const text = quiz.blankedText;
                             const parts = text.split(/(\(_{15}\))/);
@@ -643,16 +643,16 @@ const Work_13_BlankFillWord: React.FC = () => {
                 </div>
 
                 {/* 2페이지: 본문 해석 */}
-                <div className="a4-page-template" style={{border: '3px solid #FF0000'}}>
-                  <div className="a4-page-header" style={{border: '2px solid #00FF00'}}>
+                <div className="a4-page-template">
+                  <div className="a4-page-header">
                     <PrintHeaderWork01 />
                   </div>
-                  <div className="a4-page-content" style={{border: '2px solid #0000FF'}}>
-                    <div className="quiz-content" style={{border: '2px solid #FF00FF'}}>
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%', border: '2px solid #FFFF00'}}>
+                  <div className="a4-page-content">
+                    <div className="quiz-content">
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="work13-print-translation" style={{fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'2px solid #FFA500', marginTop:'0'}}>
+                      <div className="work13-print-translation" style={{fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', marginTop:'0'}}>
                         {quiz.translation}
                       </div>
                     </div>
@@ -661,17 +661,17 @@ const Work_13_BlankFillWord: React.FC = () => {
               </>
             ) : (
               // 1페이지 구성: 문제제목 + 본문(정답포함) + 본문해석 (본문 2000자 미만)
-              <div className="a4-page-template" style={{border: '3px solid #FF0000'}}>
-                <div className="a4-page-header" style={{border: '2px solid #00FF00'}}>
+              <div className="a4-page-template">
+                <div className="a4-page-header">
                   <PrintHeaderWork01 />
                 </div>
-                <div className="a4-page-content" style={{border: '2px solid #0000FF'}}>
-                  <div className="quiz-content" style={{border: '2px solid #FF00FF'}}>
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%', border: '2px solid #FFFF00'}}>
+                <div className="a4-page-content">
+                  <div className="quiz-content">
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                       <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
                       <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
                     </div>
-                      <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'1.5rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border: '2px solid #00FFFF'}}>
+                      <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'1.5rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {(() => {
                           const text = quiz.blankedText;
                           const parts = text.split(/(\(_{15}\))/);
@@ -690,10 +690,10 @@ const Work_13_BlankFillWord: React.FC = () => {
                           });
                         })()}
                       </div>
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'0', marginBottom:'3rem', display:'block', width:'100%', border: '2px solid #FFFF00'}}>
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'0', marginBottom:'3rem', display:'block', width:'100%'}}>
                       본문 해석
                     </div>
-                    <div className="work13-print-translation" style={{fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'2px solid #FFA500', marginTop:'1rem'}}>
+                    <div className="work13-print-translation" style={{fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', marginTop:'1rem'}}>
                       {quiz.translation}
                     </div>
                   </div>
