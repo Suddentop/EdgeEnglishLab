@@ -28,7 +28,7 @@ function fileToBase64(file: File): Promise<string> {
 
 // OpenAI Vision API 호출
 async function callOpenAIVisionAPI(imageBase64: string, prompt: string, apiKey: string): Promise<string> {
-  console.log('OpenAI Vision API Key:', apiKey); // 디버깅용
+  // console.log('OpenAI Vision API Key:', apiKey); // 보안상 제거됨
   if (!apiKey) throw new Error('API Key가 비어 있습니다. .env 파일과 개발 서버 재시작을 확인하세요.');
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -901,7 +901,7 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
             minHeight: '120px',
             maxHeight: '800px'
           }}
-          disabled={inputMode !== 'text' && inputMode !== 'file'}
+          disabled={inputMode === 'file' && !inputText}
         />
         <div className="text-info">
           <span>글자 수: {inputText.length}자</span>

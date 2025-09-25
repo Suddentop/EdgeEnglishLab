@@ -101,7 +101,7 @@ export const checkFirebaseConfig = () => {
   };
   
   console.log('=== Firebase 설정 확인 ===');
-  console.log('API Key:', config.apiKey ? '설정됨' : '설정되지 않음');
+  // console.log('API Key:', config.apiKey ? '설정됨' : '설정되지 않음'); // 보안상 제거됨
   console.log('Auth Domain:', config.authDomain);
   console.log('Project ID:', config.projectId);
   console.log('Storage Bucket:', config.storageBucket);

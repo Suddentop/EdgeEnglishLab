@@ -870,7 +870,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
           className="text-input"
           rows={8}
           style={{overflow: 'hidden', resize: 'none'}}
-          disabled={inputMode !== 'text' && inputMode !== 'capture' && inputMode !== 'image'}
+          disabled={inputMode === 'image' && !inputText}
         />
         <div className="text-info">
           <span>글자 수: {inputText.length}자</span>

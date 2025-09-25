@@ -2623,7 +2623,7 @@ ${inputText}`;
       if (work01Quiz && work01Quiz.quiz?.originalText) {
         try {
           const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-          console.log('🔑 API 키 확인:', apiKey ? '있음' : '없음');
+          // console.log('🔑 API 키 확인:', apiKey ? '있음' : '없음'); // 보안상 제거됨
           
           if (apiKey) {
             const translation = await translateToKorean(work01Quiz.quiz?.originalText || '', apiKey);

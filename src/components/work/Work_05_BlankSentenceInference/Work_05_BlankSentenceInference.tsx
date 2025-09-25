@@ -335,7 +335,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
 
   // 별도 번역 함수 추가 (유형#01과 동일) - 개선된 버전
   async function translateToKorean(englishText: string, apiKey: string): Promise<string> {
-    console.log('번역 시작:', { textLength: englishText.length, hasApiKey: !!apiKey });
+    console.log('번역 시작:', { textLength: englishText.length, hasApiKey: !!apiKey }); // API Key는 노출하지 않음
     
     if (!apiKey) {
       console.error('API 키가 없습니다.');
@@ -1201,7 +1201,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
           className="text-input"
           rows={8}
           style={{overflow: 'hidden', resize: 'none'}}
-          disabled={inputMode !== 'text' && inputMode !== 'capture' && inputMode !== 'image'}
+          disabled={inputMode === 'image' && !inputText}
         />
         <div className="text-info">
           <span>글자 수: {inputText.length}자</span>

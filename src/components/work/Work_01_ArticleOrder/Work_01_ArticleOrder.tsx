@@ -31,7 +31,7 @@ function fileToBase64(file: File): Promise<string> {
 
 // OpenAI Vision API 호출
 async function callOpenAIVisionAPI(imageBase64: string, prompt: string, apiKey: string): Promise<string> {
-  console.log('OpenAI Vision API Key:', apiKey); // 디버깅용
+  // console.log('OpenAI Vision API Key:', apiKey); // 보안상 제거됨
   if (!apiKey) throw new Error('API Key가 비어 있습니다. .env 파일과 개발 서버 재시작을 확인하세요.');
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -428,7 +428,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
                    // 영어 원본문을 한글로 번역 (단락별 개별 번역)
           try {
             const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-            console.log('🔑 API 키 확인:', apiKey ? '있음' : '없음');
+            // console.log('🔑 API 키 확인:', apiKey ? '있음' : '없음'); // 보안상 제거됨
             
             if (!apiKey) {
               setTranslatedText('번역을 사용하려면 .env 파일에 REACT_APP_OPENAI_API_KEY를 설정해주세요.');
@@ -1105,10 +1105,13 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
           className="text-input"
           rows={8}
           style={{overflow: 'hidden', resize: 'none'}}
-          disabled={inputType !== 'text'}
+          disabled={inputType === 'file' && !text}
         />
         <div className="text-info">
           <span>글자 수: {text.length}자</span>
+          {inputType === 'clipboard' && text && (
+            <span className="edit-hint">✏️ 추출된 텍스트를 키보드로 수정할 수 있습니다</span>
+          )}
         </div>
         {tooltip && <div className="tooltip">{tooltip}</div>}
         {isVisionLoading && <div style={{color:'#6a5acd', fontWeight:600, marginTop:'0.5rem'}}>OpenAI Vision 처리 중...</div>}
