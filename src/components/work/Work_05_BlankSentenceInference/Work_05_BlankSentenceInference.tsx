@@ -51,11 +51,37 @@ const Work_05_BlankSentenceInference: React.FC = () => {
     const initializePoints = async () => {
       try {
         const points = await getWorkTypePoints();
-        setWorkTypePoints(points);
+        console.log('포인트 설정 로드 결과:', points);
         
-        // 유형#05의 포인트 설정
-        const workType5Points = points.find(wt => wt.id === '5')?.points || 0;
-        setPointsToDeduct(workType5Points);
+        if (Array.isArray(points) && points.length > 0) {
+          setWorkTypePoints(points);
+          
+          // 유형#05의 포인트 설정
+          const workType5Points = points.find(wt => wt.id === '5')?.points || 20; // 기본값 20
+          setPointsToDeduct(workType5Points);
+          console.log('유형#05 포인트 설정:', workType5Points);
+        } else {
+          console.warn('포인트 설정이 비어있거나 배열이 아닙니다. 기본값을 사용합니다.');
+          // 기본 포인트 설정
+          const defaultPoints = [
+            { id: '1', name: '유형#01', points: 10, description: '문장 순서 테스트' },
+            { id: '2', name: '유형#02', points: 15, description: '독해 문제 생성' },
+            { id: '3', name: '유형#03', points: 12, description: '어휘 단어 문제' },
+            { id: '4', name: '유형#04', points: 18, description: '빈칸(구) 추론 문제' },
+            { id: '5', name: '유형#05', points: 20, description: '빈칸(문장) 추론 문제' },
+            { id: '6', name: '유형#06', points: 16, description: '문장 위치 추론 문제' },
+            { id: '7', name: '유형#07', points: 22, description: '주요 아이디어 추론 문제' },
+            { id: '8', name: '유형#08', points: 25, description: '제목 추론 문제' },
+            { id: '9', name: '유형#09', points: 14, description: '문법 오류 문제' },
+            { id: '10', name: '유형#10', points: 30, description: '복합 문법 오류 문제' },
+            { id: '11', name: '유형#11', points: 18, description: '기사 순서 문제' },
+            { id: '12', name: '유형#12', points: 20, description: '영어단어 문제' },
+            { id: '13', name: '유형#13', points: 12, description: '빈칸 채우기 문제(단어-주관식)' },
+            { id: '14', name: '유형#14', points: 15, description: '빈칸 채우기 문제(문장-주관식)' }
+          ];
+          setWorkTypePoints(defaultPoints);
+          setPointsToDeduct(20); // 유형#05 기본값
+        }
         
         // 로딩이 완료되고 userData가 있을 때만 포인트 조회
         if (!loading && userData && userData.uid) {
@@ -64,6 +90,12 @@ const Work_05_BlankSentenceInference: React.FC = () => {
         }
       } catch (error) {
         console.error('포인트 초기화 오류:', error);
+        // 에러 발생 시 기본값 설정
+        const defaultPoints = [
+          { id: '5', name: '유형#05', points: 20, description: '빈칸(문장) 추론 문제' }
+        ];
+        setWorkTypePoints(defaultPoints);
+        setPointsToDeduct(20);
       }
     };
     
@@ -94,7 +126,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
     page3Content: ''
   });
 
-  // inputText나 quiz가 변경될 때마다 페이지 레이아웃 재계산
+  // 인쇄(정답) 페이지 분할 로직만 독립적으로 계산
   useEffect(() => {
     if (!inputText || !quiz) return;
 
@@ -123,7 +155,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
     };
 
     // ========================================
-    // 가. 인쇄(문제) 로직
+    // 인쇄(정답) 페이지 분할 로직만 독립적으로 계산
     // ========================================
     
     // 1. 문제제목 컨테이너 높이
@@ -132,26 +164,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
     // 2. 영어문제본문 컨테이너 높이
     const englishPassageHeight = calculateElementHeight(inputText, 16, 1.7, 32);
     
-    // 3. 4지선다 컨테이너 높이 (해석 포함하지 않음)
-    const optionsInstructionHeight = calculateElementHeight('다음 중에서 가장 적절한 것을 고르시오.', 12.8, 1.0, 8);
-    let optionsHeight = 0;
-    quiz.options.forEach((opt, i) => {
-      const englishHeight = calculateElementHeight(opt, 12.8, 1.0, 0.2);
-      optionsHeight += englishHeight;
-    });
-    const optionsContainerHeight = optionsInstructionHeight + optionsHeight + 20; // 여백 포함
-    
-    // 4. 인쇄(문제) 전체 높이 계산
-    const problemTotalHeight = problemTitleHeight + englishPassageHeight + optionsContainerHeight;
-    
-    // 5. 인쇄(문제) 페이지 분할 결정
-    const needsSecondPageForProblem = problemTotalHeight > CONTENT_HEIGHT_PX;
-    
-    // ========================================
-    // 나. 인쇄(정답) 로직
-    // ========================================
-    
-    // 1. 4지선다(해석포함) 컨테이너 높이
+    // 3. 4지선다(해석포함) 컨테이너 높이
     const optionsInstructionHeightWithAnswer = calculateElementHeight('다음 중에서 가장 적절한 것을 고르시오.', 14.4, 1.2, 8);
     let optionsHeightWithAnswer = 0;
     quiz.options.forEach((opt, i) => {
@@ -161,50 +174,45 @@ const Work_05_BlankSentenceInference: React.FC = () => {
         : 0;
       optionsHeightWithAnswer += englishHeight + koreanHeight;
     });
-    const optionsContainerHeightWithAnswer = optionsInstructionHeightWithAnswer + optionsHeightWithAnswer + 20;
+    // 선택항목들 사이 여백 (0.8rem × 4개 = 3.2rem ≈ 51px) + 컨테이너 여백
+    const optionsSpacingWithAnswer = 51; // 0.8rem × 4개 선택항목 사이 여백
+    const optionsContainerHeightWithAnswer = optionsInstructionHeightWithAnswer + optionsHeightWithAnswer + optionsSpacingWithAnswer + 20;
     
-    // 2. 영어문제본문 한글해석 컨테이너 높이
+    // 4. 영어문제본문 한글해석 컨테이너 높이
     const translationInstructionHeight = calculateElementHeight('본문 해석', 16, 1.2, 14);
     const translationHeight = calculateElementHeight(quiz.translation || '', 16, 1.6, 32);
     const translationContainerHeight = translationInstructionHeight + translationHeight + 24; // "본문 해석" 제목과 내용 사이 여백 24px (1.5rem)
     
-    // 3. 인쇄(정답) 1페이지 높이 계산 (문제제목 + 영어본문 + 4지선다(해석포함))
+    // 5. 인쇄(정답) 1페이지 높이 계산 (문제제목 + 영어본문 + 4지선다(해석포함))
     const answerPage1Height = problemTitleHeight + englishPassageHeight + optionsContainerHeightWithAnswer;
     
-    // 4. 인쇄(정답) 페이지 분할 결정
+    // 6. 인쇄(정답) 페이지 분할 결정
     const needsSecondPageForAnswer = answerPage1Height > CONTENT_HEIGHT_PX;
     
-    // 5. 2페이지에 4지선다(해석포함) + 해석이 들어갈 수 있는지 확인 (4지선다와 "본문 해석" 제목 사이 여백 64px 포함)
+    // 7. 2페이지에 4지선다(해석포함) + 해석이 들어갈 수 있는지 확인 (4지선다와 "본문 해석" 제목 사이 여백 64px 포함)
     const canFitTranslationWithOptions = needsSecondPageForAnswer && 
       (optionsContainerHeightWithAnswer + translationContainerHeight + 64) <= CONTENT_HEIGHT_PX; // 4지선다와 "본문 해석" 제목 사이 여백 64px (4rem)
     
-    console.log('=== 유형#05 페이지 분할 로직 ===');
+    console.log('=== 유형#05 인쇄(정답) 페이지 분할 로직 ===');
     console.log('전체 페이지 높이:', Math.round(CONTENT_HEIGHT_PX), 'px');
-    console.log('');
-    console.log('가. 인쇄(문제) 로직:');
-    console.log('  문제제목 높이:', Math.round(problemTitleHeight), 'px');
-    console.log('  영어본문 높이:', Math.round(englishPassageHeight), 'px');
-    console.log('  4지선다 높이:', Math.round(optionsContainerHeight), 'px');
-    console.log('  전체 높이:', Math.round(problemTotalHeight), 'px');
-    console.log('  2페이지 분할:', needsSecondPageForProblem);
-    console.log('');
-    console.log('나. 인쇄(정답) 로직:');
-    console.log('  4지선다(해석포함) 높이:', Math.round(optionsContainerHeightWithAnswer), 'px');
-    console.log('  해석 컨테이너 높이:', Math.round(translationContainerHeight), 'px');
-    console.log('  1페이지 높이:', Math.round(answerPage1Height), 'px');
-    console.log('  2페이지 분할:', needsSecondPageForAnswer);
-    console.log('  2페이지에 해석 포함 가능:', canFitTranslationWithOptions);
+    console.log('문제제목 높이:', Math.round(problemTitleHeight), 'px');
+    console.log('영어본문 높이:', Math.round(englishPassageHeight), 'px');
+    console.log('4지선다(해석포함) 높이:', Math.round(optionsContainerHeightWithAnswer), 'px');
+    console.log('해석 컨테이너 높이:', Math.round(translationContainerHeight), 'px');
+    console.log('1페이지 높이:', Math.round(answerPage1Height), 'px');
+    console.log('2페이지 분할:', needsSecondPageForAnswer);
+    console.log('2페이지에 해석 포함 가능:', canFitTranslationWithOptions);
     console.log('=====================================');
 
     setPageLayoutInfo({
-      needsSecondPage: needsSecondPageForProblem, // 인쇄(문제) 기준으로 설정
+      needsSecondPage: false, // 인쇄(문제)는 항상 1페이지
       canFitTranslationWithOptions,
-      page1Content: `문제: ${Math.round(problemTotalHeight)}px / ${Math.round(CONTENT_HEIGHT_PX)}px`,
-      page2Content: `정답: ${Math.round(answerPage1Height)}px / ${Math.round(CONTENT_HEIGHT_PX)}px`,
-      page3Content: `분할: 문제=${needsSecondPageForProblem ? '2페이지' : '1페이지'}, 정답=${needsSecondPageForAnswer ? '2페이지' : '1페이지'}`
+      page1Content: `정답: ${Math.round(answerPage1Height)}px / ${Math.round(CONTENT_HEIGHT_PX)}px`,
+      page2Content: `분할: ${needsSecondPageForAnswer ? '2페이지' : '1페이지'}`,
+      page3Content: `해석 포함: ${canFitTranslationWithOptions ? '2페이지에 함께' : '3페이지 분리'}`
     });
 
-    setNeedsSecondPage(needsSecondPageForProblem);
+    setNeedsSecondPage(false); // 인쇄(문제)는 항상 1페이지
   }, [inputText, quiz]);
 
   const handleInputModeChange = (mode: InputMode) => {
@@ -733,7 +741,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
       instruction: {fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'},
       passage: {marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'},
       options: {margin:'1rem 0'},
-      optionItem: {margin:'0.3rem 0', fontFamily:'inherit'}
+      optionItem: {margin:'0.8rem 0', fontFamily:'inherit'}
     };
 
     const renderProblemPage = () => (
@@ -848,8 +856,45 @@ const Work_05_BlankSentenceInference: React.FC = () => {
       </div>
     );
 
-    // 레이아웃 결정 로직
-    if (pageLayoutInfo.needsSecondPage) {
+    // 인쇄(정답) 페이지 독립적인 레이아웃 결정 로직
+    // pageLayoutInfo.canFitTranslationWithOptions는 인쇄(정답) 페이지의 분할 로직에서 계산됨
+    
+    // 1페이지 높이 계산 (문제제목 + 영어본문 + 4지선다(해석포함))
+    const A4_HEIGHT_MM = 297;
+    const A4_WIDTH_MM = 210;
+    const MARGIN_TOP_MM = 20;
+    const MARGIN_BOTTOM_MM = 20;
+    const HEADER_HEIGHT_MM = 15;
+    const FOOTER_HEIGHT_MM = 10;
+    const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM - HEADER_HEIGHT_MM - FOOTER_HEIGHT_MM;
+    const MM_TO_PX = 3.78;
+    const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
+    
+    const calculateElementHeight = (text: string, fontSize: number, lineHeight: number, padding: number = 0) => {
+      const availableWidth = A4_WIDTH_MM * MM_TO_PX * 0.9;
+      const charWidth = fontSize * 0.55;
+      const charsPerLine = Math.floor(availableWidth / charWidth);
+      const lines = Math.ceil(text.length / charsPerLine);
+      return (lines * fontSize * lineHeight) + padding;
+    };
+    
+    const problemTitleHeight = calculateElementHeight('다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.', 16, 1.2, 14);
+    const englishPassageHeight = calculateElementHeight(inputText, 16, 1.7, 32);
+    const optionsInstructionHeightWithAnswer = calculateElementHeight('다음 중에서 가장 적절한 것을 고르시오.', 14.4, 1.2, 8);
+    let optionsHeightWithAnswer = 0;
+    quiz.options.forEach((opt, i) => {
+      const englishHeight = calculateElementHeight(opt, 14.4, 1.2, 2);
+      const koreanHeight = quiz.optionTranslations && quiz.optionTranslations[i] 
+        ? calculateElementHeight(quiz.optionTranslations[i], 11.2, 1.2, 1)
+        : 0;
+      optionsHeightWithAnswer += englishHeight + koreanHeight;
+    });
+    const optionsSpacingWithAnswer = 51;
+    const optionsContainerHeightWithAnswer = optionsInstructionHeightWithAnswer + optionsHeightWithAnswer + optionsSpacingWithAnswer + 20;
+    const answerPage1Height = problemTitleHeight + englishPassageHeight + optionsContainerHeightWithAnswer;
+    const needsSecondPageForAnswer = answerPage1Height > CONTENT_HEIGHT_PX;
+    
+    if (needsSecondPageForAnswer) {
       if (pageLayoutInfo.canFitTranslationWithOptions) {
         // 2페이지: 본문, 4지선다+해석
         return (
@@ -984,7 +1029,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
             </div>
             <div className="problem-options" style={{margin:'1.2rem 0'}}>
               {quiz.options.map((opt, i) => (
-                <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
+                <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.8rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
                   <input
                     type="radio"
                     name="blank-quiz"
@@ -1004,89 +1049,33 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                 정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
               </div>
             )}
-            {/* 페이지 레이아웃 디버깅 정보 */}
-            {quiz && (
-              <div className="no-print" style={{marginTop:'1rem', padding:'1rem', background:'#f5f5f5', borderRadius:'8px', fontSize:'0.9rem'}}>
-                <h4 style={{margin:'0 0 0.5rem 0', color:'#333'}}>📄 페이지 레이아웃 정보</h4>
-                <div style={{marginBottom:'0.3rem'}}>{pageLayoutInfo.page1Content}</div>
-                <div style={{marginBottom:'0.3rem'}}>{pageLayoutInfo.page2Content}</div>
-                <div style={{marginBottom:'0.5rem'}}>{pageLayoutInfo.page3Content}</div>
-                <div style={{color:'#666'}}>
-                  <strong>분할 결정:</strong> {pageLayoutInfo.needsSecondPage ? '2페이지 분할' : '1페이지'} | 
-                  <strong> 해석 배치:</strong> {pageLayoutInfo.canFitTranslationWithOptions ? '2페이지에 함께' : '3페이지 분리'}
-                </div>
-              </div>
-            )}
           </div>
         </div>
         {printMode === 'no-answer' && (
           <div className="only-print">
-            {pageLayoutInfo.needsSecondPage ? (
-              // 2페이지 구성: 본문, 4지선다 (본문 2000자 이상)
-              <>
-                {/* 1페이지: 문제제목 + 본문 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
+            {/* 인쇄(문제): 항상 1페이지에 모든 내용 표시 */}
+            <div className="a4-page-template">
+              <div className="a4-page-header">
+                <PrintHeaderWork01 />
+              </div>
+              <div className="a4-page-content">
+                <div className="quiz-content">
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                    다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.
                   </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.
-                      </div>
-                      <div className={inputText.length >= 1700 ? 'work05-long-text' : ''} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        {displayBlankedText}
-                      </div>
-                    </div>
+                  <div className={inputText.length >= 1700 ? 'work05-long-text' : ''} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    {displayBlankedText}
                   </div>
-                </div>
-
-                {/* 2페이지: 4지선다 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        다음 중에서 가장 적절한 것을 고르시오.
+                  <div className="problem-options" style={{margin:'1rem 0'}}>
+                    {quiz.options.map((opt, i) => (
+                      <div key={i} style={{fontSize:'1rem !important', margin:'0.8rem 0', fontFamily:'inherit', color:'#222'}}>
+                        {`①②③④⑤`[i] || `${i+1}.`} {opt}
                       </div>
-                      <div className="problem-options" style={{margin:'1rem 0'}}>
-                        {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'0.8rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
-                            {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              // 1페이지 구성: 문제제목 + 본문 + 4지선다 (본문 2000자 미만)
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                      다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.
-                    </div>
-                    <div className={inputText.length >= 1700 ? 'work05-long-text' : ''} style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                      {displayBlankedText}
-                    </div>
-                    <div className="problem-options" style={{margin:'1rem 0'}}>
-                      {quiz.options.map((opt, i) => (
-                        <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
-                          {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                        </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         )}
         {printMode === 'with-answer' && quiz && (
@@ -1197,7 +1186,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
       <div className="input-section">
         <div className="input-label-row">
           <label htmlFor="blank-quiz-text" className="input-label">
-            영어 본문 직접 붙여넣기:
+            영어 본문 직접 붙여넣기: (2,000자 미만 )
           </label>
           {inputText.length < 100 && (
             <span className="warning">⚠️ 더 긴 본문을 입력하면 더 좋은 결과를 얻을 수 있습니다.</span>

@@ -779,7 +779,7 @@
   /* 4지선다 개별 선택지 */
   .only-print .problem-options > div {
     line-height: 1.0 !important;
-    margin: 0.3rem 0 !important; /* 문항 사이 여백 */
+    margin: 0.8rem 0 !important; /* 문항 사이 여백 증가 */
     padding: 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
