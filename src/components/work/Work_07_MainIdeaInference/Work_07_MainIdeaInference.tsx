@@ -818,7 +818,7 @@ ${passage}
                                 <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                               )}
                             </div>
-                            <div style={{fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500}}>
+                            <div style={{fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500, paddingLeft:'1.5rem'}}>
                               {quiz.optionTranslations && quiz.optionTranslations[i] ? quiz.optionTranslations[i] : '해석 없음'}
                             </div>
                           </div>
@@ -871,7 +871,7 @@ ${passage}
                                 <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                               )}
                             </div>
-                            <div style={{fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500}}>
+                            <div style={{fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500, paddingLeft:'1.5rem'}}>
                               {quiz.optionTranslations && quiz.optionTranslations[i] ? quiz.optionTranslations[i] : '해석 없음'}
                             </div>
                           </div>

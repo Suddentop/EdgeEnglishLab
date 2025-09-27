@@ -53,7 +53,9 @@ const Work_02_ReadingComprehension: React.FC = () => {
   
   // 페이지 분할 관련 상태
   const [needsSecondPage, setNeedsSecondPage] = useState(false);
-  const [needsAnswerSecondPage, setNeedsAnswerSecondPage] = useState(false);
+  const [needsThirdPage, setNeedsThirdPage] = useState(false);
+  const [isCalculatingLayout, setIsCalculatingLayout] = useState(false);
+  const [firstPageIncludesReplacements, setFirstPageIncludesReplacements] = useState(false);
   
   // 포인트 관련 상태
   const [showPointModal, setShowPointModal] = useState(false);
@@ -61,33 +63,367 @@ const Work_02_ReadingComprehension: React.FC = () => {
   const [userCurrentPoints, setUserCurrentPoints] = useState(0);
   const [workTypePoints, setWorkTypePoints] = useState<any[]>([]);
 
-  // 본문 글자 수 기반 페이지 분할 결정
-  const checkContentLength = () => {
-    if (!quiz) return;
+
+
+  // 페이지 분할 계산 함수 (실제 DOM 높이 측정)
+  const calculatePageLayout = async () => {
+    if (!quiz) {
+      console.log('❌ 퀴즈 데이터가 없어서 페이지 분할 계산을 건너뜁니다.');
+      return;
+    }
     
-    // 본문 내용의 총 글자 수 계산 (공백 포함)
-    const totalContentLength = quiz.modifiedText.length;
+    console.log('🔄 페이지 분할 계산을 시작합니다...');
+    setIsCalculatingLayout(true);
     
-    // 1,500자 미만이면 1페이지, 1,500자 이상이면 2페이지
-    setNeedsSecondPage(totalContentLength >= 1500);
+    try {
+      // A4 페이지 크기 (인쇄용) - 더 정확한 계산
+      const A4_WIDTH = 21; // cm
+      const A4_HEIGHT = 29.7; // cm
+      const MARGIN = 1.5; // cm (상하좌우) - 여백 줄임
+      const HEADER_HEIGHT = 1.5; // cm (헤더 높이) - 헤더 높이 줄임
+      
+      // cm를 px로 변환 (1cm = 37.8px)
+      const availableWidth = (A4_WIDTH - MARGIN * 2) * 37.8;
+      const availableHeight = (A4_HEIGHT - MARGIN * 2 - HEADER_HEIGHT) * 37.8;
+      
+      console.log(`📏 A4 페이지 크기: ${availableWidth}px × ${availableHeight}px`);
+      
+      // 임시 컨테이너 생성
+      const tempContainer = document.createElement('div');
+      tempContainer.style.cssText = `
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+        width: ${availableWidth}px;
+        height: auto;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        font-family: 'Noto Sans KR', Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        background: white;
+        visibility: hidden;
+        pointer-events: none;
+      `;
+      
+      document.body.appendChild(tempContainer);
+      
+      // 1. 문제제목 + 영어본문 높이 측정 (더 정확하게)
+      const firstPageContent = document.createElement('div');
+      firstPageContent.style.cssText = `
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      `;
+      
+      const problemTitle = document.createElement('div');
+      problemTitle.style.cssText = `
+        font-weight: 800;
+        font-size: 16px;
+        background: #222;
+        color: #fff;
+        padding: 11px 8px;
+        border-radius: 8px;
+        margin-bottom: 19px;
+        width: 100%;
+        box-sizing: border-box;
+      `;
+      problemTitle.textContent = '문제: 다음 본문을 읽고 해석하세요';
+
+      const englishPassage = document.createElement('div');
+      englishPassage.style.cssText = `
+        font-size: 14px;
+        padding: 16px;
+        background: #fff3cd;
+        border-radius: 8px;
+        font-family: inherit;
+        color: #222;
+        line-height: 1.7;
+        box-sizing: border-box;
+        word-wrap: break-word;
+        margin: 0;
+      `;
+      englishPassage.textContent = quiz.modifiedText;
+      
+      firstPageContent.appendChild(problemTitle);
+      firstPageContent.appendChild(englishPassage);
+      tempContainer.appendChild(firstPageContent);
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const firstPageHeight = firstPageContent.scrollHeight;
+      
+      console.log(`📏 1페이지 높이 상세 분석:`);
+      console.log(`- 문제제목 높이: ${problemTitle.scrollHeight}px`);
+      console.log(`- 영어본문 높이: ${englishPassage.scrollHeight}px`);
+      console.log(`- 1페이지 총 높이: ${firstPageHeight}px`);
+      
+      // 2. 교체된단어들 제목 + 표 높이 측정
+      const replacementsContent = document.createElement('div');
+      replacementsContent.style.cssText = `
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      `;
+      
+      const replacementsTitle = document.createElement('div');
+      replacementsTitle.style.cssText = `
+        font-weight: 800;
+        font-size: 16px;
+        background: #222;
+        color: #fff;
+        padding: 11px 8px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        margin-top: 16px;
+        width: 100%;
+        box-sizing: border-box;
+      `;
+      replacementsTitle.textContent = '교체된 단어들';
+      
+      const replacementsTable = document.createElement('div');
+      replacementsTable.style.cssText = `
+        font-size: 13px;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        font-family: inherit;
+        color: #222;
+        line-height: 1.7;
+        box-sizing: border-box;
+      `;
+      
+      // 교체된 단어들 테이블 HTML 생성
+      let tableHTML = '<table style="width: 100%; border-collapse: collapse; background: white; border: 1px solid #ddd;">';
+      tableHTML += '<thead><tr>';
+      tableHTML += '<th style="background: #f5f5f5; color: #333; font-weight: 600; padding: 6px 12px; text-align: center; font-size: 13px; border: 1px solid #ddd;">원래 단어</th>';
+      tableHTML += '<th style="background: #f5f5f5; color: #333; font-weight: 600; padding: 6px 12px; text-align: center; font-size: 13px; border: 1px solid #ddd;">교체된 단어</th>';
+      tableHTML += '<th style="background: #f5f5f5; color: #333; font-weight: 600; padding: 6px 12px; text-align: center; font-size: 13px; border: 1px solid #ddd;">원래 단어</th>';
+      tableHTML += '<th style="background: #f5f5f5; color: #333; font-weight: 600; padding: 6px 12px; text-align: center; font-size: 13px; border: 1px solid #ddd;">교체된 단어</th>';
+      tableHTML += '</tr></thead><tbody>';
+      
+      if (quiz.replacements && quiz.replacements.length > 0) {
+        const halfLength = Math.ceil(quiz.replacements.length / 2);
+        for (let i = 0; i < halfLength; i++) {
+          const leftReplacement = quiz.replacements[i * 2];
+          const rightReplacement = quiz.replacements[i * 2 + 1];
+          
+          tableHTML += '<tr>';
+          
+          // 왼쪽 열
+          if (leftReplacement) {
+            tableHTML += `<td style="padding: 6px 12px; border: 1px solid #ddd; text-align: left; vertical-align: middle; font-size: 13px;">
+              <span style="font-weight: 600; color: #d97706;">${leftReplacement.original}</span>
+              <span style="color: #666; font-style: italic;"> (${leftReplacement.originalMeaning})</span>
+            </td>
+            <td style="padding: 6px 12px; border: 1px solid #ddd; text-align: left; vertical-align: middle; font-size: 13px;">
+              <span style="font-weight: 600; color: #1976d2;">${leftReplacement.replacement}</span>
+              <span style="color: #1976d2; font-style: italic;"> (${leftReplacement.replacementMeaning})</span>
+            </td>`;
+          } else {
+            tableHTML += '<td style="padding: 6px 12px; border: 1px solid #ddd;"></td><td style="padding: 6px 12px; border: 1px solid #ddd;"></td>';
+          }
+          
+          // 오른쪽 열
+          if (rightReplacement) {
+            tableHTML += `<td style="padding: 6px 12px; border: 1px solid #ddd; text-align: left; vertical-align: middle; font-size: 13px;">
+              <span style="font-weight: 600; color: #d97706;">${rightReplacement.original}</span>
+              <span style="color: #666; font-style: italic;"> (${rightReplacement.originalMeaning})</span>
+            </td>
+            <td style="padding: 6px 12px; border: 1px solid #ddd; text-align: left; vertical-align: middle; font-size: 13px;">
+              <span style="font-weight: 600; color: #1976d2;">${rightReplacement.replacement}</span>
+              <span style="color: #1976d2; font-style: italic;"> (${rightReplacement.replacementMeaning})</span>
+            </td>`;
+          } else {
+            tableHTML += '<td style="padding: 6px 12px; border: 1px solid #ddd;"></td><td style="padding: 6px 12px; border: 1px solid #ddd;"></td>';
+          }
+          
+          tableHTML += '</tr>';
+        }
+      }
+      
+      tableHTML += '</tbody></table>';
+      replacementsTable.innerHTML = tableHTML;
+      
+      replacementsContent.appendChild(replacementsTitle);
+      replacementsContent.appendChild(replacementsTable);
+      tempContainer.appendChild(replacementsContent);
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const replacementsHeight = replacementsContent.scrollHeight;
+      
+      // 3. 한글 해석 높이 측정 (실제 인쇄 스타일과 동일하게)
+      const koreanTranslation = document.createElement('div');
+      koreanTranslation.style.cssText = `
+        font-size: 16px;
+        padding: 16px;
+        background: #F1F8E9;
+        border-radius: 8px;
+        font-family: inherit;
+        color: #222;
+        line-height: 1.7;
+        box-sizing: border-box;
+        word-wrap: break-word;
+        width: 100%;
+        max-width: 100%;
+        overflow-wrap: break-word;
+        white-space: normal;
+        margin: 0;
+      `;
+      koreanTranslation.textContent = quiz.translation || '번역을 생성하는 중...';
+      
+      tempContainer.appendChild(koreanTranslation);
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const koreanTranslationHeight = koreanTranslation.scrollHeight;
+      
+      // 임시 컨테이너 제거
+      document.body.removeChild(tempContainer);
+      
+      // 페이지 분할 로직 결정 (3페이지 분할 지원)
+      let needsSecondPage = false;
+      let needsThirdPage = false;
+      
+      // A, B, C 높이 정의
+      const A = firstPageHeight;        // 문제 제목 + 영어 본문
+      const B = replacementsHeight;     // 교체된 단어들 제목 + 테이블
+      const C = koreanTranslationHeight; // 한글 해석
+      const availableSpace = availableHeight; // 950px
+      
+      console.log(`📏 측정된 높이:`);
+      console.log(`- A (문제+본문): ${A}px`);
+      console.log(`- B (교체된단어들): ${B}px`);
+      console.log(`- C (한글해석): ${C}px`);
+      console.log(`- 사용 가능 공간: ${availableSpace}px`);
+      
+      const totalHeight = A + B + C;
+      
+      console.log(`🔍 페이지 분할 로직 분석:`);
+      console.log(`- A + B + C = ${A} + ${B} + ${C} = ${totalHeight}px`);
+      console.log(`- A + B = ${A} + ${B} = ${A + B}px`);
+      console.log(`- B + C = ${B} + ${C} = ${B + C}px`);
+      
+      if (totalHeight <= availableSpace) {
+        // A+B+C ≤ 950 → 1페이지
+        needsSecondPage = false;
+        needsThirdPage = false;
+        setFirstPageIncludesReplacements(true);
+        console.log('✅ 1페이지: A+B+C 모두 1페이지에 들어갑니다');
+      } else if (A + B <= availableSpace) {
+        // A+B+C > 950, A+B ≤ 950 → 1페이지(A+B), 2페이지(C)
+        needsSecondPage = true;
+        needsThirdPage = false;
+        setFirstPageIncludesReplacements(true);
+        console.log('✅ 2페이지: 1페이지(A+B), 2페이지(C)');
+      } else if (A <= availableSpace && B + C <= availableSpace) {
+        // A+B+C > 950, A+B > 950, A ≤ 950, B+C ≤ 950 → 1페이지(A), 2페이지(B+C)
+        needsSecondPage = true;
+        needsThirdPage = false;
+        setFirstPageIncludesReplacements(false);
+        console.log('✅ 2페이지: 1페이지(A), 2페이지(B+C)');
+      } else {
+        // A+B+C > 950, A+B > 950, A > 950 또는 B+C > 950 → 1페이지(A), 2페이지(B), 3페이지(C)
+        needsSecondPage = true;
+        needsThirdPage = true;
+        setFirstPageIncludesReplacements(false);
+        console.log('✅ 3페이지: 1페이지(A), 2페이지(B), 3페이지(C)');
+      }
+      
+      setNeedsSecondPage(needsSecondPage);
+      setNeedsThirdPage(needsThirdPage);
+      
+      console.log(`=== 최종 페이지 분할 결과 ===`);
+      console.log(`2페이지 필요: ${needsSecondPage}`);
+      console.log(`3페이지 필요: ${needsThirdPage}`);
+      console.log(`✅ 상태 설정 완료`);
+      
+    } catch (error) {
+      console.error('페이지 레이아웃 계산 오류:', error);
+      // 오류 시 기본값으로 1페이지 설정
+      setNeedsSecondPage(false);
+      setNeedsThirdPage(false);
+    } finally {
+      setIsCalculatingLayout(false);
+    }
   };
 
-  // 정답 페이지용 글자 수 기반 페이지 분할 결정
-  const checkAnswerContentLength = () => {
-    if (!quiz) return;
-    
-    // 본문 글자 수만 확인 (2000자 이상이면 3페이지 구성)
-    const textLength = quiz.modifiedText.length;
-    
-    // 2,000자 미만이면 2페이지, 2,000자 이상이면 3페이지
-    setNeedsAnswerSecondPage(textLength >= 2000);
+  // 교체된단어들 테이블 렌더링 함수
+  const renderReplacementsTable = () => {
+    if (!quiz || !quiz.replacements || quiz.replacements.length === 0) {
+      return (
+        <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
+          교체된 단어가 없습니다.
+        </div>
+      );
+    }
+
+    const totalReplacements = quiz.replacements.length;
+    const halfLength = Math.ceil(totalReplacements / 2);
+
+    return (
+      <table className="replacements-table">
+        <thead>
+          <tr>
+            <th>원래 단어</th>
+            <th>교체된 단어</th>
+            <th>원래 단어</th>
+            <th>교체된 단어</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: halfLength }, (_, rowIndex) => {
+            const leftReplacement = quiz.replacements[rowIndex * 2];
+            const rightReplacement = quiz.replacements[rowIndex * 2 + 1];
+            
+            return (
+              <tr key={rowIndex}>
+                <td>
+                  {leftReplacement && (
+                    <>
+                      <span className="original-word">{leftReplacement.original}</span>
+                      <span className="original-meaning"> ({leftReplacement.originalMeaning})</span>
+                    </>
+                  )}
+                </td>
+                <td>
+                  {leftReplacement && (
+                    <>
+                      <span className="replacement-word">{leftReplacement.replacement}</span>
+                      <span className="replacement-meaning"> ({leftReplacement.replacementMeaning})</span>
+                    </>
+                  )}
+                </td>
+                <td>
+                  {rightReplacement && (
+                    <>
+                      <span className="original-word">{rightReplacement.original}</span>
+                      <span className="original-meaning"> ({rightReplacement.originalMeaning})</span>
+                    </>
+                  )}
+                </td>
+                <td>
+                  {rightReplacement && (
+                    <>
+                      <span className="replacement-word">{rightReplacement.replacement}</span>
+                      <span className="replacement-meaning"> ({rightReplacement.replacementMeaning})</span>
+                    </>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
   };
 
-  // 퀴즈가 생성되면 내용 길이 확인
+  // 퀴즈가 생성되면 페이지 분할 계산
   useEffect(() => {
     if (quiz) {
-      checkContentLength();
-      checkAnswerContentLength();
+      console.log('🎯 퀴즈 데이터 감지, 페이지 분할 계산 시작');
+      calculatePageLayout();
     }
   }, [quiz]);
 
@@ -1210,8 +1546,9 @@ Korean translation:`;
           </div>
         </div>
 
+
         {/* 문제 제목 */}
-        <div className="problem-title work-02-problem-title" style={{fontWeight: '800 !important', fontSize: '0.6rem !important', background: '#222 !important', color: '#fff !important', padding: '0.2rem 0.4rem !important', borderRadius: '3px !important', marginBottom: '0.3rem !important', display: 'inline-block !important'}}>
+        <div className="problem-title work-02-problem-title" style={{fontWeight: '800 !important', fontSize: '1rem !important', background: '#222 !important', color: '#fff !important', padding: '0.2rem 0.4rem !important', borderRadius: '3px !important', marginBottom: '0.3rem !important', display: 'block !important', width: '100% !important'}}>
           문제: 다음 본문을 읽고 해석하세요
         </div>
 
@@ -1287,7 +1624,7 @@ Korean translation:`;
           {/* 번역 */}
           <div className="translation-section no-print">
             <h3>본문 해석:</h3>
-            <div className="translation-content" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px'}}>
+            <div className="translation-content problem-passage translation" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px', fontSize: '1rem', transform:'scale(0.9)', transformOrigin:'top left', width:'111.11%'}}>
               {quiz.translation}
               </div>
           </div>
@@ -1306,7 +1643,7 @@ Korean translation:`;
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                   문제: 다음 본문을 읽고 해석하세요
                 </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'14px', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                  <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                 </div>
               </div>
               </div>
@@ -1317,99 +1654,72 @@ Korean translation:`;
         {/* 인쇄용: 정답포함 - A4 템플릿 사용 */}
         {printMode === 'with-answer' && quiz && (
           <div className="only-print print-answer-mode">
-            {/* 컨테이너1: only-print print-answer-mode */}
-            {needsAnswerSecondPage ? (
-              // 3페이지 구성: 본문, 교체된 단어들, 해석
+            {!needsSecondPage ? (
+              // 1페이지: 모든 내용
+              <div className="a4-page-template">
+                <div className="a4-page-header">
+                  <PrintHeaderWork01 />
+                </div>
+                <div className="a4-page-content">
+                  <div className="quiz-content">
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                      문제: 다음 본문을 읽고 해석하세요
+                    </div>
+                    <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                    </div>
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                      교체된 단어들
+                    </div>
+                    {quiz.replacements && quiz.replacements.length > 0 ? (
+                      <div>
+                        {renderReplacementsTable()}
+                      </div>
+                    ) : (
+                      <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
+                        교체된 단어가 없습니다.
+                      </div>
+                    )}
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                      본문 해석
+                    </div>
+                    <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      {quiz.translation || '번역을 생성하는 중...'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : needsThirdPage ? (
+              // 3페이지 구성: 1페이지(문제+본문), 2페이지(교체된단어들), 3페이지(한글해석)
               <>
-                {/* 1페이지: 문제제목 + 본문 */}
+                {/* 1페이지: 문제제목 + 영어본문 */}
                 <div className="a4-page-template">
-                  {/* 컨테이너2: a4-page-template */}
                   <div className="a4-page-header">
-                    {/* 컨테이너3: a4-page-header */}
                     <PrintHeaderWork01 />
                   </div>
                   <div className="a4-page-content">
-                    {/* 컨테이너4: a4-page-content */}
                     <div className="quiz-content">
-                      {/* 컨테이너5: quiz-content */}
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        {/* 컨테이너6: problem-instruction */}
                         문제: 다음 본문을 읽고 해석하세요
                       </div>
-                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'14px', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
-                        {/* 컨테이너7: problem-passage - 본문 텍스트 직접 포함 */}
+                      <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 2페이지: 교체된 단어들 */}
+                {/* 2페이지: 교체된단어들 제목 + 교체된단어들 표 */}
                 <div className="a4-page-template">
-                  {/* 컨테이너8: a4-page-template */}
                   <div className="a4-page-header">
-                    {/* 컨테이너9: a4-page-header */}
                     <PrintHeaderWork01 />
                   </div>
                   <div className="a4-page-content">
-                    {/* 컨테이너10: a4-page-content */}
                     <div className="quiz-content">
-                      {/* 컨테이너11: quiz-content */}
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%'}}>
-                        {/* 컨테이너12: problem-instruction */}
                         교체된 단어들
                       </div>
                       {quiz.replacements && quiz.replacements.length > 0 ? (
                         <div>
-                          {/* 컨테이너13: 교체된 단어들 테이블 컨테이너 */}
-                          <table className="replacements-table">
-                            {/* 컨테이너14: replacements-table */}
-                            <thead>
-                              <tr>
-                                <th>원래 단어</th>
-                                <th>교체된 단어</th>
-                                <th>원래 단어</th>
-                                <th>교체된 단어</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Array.from({ length: Math.ceil(quiz.replacements.length / 2) }, (_, rowIndex) => (
-                                <tr key={rowIndex}>
-                                  <td>
-                                    {quiz.replacements[rowIndex * 2] && (
-                                      <>
-                                        <span className="original-word">{quiz.replacements[rowIndex * 2].original}</span>
-                                        <span className="original-meaning"> ({quiz.replacements[rowIndex * 2].originalMeaning})</span>
-                                      </>
-                                    )}
-                                  </td>
-                                  <td>
-                                    {quiz.replacements[rowIndex * 2] && (
-                                      <>
-                                        <span className="replacement-word">{quiz.replacements[rowIndex * 2].replacement}</span>
-                                        <span className="replacement-meaning"> ({quiz.replacements[rowIndex * 2].replacementMeaning})</span>
-                                      </>
-                                    )}
-                                  </td>
-                                  <td>
-                                    {quiz.replacements[rowIndex * 2 + 1] && (
-                                      <>
-                                        <span className="original-word">{quiz.replacements[rowIndex * 2 + 1].original}</span>
-                                        <span className="original-meaning"> ({quiz.replacements[rowIndex * 2 + 1].originalMeaning})</span>
-                                      </>
-                                    )}
-                                  </td>
-                                  <td>
-                                    {quiz.replacements[rowIndex * 2 + 1] && (
-                                      <>
-                                        <span className="replacement-word">{quiz.replacements[rowIndex * 2 + 1].replacement}</span>
-                                        <span className="replacement-meaning"> ({quiz.replacements[rowIndex * 2 + 1].replacementMeaning})</span>
-                                      </>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          {renderReplacementsTable()}
                         </div>
                       ) : (
                         <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
@@ -1420,131 +1730,155 @@ Korean translation:`;
                   </div>
                 </div>
 
-                {/* 3페이지: 본문 해석 */}
+                {/* 3페이지: 한글해석 */}
                 <div className="a4-page-template">
-                  {/* 컨테이너15: a4-page-template */}
                   <div className="a4-page-header">
-                    {/* 컨테이너16: a4-page-header */}
                     <PrintHeaderWork01 />
                   </div>
                   <div className="a4-page-content">
-                    {/* 컨테이너17: a4-page-content */}
                     <div className="quiz-content">
-                      {/* 컨테이너18: quiz-content */}
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.875rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        {/* 컨테이너20: problem-passage - 본문 해석 직접 포함 */}
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                        본문 해석
+                      </div>
+                      <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important',  padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation || '번역을 생성하는 중...'}
                       </div>
                     </div>
                   </div>
                 </div>
               </>
+            ) : needsSecondPage ? (
+              firstPageIncludesReplacements ? (
+                // 2페이지 구성: 1페이지(문제+본문+교체된단어들), 2페이지(한글해석)
+                <>
+                  {/* 1페이지: 문제제목 + 영어본문 + 교체된단어들 */}
+                  <div className="a4-page-template">
+                    <div className="a4-page-header">
+                      <PrintHeaderWork01 />
+                    </div>
+                    <div className="a4-page-content">
+                      <div className="quiz-content">
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                          문제: 다음 본문을 읽고 해석하세요
+                        </div>
+                        <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                        </div>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                          교체된 단어들
+                        </div>
+                        {quiz.replacements && quiz.replacements.length > 0 ? (
+                          <div>
+                            {renderReplacementsTable()}
+                          </div>
+                        ) : (
+                          <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
+                            교체된 단어가 없습니다.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2페이지: 한글해석만 */}
+                  <div className="a4-page-template">
+                    <div className="a4-page-header">
+                      <PrintHeaderWork01 />
+                    </div>
+                    <div className="a4-page-content">
+                      <div className="quiz-content">
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                          본문 해석
+                        </div>
+                        <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                          {quiz.translation || '번역을 생성하는 중...'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // 2페이지 구성: 1페이지(문제+본문), 2페이지(교체된단어들+한글해석)
+                <>
+                  {/* 1페이지: 문제제목 + 영어본문 */}
+                  <div className="a4-page-template">
+                    <div className="a4-page-header">
+                      <PrintHeaderWork01 />
+                    </div>
+                    <div className="a4-page-content">
+                      <div className="quiz-content">
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                          문제: 다음 본문을 읽고 해석하세요
+                        </div>
+                        <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2페이지: 교체된단어들 제목 + 교체된단어들 표 + 한글해석 */}
+                  <div className="a4-page-template">
+                    <div className="a4-page-header">
+                      <PrintHeaderWork01 />
+                    </div>
+                    <div className="a4-page-content">
+                      <div className="quiz-content">
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%'}}>
+                          교체된 단어들
+                        </div>
+                        {quiz.replacements && quiz.replacements.length > 0 ? (
+                          <div>
+                            {renderReplacementsTable()}
+                          </div>
+                        ) : (
+                          <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
+                            교체된 단어가 없습니다.
+                          </div>
+                        )}
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                          본문 해석
+                        </div>
+                        <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important',  padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                          {quiz.translation || '번역을 생성하는 중...'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )
             ) : (
-              // 2페이지 구성: 본문+교체된 단어들, 해석
-              <>
-                {/* 1페이지: 문제제목 + 본문 + 교체된 단어들 */}
-                <div className="a4-page-template">
-                  {/* 컨테이너2: a4-page-template */}
-                  <div className="a4-page-header">
-                    {/* 컨테이너3: a4-page-header */}
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    {/* 컨테이너4: a4-page-content */}
-                    <div className="quiz-content">
-                      {/* 컨테이너5: quiz-content */}
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        {/* 컨테이너6: problem-instruction */}
-                        문제: 다음 본문을 읽고 해석하세요
+              // 1페이지 구성: 모든 내용 (문제제목 + 영어본문 + 교체된단어들 + 한글해석)
+              <div className="a4-page-template">
+                <div className="a4-page-header">
+                  <PrintHeaderWork01 />
+                </div>
+                <div className="a4-page-content">
+                  <div className="quiz-content">
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                      문제: 다음 본문을 읽고 해석하세요
+                    </div>
+                    <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                    </div>
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                      교체된 단어들
+                    </div>
+                    {quiz.replacements && quiz.replacements.length > 0 ? (
+                      <div>
+                        {renderReplacementsTable()}
                       </div>
-                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'14px', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
-                        {/* 컨테이너7: problem-passage - 본문 텍스트 직접 포함 */}
+                    ) : (
+                      <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
+                        교체된 단어가 없습니다.
                       </div>
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%'}}>
-                        {/* 컨테이너8: problem-instruction */}
-                        교체된 단어들
-                      </div>
-                      {quiz.replacements && quiz.replacements.length > 0 ? (
-                        <div>
-                          {/* 컨테이너9: 교체된 단어들 테이블 컨테이너 */}
-                          <table className="replacements-table">
-                            {/* 컨테이너10: replacements-table */}
-                            <thead>
-                              <tr>
-                                <th>원래 단어</th>
-                                <th>교체된 단어</th>
-                                <th>원래 단어</th>
-                                <th>교체된 단어</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Array.from({ length: Math.ceil(quiz.replacements.length / 2) }, (_, rowIndex) => (
-                                <tr key={rowIndex}>
-                                  <td>
-                                    {quiz.replacements[rowIndex * 2] && (
-                                      <>
-                                        <span className="original-word">{quiz.replacements[rowIndex * 2].original}</span>
-                                        <span className="original-meaning"> ({quiz.replacements[rowIndex * 2].originalMeaning})</span>
-                                      </>
-                                    )}
-                                  </td>
-                                  <td>
-                                    {quiz.replacements[rowIndex * 2] && (
-                                      <>
-                                        <span className="replacement-word">{quiz.replacements[rowIndex * 2].replacement}</span>
-                                        <span className="replacement-meaning"> ({quiz.replacements[rowIndex * 2].replacementMeaning})</span>
-                                      </>
-                                    )}
-                                  </td>
-                                  <td>
-                                    {quiz.replacements[rowIndex * 2 + 1] && (
-                                      <>
-                                        <span className="original-word">{quiz.replacements[rowIndex * 2 + 1].original}</span>
-                                        <span className="original-meaning"> ({quiz.replacements[rowIndex * 2 + 1].originalMeaning})</span>
-                                      </>
-                                    )}
-                                  </td>
-                                  <td>
-                                    {quiz.replacements[rowIndex * 2 + 1] && (
-                                      <>
-                                        <span className="replacement-word">{quiz.replacements[rowIndex * 2 + 1].replacement}</span>
-                                        <span className="replacement-meaning"> ({quiz.replacements[rowIndex * 2 + 1].replacementMeaning})</span>
-                                      </>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      ) : (
-                        <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
-                          교체된 단어가 없습니다.
-                        </div>
-                      )}
+                    )}
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                      본문 해석
+                    </div>
+                    <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important',  padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      {quiz.translation || '번역을 생성하는 중...'}
                     </div>
                   </div>
                 </div>
-
-                {/* 2페이지: 본문 해석 */}
-                <div className="a4-page-template">
-                  {/* 컨테이너11: a4-page-template */}
-                  <div className="a4-page-header">
-                    {/* 컨테이너12: a4-page-header */}
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    {/* 컨테이너13: a4-page-content */}
-                    <div className="quiz-content">
-                      {/* 컨테이너14: quiz-content */}
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.875rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        {/* 컨테이너16: problem-passage - 본문 해석 직접 포함 */}
-                        {quiz.translation || '번역을 생성하는 중...'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
+              </div>
             )}
           </div>
         )}

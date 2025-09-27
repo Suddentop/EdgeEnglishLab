@@ -847,9 +847,6 @@ ${passage}`;
                   </div>
                   <div className="a4-page-content">
                     <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        본문 해석
-                      </div>
                       <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation ? (
                           <div>
@@ -953,9 +950,6 @@ ${passage}`;
                   </div>
                   <div className="a4-page-content">
                     <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        본문 해석
-                      </div>
                       <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {quiz.translation ? (
                           <div style={{fontSize:'1rem !important', fontFamily:'inherit', color:'#222'}}>

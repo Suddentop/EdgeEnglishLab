@@ -201,56 +201,26 @@ export const generateBlankFillQuizWithAI = async (passage: string, retryCount: n
     제외된문장들: skippedSentences.map(s => `${s.substring(0, 30)}... (${countWordsInSentence(s)}개 단어)`)
   });
   
-  const prompt = `다음 ${validSentences.length}개 문장을 하나씩 분석하여 각 문장에서 핵심 단어 1개씩을 선택하세요.
+  // 문장별로 명확히 구분된 프롬프트 생성
+  const sentenceList = validSentences.map((sentence, index) => 
+    `문장 ${index + 1}: "${sentence}"`
+  ).join('\n\n');
+  
+  const prompt = `다음 ${validSentences.length}개 문장에서 각 문장마다 핵심 단어 1개씩을 선택하세요.
 
-**문장별 분석 (각 문장을 개별적으로 처리):**
-${validSentences.map((sentence, index) => `
-문장 ${index + 1}: "${sentence}"
-→ 이 문장의 핵심 의미를 파악하고, 그 의미를 가장 잘 나타내는 단어 1개를 선택하세요.
-→ 선택할 단어는 반드시 이 문장에 실제로 존재해야 합니다.
-→ 문장의 주제, 주요 동작, 핵심 개념을 나타내는 단어를 선택하세요.`).join('\n')}
+**문장 목록:**
+${sentenceList}
 
-**작업 절차:**
-1. 문장 1을 읽고 분석 → 핵심 단어 1개 선택
-2. 문장 2를 읽고 분석 → 핵심 단어 1개 선택  
-3. 문장 3을 읽고 분석 → 핵심 단어 1개 선택
-4. ... (모든 문장에 대해 반복)
-5. 선택한 단어들을 (_______________)로 교체하여 빈칸 문제 생성
+**작업 방법:**
+1. 문장 1을 읽고 → 핵심 단어 1개 선택
+2. 문장 2를 읽고 → 핵심 단어 1개 선택
+3. 문장 3을 읽고 → 핵심 단어 1개 선택
+4. ... (모든 ${validSentences.length}개 문장에 대해 반복)
 
-**절대 규칙:**
-- **${validSentences.length}개 문장 = 정확히 ${validSentences.length}개 단어 선택**
-- **각 문장에서 1개씩만 선택 (건너뛰지 말 것)**
-- **선택한 단어는 해당 문장에 반드시 존재해야 함**
-
-**단어 선택 기준 (매우 중요):**
-1. **문장의 핵심 의미를 나타내는 단어**를 선택하세요
-2. **동사, 명사, 형용사** 중에서 문장의 주요 의미를 담당하는 단어
-3. **절대 피해야 할 단어들:**
-   - 관사 (a, an, the)
-   - 전치사 (in, on, at, by, for, with, etc.)
-   - 접속사 (and, or, but, so, etc.)
-   - 대명사 (it, this, that, they, etc.)
-   - 조동사 (will, can, should, etc.)
-   - 문장의 첫 번째 단어나 마지막 단어를 무작정 선택하지 말 것
-
-4. **선택 우선순위:**
-   - 문장의 주제나 핵심 개념을 나타내는 명사
-   - 문장의 주요 동작을 나타내는 동사
-   - 문장의 핵심 특성을 나타내는 형용사
-   - 문장의 의미를 이해하는 데 필수적인 단어
-
-5. **선택 방법:**
-   - 문장을 읽고 "이 문장이 무엇에 대해 말하고 있는가?"를 생각하세요
-   - 그 답에 가장 중요한 역할을 하는 단어를 선택하세요
-   - 문장에서 그 단어를 제거하면 문장의 의미가 크게 달라지는 단어를 선택하세요
-
-**예시:**
-- "The cat is sleeping on the mat." → "sleeping" (핵심 동작)
-- "She bought a beautiful red dress." → "dress" (핵심 명사) 또는 "beautiful" (핵심 형용사)
-- "The weather is very cold today." → "cold" (핵심 형용사)
-- "Social media is shifting the power from marketers to consumers where the stories told by the consumers themselves are often more potent than the ones told by the brands." → "shifting" (핵심 동작, 문장의 주요 변화를 나타냄) ❌ "brands" (마지막 단어이지만 핵심 의미 아님)
-- "The company announced a major breakthrough in renewable energy technology." → "breakthrough" (핵심 명사, 문장의 핵심 내용) ❌ "technology" (마지막 단어이지만 핵심 의미 아님)
-- "Students are struggling with the complex mathematical concepts." → "struggling" (핵심 동작, 문장의 주요 상황) ❌ "concepts" (마지막 단어이지만 핵심 의미 아님)
+**단어 선택 기준:**
+- 문장의 핵심 의미를 나타내는 단어 (명사, 동사, 형용사)
+- 관사(a, an, the), 전치사(in, on, at), 접속사(and, or, but)는 피하세요
+- 각 문장에서 정확히 1개씩만 선택하세요
 
 **출력 형식 (JSON만):**
 {
@@ -258,33 +228,10 @@ ${validSentences.map((sentence, index) => `
   "correctAnswers": ["단어1", "단어2", "단어3", ...]
 }
 
-**중요한 체크리스트:**
-- 문장 개수를 세어보세요: ${validSentences.length}개
-- 각 문장에서 1개씩 단어를 선택하세요
-- 총 ${validSentences.length}개 단어가 선택되어야 합니다
-- 문장을 하나도 건너뛰지 마세요!
-
-**중요 (절대 규칙):**
-- **반드시 ${validSentences.length}개의 단어를 선택해야 함**
-- **모든 문장에서 1개씩 선택 (건너뛰지 말 것)**
-- **문장을 하나도 건너뛰지 마세요!**
-- **${validSentences.length}개 문장 = 정확히 ${validSentences.length}개 단어**
-- JSON 형식으로만 응답
-- **절대 문장의 마지막 단어를 무작정 선택하지 마세요!**
-- **문장의 위치(첫 번째, 마지막)가 아닌 의미의 중요성으로 선택하세요**
-- **문장을 읽고 "이 문장이 무엇을 말하려고 하는가?"를 먼저 파악한 후, 그 의미를 가장 잘 나타내는 단어를 선택하세요**
-- **위치에 의존하지 말고 의미에 의존하세요!**
-
-**처리 순서 (구체적 예시):**
-현재 ${validSentences.length}개 문장이 있습니다. 각 문장에서 1개씩 선택하세요:
-
-${validSentences.map((sentence, index) => `${index + 1}. 문장 ${index + 1}: "${sentence.substring(0, 100)}${sentence.length > 100 ? '...' : ''}" → [여기서 1개 단어 선택]`).join('\n')}
-
-**절대 규칙 (위반 시 오류):**
-- 문장 개수 = 선택된 단어 개수
-- ${validSentences.length}개 문장 → 정확히 ${validSentences.length}개 단어 선택
-- 모든 문장에서 1개씩 선택 (건너뛰지 말 것)
-- 문장을 하나도 건너뛰면 안 됩니다!
+**중요:**
+- 정확히 ${validSentences.length}개 단어를 선택해야 합니다
+- 모든 문장에서 1개씩 선택하세요 (건너뛰지 마세요)
+- JSON 형식으로만 응답하세요
 
 입력된 영어 본문:
 ${passage}`;
@@ -298,39 +245,32 @@ ${passage}`;
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-         messages: [
-           { 
-             role: 'system', 
-             content: `You are an expert English teacher creating blank-fill problems. You will process sentences ONE BY ONE.
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are an expert English teacher creating blank-fill problems.
 
-CRITICAL PROCESSING RULES:
+CRITICAL RULES:
 1. You will receive ${validSentences.length} sentences
-2. Process each sentence individually and sequentially
-3. For each sentence, select exactly ONE word that carries the core meaning
-4. The selected word MUST exist in that specific sentence
-5. You must process ALL ${validSentences.length} sentences - no skipping
-6. Return exactly ${validSentences.length} words total
+2. Select exactly ONE word from each sentence
+3. Process ALL ${validSentences.length} sentences - no skipping
+4. Return exactly ${validSentences.length} words total
 
-SENTENCE-BY-SENTENCE PROCESSING:
-- Read Sentence 1 → Analyze its meaning → Select 1 word from Sentence 1
-- Read Sentence 2 → Analyze its meaning → Select 1 word from Sentence 2  
-- Read Sentence 3 → Analyze its meaning → Select 1 word from Sentence 3
-- Continue for all ${validSentences.length} sentences
-
-WORD SELECTION STRATEGY:
-- Ask: "What is the main idea of this specific sentence?"
-- Find the word that best represents that main idea
-- The word must be present in that exact sentence
-- Prefer content words (nouns, verbs, adjectives) over function words
-- Avoid articles, prepositions, conjunctions, pronouns
+PROCESSING METHOD:
+- Read each sentence carefully
+- Select the most important word (noun, verb, or adjective)
+- Avoid articles (a, an, the), prepositions (in, on, at), conjunctions (and, or, but)
+- Each sentence must contribute exactly 1 word
 
 OUTPUT FORMAT:
-Return a JSON object with:
-- "blankedText": the original text with selected words replaced by (_______________)
-- "correctAnswers": array of exactly ${validSentences.length} selected words
+Return JSON only:
+{
+  "blankedText": "text with (_______________) for selected words",
+  "correctAnswers": ["word1", "word2", ...]
+}
 
 Remember: ${validSentences.length} sentences = exactly ${validSentences.length} words!` 
-           },
+          },
           { role: 'user', content: prompt }
         ],
         max_tokens: 2000,
@@ -373,7 +313,7 @@ Remember: ${validSentences.length} sentences = exactly ${validSentences.length} 
       validSentences: validSentences.map(s => s.substring(0, 50) + '...')
     });
     
-    // 1단계: 개수 검증 (강화)
+    // 1단계: 개수 검증 (개선된 버전)
     console.log('🔢 1단계: 개수 검증');
     console.log('문장별 상세 정보:', validSentences.map((sentence, index) => ({
       문장번호: index + 1,
@@ -391,27 +331,92 @@ Remember: ${validSentences.length} sentences = exactly ${validSentences.length} 
         문장목록: validSentences.map((s, i) => `${i+1}. ${s.substring(0, 50)}...`)
       });
       
-      // 재시도 로직 (최대 2회)
-      if (retryCount < 2) {
-        console.log(`🔄 재시도 ${retryCount + 1}/2 - 문장별 단어 선택 강화로 재시도`);
-        return generateBlankFillQuizWithAI(passage, retryCount + 1);
+      // 재시도 로직 (최대 3회로 증가)
+      if (retryCount < 3) {
+        console.log(`🔄 재시도 ${retryCount + 1}/3 - 문장별 단어 선택 강화로 재시도`);
+        
+        // 재시도 시 더 간단한 프롬프트 사용
+        const retryPrompt = `다음 ${validSentences.length}개 문장에서 각 문장마다 핵심 단어 1개씩을 선택하세요.
+
+문장 목록:
+${validSentences.map((sentence, index) => `${index + 1}. "${sentence}"`).join('\n')}
+
+규칙:
+- 각 문장에서 정확히 1개씩 선택
+- 총 ${validSentences.length}개 단어 선택
+- JSON 형식으로 응답
+
+출력 형식:
+{
+  "blankedText": "빈칸이 포함된 전체 본문",
+  "correctAnswers": ["단어1", "단어2", ...]
+}
+
+입력된 영어 본문:
+${passage}`;
+
+        // 재시도용 간단한 프롬프트로 다시 시도
+        const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              { 
+                role: 'system', 
+                content: `You are an expert English teacher. Select exactly ONE word from each sentence. Process all ${validSentences.length} sentences. Return JSON format only.`
+              },
+              { role: 'user', content: retryPrompt }
+            ],
+            max_tokens: 2000,
+            temperature: 0.01
+          })
+        });
+        
+        if (retryResponse.ok) {
+          const retryData = await retryResponse.json();
+          const retryJsonMatch = retryData.choices[0].message.content.match(/\{[\s\S]*\}/);
+          if (retryJsonMatch) {
+            try {
+              const retryResult = JSON.parse(retryJsonMatch[0]);
+              if (retryResult.blankedText && retryResult.correctAnswers && 
+                  Array.isArray(retryResult.correctAnswers) && 
+                  retryResult.correctAnswers.length === validSentences.length) {
+                console.log('✅ 재시도 성공 - 모든 문장에서 단어 선택 완료');
+                result = retryResult;
+              } else {
+                throw new Error('재시도 결과가 유효하지 않습니다.');
+              }
+            } catch (retryError) {
+              console.error('재시도 JSON 파싱 오류:', retryError);
+              return generateBlankFillQuizWithAI(passage, retryCount + 1);
+            }
+          } else {
+            return generateBlankFillQuizWithAI(passage, retryCount + 1);
+          }
+        } else {
+          return generateBlankFillQuizWithAI(passage, retryCount + 1);
+        }
+      } else {
+        throw new Error(`❌ 심각한 오류: AI가 ${validSentences.length}개 문장 중 ${selectedWordsCount}개만 처리했습니다. 
+        
+        문장 목록:
+        ${validSentences.map((s, i) => `${i+1}. ${s}`).join('\n')}
+        
+        선택된 단어: ${result.correctAnswers.join(', ')}
+        
+        모든 문장에서 단어를 선택해야 합니다. 다시 시도해주세요.`);
       }
-      
-      throw new Error(`❌ 심각한 오류: AI가 ${validSentences.length}개 문장 중 ${selectedWordsCount}개만 처리했습니다. 
-      
-      문장 목록:
-      ${validSentences.map((s, i) => `${i+1}. ${s}`).join('\n')}
-      
-      선택된 단어: ${result.correctAnswers.join(', ')}
-      
-      모든 문장에서 단어를 선택해야 합니다. 다시 시도해주세요.`);
     }
   
      // 2단계: 문장별 단어 매핑 검증 (개선된 버전)
      console.log('🔍 2단계: 문장별 단어 매핑 검증');
      const selectedWords = result.correctAnswers;
      
-     // 각 문장에 대해 선택된 단어 중 하나가 있는지 확인
+     // 각 문장에 대해 선택된 단어 중 하나가 있는지 확인 (더 유연한 검색)
      const sentenceWordMapping: { 
        sentenceIndex: number, 
        sentence: string, 
@@ -426,12 +431,15 @@ Remember: ${validSentences.length} sentences = exactly ${validSentences.length} 
        const searchResults: { word: string, found: boolean }[] = [];
        let matchedWord: string | undefined;
        
-       // 선택된 단어들을 이 문장에서 검색
+       // 선택된 단어들을 이 문장에서 검색 (더 유연한 매칭)
        for (const selectedWord of selectedWords) {
-         const found = sentenceWords.some(word => 
-           word.includes(selectedWord.toLowerCase()) || 
-           selectedWord.toLowerCase().includes(word)
-         );
+         const selectedWordLower = selectedWord.toLowerCase().trim();
+         const found = sentenceWords.some(word => {
+           const wordClean = word.replace(/[.,!?;:]/g, '').toLowerCase();
+           return wordClean === selectedWordLower || 
+                  wordClean.includes(selectedWordLower) || 
+                  selectedWordLower.includes(wordClean);
+         });
          searchResults.push({ word: selectedWord, found });
          
          if (found && !matchedWord) {
@@ -464,9 +472,9 @@ Remember: ${validSentences.length} sentences = exactly ${validSentences.length} 
          console.error(`    검색 결과:`, item.searchResults);
        });
        
-       // 재시도 로직 (최대 2회)
-       if (retryCount < 2) {
-         console.log(`🔄 재시도 ${retryCount + 1}/2 - 문장별 단어 매핑 실패로 재시도`);
+       // 재시도 로직 (최대 3회)
+       if (retryCount < 3) {
+         console.log(`🔄 재시도 ${retryCount + 1}/3 - 문장별 단어 매핑 실패로 재시도`);
          return generateBlankFillQuizWithAI(passage, retryCount + 1);
        }
        

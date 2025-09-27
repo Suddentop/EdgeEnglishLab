@@ -408,6 +408,7 @@ interface BlankQuiz {
   options: string[];
   answerIndex: number;
   translation: string;
+  optionTranslations?: string[]; // 유형#05용: 선택지별 한글 해석
   selectedSentences?: string[]; // 유형#14용: 선택된 문장들
   correctAnswers?: string[]; // 유형#14용: 정답 문장들
   userAnswer?: string;
@@ -642,7 +643,7 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
           try {
             console.log('🔄 OCR 처리 시작...');
             console.log('📁 파일 정보:', { name: file.name, size: file.size, type: file.type });
-            console.log('🔑 API 키 확인:', process.env.REACT_APP_OPENAI_API_KEY ? '설정됨' : '설정되지 않음');
+            // console.log('🔑 API 키 확인:', process.env.REACT_APP_OPENAI_API_KEY ? '설정됨' : '설정되지 않음'); // 보안상 제거됨
             
             const ocrText = await imageToTextWithOpenAIVision(file);
             console.log('✅ OCR 처리 완료:', ocrText.substring(0, 100) + '...');
@@ -913,14 +914,20 @@ ${inputText}`;
 2. 문제의 본문(빈칸 포함)은 반드시 사용자가 입력한 전체 본문과 완전히 동일해야 하며, 일부 문장만 추출하거나, 문장 순서를 바꾸거나, 본문을 요약/변형해서는 안 돼. 오직 정답 문장만 ()로 치환해.
 3. 입력된 본문에 이미 ()로 묶인 문장이 있다면, 그 부분은 절대 빈칸 처리 대상으로 삼지 마세요. 반드시 괄호 밖에 있는 문장만 빈칸 후보로 선정하세요.
 4. 아래 문장은 절대 빈칸 처리하지 마세요: ${excludedSentences.length > 0 ? excludedSentences.join(', ') : '없음'}
-5. 정답(문장) + 오답(비슷한 길이의 문장 4개, 의미는 다름) 총 5개를 생성해.
+5. 정답(문장) + 오답(본문과 유사한 주제/맥락의 새로운 문장 4개) 총 5개를 생성해.
+   - 오답 문장들은 본문의 주제와 유사하지만 본문에 없는 새로운 내용이어야 함
+   - 본문의 다른 문장을 그대로 사용하면 안 됨
+   - 정답과 비슷한 길이와 문체로 작성해야 함
+   - 본문의 맥락과 관련이 있지만 실제로는 틀린 내용이어야 함
 6. 정답의 위치는 1~5번 중 랜덤.
-7. 아래 JSON 형식으로 응답:
+7. 각 선택지(정답 포함)에 대한 한국어 해석을 생성해.
+8. 아래 JSON 형식으로 응답 (optionTranslations 필드는 반드시 포함해야 함):
 {
-  "options": ["...", ...],
-  "answerIndex": 2 // 0~4
+  "options": ["영어 선택지1", "영어 선택지2", "영어 선택지3", "영어 선택지4", "영어 선택지5"],
+  "answerIndex": 2,
+  "optionTranslations": ["한국어 해석1", "한국어 해석2", "한국어 해석3", "한국어 해석4", "한국어 해석5"]
 }
-주의: options의 정답(정답 인덱스에 해당하는 문장)은 반드시 본문에 있던 문장과 완전히 일치해야 하며, 변형/대체/동의어/어형 변화가 있으면 안 됨. 문제의 본문(빈칸 포함)은 반드시 입력한 전체 본문과 동일해야 함. 입력된 본문에 이미 ()로 묶인 부분은 빈칸 처리 대상에서 제외해야 함.
+주의: options의 정답(정답 인덱스에 해당하는 문장)은 반드시 본문에 있던 문장과 완전히 일치해야 하며, 변형/대체/동의어/어형 변화가 있으면 안 됨. 오답들은 본문에 없는 새로운 문장이어야 함. 문제의 본문(빈칸 포함)은 반드시 입력한 전체 본문과 동일해야 함. 입력된 본문에 이미 ()로 묶인 부분은 빈칸 처리 대상에서 제외해야 함.
 본문:
 ${inputText}`;
 
@@ -945,6 +952,7 @@ ${inputText}`;
 
       const data = await response.json();
       console.log('🤖 AI 응답 전체:', data);
+      console.log('AI 응답 원본:', data.choices[0].message.content);
       
       const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
@@ -952,7 +960,10 @@ ${inputText}`;
       let result;
       try {
         result = JSON.parse(jsonMatch[0]);
-      } catch {
+        console.log('파싱된 결과:', result);
+        console.log('optionTranslations:', result.optionTranslations);
+      } catch (parseError) {
+        console.error('JSON 파싱 오류:', parseError);
         throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
       }
       
@@ -1006,11 +1017,18 @@ ${inputText}`;
       const translation = await translateToKorean(inputText, apiKey);
       console.log('✅ 번역 완료');
 
+      // optionTranslations가 없으면 기본값 설정
+      if (!result.optionTranslations || !Array.isArray(result.optionTranslations)) {
+        console.warn('optionTranslations가 없거나 배열이 아닙니다. 기본값을 설정합니다.');
+        result.optionTranslations = result.options.map(() => '해석을 생성할 수 없습니다.');
+      }
+
       return {
         blankedText: result.blankedText,
         options: result.options,
         answerIndex: result.answerIndex,
-        translation: translation
+        translation: translation,
+        optionTranslations: result.optionTranslations
       };
 
     } catch (error) {

@@ -71,18 +71,6 @@
     width: 100vw !important;
     box-sizing: border-box;
   }
-  .answer-page {
-    page-break-before: always !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-  }
-  .replacements-section,
-  .translation-section {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
   .print-footer {
     position: fixed !important;
     bottom: 0 !important;
@@ -90,7 +78,7 @@
     right: 0 !important;
     width: 100% !important;
     text-align: center !important;
-    font-size: 0.8rem !important;
+    font-size: 1rem !important;
     color: #444 !important;
     z-index: 9999 !important;
     padding: 0.5rem 0 !important;
@@ -106,68 +94,6 @@
   .print-header-margin {
     margin-top: 0.5cm !important;
     margin-bottom: 1.2rem !important;
-  }
-  .answer-page .print-header-margin {
-    margin-top: 0.5cm !important;
-  }
-  /* 페이지별 여백 조정 */
-  .only-print > .quiz-print-body {
-    position: relative;
-  }
-  .only-print > .quiz-print-body:first-child {
-    padding-top: 0.5cm;
-  }
-  .only-print > .quiz-print-body + .quiz-print-body {
-    margin-top: 0 !important;
-    position: relative;
-    padding-top: 0;
-  }
-  
-  /* 두 번째 장 (정답 페이지) 스타일 강화 */
-  .only-print .answer-page {
-    page-break-before: always !important;
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-  }
-  
-  /* 교체된 단어들과 본문 해석 섹션 강화 */
-  .only-print .replacements-section h3,
-  .only-print .translation-section h3 {
-    font-size: 1.2rem !important;
-    font-weight: 700 !important;
-    margin-bottom: 0.1rem !important; /* 여백을 0.3rem에서 0.1rem으로 더욱 축소 */
-    color: #1976d2 !important;
-  }
-  
-  /* 교체된 단어들 제목 여백 축소 */
-  .only-print h3 {
-    margin-bottom: 0.1rem !important; /* 모든 h3 제목의 하단 여백 더욱 축소 */
-  }
-  
-  .only-print .replacements-section,
-  .only-print .translation-section {
-    margin-bottom: 2rem !important;
-  }
-  
-  /* 인쇄 시 두 번째 장 강제 표시 */
-  .only-print .print-answer-mode {
-    display: block !important;
-  }
-  
-  .only-print .answer-page {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-  
-  /* 인쇄 시 페이지 구분 명확화 */
-  @media print {
-    .answer-page {
-      page-break-before: always !important;
-      break-before: page !important;
-    }
   }
 }
 
@@ -902,7 +828,7 @@
   border-collapse: collapse !important;
   background: white !important;
   border: 1px solid #ddd !important;
-  margin-top: 1rem !important;
+  margin-top: 0.7rem !important;
 }
 
 /* 화면 표시용 테이블 - 전체 테두리 */
@@ -916,7 +842,7 @@
   background: #f5f5f5 !important;
   color: #333 !important;
   font-weight: 600 !important;
-  padding: 0.8rem !important;
+  padding: 0.64rem 0.8rem !important; /* 상·하 20% 감소 */
   text-align: center !important;
   font-size: 12px !important;
   border-top: 0.5px solid #aaaaaa !important;
@@ -930,31 +856,31 @@
   background: #f5f5f5 !important;
   color: #333 !important;
   font-weight: 600 !important;
-  padding: 0.225rem 0.45rem !important;
+  padding: 0.1575rem 0.315rem !important;
   text-align: center !important;
-  font-size: 12px !important;
+  font-size: 1rem !important;
   border: 1px solid #ddd !important;
 }
 
 /* 화면 표시용 테이블 셀 */
 .quiz-generator .replacements-table.no-print td {
-  padding: 0.6rem 0.8rem !important;
+  padding: 0.48rem 0.8rem !important; /* 상·하 20% 감소 */
   border-top: 0.5px solid #aaaaaa !important;
   border-bottom: 0.5px solid #aaaaaa !important;
   border-left: 0.5px solid #aaaaaa !important;
   border-right: 0.5px solid #aaaaaa !important;
   text-align: left !important;
   vertical-align: middle !important;
-  font-size: 12px !important;
+  font-size: 1rem !important;
 }
 
 /* 인쇄(정답)용 테이블 셀 */
 .only-print .replacements-table td {
-  padding: 0.225rem 0.9rem !important;
+  padding: 0.1575rem 0.63rem !important;
   border: 1px solid #ddd !important;
   text-align: left !important;
   vertical-align: middle !important;
-  font-size: 12px !important;
+  font-size: 1rem !important;
 }
 
 .replacements-table tr:last-child td {
@@ -968,23 +894,23 @@
 .original-word {
   font-weight: 600;
   color: #d97706;
-  font-size: 12px;
+  font-size: 0.8rem;
 }
 
 .replacement-word {
   font-weight: 600;
   color: #1976d2;
-  font-size: 12px;
+  font-size: 0.8rem;
 }
 
 .original-meaning {
-  font-size: 12px;
+  font-size: 0.8rem;
   color: #666;
   font-style: italic;
 }
 
 .replacement-meaning {
-  font-size: 12px;
+  font-size: 0.8rem;
   color: #1976d2;
   font-style: italic;
 }
@@ -1011,7 +937,7 @@
   .quiz-generator .replacements-table.no-print th,
   .quiz-generator .replacements-table.no-print td {
     padding: 0.5rem 0.4rem !important;
-    font-size: 12px !important;
+    font-size: 1rem !important;
     border: 0.5px solid #aaaaaa !important;
   }
   
@@ -1052,7 +978,7 @@
     border-collapse: collapse !important;
     background: white !important;
     border: 1px solid #ddd !important;
-    margin-top: 1rem !important;
+    margin-top: 0.7rem !important;
   }
   
   .quiz-generator .replacements-table th,
@@ -1060,19 +986,19 @@
     background: #f5f5f5 !important;
     color: #333 !important;
     font-weight: 600 !important;
-    padding: 0.225rem 0.45rem !important;
+    padding: 0.1575rem 0.315rem !important;
     text-align: center !important;
-    font-size: 12px !important;
+    font-size: 1rem !important;
     border: 1px solid #ddd !important;
   }
   
   .quiz-generator .replacements-table td,
   .only-print .replacements-table td {
-    padding: 0.225rem 0.9rem !important;
+    padding: 0.1575rem 0.63rem !important;
     border: 1px solid #ddd !important;
     text-align: left !important;
     vertical-align: middle !important;
-    font-size: 12px !important;
+    font-size: 1rem !important;
   }
   
   .replacements-table tr:last-child td {
@@ -1086,23 +1012,23 @@
   .original-word {
     font-weight: 600 !important;
     color: #d97706 !important;
-    font-size: 12px !important;
+    font-size: 1rem !important;
   }
   
   .replacement-word {
     font-weight: 600 !important;
     color: #1976d2 !important;
-    font-size: 12px !important;
+    font-size: 1rem !important;
   }
   
   .original-meaning {
-    font-size: 12px !important;
+    font-size: 1rem !important;
     color: #666 !important;
     font-style: italic !important;
   }
   
   .replacement-meaning {
-    font-size: 12px !important;
+    font-size: 1rem !important;
     color: #1976d2 !important;
     font-style: italic !important;
   }
@@ -1136,22 +1062,36 @@
   
   /* 본문 영역 글씨크기 설정 - 영어 본문 */
   .only-print .problem-passage:not(.translation) {
-    font-size: 14px !important;
+    font-size: 0.9rem !important;
   }
   
-  /* 본문 영역 내부의 모든 요소들도 14px로 강제 설정 - 영어 본문 */
+  /* 본문 영역 내부의 모든 요소들도 0.9rem으로 강제 설정 - 영어 본문 */
   .only-print .problem-passage:not(.translation) * {
-    font-size: 14px !important;
+    font-size: 0.9rem !important;
   }
   
-  /* 한글해석 영역 글씨크기 설정 - 2페이지 */
-  .only-print .problem-passage.translation {
-    font-size: 14px !important;
+  /* 한글해석 영역 글씨크기 설정 - 2페이지 - 더 구체적인 선택자로 전역 CSS 덮어쓰기 */
+  .only-print .quiz-generator .problem-passage.translation,
+  .only-print .quiz-display .problem-passage.translation,
+  .only-print .quiz-print-body .problem-passage.translation,
+  .only-print .quiz-section .problem-passage.translation,
+  .only-print .work-02-reading-comprehension .problem-passage.translation,
+  .only-print .a4-page-template .problem-passage.translation,
+  .only-print .a4-page-content .problem-passage.translation,
+  .only-print .quiz-content .problem-passage.translation {
+    font-size: 1rem !important;
   }
   
-  /* 한글해석 영역 내부의 모든 요소들도 14px로 강제 설정 - 2페이지 */
-  .only-print .problem-passage.translation * {
-    font-size: 14px !important;
+  /* 한글해석 영역 내부의 모든 요소들도 0.6rem으로 강제 설정 - 2페이지 */
+  .only-print .quiz-generator .problem-passage.translation *,
+  .only-print .quiz-display .problem-passage.translation *,
+  .only-print .quiz-print-body .problem-passage.translation *,
+  .only-print .quiz-section .problem-passage.translation *,
+  .only-print .work-02-reading-comprehension .problem-passage.translation *,
+  .only-print .a4-page-template .problem-passage.translation *,
+  .only-print .a4-page-content .problem-passage.translation *,
+  .only-print .quiz-content .problem-passage.translation * {
+    font-size: 1rem !important;
   }
 }
 
@@ -1199,22 +1139,60 @@ table.replacements-table.no-print td,
 
 /* 인쇄(정답)용 테이블만 - 조정된 크기 */
 .only-print .replacements-table th {
-  padding: 0.225rem 0.45rem !important;
+  padding: 0.126rem 0.315rem !important; /* 20% 감소 */
   line-height: 1.4 !important;
 }
 
 .only-print .replacements-table td {
-  padding: 0.225rem 0.9rem !important;
+  padding: 0.126rem 0.63rem !important; /* 20% 감소 */
   line-height: 1.4 !important;
 }
 
 /* 본문 영역 글씨크기 강제 통일 (일반 화면용) */
 .problem-passage:not(.translation) {
-  font-size: 14px !important;
+  font-size: 1rem !important;
 }
 
 .problem-passage:not(.translation) * {
-  font-size: 14px !important;
+  font-size: 1rem !important;
+}
+
+/* 화면용 한글해석 글씨크기 - 더 구체적인 선택자로 전역 CSS 덮어쓰기 */
+.quiz-generator .problem-passage.translation,
+.quiz-display .problem-passage.translation,
+.quiz-print-body .problem-passage.translation,
+.quiz-section .problem-passage.translation,
+.work-02-reading-comprehension .problem-passage.translation,
+.quiz-generator .translation-content,
+.quiz-display .translation-content,
+.quiz-print-body .translation-content,
+.quiz-section .translation-content,
+.work-02-reading-comprehension .translation-content {
+  font-size: 1rem !important;
+  background: #f1f8e9 !important;
+}
+
+/* 화면용 변경된 본문(문제) 배경색 - 노란색 유지 */
+.quiz-generator .text-content.no-print {
+  background: #fff3cd !important;
+}
+
+.quiz-generator .problem-passage.translation *,
+.quiz-display .problem-passage.translation *,
+.quiz-print-body .problem-passage.translation *,
+.quiz-section .problem-passage.translation *,
+.work-02-reading-comprehension .problem-passage.translation *,
+.quiz-generator .translation-content *,
+.quiz-display .translation-content *,
+.quiz-print-body .translation-content *,
+.quiz-section .translation-content *,
+.work-02-reading-comprehension .translation-content * {
+  font-size: 1rem !important;
+}
+
+/* 화면용 교체된단어들 제목 글씨크기 */
+.quiz-generator h3 {
+  font-size: 1rem !important;
 }
 
 /* 인쇄 시에도 동일하게 적용 */
@@ -1236,5 +1214,203 @@ table.replacements-table.no-print td,
     box-sizing: border-box !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+}
+
+/* ===== 최고 우선순위 스타일 - Work_02 전용 ===== */
+/* 화면용 한글해석 글씨크기 강제 적용 - 모든 전역 CSS 덮어쓰기 */
+.quiz-generator .translation-content.problem-passage.translation,
+.quiz-generator .translation-content,
+.quiz-generator .problem-passage.translation {
+  font-size: 1rem !important;
+}
+
+.quiz-generator .translation-content.problem-passage.translation *,
+.quiz-generator .translation-content *,
+.quiz-generator .problem-passage.translation * {
+  font-size: 1rem !important;
+}
+
+/* 인쇄용 한글해석 글씨크기 강제 적용 - 모든 전역 CSS 덮어쓰기 */
+@media print {
+  .only-print .quiz-generator .translation-content.problem-passage.translation,
+  .only-print .quiz-generator .translation-content,
+  .only-print .quiz-generator .problem-passage.translation,
+  .only-print .a4-page-template .problem-passage.translation,
+  .only-print .a4-page-content .problem-passage.translation,
+  .only-print .quiz-content .problem-passage.translation {
+    font-size: 1rem !important;
+  }
+  
+  .only-print .quiz-generator .translation-content.problem-passage.translation *,
+  .only-print .quiz-generator .translation-content *,
+  .only-print .quiz-generator .problem-passage.translation *,
+  .only-print .a4-page-template .problem-passage.translation *,
+  .only-print .a4-page-content .problem-passage.translation *,
+  .only-print .quiz-content .problem-passage.translation * {
+    font-size: 1rem !important;
+  }
+}
+
+/* ===== 최종 강제 적용 - 모든 선택자 덮어쓰기 ===== */
+/* 인쇄용 한글해석 - 절대적 우선순위 */
+@media print {
+  div[style*="fontSize:'0.3rem'"],
+  div[style*="fontSize: '0.3rem'"],
+  .problem-passage.translation[style*="fontSize"],
+  .only-print div[style*="fontSize:'0.3rem'"],
+  .only-print div[style*="fontSize: '0.3rem'"],
+  .only-print .problem-passage.translation[style*="fontSize"] {
+    font-size: 1rem !important;
+  }
+  
+  div[style*="fontSize:'0.3rem'"] *,
+  div[style*="fontSize: '0.3rem'"] *,
+  .problem-passage.translation[style*="fontSize"] *,
+  .only-print div[style*="fontSize:'0.3rem'"] *,
+  .only-print div[style*="fontSize: '0.3rem'"] *,
+  .only-print .problem-passage.translation[style*="fontSize"] * {
+    font-size: 1rem !important;
+  }
+}
+
+/* ===== 절대 최종 강제 적용 ===== */
+/* 모든 가능한 선택자로 0.3rem 강제 적용 */
+@media print {
+  .only-print .a4-page-template .quiz-content .problem-passage.translation,
+  .only-print .a4-page-content .quiz-content .problem-passage.translation,
+  .only-print .quiz-print-body .problem-passage.translation,
+  .only-print .quiz-section .problem-passage.translation,
+  .only-print .work-02-reading-comprehension .problem-passage.translation,
+  .only-print .quiz-generator .problem-passage.translation,
+  .only-print .quiz-display .problem-passage.translation,
+  .only-print .quiz-print-body .problem-passage.translation,
+  .only-print .quiz-section .problem-passage.translation,
+  .only-print .work-02-reading-comprehension .problem-passage.translation,
+  .only-print .a4-page-template .problem-passage.translation,
+  .only-print .a4-page-content .problem-passage.translation,
+  .only-print .quiz-content .problem-passage.translation,
+  .only-print .problem-passage.translation {
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+  }
+  
+  .only-print .a4-page-template .quiz-content .problem-passage.translation *,
+  .only-print .a4-page-content .quiz-content .problem-passage.translation *,
+  .only-print .quiz-print-body .problem-passage.translation *,
+  .only-print .quiz-section .problem-passage.translation *,
+  .only-print .work-02-reading-comprehension .problem-passage.translation *,
+  .only-print .quiz-generator .problem-passage.translation *,
+  .only-print .quiz-display .problem-passage.translation *,
+  .only-print .quiz-print-body .problem-passage.translation *,
+  .only-print .quiz-section .problem-passage.translation *,
+  .only-print .work-02-reading-comprehension .problem-passage.translation *,
+  .only-print .a4-page-template .problem-passage.translation *,
+  .only-print .a4-page-content .problem-passage.translation *,
+  .only-print .quiz-content .problem-passage.translation *,
+  .only-print .problem-passage.translation * {
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+  }
+}
+
+/* ===== 최종 최종 강제 적용 - 모든 전역 CSS 무시 ===== */
+/* 인쇄용 한글해석 - 절대적 우선순위로 모든 CSS 덮어쓰기 */
+@media print {
+  /* 모든 가능한 선택자 조합 */
+  .only-print .a4-page-template .quiz-content .problem-passage.translation,
+  .only-print .a4-page-content .quiz-content .problem-passage.translation,
+  .only-print .quiz-print-body .problem-passage.translation,
+  .only-print .quiz-section .problem-passage.translation,
+  .only-print .work-02-reading-comprehension .problem-passage.translation,
+  .only-print .quiz-generator .problem-passage.translation,
+  .only-print .quiz-display .problem-passage.translation,
+  .only-print .a4-page-template .problem-passage.translation,
+  .only-print .a4-page-content .problem-passage.translation,
+  .only-print .quiz-content .problem-passage.translation,
+  .only-print .problem-passage.translation,
+  .only-print div[class*="problem-passage"][class*="translation"],
+  .only-print div[class*="translation"],
+  .only-print .quiz-generator div[class*="translation"],
+  .only-print .a4-page-template div[class*="translation"],
+  .only-print .a4-page-content div[class*="translation"],
+  .only-print .quiz-content div[class*="translation"] {
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+  }
+  
+  /* 모든 하위 요소 */
+  .only-print .a4-page-template .quiz-content .problem-passage.translation *,
+  .only-print .a4-page-content .quiz-content .problem-passage.translation *,
+  .only-print .quiz-print-body .problem-passage.translation *,
+  .only-print .quiz-section .problem-passage.translation *,
+  .only-print .work-02-reading-comprehension .problem-passage.translation *,
+  .only-print .quiz-generator .problem-passage.translation *,
+  .only-print .quiz-display .problem-passage.translation *,
+  .only-print .a4-page-template .problem-passage.translation *,
+  .only-print .a4-page-content .problem-passage.translation *,
+  .only-print .quiz-content .problem-passage.translation *,
+  .only-print .problem-passage.translation *,
+  .only-print div[class*="problem-passage"][class*="translation"] *,
+  .only-print div[class*="translation"] *,
+  .only-print .quiz-generator div[class*="translation"] *,
+  .only-print .a4-page-template div[class*="translation"] *,
+  .only-print .a4-page-content div[class*="translation"] *,
+  .only-print .quiz-content div[class*="translation"] * {
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+  }
+}
+
+/* ===== 절대 최종 강제 적용 - 모든 CSS 무시 ===== */
+/* 인쇄용 한글해석 - 절대적 우선순위로 모든 CSS 덮어쓰기 */
+@media print {
+  /* 모든 div 요소 중 translation이 포함된 것들 */
+  .only-print div[class*="translation"],
+  .only-print div[class*="problem-passage"][class*="translation"],
+  .only-print .quiz-generator div[class*="translation"],
+  .only-print .a4-page-template div[class*="translation"],
+  .only-print .a4-page-content div[class*="translation"],
+  .only-print .quiz-content div[class*="translation"],
+  .only-print .quiz-print-body div[class*="translation"],
+  .only-print .quiz-section div[class*="translation"],
+  .only-print .work-02-reading-comprehension div[class*="translation"] {
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    transform: scale(0.9) !important;
+    transform-origin: top left !important;
+    width: 111.11% !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+  
+  /* 모든 하위 요소 */
+  .only-print div[class*="translation"] *,
+  .only-print div[class*="problem-passage"][class*="translation"] *,
+  .only-print .quiz-generator div[class*="translation"] *,
+  .only-print .a4-page-template div[class*="translation"] *,
+  .only-print .a4-page-content div[class*="translation"] *,
+  .only-print .quiz-content div[class*="translation"] *,
+  .only-print .quiz-print-body div[class*="translation"] *,
+  .only-print .quiz-section div[class*="translation"] *,
+  .only-print .work-02-reading-comprehension div[class*="translation"] * {
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    font-size: 1rem !important;
+    transform: scale(0.9) !important;
+    transform-origin: top left !important;
   }
 }

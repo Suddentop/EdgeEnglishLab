@@ -38,6 +38,7 @@ interface BlankQuiz {
   options: string[];
   answerIndex: number;
   translation: string;
+  optionTranslations?: string[]; // 유형#05용: 선택지별 한글 해석
   selectedSentences?: string[]; // 유형#14용: 선택된 문장들
   correctAnswers?: string[]; // 유형#14용: 정답 문장들
 }
@@ -1398,11 +1399,22 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
               <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work05Data.blankedText}
               </div>
-              <div className="option option-print" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
-                  {['①', '②', '③', '④', '⑤'][work05Data.answerIndex]} {work05Data.options[work05Data.answerIndex]}
-              </div>
-              <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0', marginBottom: '2rem'}}>
-                정답: {['①', '②', '③', '④', '⑤'][work05Data.answerIndex]}
+              <div className="problem-options" style={{margin:'1rem 0'}}>
+                {work05Data.options.map((option, index) => (
+                  <div key={index} style={{margin:'0.8rem 0', fontFamily:'inherit'}}>
+                    <div className="option-english" style={{fontSize:'0.9rem', color:'#222', lineHeight:'1.3', margin:'0', padding:'0'}}>
+                      {['①', '②', '③', '④', '⑤'][index]} {option}
+                      {work05Data.answerIndex === index && (
+                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                      )}
+                    </div>
+                    {work05Data.optionTranslations && work05Data.optionTranslations[index] && (
+                      <div className="option-translation" style={{fontSize:'0.8rem', color:'#666', marginTop:'0.2rem', marginLeft:'1rem', fontStyle:'italic', lineHeight:'1.2', padding:'0'}}>
+                        {work05Data.optionTranslations[index]}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
