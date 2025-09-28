@@ -16,11 +16,50 @@ const INPUT_MODES = [
 type InputMode = typeof INPUT_MODES[number]['key'];
 type PrintMode = 'none' | 'no-answer' | 'with-answer';
 
+// A4 페이지 설정 (실제 A4 크기 기준, px 단위)
+const A4_CONFIG = {
+  // 실제 A4 크기: 210mm × 297mm = 794px × 1123px (96 DPI)
+  PAGE_WIDTH: 794,          // px (210mm * 3.78px/mm)
+  PAGE_HEIGHT: 1123,        // px (297mm * 3.78px/mm)
+  
+  // 인쇄 여백 (실제 인쇄 시 표준 여백)
+  TOP_MARGIN: 25,           // px (6.6mm)
+  BOTTOM_MARGIN: 25,        // px (6.6mm)
+  LEFT_MARGIN: 20,          // px (5.3mm)
+  RIGHT_MARGIN: 20,         // px (5.3mm)
+  
+  // 헤더/푸터 영역
+  HEADER_HEIGHT: 30,        // px (8mm)
+  FOOTER_HEIGHT: 20,        // px (5.3mm)
+  
+  // 콘텐츠 영역 계산
+  CONTENT_WIDTH: 754,       // px (794 - 20 - 20)
+  CONTENT_HEIGHT: 1048,     // px (1123 - 25 - 25 - 30 - 20)
+  
+  // 섹션별 높이 설정
+  INSTRUCTION_HEIGHT: 30,   // px
+  INSTRUCTION_MARGIN: 11,   // px
+  TRANSLATION_HEADER_HEIGHT: 30,  // px
+  TRANSLATION_HEADER_MARGIN: 11,  // px
+  ANSWER_HEADER_HEIGHT: 30,       // px
+  ANSWER_HEADER_MARGIN: 11,       // px
+};
+
 interface SentencePositionQuiz {
   missingSentence: string;
   numberedPassage: string;
   answerIndex: number; // 0~4 (①~⑤)
   translation: string;
+}
+
+// 컨테이너 높이 계산 함수 (실제 A4 크기 기준)
+function calculateContainerHeight(text: string, padding: number = 38, fontSize: number = 16, lineHeight: number = 1.7): number {
+  // 실제 A4 콘텐츠 너비 사용 (754px - 좌우 패딩 40px = 714px)
+  const availableWidthPx = A4_CONFIG.CONTENT_WIDTH - 40; // px
+  const charWidthPx = fontSize * 0.55; // px 단위 문자 폭
+  const charsPerLine = Math.floor(availableWidthPx / charWidthPx);
+  const lines = Math.ceil(text.length / charsPerLine);
+  return (lines * fontSize * lineHeight) + padding; // px 단위로 반환
 }
 
 const Work_06_SentencePosition: React.FC = () => {
@@ -85,96 +124,90 @@ const Work_06_SentencePosition: React.FC = () => {
   // 동적 페이지 분할 결정을 위한 상태
   const [pageLayoutInfo, setPageLayoutInfo] = useState({
     needsSecondPage: false,
-    canFitTranslationWithAnswer: false,
-    canFitAnswerWithTranslation: false,
+    needsThirdPage: false,
     page1Content: '',
     page2Content: '',
     page3Content: ''
   });
 
-  // 인쇄(정답) 페이지 분할 로직만 독립적으로 계산
-  useEffect(() => {
-    if (!inputText || !quiz) return;
+  // 페이지 분할 계산 함수 (유형#06 전용 2섹션 로직)
+  const calculatePageLayout = () => {
+    if (!quiz) return;
 
-    // A4 페이지 기준 설정 (실제 인쇄 크기)
-    const A4_HEIGHT_MM = 297; // A4 높이 (mm)
-    const A4_WIDTH_MM = 210;  // A4 너비 (mm)
-    const MARGIN_TOP_MM = 20;  // 상단 여백
-    const MARGIN_BOTTOM_MM = 20; // 하단 여백
-    const HEADER_HEIGHT_MM = 15; // 헤더 높이
-    const FOOTER_HEIGHT_MM = 10; // 푸터 높이
-    
-    // 실제 사용 가능한 컨텐츠 영역 높이
-    const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM - HEADER_HEIGHT_MM - FOOTER_HEIGHT_MM;
-    
-    // mm를 픽셀로 변환 (1mm ≈ 3.78px, 96dpi 기준)
-    const MM_TO_PX = 3.78;
-    const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
-    
-    // 각 요소별 높이 계산 함수
-    const calculateElementHeight = (text: string, fontSize: number, lineHeight: number, padding: number = 0) => {
-      const availableWidth = A4_WIDTH_MM * MM_TO_PX * 0.9; // 90% 사용 (여백 10%)
-      const charWidth = fontSize * 0.55; // 문자 폭 추정
-      const charsPerLine = Math.floor(availableWidth / charWidth);
-      const lines = Math.ceil(text.length / charsPerLine);
-      return (lines * fontSize * lineHeight) + padding;
-    };
+    // A. 문제제목 + 주요문장 + 영어본문 + 정답 컨테이너
+    const problemTitleHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN; // 41px
+    const missingSentenceHeight = calculateContainerHeight(`주요 문장: ${quiz.missingSentence}`, 38, 16, 1.7);
+    const englishPassageHeight = calculateContainerHeight(quiz.numberedPassage, 38, 16, 1.7);
+    const answerText = `정답: ${`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}`;
+    const answerHeight = calculateContainerHeight(answerText, 38, 16, 1.7);
+    const sectionAHeight = problemTitleHeight + missingSentenceHeight + englishPassageHeight + answerHeight;
 
-    // ========================================
-    // 인쇄(정답) 페이지 분할 로직만 독립적으로 계산
-    // ========================================
-    
-    // 1. 문제제목 컨테이너 높이
-    const problemTitleHeight = calculateElementHeight('아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.', 16, 1.2, 14);
-    
-    // 2. 주요문장 박스 높이
-    const missingSentenceBoxHeight = calculateElementHeight(`주요 문장: ${quiz.missingSentence}`, 16, 1.2, 32);
-    
-    // 3. 번호가 매겨진 본문 높이
-    const numberedPassageHeight = calculateElementHeight(quiz.numberedPassage, 16, 1.7, 32);
-    
-    // 4. 정답 표시 높이
-    const answerHeight = calculateElementHeight(`정답: ①②③④⑤[${quiz.answerIndex}]`, 16, 1.2, 20) + 24; // marginBottom 1.5rem (24px) 추가
-    
-    // 5. 본문 해석 컨테이너 높이
-    const translationHeight = calculateElementHeight(quiz.translation || '', 16, 1.6, 32);
-    const translationContainerHeight = translationHeight; // 제목 제거로 높이 계산 단순화
-    
-    // 6. 인쇄(정답) 1페이지 높이 계산 (문제제목 + 주요문장박스 + 번호본문 + 정답)
-    const answerPage1Height = problemTitleHeight + missingSentenceBoxHeight + numberedPassageHeight + answerHeight;
-    
-    // 7. 1페이지에 정답 + 해석이 들어갈 수 있는지 확인
-    const canFitAnswerWithTranslation = (answerPage1Height + translationContainerHeight + 32) <= CONTENT_HEIGHT_PX; // 정답과 해석 사이 여백 32px (2rem)
-    
-    // 8. 인쇄(정답) 페이지 분할 결정
-    const needsSecondPageForAnswer = answerPage1Height > CONTENT_HEIGHT_PX;
-    
-    // 9. 2페이지에 정답 + 해석이 들어갈 수 있는지 확인 (1페이지에 안 들어가는 경우에만)
-    const canFitTranslationWithAnswer = needsSecondPageForAnswer && 
-      (answerHeight + translationContainerHeight + 32) <= CONTENT_HEIGHT_PX; // 정답과 해석 사이 여백 32px (2rem)
-    
-    console.log('=== 유형#06 인쇄(정답) 페이지 분할 로직 ===');
-    console.log('전체 페이지 높이:', Math.round(CONTENT_HEIGHT_PX), 'px');
-    console.log('문제제목 높이:', Math.round(problemTitleHeight), 'px');
-    console.log('주요문장박스 높이:', Math.round(missingSentenceBoxHeight), 'px');
-    console.log('번호본문 높이:', Math.round(numberedPassageHeight), 'px');
-    console.log('정답 높이:', Math.round(answerHeight), 'px');
-    console.log('해석 컨테이너 높이:', Math.round(translationContainerHeight), 'px');
-    console.log('1페이지 높이:', Math.round(answerPage1Height), 'px');
-    console.log('1페이지에 정답+해석 포함 가능:', canFitAnswerWithTranslation);
-    console.log('2페이지 분할:', needsSecondPageForAnswer);
-    console.log('2페이지에 해석 포함 가능:', canFitTranslationWithAnswer);
-    console.log('=====================================');
+    // B. 본문해석 제목 + 한글해석 컨테이너
+    const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT + A4_CONFIG.TRANSLATION_HEADER_MARGIN; // 41px
+    const translatedText = quiz.translation || '본문 해석이 생성되지 않았습니다.';
+    const translationHeight = calculateContainerHeight(translatedText, 38, 16, 1.7);
+    const sectionBHeight = translationHeaderHeight + translationHeight;
 
-    setPageLayoutInfo({
-      needsSecondPage: false, // 인쇄(문제)는 항상 1페이지
-      canFitTranslationWithAnswer,
-      canFitAnswerWithTranslation,
-      page1Content: `정답: ${Math.round(answerPage1Height)}px / ${Math.round(CONTENT_HEIGHT_PX)}px`,
-      page2Content: `분할: ${needsSecondPageForAnswer ? '2페이지' : '1페이지'}`,
-      page3Content: `해석 포함: ${canFitTranslationWithAnswer ? '2페이지에 함께' : '3페이지 분리'}`
+    // 이용 가능한 공간 계산 (실제 A4 크기 기준)
+    const availableHeight = A4_CONFIG.CONTENT_HEIGHT; // 1048px
+    const safetyMargin = 50; // px (실제 A4 기준 적절한 여백)
+    const effectiveAvailableHeight = availableHeight - safetyMargin; // 998px
+
+    const totalHeight = sectionAHeight + sectionBHeight;
+
+    console.log('📏 유형#06 동적 페이지 분할 계산 (2섹션):', {
+      availableHeight: availableHeight.toFixed(2) + 'px',
+      sectionAHeight: sectionAHeight.toFixed(2) + 'px',
+      sectionBHeight: sectionBHeight.toFixed(2) + 'px',
+      totalHeight: totalHeight.toFixed(2) + 'px',
+      effectiveAvailableHeight: effectiveAvailableHeight.toFixed(2) + 'px',
+      quizTextLength: quiz.numberedPassage.length,
+      translationTextLength: translatedText.length
     });
-  }, [inputText, quiz]);
+
+    // 실제 A4 크기 기준 검증
+    console.log('🔍 실제 A4 크기 기준 계산:', {
+      A4_SIZE: '210mm × 297mm = 794px × 1123px (96 DPI)',
+      CONTENT_AREA: A4_CONFIG.CONTENT_WIDTH + 'px × ' + A4_CONFIG.CONTENT_HEIGHT + 'px',
+      TOP_MARGIN: A4_CONFIG.TOP_MARGIN + 'px',
+      BOTTOM_MARGIN: A4_CONFIG.BOTTOM_MARGIN + 'px',
+      LEFT_MARGIN: A4_CONFIG.LEFT_MARGIN + 'px',
+      RIGHT_MARGIN: A4_CONFIG.RIGHT_MARGIN + 'px',
+      HEADER_HEIGHT: A4_CONFIG.HEADER_HEIGHT + 'px',
+      FOOTER_HEIGHT: A4_CONFIG.FOOTER_HEIGHT + 'px',
+      availableHeight: availableHeight + 'px',
+      safetyMargin: safetyMargin + 'px',
+      effectiveAvailableHeight: effectiveAvailableHeight + 'px'
+    });
+
+    // 페이지 분할 로직 (유형#06 전용 2가지 케이스)
+    if (totalHeight <= effectiveAvailableHeight) {
+      // 케이스 1: A+B ≤ 998px → 1페이지에 A, B 모두 포함
+      setPageLayoutInfo({
+        needsSecondPage: false,
+        needsThirdPage: false,
+        page1Content: 'A+B',
+        page2Content: '',
+        page3Content: ''
+      });
+    } else {
+      // 케이스 2: A+B > 998px → 1페이지에 A 포함, 2페이지에 B 포함
+      setPageLayoutInfo({
+        needsSecondPage: true,
+        needsThirdPage: false,
+        page1Content: 'A',
+        page2Content: 'B',
+        page3Content: ''
+      });
+    }
+  };
+
+  // 페이지 분할 계산 실행
+  useEffect(() => {
+    if (quiz && quiz.translation) {
+      calculatePageLayout();
+    }
+  }, [quiz, quiz?.translation]);
 
   const handleInputModeChange = (mode: InputMode) => {
     setInputMode(mode);
@@ -1144,6 +1177,7 @@ ${passage}`;
   };
 
   // 공통 인쇄(정답) 레이아웃 렌더링 함수
+  // 공통 인쇄(정답) 레이아웃 렌더링 함수 (유형#03과 동일한 조건부 렌더링)
   const renderPrintWithAnswerLayout = () => {
     if (!quiz) return null;
 
@@ -1155,131 +1189,17 @@ ${passage}`;
       translation: {marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
     };
 
-    const renderProblemPage = () => (
+    // 1페이지 렌더링
+    const renderPage1 = () => (
       <div className="a4-page-template">
         <div className="a4-page-header">
           <PrintHeaderWork01 />
         </div>
         <div className="a4-page-content">
           <div className="quiz-content">
-            <div className="problem-instruction" style={commonStyles.instruction}>
-              아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
-            </div>
-            <div className="missing-sentence-box" style={commonStyles.missingSentenceBox}>
-              <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{quiz.missingSentence}</span>
-            </div>
-            <div style={commonStyles.numberedPassage}>
-              {quiz.numberedPassage}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    const renderAnswerPage = () => (
-      <div className="a4-page-template">
-        <div className="a4-page-header">
-          <PrintHeaderWork01 />
-        </div>
-        <div className="a4-page-content">
-          <div className="quiz-content">
-            <div className="problem-instruction" style={commonStyles.instruction}>
-              정답
-            </div>
-            <div className="problem-answer" style={commonStyles.answer}>
-              정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    const renderTranslationPage = () => (
-      <div className="a4-page-template">
-        <div className="a4-page-header">
-          <PrintHeaderWork01 />
-        </div>
-        <div className="a4-page-content">
-          <div className="quiz-content">
-            <div className="problem-passage translation" style={commonStyles.translation}>
-              {quiz.translation && quiz.translation.trim().length > 0 
-                ? quiz.translation 
-                : '본문 해석이 생성되지 않았습니다.'}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    const renderAnswerWithTranslationPage = () => (
-      <div className="a4-page-template">
-        <div className="a4-page-header">
-          <PrintHeaderWork01 />
-        </div>
-        <div className="a4-page-content">
-          <div className="quiz-content">
-            <div className="problem-instruction" style={commonStyles.instruction}>
-              정답
-            </div>
-            <div className="problem-answer" style={commonStyles.answer}>
-              정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
-            </div>
-            
-            {/* 본문 해석 추가 */}
-            <div className="problem-passage translation" style={commonStyles.translation}>
-              {quiz.translation && quiz.translation.trim().length > 0 
-                ? quiz.translation 
-                : '본문 해석이 생성되지 않았습니다.'}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    // 인쇄(정답) 페이지 독립적인 레이아웃 결정 로직
-    // pageLayoutInfo.canFitTranslationWithAnswer는 인쇄(정답) 페이지의 분할 로직에서 계산됨
-    
-    // 1페이지 높이 계산 (문제제목 + 주요문장박스 + 번호본문 + 정답)
-    const A4_HEIGHT_MM = 297;
-    const A4_WIDTH_MM = 210;
-    const MARGIN_TOP_MM = 20;
-    const MARGIN_BOTTOM_MM = 20;
-    const HEADER_HEIGHT_MM = 15;
-    const FOOTER_HEIGHT_MM = 10;
-    const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM - HEADER_HEIGHT_MM - FOOTER_HEIGHT_MM;
-    const MM_TO_PX = 3.78;
-    const CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX;
-    
-    const calculateElementHeight = (text: string, fontSize: number, lineHeight: number, padding: number = 0) => {
-      const availableWidth = A4_WIDTH_MM * MM_TO_PX * 0.9;
-      const charWidth = fontSize * 0.55;
-      const charsPerLine = Math.floor(availableWidth / charWidth);
-      const lines = Math.ceil(text.length / charsPerLine);
-      return (lines * fontSize * lineHeight) + padding;
-    };
-    
-    const problemTitleHeight = calculateElementHeight('아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.', 16, 1.2, 14);
-    const missingSentenceBoxHeight = calculateElementHeight(`주요 문장: ${quiz.missingSentence}`, 16, 1.2, 32);
-    const numberedPassageHeight = calculateElementHeight(quiz.numberedPassage, 16, 1.7, 32);
-    const answerHeight = calculateElementHeight(`정답: ①②③④⑤[${quiz.answerIndex}]`, 16, 1.2, 20) + 24; // marginBottom 1.5rem (24px) 추가
-    const answerPage1Height = problemTitleHeight + missingSentenceBoxHeight + numberedPassageHeight + answerHeight;
-    const needsSecondPageForAnswer = answerPage1Height > CONTENT_HEIGHT_PX;
-    
-    // 해석 컨테이너 높이 계산
-    const translationHeight = calculateElementHeight(quiz.translation || '', 16, 1.6, 32);
-    const translationContainerHeight = translationHeight; // 제목 제거로 높이 계산 단순화
-    
-    // 1페이지에 정답+해석이 들어갈 수 있는지 먼저 확인
-    if (pageLayoutInfo.canFitAnswerWithTranslation) {
-      // 1페이지: 본문+정답+해석 (모든 내용이 1페이지에 들어감)
-      return (
-        <>
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderWork01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
+            {/* A. 문제제목 + 주요문장 + 영어본문 + 정답 컨테이너 */}
+            {(pageLayoutInfo.page1Content.includes('A') || pageLayoutInfo.page1Content === 'A') && (
+              <>
                 <div className="problem-instruction" style={commonStyles.instruction}>
                   아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
                 </div>
@@ -1292,47 +1212,38 @@ ${passage}`;
                 <div className="problem-answer" style={commonStyles.answer}>
                   정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
                 </div>
-                
-                {/* 본문 해석 추가 */}
+              </>
+            )}
+
+            {/* B. 본문해석 제목 + 한글 해석 컨테이너 */}
+            {(pageLayoutInfo.page1Content.includes('B') || pageLayoutInfo.page1Content === 'B') && (
+              <>
+                <div className="problem-instruction" style={commonStyles.instruction}>
+                  본문 해석
+                </div>
                 <div className="problem-passage translation" style={commonStyles.translation}>
                   {quiz.translation && quiz.translation.trim().length > 0 
                     ? quiz.translation 
                     : '본문 해석이 생성되지 않았습니다.'}
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
-        </>
-      );
-    } else if (needsSecondPageForAnswer) {
-      if (pageLayoutInfo.canFitTranslationWithAnswer) {
-        // 2페이지: 본문, 정답+해석
-        return (
-          <>
-            {renderProblemPage()}
-            {renderAnswerWithTranslationPage()}
-          </>
-        );
-      } else {
-        // 3페이지: 본문, 정답, 해석
-        return (
-          <>
-            {renderProblemPage()}
-            {renderAnswerPage()}
-            {renderTranslationPage()}
-          </>
-        );
-      }
-    } else {
-      // 2페이지: 본문+정답, 해석
-      return (
-        <>
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderWork01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
+        </div>
+      </div>
+    );
+
+    // 2페이지 렌더링
+    const renderPage2 = () => (
+      <div className="a4-page-template">
+        <div className="a4-page-header">
+          <PrintHeaderWork01 />
+        </div>
+        <div className="a4-page-content">
+          <div className="quiz-content">
+            {/* A. 문제제목 + 주요문장 + 영어본문 + 정답 컨테이너 */}
+            {(pageLayoutInfo.page2Content.includes('A') || pageLayoutInfo.page2Content === 'A') && (
+              <>
                 <div className="problem-instruction" style={commonStyles.instruction}>
                   아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
                 </div>
@@ -1345,10 +1256,37 @@ ${passage}`;
                 <div className="problem-answer" style={commonStyles.answer}>
                   정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
                 </div>
-              </div>
-            </div>
+              </>
+            )}
+
+            {/* B. 본문해석 제목 + 한글 해석 컨테이너 */}
+            {(pageLayoutInfo.page2Content.includes('B') || pageLayoutInfo.page2Content === 'B') && (
+              <>
+                <div className="problem-instruction" style={commonStyles.instruction}>
+                  본문 해석
+                </div>
+                <div className="problem-passage translation" style={commonStyles.translation}>
+                  {quiz.translation && quiz.translation.trim().length > 0 
+                    ? quiz.translation 
+                    : '본문 해석이 생성되지 않았습니다.'}
+                </div>
+              </>
+            )}
           </div>
-          {renderTranslationPage()}
+        </div>
+      </div>
+    );
+
+    // 페이지 분할에 따른 렌더링 (2페이지만 사용)
+    if (!pageLayoutInfo.needsSecondPage) {
+      // 1페이지만 (A+B 모두 포함)
+      return renderPage1();
+    } else {
+      // 2페이지 (1페이지에 A, 2페이지에 B)
+      return (
+        <>
+          {renderPage1()}
+          {renderPage2()}
         </>
       );
     }
