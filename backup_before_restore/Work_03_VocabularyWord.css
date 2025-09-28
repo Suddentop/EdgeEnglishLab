@@ -792,6 +792,10 @@
     font-size: 1.15em !important;
   }
 
+  /* 본문 해석 섹션 페이지 나누기 방지 */
+  .translation-section {
+    page-break-inside: avoid;
+  }
 }
 
 /* 포인트 관련 스타일 */
@@ -975,44 +979,21 @@
   100% { transform: rotate(360deg); }
 }
 
-/* 인쇄용 problem-passage 배경색 설정 - 영어 본문은 연한 노란색 */
+/* 인쇄용 problem-passage 배경색 설정 - 2페이지 한글해석만 연한 녹색 */
 @media print {
-  .only-print .problem-passage {
+  .only-print .problem-passage.translation {
+    background: #F1F8E9 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 1페이지 영어 본문은 연한 노란색으로 강제 설정 */
+  .only-print .problem-passage:not(.translation) {
     background: #fff3cd !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    margin-bottom: 5rem !important; /* 영어본문과 4지선다 사이 간격 확대 */
-  }
-  
-  /* 인쇄용 문제 페이지에서 4지선다 윗쪽에 여백 추가 */
-  .only-print:not(.print-answer-mode) .quiz-content .problem-options {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-  }
-  
-  /* 더 구체적인 선택자로 강제 적용 */
-  .only-print:not(.print-answer-mode) .a4-page-template .quiz-content .problem-options {
-    margin-top: 1rem !important;
-    margin-bottom: 1rem !important;
-  }
-  
-  /* 인쇄용 정답 페이지에서 4지선다 윗쪽에 여백 추가 */
-  .only-print.print-answer-mode .quiz-content .problem-options {
-    margin-top: 0.5rem !important;
-    margin-bottom: 1rem !important;
-  }
-  
-  /* 더 구체적인 선택자로 강제 적용 */
-  .only-print.print-answer-mode .a4-page-template .quiz-content .problem-options {
-    margin-top: 0.5rem !important;
-    margin-bottom: 1rem !important;
   }
 }
 
-/* 인쇄(정답) 페이지의 노란색 배경 div에만 적용 */
-.only-print.print-answer-mode div[style*="background:'#FFF3CD'"],
-.only-print.print-answer-mode div[style*="background:#FFF3CD'"],
-.only-print.print-answer-mode div[style*="background:#fff3cd"],
-.only-print.print-answer-mode div[style*="background:'#fff3cd'"] {
-  margin-bottom: 5rem !important;
-} 
+/* 유형#03 전용 스타일 - Work_03_PrintFormat.css에서 인쇄 스타일 처리 */
+/* 인쇄 관련 스타일은 Work_03_PrintFormat.css로 이동됨 */ 
