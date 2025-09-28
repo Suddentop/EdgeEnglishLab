@@ -281,7 +281,72 @@ ${passage}
       return await generateMainIdeaQuizWithAIRetry(passage, 1);
     }
     
-    return result;
+    // 선택지 섞기 및 정답 위치 랜덤화
+    const shuffledResult = shuffleOptionsAndUpdateAnswerIndex(result);
+    
+    return shuffledResult;
+  }
+
+  // 선택지 섞기 및 정답 위치 랜덤화 함수
+  function shuffleOptionsAndUpdateAnswerIndex(quiz: MainIdeaQuiz): MainIdeaQuiz {
+    // 원본 정답과 해석 저장
+    const originalAnswer = quiz.options[quiz.answerIndex];
+    const originalAnswerTranslation = quiz.answerTranslation;
+    const originalAnswerTranslationInArray = quiz.optionTranslations[quiz.answerIndex];
+    
+    // 정답을 제외한 나머지 선택지들
+    const wrongOptions = quiz.options.filter((_, index) => index !== quiz.answerIndex);
+    const wrongTranslations = quiz.optionTranslations.filter((_, index) => index !== quiz.answerIndex);
+    
+    // 정답을 랜덤한 위치에 배치 (0~4 중 하나)
+    const newAnswerIndex = Math.floor(Math.random() * 5);
+    
+    // 새로운 배열 생성 (5개 슬롯)
+    const newOptions = new Array(5);
+    const newOptionTranslations = new Array(5);
+    
+    // 정답을 지정된 위치에 배치
+    newOptions[newAnswerIndex] = originalAnswer;
+    newOptionTranslations[newAnswerIndex] = originalAnswerTranslationInArray;
+    
+    // 나머지 위치에 오답들을 랜덤하게 배치
+    const remainingIndices = [];
+    for (let i = 0; i < 5; i++) {
+      if (i !== newAnswerIndex) {
+        remainingIndices.push(i);
+      }
+    }
+    
+    // 오답들을 랜덤하게 섞어서 배치
+    for (let i = wrongOptions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [wrongOptions[i], wrongOptions[j]] = [wrongOptions[j], wrongOptions[i]];
+      [wrongTranslations[i], wrongTranslations[j]] = [wrongTranslations[j], wrongTranslations[i]];
+    }
+    
+    // 오답들을 남은 위치에 배치
+    let wrongIndex = 0;
+    for (const index of remainingIndices) {
+      newOptions[index] = wrongOptions[wrongIndex];
+      newOptionTranslations[index] = wrongTranslations[wrongIndex];
+      wrongIndex++;
+    }
+    
+    console.log('🎲 선택지 섞기 완료:', {
+      originalAnswerIndex: quiz.answerIndex,
+      newAnswerIndex: newAnswerIndex,
+      originalAnswer: originalAnswer,
+      shuffledOptions: newOptions,
+      randomSeed: Math.random()
+    });
+    
+    return {
+      ...quiz,
+      options: newOptions,
+      optionTranslations: newOptionTranslations,
+      answerIndex: newAnswerIndex,
+      answerTranslation: originalAnswerTranslation
+    };
   }
 
   // 정답 해석 불일치 검증 함수
@@ -409,7 +474,10 @@ ${passage}
       return await generateMainIdeaQuizWithAIRetry(passage, retryCount + 1);
     }
     
-    return result;
+    // 선택지 섞기 및 정답 위치 랜덤화
+    const shuffledResult = shuffleOptionsAndUpdateAnswerIndex(result);
+    
+    return shuffledResult;
   }
 
   // 문제 생성 (포인트 차감 포함)
