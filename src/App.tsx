@@ -8,6 +8,8 @@ import './components/layout/ErrorBoundary.css';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { AuthProvider } from './contexts/AuthContext';
+// 프로덕션 환경에서 콘솔 로그 비활성화
+import './utils/disableConsole';
 import PrivateRoute from './components/layout/PrivateRoute';
 import Login from './components/auth/Login';
 import SignUp from './components/auth/SignUp';
