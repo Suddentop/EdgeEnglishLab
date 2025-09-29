@@ -196,17 +196,32 @@
     padding: 0.7rem 0.6rem !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.8rem !important; /* 하단 마진을 0.8rem으로 설정 */
   }
   
   .only-print .problem-passage {
     font-size: 1rem !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.8rem !important;
     padding-left: 1rem !important;
     padding-right: 1rem !important;
     padding-top: 0.5rem !important;
     padding-bottom: 0.3rem !important;
   }
+
+  /* 패키지#01-유형#02 전용: 영어본문과 교체된 단어들 제목 사이 여백 증가 */
+  .only-print.print-answer-mode .problem-passage {
+    margin-bottom: 1.6rem !important;
+  }
+
+  /* 패키지#01-유형#02 전용: 교체된 단어들 테이블 컨테이너 여백 제거 */
+  .only-print.print-answer-mode .replacements-table {
+    margin-top: 0rem !important;
+  }
+
   
   .only-print .problem-options {
     font-size: 1rem !important;
@@ -529,7 +544,7 @@
        width: 100%;
        border-collapse: collapse;
        margin: 1rem 0;
-       font-size: 0.8rem !important;
+       font-size: 1rem !important;
        table-layout: fixed;
      }
 
@@ -573,6 +588,12 @@
        margin: 0;
        font-size: 0.7rem !important;
        line-height: 1.2 !important;
+     }
+
+     /* 원래 유형#02와 동일한 글씨크기 설정 */
+     .only-print .replacements-table th,
+     .only-print .replacements-table td {
+       font-size: 1rem !important;
      }
   }
 

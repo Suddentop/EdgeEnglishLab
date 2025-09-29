@@ -213,7 +213,51 @@ Required JSON format:
   }
 }
 
-// Step 4: 본문 번역
+// Step 4: 본문에서 단어 교체 (순차 처리)
+function replaceWordsInTextSequentially(originalText: string, sentences: string[], replacements: WordReplacement[]): string {
+  let modifiedText = originalText;
+  let currentPosition = 0;
+  
+  // 각 문장별로 순차적으로 처리
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i];
+    const replacement = replacements[i];
+    
+    if (!replacement) continue;
+    
+    // 현재 문장의 시작 위치 찾기
+    const sentenceStart = modifiedText.indexOf(sentence, currentPosition);
+    if (sentenceStart === -1) {
+      console.warn(`문장 ${i + 1}을 찾을 수 없음: "${sentence.substring(0, 50)}..."`);
+      continue;
+    }
+    
+    const sentenceEnd = sentenceStart + sentence.length;
+    
+    // 현재 문장 내에서만 단어 교체
+    const sentenceText = modifiedText.substring(sentenceStart, sentenceEnd);
+    const escapedOriginal = replacement.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+    
+    const beforeReplace = sentenceText;
+    const modifiedSentence = sentenceText.replace(regex, replacement.replacement);
+    
+    if (beforeReplace !== modifiedSentence) {
+      console.log(`문장 ${i + 1} 교체 성공: "${replacement.original}" → "${replacement.replacement}"`);
+      // 전체 텍스트에서 해당 문장 부분만 교체
+      modifiedText = modifiedText.substring(0, sentenceStart) + modifiedSentence + modifiedText.substring(sentenceEnd);
+    } else {
+      console.warn(`문장 ${i + 1} 교체 실패: "${replacement.original}"를 찾을 수 없음`);
+    }
+    
+    // 다음 문장 처리를 위해 위치 업데이트
+    currentPosition = sentenceStart + modifiedSentence.length;
+  }
+  
+  return modifiedText;
+}
+
+// Step 5: 본문 번역
 async function translatePassage(passage: string, apiKey: string): Promise<string> {
   const prompt = `Translate the following English passage to Korean. Provide a natural, fluent Korean translation.
 
@@ -279,19 +323,12 @@ export async function generateWork02Quiz(passage: string): Promise<Work02QuizDat
     // Step 3: 단어 교체
     console.log('🔄 Step 3: 단어 교체 중...');
     const replacements: WordReplacement[] = [];
-    const modifiedSentences: string[] = [];
 
     for (let i = 0; i < sentences.length; i++) {
       const sentence = sentences[i];
       const wordSelection = selectedWords[i];
       
       const replacement = await replaceWordInSentence(sentence, wordSelection.index, wordSelection.original, apiKey);
-      
-      // 문장에서 단어 교체
-      const words = sentence.split(' ');
-      words[wordSelection.index] = replacement.replacement;
-      const modifiedSentence = words.join(' ');
-      modifiedSentences.push(modifiedSentence);
       
       replacements.push({
         original: wordSelection.original,
@@ -303,15 +340,19 @@ export async function generateWork02Quiz(passage: string): Promise<Work02QuizDat
       console.log(`✅ 문장 ${i + 1}: "${wordSelection.original}" → "${replacement.replacement}"`);
     }
 
-    // Step 4: 본문 번역
-    console.log('🌐 Step 4: 본문 번역 중...');
+    // Step 4: 본문에서 단어 교체 (순차 처리)
+    console.log('🔄 Step 4: 본문에서 단어 교체 중...');
+    const modifiedText = replaceWordsInTextSequentially(passage, sentences, replacements);
+
+    // Step 5: 본문 번역
+    console.log('🌐 Step 5: 본문 번역 중...');
     const translation = await translatePassage(passage, apiKey);
     console.log('✅ 번역 완료');
 
     const result: Work02QuizData = {
       title: '독해 문제',
       originalText: passage,
-      modifiedText: modifiedSentences.join(' '),
+      modifiedText: modifiedText,
       replacements: replacements,
       translation: translation
     };

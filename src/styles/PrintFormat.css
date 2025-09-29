@@ -172,22 +172,34 @@
     margin-left: 0 !important;
     margin-right: 0 !important;
     margin-top: 0 !important;
-    margin-bottom: 1.5rem !important; /* 하단 마진을 1.5rem으로 설정 */
+    margin-bottom: 0.8rem !important; /* 하단 마진을 0.8rem으로 설정 */
   }
   
   /* 2-2페이지와 3-2페이지의 본문해석 컨테이너 간격 강제 설정 */
   .only-print .a4-page-template .problem-instruction {
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 0.8rem !important;
   }
   
   .only-print .problem-passage {
     font-size: 1rem !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.8rem !important;
     padding-left: 1rem !important;
     padding-right: 1rem !important;
     padding-top: 0.5rem !important;
     padding-bottom: 0.3rem !important;
+  }
+
+  /* 패키지#01-유형#02 전용: 영어본문과 교체된 단어들 제목 사이 여백 증가 */
+  .only-print.print-answer-mode .problem-passage {
+    margin-bottom: 1.6rem !important;
+  }
+
+  /* 모든 유형#02: 교체된 단어들 테이블 여백 제거 */
+  .only-print .replacements-table {
+    margin-top: 0rem !important;
   }
   
   .only-print .problem-options {

@@ -1643,7 +1643,7 @@ Korean translation:`;
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                   문제: 다음 본문을 읽고 해석하세요
                 </div>
-                  <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                  <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                 </div>
               </div>
               </div>
@@ -1665,13 +1665,13 @@ Korean translation:`;
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                       문제: 다음 본문을 읽고 해석하세요
                     </div>
-                    <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                    <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                     </div>
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                       교체된 단어들
                     </div>
                     {quiz.replacements && quiz.replacements.length > 0 ? (
-                      <div>
+                      <div style={{marginTop:'0rem'}}>
                         {renderReplacementsTable()}
                       </div>
                     ) : (
@@ -1679,7 +1679,7 @@ Korean translation:`;
                         교체된 단어가 없습니다.
                       </div>
                     )}
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                       본문 해석
                     </div>
                     <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -1701,7 +1701,7 @@ Korean translation:`;
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         문제: 다음 본문을 읽고 해석하세요
                       </div>
-                      <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                      <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                       </div>
                     </div>
                   </div>
@@ -1714,7 +1714,7 @@ Korean translation:`;
                   </div>
                   <div className="a4-page-content">
                     <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%'}}>
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                         교체된 단어들
                       </div>
                       {quiz.replacements && quiz.replacements.length > 0 ? (
@@ -1737,7 +1737,7 @@ Korean translation:`;
                   </div>
                   <div className="a4-page-content">
                     <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                         본문 해석
                       </div>
                       <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important',  padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -1761,9 +1761,9 @@ Korean translation:`;
                         <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                           문제: 다음 본문을 읽고 해석하세요
                         </div>
-                        <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                        <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                         </div>
-                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                           교체된 단어들
                         </div>
                         {quiz.replacements && quiz.replacements.length > 0 ? (
@@ -1786,7 +1786,7 @@ Korean translation:`;
                     </div>
                     <div className="a4-page-content">
                       <div className="quiz-content">
-                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                           본문 해석
                         </div>
                         <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -1809,7 +1809,7 @@ Korean translation:`;
                         <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                           문제: 다음 본문을 읽고 해석하세요
                         </div>
-                        <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                        <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                         </div>
                       </div>
                     </div>
@@ -1822,7 +1822,7 @@ Korean translation:`;
                     </div>
                     <div className="a4-page-content">
                       <div className="quiz-content">
-                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%'}}>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                           교체된 단어들
                         </div>
                         {quiz.replacements && quiz.replacements.length > 0 ? (
@@ -1834,7 +1834,7 @@ Korean translation:`;
                             교체된 단어가 없습니다.
                           </div>
                         )}
-                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                           본문 해석
                         </div>
                         <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important',  padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -1856,13 +1856,13 @@ Korean translation:`;
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                       문제: 다음 본문을 읽고 해석하세요
                     </div>
-                    <div className="problem-passage" style={{marginTop:'0.63rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                    <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                     </div>
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                       교체된 단어들
                     </div>
                     {quiz.replacements && quiz.replacements.length > 0 ? (
-                      <div>
+                      <div style={{marginTop:'0rem'}}>
                         {renderReplacementsTable()}
                       </div>
                     ) : (
@@ -1870,7 +1870,7 @@ Korean translation:`;
                         교체된 단어가 없습니다.
                       </div>
                     )}
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%', marginTop:'1rem'}}>
+                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                       본문 해석
                     </div>
                     <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important',  padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>

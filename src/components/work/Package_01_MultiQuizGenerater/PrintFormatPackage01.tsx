@@ -152,29 +152,9 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
     return totalContentLength >= 2000;
   };
 
-  // 2페이지(해석 페이지) 분할 결정
-  const getAnswerPage2Split = () => {
-    const correctOrder = quiz.choices[quiz.answerIndex];
-    const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-      ? quiz.shuffledParagraphs 
-      : (quiz.paragraphs || []);
-    
-    const totalAnswerPage2Length = correctOrder.reduce((total, paragraphLabel) => {
-      const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-      if (paragraph && paragraph.content) {
-        const paragraphLength = paragraph.content.length;
-        const translationLength = translatedText.length / 4;
-        return total + paragraphLength + translationLength;
-      }
-      return total;
-    }, 0);
-    
-    return totalAnswerPage2Length >= 2000;
-  };
 
   const needsSecondPage = getContentLength();
   const needsAnswerThirdPage = getAnswerContentLength();
-  const needsAnswerPage2Split = getAnswerPage2Split();
 
   // 인쇄용 문제 (정답 없음)
   if (printMode === 'no-answer') {
@@ -190,7 +170,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
@@ -210,7 +190,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
@@ -236,7 +216,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                 </div>
@@ -272,7 +252,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
@@ -329,7 +309,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
             </div>
 
             {/* 3페이지: 본문 해석 - 글자 수에 따라 분할 */}
-            {needsAnswerPage2Split ? (
+            {needsAnswerThirdPage ? (
               // 3페이지 분할: A,B,C+해석, D+해석
               <>
                 {/* 3-1페이지: A, B, C + 해석 */}
@@ -517,7 +497,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
@@ -534,7 +514,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
             </div>
 
             {/* 2페이지: 본문 해석 - 글자 수에 따라 분할 */}
-            {needsAnswerPage2Split ? (
+            {needsAnswerThirdPage ? (
               // 2페이지 분할: A,B,C+해석, D+해석
               <>
                 {/* 2-1페이지: A, B, C + 해석 */}
@@ -763,8 +743,8 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
       const escapedWord = wordToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
       
-      // 문장 내에서 해당 단어만 HTML 태그로 감싸기
-      const modifiedSentence = sentence.replace(regex, `<u><strong>$&</strong></u>`);
+      // 문장 내에서 해당 단어만 HTML 태그로 감싸기 (밑줄, 파란색, 진하게)
+      const modifiedSentence = sentence.replace(regex, `<u><strong style="color: #1976d2;">$&</strong></u>`);
       result += modifiedSentence;
       
       currentPosition = sentenceEnd;
@@ -773,16 +753,187 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     return result;
   };
 
-  // 정답 페이지용 글자 수 기반 페이지 분할 결정
-  const getAnswerContentLength = () => {
-    // 본문 글자 수만 확인 (2000자 이상이면 3페이지 구성)
-    const textLength = work02Data.modifiedText.length;
+  // Work_02용 페이지 분할 로직 (원래 유형#02와 동일)
+  const getWork02PageLayout = (work02Data: Work02QuizData) => {
+    if (!work02Data) return { needsSecondPage: false, needsThirdPage: false, firstPageIncludesReplacements: true };
+
+    // 임시 컨테이너 생성하여 실제 높이 측정
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = `
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      width: 100%;
+      max-width: 100%;
+      font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
+      visibility: hidden;
+      pointer-events: none;
+    `;
+    document.body.appendChild(tempContainer);
+
+    // A: 문제 제목 + 영어 본문 높이 측정
+    const problemTitle = document.createElement('div');
+    problemTitle.style.cssText = `
+      font-weight: 800;
+      font-size: 0.9rem;
+      background: #222;
+      color: #fff;
+      padding: 0.7rem 0.5rem;
+      border-radius: 8px;
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      box-sizing: border-box;
+    `;
+    problemTitle.innerHTML = '<span>문제: 다음 본문을 읽고 해석하세요</span><span style="font-size:0.9rem; font-weight:700; color:#FFD700;">유형#02</span>';
     
-    // 2,000자 미만이면 2페이지, 2,000자 이상이면 3페이지
-    return textLength >= 2000;
+    const englishPassage = document.createElement('div');
+    englishPassage.style.cssText = `
+      margin-top: 0.9rem;
+      font-size: 0.9rem;
+      padding: 1rem;
+      background: #FFF3CD;
+      border-radius: 8px;
+      border: 1.5px solid #e3f2fd;
+      font-family: inherit;
+      color: #222;
+      line-height: 1.7;
+      box-sizing: border-box;
+      word-wrap: break-word;
+      width: 100%;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      white-space: normal;
+      margin: 0;
+    `;
+    englishPassage.textContent = work02Data.modifiedText || '';
+    
+    tempContainer.appendChild(problemTitle);
+    tempContainer.appendChild(englishPassage);
+    
+    const firstPageHeight = problemTitle.scrollHeight + englishPassage.scrollHeight + 20; // 20px 여백
+
+    // B: 교체된 단어들 제목 + 테이블 높이 측정
+    const replacementsTitle = document.createElement('div');
+    replacementsTitle.style.cssText = `
+      font-weight: 800;
+      font-size: 0.9rem;
+      background: #222;
+      color: #fff;
+      padding: 0.7rem 0.5rem;
+      border-radius: 8px;
+      margin-bottom: 0rem;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+    `;
+    replacementsTitle.textContent = '교체된 단어들';
+    
+    const replacementsTable = document.createElement('div');
+    replacementsTable.style.cssText = `
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 1rem;
+      table-layout: fixed;
+      box-sizing: border-box;
+    `;
+    
+    // 테이블 HTML 생성 (간단한 버전)
+    let tableHTML = '<table style="width: 100%; border-collapse: collapse; background: white; border: 1px solid #ddd;">';
+    tableHTML += '<thead><tr><th>원래 단어</th><th>교체된 단어</th><th>원래 단어</th><th>교체된 단어</th></tr></thead><tbody>';
+    
+    const halfLength = Math.ceil(work02Data.replacements.length / 2);
+    for (let i = 0; i < halfLength; i++) {
+      const leftReplacement = work02Data.replacements[i * 2];
+      const rightReplacement = work02Data.replacements[i * 2 + 1];
+      
+      tableHTML += '<tr>';
+      tableHTML += `<td>${leftReplacement ? `${leftReplacement.original} (${leftReplacement.originalMeaning})` : ''}</td>`;
+      tableHTML += `<td>${leftReplacement ? `${leftReplacement.replacement} (${leftReplacement.replacementMeaning})` : ''}</td>`;
+      tableHTML += `<td>${rightReplacement ? `${rightReplacement.original} (${rightReplacement.originalMeaning})` : ''}</td>`;
+      tableHTML += `<td>${rightReplacement ? `${rightReplacement.replacement} (${rightReplacement.replacementMeaning})` : ''}</td>`;
+      tableHTML += '</tr>';
+    }
+    tableHTML += '</tbody></table>';
+    replacementsTable.innerHTML = tableHTML;
+    
+    tempContainer.appendChild(replacementsTitle);
+    tempContainer.appendChild(replacementsTable);
+    
+    const replacementsHeight = replacementsTitle.scrollHeight + replacementsTable.scrollHeight + 20; // 20px 여백
+
+    // C: 한글 해석 높이 측정
+    const koreanTranslation = document.createElement('div');
+    koreanTranslation.style.cssText = `
+      font-size: 16px;
+      padding: 16px;
+      background: #F1F8E9;
+      border-radius: 8px;
+      font-family: inherit;
+      color: #222;
+      line-height: 1.7;
+      box-sizing: border-box;
+      word-wrap: break-word;
+      width: 100%;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      white-space: normal;
+      margin: 0;
+    `;
+    koreanTranslation.textContent = work02Data.translation || '번역을 생성하는 중...';
+    
+    tempContainer.appendChild(koreanTranslation);
+    
+    const koreanTranslationHeight = koreanTranslation.scrollHeight + 20; // 20px 여백
+
+    // 임시 컨테이너 제거
+    document.body.removeChild(tempContainer);
+    
+    // 페이지 분할 로직 결정 (원래 유형#02와 동일)
+    const A = firstPageHeight;        // 문제 제목 + 영어 본문
+    const B = replacementsHeight;     // 교체된 단어들 제목 + 테이블
+    const C = koreanTranslationHeight; // 한글 해석
+    const availableSpace = 950; // 950px
+    
+    const totalHeight = A + B + C;
+    
+    let needsSecondPage = false;
+    let needsThirdPage = false;
+    let firstPageIncludesReplacements = true;
+    
+    if (totalHeight <= availableSpace) {
+      // A+B+C ≤ 950 → 1페이지
+      needsSecondPage = false;
+      needsThirdPage = false;
+      firstPageIncludesReplacements = true;
+    } else if (A + B <= availableSpace) {
+      // A+B+C > 950, A+B ≤ 950 → 1페이지(A+B), 2페이지(C)
+      needsSecondPage = true;
+      needsThirdPage = false;
+      firstPageIncludesReplacements = true;
+    } else if (A <= availableSpace && B + C <= availableSpace) {
+      // A+B+C > 950, A+B > 950, A ≤ 950, B+C ≤ 950 → 1페이지(A), 2페이지(B+C)
+      needsSecondPage = true;
+      needsThirdPage = false;
+      firstPageIncludesReplacements = false;
+    } else {
+      // A+B+C > 950, A+B > 950, A > 950 또는 B+C > 950 → 1페이지(A), 2페이지(B), 3페이지(C)
+      needsSecondPage = true;
+      needsThirdPage = true;
+      firstPageIncludesReplacements = false;
+    }
+    
+    return { needsSecondPage, needsThirdPage, firstPageIncludesReplacements };
   };
 
-  const needsAnswerSecondPage = getAnswerContentLength();
+  // Work_02용 페이지 분할 로직 적용
+  const work02PageLayout = getWork02PageLayout(work02Data);
+  const needsAnswerSecondPage = work02PageLayout.needsSecondPage;
+  const needsAnswerThirdPage = work02PageLayout.needsThirdPage;
+  const firstPageIncludesReplacements = work02PageLayout.firstPageIncludesReplacements;
 
   // 인쇄용: 문제만
   if (printMode === 'no-answer') {
@@ -795,12 +946,11 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 다음 본문을 읽고 해석하세요</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
               </div>
-              <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {work02Data.modifiedText}
+              <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
               </div>
             </div>
           </div>
@@ -809,20 +959,341 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     );
   }
 
-  // 인쇄용: 정답포함
+  // 인쇄용: 정답포함 (원래 유형#02와 동일한 페이지 분할 로직)
   if (printMode === 'with-answer') {
-    if (needsAnswerSecondPage) {
-      // 3페이지 구성: 본문, 교체된 단어들, 해석
+    if (!needsAnswerSecondPage) {
+      // 1페이지: A+B+C 모두 1페이지에 들어감
       return (
         <div className="only-print print-answer-mode">
-          {/* 1페이지: 문제제목 + 본문 */}
           <div className="a4-page-template">
             <div className="a4-page-header">
               <PrintHeaderPackage01 />
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 본문을 읽고 해석하세요</span>
+                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
+                </div>
+                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                </div>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%'}}>
+                  교체된 단어들
+              </div>
+                {work02Data.replacements && work02Data.replacements.length > 0 ? (
+                  <div style={{marginTop:'0rem'}}>
+                    {(() => {
+                      const totalReplacements = work02Data.replacements.length;
+                      const halfLength = Math.ceil(totalReplacements / 2);
+
+                      return (
+                        <table className="replacements-table">
+                          <thead>
+                            <tr>
+                              <th>원래 단어</th>
+                              <th>교체된 단어</th>
+                              <th>원래 단어</th>
+                              <th>교체된 단어</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Array.from({ length: halfLength }, (_, rowIndex) => {
+                              const leftReplacement = work02Data.replacements[rowIndex * 2];
+                              const rightReplacement = work02Data.replacements[rowIndex * 2 + 1];
+                              
+                              return (
+                                <tr key={rowIndex}>
+                                  <td>
+                                    {leftReplacement && (
+                                      <>
+                                        <span className="original-word">{leftReplacement.original}</span>
+                                        <span className="original-meaning"> ({leftReplacement.originalMeaning})</span>
+                                      </>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {leftReplacement && (
+                                      <>
+                                        <span className="replacement-word">{leftReplacement.replacement}</span>
+                                        <span className="replacement-meaning"> ({leftReplacement.replacementMeaning})</span>
+                                      </>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {rightReplacement && (
+                                      <>
+                                        <span className="original-word">{rightReplacement.original}</span>
+                                        <span className="original-meaning"> ({rightReplacement.originalMeaning})</span>
+                                      </>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {rightReplacement && (
+                                      <>
+                                        <span className="replacement-word">{rightReplacement.replacement}</span>
+                                        <span className="replacement-meaning"> ({rightReplacement.replacementMeaning})</span>
+                                      </>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      );
+                    })()}
+            </div>
+                ) : (
+                  <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
+                    교체된 단어가 없습니다.
+          </div>
+                )}
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
+                  본문 해석
+                </div>
+                <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {work02Data.translation || '번역을 생성하는 중...'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    } else if (needsAnswerSecondPage && !needsAnswerThirdPage) {
+      // 2페이지 구성
+      if (firstPageIncludesReplacements) {
+        // 1페이지(A+B), 2페이지(C)
+        return (
+          <div className="only-print print-answer-mode">
+            {/* 1페이지: 문제제목 + 본문 + 교체된 단어들 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                    <span>문제: 다음 본문을 읽고 해석하세요</span>
+                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
+                  </div>
+                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                  </div>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%'}}>
+                  교체된 단어들
+                </div>
+                {work02Data.replacements && work02Data.replacements.length > 0 ? (
+                    <div style={{marginTop:'0rem'}}>
+                      {(() => {
+                        const totalReplacements = work02Data.replacements.length;
+                        const halfLength = Math.ceil(totalReplacements / 2);
+
+                        return (
+                    <table className="replacements-table">
+                      <thead>
+                        <tr>
+                          <th>원래 단어</th>
+                          <th>교체된 단어</th>
+                          <th>원래 단어</th>
+                          <th>교체된 단어</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                              {Array.from({ length: halfLength }, (_, rowIndex) => {
+                                const leftReplacement = work02Data.replacements[rowIndex * 2];
+                                const rightReplacement = work02Data.replacements[rowIndex * 2 + 1];
+                                
+                                return (
+                          <tr key={rowIndex}>
+                            <td>
+                                      {leftReplacement && (
+                                <>
+                                          <span className="original-word">{leftReplacement.original}</span>
+                                          <span className="original-meaning"> ({leftReplacement.originalMeaning})</span>
+                                </>
+                              )}
+                            </td>
+                            <td>
+                                      {leftReplacement && (
+                                <>
+                                          <span className="replacement-word">{leftReplacement.replacement}</span>
+                                          <span className="replacement-meaning"> ({leftReplacement.replacementMeaning})</span>
+                                </>
+                              )}
+                            </td>
+                            <td>
+                                      {rightReplacement && (
+                                <>
+                                          <span className="original-word">{rightReplacement.original}</span>
+                                          <span className="original-meaning"> ({rightReplacement.originalMeaning})</span>
+                                </>
+                              )}
+                            </td>
+                            <td>
+                                      {rightReplacement && (
+                                <>
+                                          <span className="replacement-word">{rightReplacement.replacement}</span>
+                                          <span className="replacement-meaning"> ({rightReplacement.replacementMeaning})</span>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                                );
+                              })}
+                      </tbody>
+                    </table>
+                        );
+                      })()}
+                  </div>
+                ) : (
+                  <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
+                    교체된 단어가 없습니다.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+            {/* 2페이지: 본문 해석 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
+                  본문 해석
+                </div>
+                  <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    {work02Data.translation || '번역을 생성하는 중...'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+        // 1페이지(A), 2페이지(B+C)
+      return (
+        <div className="only-print print-answer-mode">
+            {/* 1페이지: 문제제목 + 본문만 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 본문을 읽고 해석하세요</span>
+                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
+                </div>
+                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2페이지: 교체된 단어들 + 본문 해석 */}
+            <div className="a4-page-template">
+              <div className="a4-page-header">
+                <PrintHeaderPackage01 />
+              </div>
+              <div className="a4-page-content">
+                <div className="quiz-content">
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%'}}>
+                  교체된 단어들
+                </div>
+                {work02Data.replacements && work02Data.replacements.length > 0 ? (
+                    <div style={{marginTop:'0rem'}}>
+                      {(() => {
+                        const totalReplacements = work02Data.replacements.length;
+                        const halfLength = Math.ceil(totalReplacements / 2);
+
+                        return (
+                    <table className="replacements-table">
+                      <thead>
+                        <tr>
+                          <th>원래 단어</th>
+                          <th>교체된 단어</th>
+                          <th>원래 단어</th>
+                          <th>교체된 단어</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                              {Array.from({ length: halfLength }, (_, rowIndex) => {
+                                const leftReplacement = work02Data.replacements[rowIndex * 2];
+                                const rightReplacement = work02Data.replacements[rowIndex * 2 + 1];
+                                
+                                return (
+                          <tr key={rowIndex}>
+                            <td>
+                                      {leftReplacement && (
+                                <>
+                                          <span className="original-word">{leftReplacement.original}</span>
+                                          <span className="original-meaning"> ({leftReplacement.originalMeaning})</span>
+                                </>
+                              )}
+                            </td>
+                            <td>
+                                      {leftReplacement && (
+                                <>
+                                          <span className="replacement-word">{leftReplacement.replacement}</span>
+                                          <span className="replacement-meaning"> ({leftReplacement.replacementMeaning})</span>
+                                </>
+                              )}
+                            </td>
+                            <td>
+                                      {rightReplacement && (
+                                <>
+                                          <span className="original-word">{rightReplacement.original}</span>
+                                          <span className="original-meaning"> ({rightReplacement.originalMeaning})</span>
+                                </>
+                              )}
+                            </td>
+                            <td>
+                                      {rightReplacement && (
+                                <>
+                                          <span className="replacement-word">{rightReplacement.replacement}</span>
+                                          <span className="replacement-meaning"> ({rightReplacement.replacementMeaning})</span>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                                );
+                              })}
+                      </tbody>
+                    </table>
+                        );
+                      })()}
+                  </div>
+                ) : (
+                  <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
+                    교체된 단어가 없습니다.
+                  </div>
+                )}
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
+                    본문 해석
+                  </div>
+                  <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    {work02Data.translation || '번역을 생성하는 중...'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+    } else {
+      // 3페이지 구성: 1페이지(A), 2페이지(B), 3페이지(C)
+      return (
+        <div className="only-print print-answer-mode">
+          {/* 1페이지: 문제제목 + 본문만 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 본문을 읽고 해석하세요</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
                 </div>
@@ -839,59 +1310,71 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%'}}>
                   교체된 단어들
                 </div>
                 {work02Data.replacements && work02Data.replacements.length > 0 ? (
-                  <div>
-                    <table className="replacements-table">
-                      <thead>
-                        <tr>
-                          <th>원래 단어</th>
-                          <th>교체된 단어</th>
-                          <th>원래 단어</th>
-                          <th>교체된 단어</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Array.from({ length: Math.ceil(work02Data.replacements.length / 2) }, (_, rowIndex) => (
-                          <tr key={rowIndex}>
-                            <td>
-                              {work02Data.replacements[rowIndex * 2] && (
-                                <>
-                                  <span className="original-word">{work02Data.replacements[rowIndex * 2].original}</span>
-                                  <span className="original-meaning"> ({work02Data.replacements[rowIndex * 2].originalMeaning})</span>
-                                </>
-                              )}
-                            </td>
-                            <td>
-                              {work02Data.replacements[rowIndex * 2] && (
-                                <>
-                                  <span className="replacement-word">{work02Data.replacements[rowIndex * 2].replacement}</span>
-                                  <span className="replacement-meaning"> ({work02Data.replacements[rowIndex * 2].replacementMeaning})</span>
-                                </>
-                              )}
-                            </td>
-                            <td>
-                              {work02Data.replacements[rowIndex * 2 + 1] && (
-                                <>
-                                  <span className="original-word">{work02Data.replacements[rowIndex * 2 + 1].original}</span>
-                                  <span className="original-meaning"> ({work02Data.replacements[rowIndex * 2 + 1].originalMeaning})</span>
-                                </>
-                              )}
-                            </td>
-                            <td>
-                              {work02Data.replacements[rowIndex * 2 + 1] && (
-                                <>
-                                  <span className="replacement-word">{work02Data.replacements[rowIndex * 2 + 1].replacement}</span>
-                                  <span className="replacement-meaning"> ({work02Data.replacements[rowIndex * 2 + 1].replacementMeaning})</span>
-                                </>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div style={{marginTop:'0rem'}}>
+                    {(() => {
+                      const totalReplacements = work02Data.replacements.length;
+                      const halfLength = Math.ceil(totalReplacements / 2);
+
+                      return (
+                        <table className="replacements-table">
+                          <thead>
+                            <tr>
+                              <th>원래 단어</th>
+                              <th>교체된 단어</th>
+                              <th>원래 단어</th>
+                              <th>교체된 단어</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Array.from({ length: halfLength }, (_, rowIndex) => {
+                              const leftReplacement = work02Data.replacements[rowIndex * 2];
+                              const rightReplacement = work02Data.replacements[rowIndex * 2 + 1];
+                              
+                              return (
+                                <tr key={rowIndex}>
+                                  <td>
+                                    {leftReplacement && (
+                                      <>
+                                        <span className="original-word">{leftReplacement.original}</span>
+                                        <span className="original-meaning"> ({leftReplacement.originalMeaning})</span>
+                                      </>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {leftReplacement && (
+                                      <>
+                                        <span className="replacement-word">{leftReplacement.replacement}</span>
+                                        <span className="replacement-meaning"> ({leftReplacement.replacementMeaning})</span>
+                                      </>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {rightReplacement && (
+                                      <>
+                                        <span className="original-word">{rightReplacement.original}</span>
+                                        <span className="original-meaning"> ({rightReplacement.originalMeaning})</span>
+                                      </>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {rightReplacement && (
+                                      <>
+                                        <span className="replacement-word">{rightReplacement.replacement}</span>
+                                        <span className="replacement-meaning"> ({rightReplacement.replacementMeaning})</span>
+                                      </>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
@@ -909,109 +1392,11 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                   본문 해석
                 </div>
-                <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                  {translatedText || '번역을 생성하는 중...'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    } else {
-      // 2페이지 구성: 본문+교체된 단어들, 해석
-      return (
-        <div className="only-print print-answer-mode">
-          {/* 1페이지: 문제제목 + 본문 + 교체된 단어들 */}
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                  <span>문제: 다음 본문을 읽고 해석하세요</span>
-                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
-                </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
-                </div>
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'block', width:'100%'}}>
-                  교체된 단어들
-                </div>
-                {work02Data.replacements && work02Data.replacements.length > 0 ? (
-                  <div>
-                    <table className="replacements-table">
-                      <thead>
-                        <tr>
-                          <th>원래 단어</th>
-                          <th>교체된 단어</th>
-                          <th>원래 단어</th>
-                          <th>교체된 단어</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Array.from({ length: Math.ceil(work02Data.replacements.length / 2) }, (_, rowIndex) => (
-                          <tr key={rowIndex}>
-                            <td>
-                              {work02Data.replacements[rowIndex * 2] && (
-                                <>
-                                  <span className="original-word">{work02Data.replacements[rowIndex * 2].original}</span>
-                                  <span className="original-meaning"> ({work02Data.replacements[rowIndex * 2].originalMeaning})</span>
-                                </>
-                              )}
-                            </td>
-                            <td>
-                              {work02Data.replacements[rowIndex * 2] && (
-                                <>
-                                  <span className="replacement-word">{work02Data.replacements[rowIndex * 2].replacement}</span>
-                                  <span className="replacement-meaning"> ({work02Data.replacements[rowIndex * 2].replacementMeaning})</span>
-                                </>
-                              )}
-                            </td>
-                            <td>
-                              {work02Data.replacements[rowIndex * 2 + 1] && (
-                                <>
-                                  <span className="original-word">{work02Data.replacements[rowIndex * 2 + 1].original}</span>
-                                  <span className="original-meaning"> ({work02Data.replacements[rowIndex * 2 + 1].originalMeaning})</span>
-                                </>
-                              )}
-                            </td>
-                            <td>
-                              {work02Data.replacements[rowIndex * 2 + 1] && (
-                                <>
-                                  <span className="replacement-word">{work02Data.replacements[rowIndex * 2 + 1].replacement}</span>
-                                  <span className="replacement-meaning"> ({work02Data.replacements[rowIndex * 2 + 1].replacementMeaning})</span>
-                                </>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>
-                    교체된 단어가 없습니다.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* 2페이지: 본문 해석 */}
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                  본문 해석
-                </div>
-                <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                  {translatedText || '번역을 생성하는 중...'}
+                <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {work02Data.translation || '번역을 생성하는 중...'}
                 </div>
               </div>
             </div>
@@ -1046,7 +1431,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>다음 빈칸에 들어갈 가장 적절한 단어를 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
               </div>
@@ -1064,7 +1449,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>다음 빈칸에 들어갈 가장 적절한 단어를 고르세요.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
                   </div>
@@ -1085,7 +1470,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
         </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>다음 빈칸에 들어갈 가장 적절한 단어를 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
                 </div>
@@ -1116,7 +1501,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>다음 빈칸에 들어갈 가장 적절한 단어를 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
               </div>
@@ -1140,7 +1525,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                 본문 해석
               </div>
               <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -1184,7 +1569,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
               </div>
@@ -1202,7 +1587,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
                   </div>
@@ -1223,7 +1608,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
         </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
                 </div>
@@ -1254,7 +1639,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
               </div>
@@ -1278,7 +1663,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                 본문 해석
               </div>
               <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -1317,7 +1702,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
               </div>
@@ -1335,7 +1720,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
                   </div>
@@ -1356,7 +1741,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
         </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
                 </div>
@@ -1386,7 +1771,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
               </div>
@@ -1421,7 +1806,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction work05-print-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'1.2rem', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+              <div className="problem-instruction work05-print-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'1.2rem', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                 본문 해석
               </div>
               <div className="problem-passage translation work05-print-translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -1453,7 +1838,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
               </div>
@@ -1480,7 +1865,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
               </div>
@@ -1504,7 +1889,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                 본문 해석
               </div>
               <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -1569,7 +1954,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
               </div>
@@ -1587,7 +1972,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
                   </div>
@@ -1608,7 +1993,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
         </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
                 </div>
@@ -1775,7 +2160,7 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>문제: 다음 본문에 가장 적합한 제목을 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
               </div>
@@ -1793,7 +2178,7 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>문제: 다음 본문에 가장 적합한 제목을 고르세요.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
                   </div>
@@ -1814,7 +2199,7 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
         </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 본문에 가장 적합한 제목을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
                 </div>
@@ -1857,7 +2242,7 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 본문에 가장 적합한 제목을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
                 </div>
@@ -1904,7 +2289,7 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>문제: 다음 본문에 가장 적합한 제목을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
                 </div>
@@ -1990,7 +2375,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                 <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
               </div>
@@ -2008,7 +2393,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                   </div>
@@ -2029,7 +2414,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
         </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                 </div>
@@ -2061,7 +2446,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                 </div>
@@ -2090,7 +2475,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                 본문 해석
               </div>
               <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
@@ -2140,7 +2525,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                   </div>
@@ -2158,7 +2543,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                   </div>
@@ -2189,7 +2574,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                 </div>
@@ -2228,7 +2613,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
               </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                 </div>
@@ -2264,7 +2649,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
             <div className="a4-page-content">
               <div className="quiz-content">
                 <div className="translation-section" style={{marginTop:'0.5rem', pageBreakBefore:'auto', pageBreakInside:'avoid'}}>
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                 본문 해석
               </div>
                   <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
