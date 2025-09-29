@@ -829,7 +829,7 @@
 }
 
 .shuffled-paragraph {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   padding: 0.8rem;
   background: #ffffff;
   border-radius: 6px;
@@ -839,7 +839,7 @@
 }
 
 .shuffled-paragraph:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0.2rem;
 }
 
 .problem-options {

@@ -677,7 +677,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
               ))}
             </div>
             <div className="screen-answer-footer" style={{color: '#1976d2', fontWeight: 700, fontSize: '1.1rem', textAlign: 'center', marginTop: '2rem', padding: '0.8rem', backgroundColor: '#f0f7ff', borderRadius: '8px'}}>
-              정답: {['①', '②', '③', '④'][quiz.answerIndex]}
+              {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')} (정답)
             </div>
           </div>
         </div>
@@ -737,7 +737,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                       문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요
                     </div>
-                    <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.75rem'}}>
+                    <div className="problem-passage" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'0.75rem'}}>
                       {quiz.shuffledParagraphs.map((paragraph, index) => (
                         <div key={paragraph.id} className="shuffled-paragraph">
                           <strong>{paragraph.label}:</strong> {paragraph.content}
@@ -745,7 +745,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
                       ))}
                     </div>
                     {quiz.choices.map((choice, index) => (
-                      <div key={index} className="option" style={{fontSize:'0.75rem', marginTop: index === 0 ? '1.5rem' : '4px', paddingTop:'5px', paddingBottom:'5px'}}>
+                      <div key={index} className="option" style={{fontSize:'0.75rem', marginTop: index === 0 ? '0.3rem' : '4px', paddingTop:'5px', paddingBottom:'5px'}}>
                         {['①', '②', '③', '④'][index]} {choice.join(' → ')}
                       </div>
                     ))}
@@ -770,16 +770,15 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
                     <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'1rem'}}>
+                  <div className="problem-passage" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'1rem'}}>
                     {quiz.shuffledParagraphs.map((paragraph, index) => (
                       <div key={paragraph.id} className="shuffled-paragraph">
                         <strong>{paragraph.label}:</strong> {paragraph.content}
                       </div>
                     ))}
                   </div>
-                  <div style={{color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '1.5rem 0', padding: '0.8rem 1rem', background: '#fff', border: '1px solid #ddd', borderRadius: '5px'}}>
-                    {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}
-                    <span style={{color: '#1976d2', fontWeight: 800, marginLeft: '8px'}}>(정답)</span>
+                  <div style={{fontWeight: 700, fontSize: '1rem', margin: '0.5rem 0 0 0', padding: '0.6rem 0.8rem', background: '#fff', border: '1px solid #ddd', borderRadius: '5px'}}>
+                    <span style={{color: '#000000'}}>{['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}</span> <span style={{color: '#1976d2'}}>(정답)</span>
                   </div>
                 </div>
               </div>

@@ -322,10 +322,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                       );
                     })()}
                   <div className="option option-print" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
-                      {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}
-                  </div>
-                  <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0'}}>
-                    정답: {['①', '②', '③', '④'][quiz.answerIndex]}
+                      <span style={{color: '#000000', fontWeight: 'bold'}}>{['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}</span>&nbsp;<span style={{color: '#1976d2', fontWeight: 'bold'}}>(정답)</span>
                   </div>
                 </div>
               </div>
@@ -530,10 +527,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                       </div>
                     ))}
                   <div className="option option-print" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
-                      {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}
-                  </div>
-                  <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0'}}>
-                    정답: {['①', '②', '③', '④'][quiz.answerIndex]}
+                      <span style={{color: '#000000', fontWeight: 'bold'}}>{['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}</span>&nbsp;<span style={{color: '#1976d2', fontWeight: 'bold'}}>(정답)</span>
                   </div>
                 </div>
               </div>
@@ -1405,7 +1399,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                     <div className="option-english" style={{fontSize:'0.9rem', color:'#222', lineHeight:'1.3', margin:'0', padding:'0'}}>
                       {['①', '②', '③', '④', '⑤'][index]} {option}
                       {work05Data.answerIndex === index && (
-                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                       )}
                     </div>
                     {work05Data.optionTranslations && work05Data.optionTranslations[index] && (
@@ -2078,7 +2072,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                   <div key={i} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', fontFamily:'inherit', color:'#222'}}>
                       {`①②③④⑤`[i] || `${i+1}.`} {opt}
                       {work09Data.answerIndex === i && (
-                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                       )}
                     </div>
                   ))}

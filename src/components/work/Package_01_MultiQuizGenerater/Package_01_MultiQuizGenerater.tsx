@@ -3042,7 +3042,7 @@ ${inputText}`;
                     borderRadius: '8px', 
                     border: '2px solid #1976d2'
                   }}>
-                    정답: {['①', '②', '③', '④'][quizItem.quiz.answerIndex || 0]}
+                    <span>{['①', '②', '③', '④'][quizItem.quiz.answerIndex || 0]} {quizItem.quiz.choices[quizItem.quiz.answerIndex || 0].join(' → ')}</span> <span>(정답)</span>
                   </div>
                 </div>
               );
