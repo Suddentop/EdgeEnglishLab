@@ -36,6 +36,42 @@ const Work_10_MultiGrammarError: React.FC = () => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [isPasteFocused, setIsPasteFocused] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [pageLayoutInfo, setPageLayoutInfo] = useState({
+    needsSecondPage: false,
+    needsThirdPage: false,
+    page1Content: '',
+    page2Content: '',
+    page3Content: ''
+  });
+
+  // A4 페이지 설정 (실제 A4 크기 기준, px 단위)
+  const A4_CONFIG = {
+    PAGE_WIDTH: 794,
+    PAGE_HEIGHT: 1123,
+    TOP_MARGIN: 25,
+    BOTTOM_MARGIN: 25,
+    LEFT_MARGIN: 20,
+    RIGHT_MARGIN: 20,
+    HEADER_HEIGHT: 30,
+    FOOTER_HEIGHT: 20,
+    CONTENT_WIDTH: 754,
+    CONTENT_HEIGHT: 1048,
+    INSTRUCTION_HEIGHT: 30,
+    INSTRUCTION_MARGIN: 11,
+    OPTIONS_HEADER_HEIGHT: 30,
+    OPTIONS_HEADER_MARGIN: 11,
+    TRANSLATION_HEADER_HEIGHT: 30,
+    TRANSLATION_HEADER_MARGIN: 11,
+  };
+
+  // 텍스트 높이 계산 함수 (실제 A4 크기 기준)
+  function calculateContainerHeight(text: string, padding: number = 38, fontSize: number = 16, lineHeight: number = 1.7): number {
+    const availableWidthPx = A4_CONFIG.CONTENT_WIDTH - 40;
+    const charWidthPx = fontSize * 0.55;
+    const charsPerLine = Math.floor(availableWidthPx / charWidthPx);
+    const lines = Math.ceil(text.length / charsPerLine);
+    return (lines * fontSize * lineHeight) + padding;
+  }
   
   // 포인트 관련 상태
   const [showPointModal, setShowPointModal] = useState(false);
@@ -70,10 +106,78 @@ const Work_10_MultiGrammarError: React.FC = () => {
     }
   }, [userData?.uid, loading]);
 
-  // 본문 길이에 따른 페이지 분할 결정
+  // 동적 페이지 분할 로직 (유형#03 방식 적용)
   useEffect(() => {
-    setNeedsSecondPage(inputText.length >= 2000);
-  }, [inputText]);
+    if (!quiz) return;
+
+    const availableHeight = A4_CONFIG.CONTENT_HEIGHT;
+    const safetyMargin = 50;
+    const effectiveAvailableHeight = availableHeight - safetyMargin;
+
+    // A. 문제 제목 + 영어 본문 컨테이너
+    const problemTitleHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN;
+    const englishPassageHeight = calculateContainerHeight(quiz.passage, 16, 16, 1.7); // padding 0.5rem = 8px, 상하 합계 16px
+    const sectionAHeight = problemTitleHeight + englishPassageHeight;
+
+    // B. 5지선다 선택항목 컨테이너 (정답만 표시)
+    const optionsHeight = calculateContainerHeight(`${quiz.options[quiz.answerIndex]}개 (정답)`, 11, 16, 1.3);
+    const sectionBHeight = optionsHeight;
+
+    // C. 본문해석 제목 + 한글 해석 컨테이너 (동적 크기)
+    const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT + A4_CONFIG.TRANSLATION_HEADER_MARGIN;
+    const translationHeight = calculateContainerHeight(quiz.translation, 32, 12.8, 1.7); // padding 1rem = 16px, 상하 합계 32px, fontSize 0.8rem = 12.8px
+    const sectionCHeight = translationHeaderHeight + translationHeight;
+
+    const totalHeight = sectionAHeight + sectionBHeight + sectionCHeight;
+
+    // Debugging logs for height calculations
+    console.log('📏 유형#10 동적 페이지 분할 계산:', {
+      availableHeight: availableHeight.toFixed(2) + 'px',
+      sectionAHeight: sectionAHeight.toFixed(2) + 'px',
+      sectionBHeight: sectionBHeight.toFixed(2) + 'px',
+      sectionCHeight: sectionCHeight.toFixed(2) + 'px',
+      totalHeight: totalHeight.toFixed(2) + 'px',
+      effectiveAvailableHeight: effectiveAvailableHeight.toFixed(2) + 'px',
+      passageLength: quiz.passage.length,
+      translationLength: quiz.translation.length
+    });
+
+    // 실제 A4 크기 기준 검증
+    console.log('🔍 실제 A4 크기 기준 계산:', {
+      A4_SIZE: '210mm × 297mm = 794px × 1123px (96 DPI)',
+      CONTENT_AREA: A4_CONFIG.CONTENT_WIDTH + 'px × ' + A4_CONFIG.CONTENT_HEIGHT + 'px',
+      availableHeight: availableHeight + 'px',
+      safetyMargin: safetyMargin + 'px',
+      effectiveAvailableHeight: effectiveAvailableHeight + 'px'
+    });
+
+    // 페이지 분할 조건 (유형#03과 동일한 로직)
+    if (totalHeight <= effectiveAvailableHeight) {
+      // 케이스 1: A+B+C ≤ 998px → 1페이지에 모든 내용
+      setPageLayoutInfo({ needsSecondPage: false, needsThirdPage: false, page1Content: 'A+B+C', page2Content: '', page3Content: '' });
+      setNeedsSecondPage(false);
+    } else if (sectionAHeight + sectionBHeight <= effectiveAvailableHeight) {
+      // 케이스 2: A+B ≤ 998px → 1페이지에 A+B, 2페이지에 C
+      if (sectionCHeight <= effectiveAvailableHeight) {
+        setPageLayoutInfo({ needsSecondPage: true, needsThirdPage: false, page1Content: 'A+B', page2Content: 'C', page3Content: '' });
+      } else {
+        setPageLayoutInfo({ needsSecondPage: true, needsThirdPage: true, page1Content: 'A+B', page2Content: 'C-part1', page3Content: 'C-part2' });
+      }
+      setNeedsSecondPage(true);
+    } else if (sectionAHeight <= effectiveAvailableHeight) {
+      // 케이스 3: A ≤ 998px → 1페이지에 A, 2페이지에 B+C
+      if (sectionBHeight + sectionCHeight <= effectiveAvailableHeight) {
+        setPageLayoutInfo({ needsSecondPage: true, needsThirdPage: false, page1Content: 'A', page2Content: 'B+C', page3Content: '' });
+      } else {
+        setPageLayoutInfo({ needsSecondPage: true, needsThirdPage: true, page1Content: 'A', page2Content: 'B', page3Content: 'C' });
+      }
+      setNeedsSecondPage(true);
+    } else {
+      // 케이스 4: A > 998px → 1페이지에 A, 2페이지에 B, 3페이지에 C
+      setPageLayoutInfo({ needsSecondPage: true, needsThirdPage: true, page1Content: 'A', page2Content: 'B', page3Content: 'C' });
+      setNeedsSecondPage(true);
+    }
+  }, [quiz]);
 
   // 컴포넌트 마운트 시 스크롤 최상단
   useEffect(() => {
@@ -460,6 +564,13 @@ const Work_10_MultiGrammarError: React.FC = () => {
     setIsPasteFocused(false);
     setIsLoading(false);
     setIsExtractingText(false);
+    setPageLayoutInfo({
+      needsSecondPage: false,
+      needsThirdPage: false,
+      page1Content: '',
+      page2Content: '',
+      page3Content: ''
+    });
   };
 
   // 본문 내 <u>...</u>와 번호(①~⑧)는 AI가 반환한 passage 그대로 사용
@@ -637,122 +748,155 @@ const Work_10_MultiGrammarError: React.FC = () => {
         )}
         {printMode === 'with-answer' && (
           <div className="only-print print-answer-mode">
-            {needsSecondPage ? (
-              // 3페이지 구성: 본문, 4지선다+정답, 본문해석 (본문 2000자 이상)
-              <>
-                {/* 1페이지: 문제제목 + 본문 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+            {/* 1페이지 */}
+            <div className="a4-page-template">
+              <div className="a4-page-header">
+                <PrintHeaderWork01 />
+              </div>
+              <div className="a4-page-content">
+                <div className="quiz-content">
+                  {/* A. 문제 제목 + 영어 본문 컨테이너 */}
+                  {(pageLayoutInfo.page1Content.includes('A') || pageLayoutInfo.page1Content === 'A') && (
+                    <>
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                         <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 단어가 총 몇 개인지 고르시오.</span>
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                       </div>
-                      <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
                       </div>
-                    </div>
-                  </div>
-                </div>
+                    </>
+                  )}
 
-                {/* 2페이지: 4지선다 + 정답 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        다음 중에서 가장 적절한 것을 고르시오.
+                  {/* B. 5지선다 선택항목 컨테이너 (정답만 표시) */}
+                  {(pageLayoutInfo.page1Content.includes('B') || pageLayoutInfo.page1Content === 'B') && (
+                    <div className="problem-options" style={{margin:'0.2rem 0'}}>
+                      <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                        {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex + 1}.`} {quiz.options[quiz.answerIndex]}개
+                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                       </div>
-                      <div className="problem-options" style={{margin:'1rem 0'}}>
-                        {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
-                            {`①②③④⑤`[i] || `${i+1}.`} {opt}개
-                            {quiz.answerIndex === i && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:400, fontSize:'1rem !important'}}>
+                      <div style={{fontSize:'0.9rem !important', margin:'0.2rem 0 0 0', fontFamily:'inherit', color:'#1976d2', fontWeight:400}}>
                         어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
                       </div>
                     </div>
-                  </div>
-                </div>
+                  )}
 
-                {/* 3페이지: 본문 해석 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  {/* C. 본문해석 제목 + 한글 해석 컨테이너 */}
+                  {(pageLayoutInfo.page1Content.includes('C') || pageLayoutInfo.page1Content === 'C') && (
+                    <>
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="problem-passage translation" style={{fontSize:'0.8rem !important', lineHeight:1.7, margin:'0.1rem 0', background:'#f1f8e9', borderRadius:'8px', padding:'2rem 1rem', fontFamily:'inherit', color:'#222'}}>
                         {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              // 2페이지 구성: 본문+4지선다+정답, 본문해석 (본문 2000자 미만)
-              <>
-                {/* 1페이지: 문제제목 + 본문 + 4지선다 + 정답 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                        <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 단어가 총 몇 개인지 고르시오.</span>
-                        <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
-                      </div>
-                      <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
-                      </div>
-                      <div className="problem-options" style={{margin:'1rem 0'}}>
-                        {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
-                            {`①②③④⑤`[i] || `${i+1}.`} {opt}개
-                            {quiz.answerIndex === i && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:400, fontSize:'1rem !important'}}>
-                        어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    </>
+                  )}
 
-                {/* 2페이지: 본문 해석 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        본문 해석
+                </div>
+              </div>
+            </div>
+
+            {/* 2페이지 */}
+            {pageLayoutInfo.needsSecondPage && (
+              <div className="a4-page-template">
+                <div className="a4-page-header">
+                  <PrintHeaderWork01 />
+                </div>
+                <div className="a4-page-content">
+                  <div className="quiz-content">
+                    {/* A. 문제 제목 + 영어 본문 컨테이너 */}
+                    {(pageLayoutInfo.page2Content.includes('A') || pageLayoutInfo.page2Content === 'A') && (
+                      <>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                          <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 단어가 총 몇 개인지 고르시오.</span>
+                          <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
+                        </div>
+                        <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                          <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
+                        </div>
+                      </>
+                    )}
+
+                    {/* B. 5지선다 선택항목 컨테이너 (정답만 표시) */}
+                    {(pageLayoutInfo.page2Content.includes('B') || pageLayoutInfo.page2Content === 'B') && (
+                      <div className="problem-options" style={{margin:'0.2rem 0'}}>
+                        <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                          {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex + 1}.`} {quiz.options[quiz.answerIndex]}개
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                        </div>
+                        <div style={{fontSize:'0.9rem !important', margin:'0.2rem 0 0 0', fontFamily:'inherit', color:'#1976d2', fontWeight:400}}>
+                          어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
+                        </div>
                       </div>
-                      <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
-                      </div>
-                    </div>
+                    )}
+
+                    {/* C. 본문해석 제목 + 한글 해석 컨테이너 */}
+                    {(pageLayoutInfo.page2Content.includes('C') || pageLayoutInfo.page2Content === 'C') && (
+                      <>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
+                          본문 해석
+                        </div>
+                        <div className="problem-passage translation" style={{fontSize:'0.8rem !important', lineHeight:1.7, margin:'0.1rem 0', background:'#f1f8e9', borderRadius:'8px', padding:'2rem 1rem', fontFamily:'inherit', color:'#222'}}>
+                          {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
+                        </div>
+                      </>
+                    )}
+
                   </div>
                 </div>
-              </>
+              </div>
+            )}
+
+            {/* 3페이지 */}
+            {pageLayoutInfo.needsThirdPage && (
+              <div className="a4-page-template">
+                <div className="a4-page-header">
+                  <PrintHeaderWork01 />
+                </div>
+                <div className="a4-page-content">
+                  <div className="quiz-content">
+                    {/* A. 문제 제목 + 영어 본문 컨테이너 */}
+                    {(pageLayoutInfo.page3Content.includes('A') || pageLayoutInfo.page3Content === 'A') && (
+                      <>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                          <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 단어가 총 몇 개인지 고르시오.</span>
+                          <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
+                        </div>
+                        <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                          <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
+                        </div>
+                      </>
+                    )}
+
+                    {/* B. 5지선다 선택항목 컨테이너 (정답만 표시) */}
+                    {(pageLayoutInfo.page3Content.includes('B') || pageLayoutInfo.page3Content === 'B') && (
+                      <div className="problem-options" style={{margin:'0.2rem 0'}}>
+                        <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                          {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex + 1}.`} {quiz.options[quiz.answerIndex]}개
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                        </div>
+                        <div style={{fontSize:'0.9rem !important', margin:'0.2rem 0 0 0', fontFamily:'inherit', color:'#1976d2', fontWeight:400}}>
+                          어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* C. 본문해석 제목 + 한글 해석 컨테이너 */}
+                    {(pageLayoutInfo.page3Content.includes('C') || pageLayoutInfo.page3Content === 'C') && (
+                      <>
+                        <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
+                          본문 해석
+                        </div>
+                        <div className="problem-passage translation" style={{fontSize:'0.8rem !important', lineHeight:1.7, margin:'0.1rem 0', background:'#f1f8e9', borderRadius:'8px', padding:'2rem 1rem', fontFamily:'inherit', color:'#222'}}>
+                          {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
+                        </div>
+                      </>
+                    )}
+
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
