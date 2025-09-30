@@ -8,26 +8,48 @@ import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPo
 import { useAuth } from '../../../contexts/AuthContext';
 import '../../../styles/PrintFormat.css';
 
-// A4 페이지 설정 상수 (px 단위)
+// A4 페이지 설정 상수 (실제 A4 크기 기준, px 단위)
 const A4_CONFIG = {
-  PAGE_HEIGHT: 1123, // px (29.7cm * 37.8px/cm)
-  HEADER_HEIGHT: 19, // px (0.5cm * 37.8px/cm)
-  CONTENT_MARGIN: 38, // px (1.0cm * 37.8px/cm)
-  INSTRUCTION_HEIGHT: 30, // px (0.8cm * 37.8px/cm)
-  INSTRUCTION_MARGIN: 11, // px (0.3cm * 37.8px/cm)
-  TRANSLATION_HEADER_HEIGHT: 30, // px (0.8cm * 37.8px/cm)
-  TRANSLATION_HEADER_MARGIN: 11, // px (0.3cm * 37.8px/cm)
-  OPTIONS_HEADER_HEIGHT: 30, // px (0.8cm * 37.8px/cm)
-  OPTIONS_HEADER_MARGIN: 11, // px (0.3cm * 37.8px/cm)
+  // 실제 A4 크기: 210mm × 297mm = 794px × 1123px (96 DPI)
+  PAGE_WIDTH: 794,          // px (210mm * 3.78px/mm)
+  PAGE_HEIGHT: 1123,        // px (297mm * 3.78px/mm)
+  
+  // 인쇄 여백 (실제 인쇄 시 표준 여백)
+  TOP_MARGIN: 25,           // px (6.6mm)
+  BOTTOM_MARGIN: 25,        // px (6.6mm)
+  LEFT_MARGIN: 20,          // px (5.3mm)
+  RIGHT_MARGIN: 20,         // px (5.3mm)
+  
+  // 헤더/푸터 영역
+  HEADER_HEIGHT: 30,        // px (8mm)
+  FOOTER_HEIGHT: 20,        // px (5.3mm)
+  
+  // 콘텐츠 영역 계산
+  CONTENT_WIDTH: 754,       // px (794 - 20 - 20)
+  CONTENT_HEIGHT: 1048,     // px (1123 - 25 - 25 - 30 - 20)
+  
+  // 섹션별 높이 설정
+  INSTRUCTION_HEIGHT: 30,   // px
+  INSTRUCTION_MARGIN: 11,   // px
+  TRANSLATION_HEADER_HEIGHT: 30,  // px
+  TRANSLATION_HEADER_MARGIN: 11,  // px
+  OPTIONS_HEADER_HEIGHT: 30,      // px
+  OPTIONS_HEADER_MARGIN: 11,      // px
 };
 
-// 텍스트 높이 계산 함수 (px 단위)
+// 텍스트 높이 계산 함수 (실제 A4 크기 기준, px 단위) - 정확한 계산
 function calculateContainerHeight(text: string, padding: number = 38, fontSize: number = 16, lineHeight: number = 1.7): number {
-  // A4 너비 21cm - 좌우 여백 3cm = 18cm = 680px
-  const availableWidthPx = 680; // px
-  const charWidthPx = fontSize * 0.55; // px 단위 문자 폭
+  // 실제 A4 콘텐츠 너비 사용 (754px - 좌우 패딩 40px = 714px)
+  const availableWidthPx = A4_CONFIG.CONTENT_WIDTH - 40; // px
+  
+  // 더 정확한 문자 폭 계산 (영어: 0.6, 한글: 1.0, 혼합: 0.7)
+  const hasKorean = /[가-힣]/.test(text);
+  const charWidthPx = hasKorean ? fontSize * 0.7 : fontSize * 0.6;
+  
   const charsPerLine = Math.floor(availableWidthPx / charWidthPx);
   const lines = Math.ceil(text.length / charsPerLine);
+  
+  // 기본 패딩만 사용 (추가 여백 제거)
   return (lines * fontSize * lineHeight) + padding; // px 단위로 반환
 }
 
@@ -130,36 +152,37 @@ const Work_03_VocabularyWord: React.FC = () => {
     }
   }, [quiz]);
 
-  // 페이지 분할 계산 함수
+  // 페이지 분할 계산 함수 (실제 A4 크기 기준)
   const calculatePageLayout = () => {
     if (!quiz || !translatedText) return;
 
-    // A4 페이지의 헤더를 제외한 배치 가능한 공간 계산
-    const availableHeight = A4_CONFIG.PAGE_HEIGHT - A4_CONFIG.HEADER_HEIGHT - A4_CONFIG.CONTENT_MARGIN;
+    // 실제 A4 콘텐츠 영역 높이 사용
+    const availableHeight = A4_CONFIG.CONTENT_HEIGHT; // 1048px
     
-    // A. 문제 제목 컨테이너 + 영어 본문 컨테이너 높이
-    const problemTitleHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN;
-    const englishPassageHeight = calculateContainerHeight(quiz.blankedText, 38, 16, 1.7);
-    const sectionAHeight = problemTitleHeight + englishPassageHeight;
+    // A. 문제 제목 컨테이너 + 영어 본문 컨테이너 높이 (여백 최적화)
+    const problemTitleHeight = A4_CONFIG.INSTRUCTION_HEIGHT; // 제목 높이만
+    const englishPassageHeight = calculateContainerHeight(quiz.blankedText, 38, 16, 1.7); // 본문 높이
+    const sectionAHeight = problemTitleHeight + englishPassageHeight; // 제목과 본문 사이 여백은 calculateContainerHeight 내부 패딩으로 처리
     
-    // B. 4지선다 선택항목 컨테이너 높이
-    const optionsHeaderHeight = A4_CONFIG.OPTIONS_HEADER_HEIGHT + A4_CONFIG.OPTIONS_HEADER_MARGIN;
+    // B. 4지선다 선택항목 컨테이너 높이 (여백 최적화)
+    const optionsHeaderHeight = A4_CONFIG.OPTIONS_HEADER_HEIGHT; // 제목 높이만
     let optionsHeight = 0;
     quiz.options.forEach(option => {
       optionsHeight += calculateContainerHeight(`${option} (정답)`, 11, 16, 1.3);
     });
-    const sectionBHeight = optionsHeaderHeight + optionsHeight;
+    const sectionBHeight = optionsHeaderHeight + optionsHeight; // 제목과 선택지 사이 여백은 calculateContainerHeight 내부 패딩으로 처리
     
-    // C. 본문해석 제목 컨테이너 + 한글 해석 컨테이너 높이
-    const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT + A4_CONFIG.TRANSLATION_HEADER_MARGIN;
-    const translationHeight = calculateContainerHeight(translatedText, 38, 16, 1.7);
-    const sectionCHeight = translationHeaderHeight + translationHeight;
+    // C. 본문해석 제목 컨테이너 + 한글 해석 컨테이너 높이 (여백 최적화)
+    const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT; // 제목 높이만
+    const translationHeight = calculateContainerHeight(translatedText, 38, 16, 1.7); // 해석 높이
+    const sectionCHeight = translationHeaderHeight + translationHeight; // 제목과 해석 사이 여백은 calculateContainerHeight 내부 패딩으로 처리
     
-    // 여유 공간 설정 (보수적인 안전 마진)
-    const safetyMargin = 76; // px (2.0cm * 37.8px/cm)
+    // 안전 마진 적용 (실제 A4 기준 적절한 여백)
+    const safetyMargin = 50; // px (실제 A4 기준 적절한 여백)
     const effectiveAvailableHeight = availableHeight - safetyMargin;
+    // 1048 - 50 = 998px
     
-    console.log('📏 유형#03 동적 페이지 분할 계산:', {
+    console.log('📏 유형#03 동적 페이지 분할 계산 (실제 A4 크기 기준):', {
       availableHeight: availableHeight.toFixed(2) + 'px',
       sectionAHeight: sectionAHeight.toFixed(2) + 'px',
       sectionBHeight: sectionBHeight.toFixed(2) + 'px',
@@ -167,14 +190,36 @@ const Work_03_VocabularyWord: React.FC = () => {
       totalHeight: (sectionAHeight + sectionBHeight + sectionCHeight).toFixed(2) + 'px',
       effectiveAvailableHeight: effectiveAvailableHeight.toFixed(2) + 'px',
       quizTextLength: quiz.blankedText.length,
-      translationTextLength: translatedText.length
+      translationTextLength: translatedText.length,
+      // 상세 계산 정보
+      problemTitleHeight: problemTitleHeight.toFixed(2) + 'px',
+      englishPassageHeight: englishPassageHeight.toFixed(2) + 'px',
+      optionsHeaderHeight: optionsHeaderHeight.toFixed(2) + 'px',
+      optionsHeight: optionsHeight.toFixed(2) + 'px',
+      translationHeaderHeight: translationHeaderHeight.toFixed(2) + 'px',
+      translationHeight: translationHeight.toFixed(2) + 'px'
+    });
+
+    // 실제 A4 크기 기준 검증
+    console.log('🔍 실제 A4 크기 기준 계산:', {
+      A4_SIZE: '210mm × 297mm = 794px × 1123px (96 DPI)',
+      CONTENT_AREA: A4_CONFIG.CONTENT_WIDTH + 'px × ' + A4_CONFIG.CONTENT_HEIGHT + 'px',
+      TOP_MARGIN: A4_CONFIG.TOP_MARGIN + 'px',
+      BOTTOM_MARGIN: A4_CONFIG.BOTTOM_MARGIN + 'px',
+      LEFT_MARGIN: A4_CONFIG.LEFT_MARGIN + 'px',
+      RIGHT_MARGIN: A4_CONFIG.RIGHT_MARGIN + 'px',
+      HEADER_HEIGHT: A4_CONFIG.HEADER_HEIGHT + 'px',
+      FOOTER_HEIGHT: A4_CONFIG.FOOTER_HEIGHT + 'px',
+      availableHeight: availableHeight + 'px',
+      safetyMargin: safetyMargin + 'px',
+      effectiveAvailableHeight: effectiveAvailableHeight + 'px'
     });
     
-    // 페이지 분할 로직
+    // 페이지 분할 로직 (실제 A4 크기 기준)
     const totalHeight = sectionAHeight + sectionBHeight + sectionCHeight;
     
     if (totalHeight <= effectiveAvailableHeight) {
-      // A+B+C ≤ 1000 → 1페이지에 A,B,C 모두 포함
+      // A+B+C ≤ 998px → 1페이지에 A,B,C 모두 포함
       setPageLayoutInfo({
         needsSecondPage: false,
         needsThirdPage: false,
@@ -183,7 +228,7 @@ const Work_03_VocabularyWord: React.FC = () => {
         page3Content: ''
       });
     } else if (sectionAHeight + sectionBHeight <= effectiveAvailableHeight) {
-      // A+B+C > 1000, A+B ≤ 1000 → 1페이지 A+B 포함, 2페이지에 C 포함
+      // A+B+C > 998px, A+B ≤ 998px → 1페이지 A+B 포함, 2페이지에 C 포함
       if (sectionCHeight <= effectiveAvailableHeight) {
         // C가 한 페이지에 들어갈 수 있음
         setPageLayoutInfo({
@@ -204,7 +249,7 @@ const Work_03_VocabularyWord: React.FC = () => {
         });
       }
     } else if (sectionAHeight <= effectiveAvailableHeight) {
-      // A+B+C > 1000, A+B > 1000, A ≤ 1000 → 1페이지에 A포함, 2페이지에 B+C포함
+      // A+B+C > 998px, A+B > 998px, A ≤ 998px → 1페이지에 A포함, 2페이지에 B+C포함
       if (sectionBHeight + sectionCHeight <= effectiveAvailableHeight) {
         // B+C가 한 페이지에 들어갈 수 있음
         setPageLayoutInfo({
@@ -225,7 +270,7 @@ const Work_03_VocabularyWord: React.FC = () => {
         });
       }
     } else {
-      // A+B+C > 1000, A+B > 1000, A > 1000 → 1페이지에 A포함, B+C > 1000 → 2페이지에 B포함 그리고 3페이지에 C포함
+      // A+B+C > 998px, A+B > 998px, A > 998px → 1페이지에 A포함, 2페이지에 B포함, 3페이지에 C포함
       setPageLayoutInfo({
         needsSecondPage: true,
         needsThirdPage: true,
@@ -894,11 +939,11 @@ ${englishText}`;
                   {/* A. 문제 제목 컨테이너 + 영어 본문 컨테이너 */}
                   {(pageLayoutInfo.page1Content.includes('A') || pageLayoutInfo.page1Content === 'A') && (
                     <>
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                         <span>다음 빈칸에 들어갈 단어로 가장 적절한 것을 고르시오.</span>
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
                       </div>
-                      <div className="print-passage-container" style={{marginTop:'0.9rem', marginBottom:'1.5rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div className="print-passage-container" style={{marginTop:'0.3rem', marginBottom:'0.8rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {displayBlankedText}
                       </div>
                     </>
@@ -906,9 +951,9 @@ ${englishText}`;
                   
                   {/* B. 4지선다 선택항목 컨테이너 */}
                   {(pageLayoutInfo.page1Content.includes('B') || pageLayoutInfo.page1Content === 'B') && (
-                    <div className="problem-options" style={{marginTop:'0', marginBottom:'1rem'}}>
+                    <div className="problem-options" style={{marginTop:'0', marginBottom:'0.5rem'}}>
                       {quiz.options.map((opt, i) => (
-                        <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                        <div key={i} style={{fontSize:'1rem !important', margin:'0.2rem 0', fontFamily:'inherit', color:'#222'}}>
                           {`①②③④⑤`[i] || `${i+1}.`} {opt}
                           {quiz.answerIndex === i && (
                             <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
@@ -921,10 +966,10 @@ ${englishText}`;
                   {/* C. 본문해석 제목 컨테이너 + 한글 해석 컨테이너 */}
                   {(pageLayoutInfo.page1Content.includes('C') || pageLayoutInfo.page1Content === 'C') && (
                     <>
-                      <div className="problem-instruction-copy" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', border:'2px solid #333', marginTop:'1.2rem', marginBottom:'1.2rem', display:'flex', justifyContent:'flex-start', alignItems:'center', width:'100%', boxSizing:'border-box', marginLeft:'0', marginRight:'0'}}>
+                      <div className="problem-instruction-copy" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', border:'2px solid #333', marginTop:'0.5rem', marginBottom:'0.5rem', display:'flex', justifyContent:'flex-start', alignItems:'center', width:'100%', boxSizing:'border-box', marginLeft:'0', marginRight:'0'}}>
                         <span>본문 해석</span>
                       </div>
-                      <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'1.2rem'}}>
+                      <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'0.5rem'}}>
                         {translatedText}
                       </div>
                     </>
@@ -943,9 +988,9 @@ ${englishText}`;
                   <div className="quiz-content">
                     {/* B. 4지선다 선택항목 컨테이너 */}
                     {(pageLayoutInfo.page2Content.includes('B') || pageLayoutInfo.page2Content === 'B') && (
-                      <div className="problem-options" style={{marginTop:'0', marginBottom:'1rem'}}>
+                      <div className="problem-options" style={{marginTop:'0', marginBottom:'0.5rem'}}>
                         {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                          <div key={i} style={{fontSize:'1rem !important', margin:'0.2rem 0', fontFamily:'inherit', color:'#222'}}>
                             {`①②③④⑤`[i] || `${i+1}.`} {opt}
                             {quiz.answerIndex === i && (
                               <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
@@ -958,10 +1003,10 @@ ${englishText}`;
                     {/* C. 본문해석 제목 컨테이너 + 한글 해석 컨테이너 */}
                     {(pageLayoutInfo.page2Content.includes('C') || pageLayoutInfo.page2Content === 'C') && (
                       <>
-                        <div className="problem-instruction-copy" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', border:'2px solid #333', marginTop:'1.2rem', marginBottom:'1.2rem', display:'flex', justifyContent:'flex-start', alignItems:'center', width:'100%', boxSizing:'border-box', marginLeft:'0', marginRight:'0'}}>
+                        <div className="problem-instruction-copy" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', border:'2px solid #333', marginTop:'0.5rem', marginBottom:'0.5rem', display:'flex', justifyContent:'flex-start', alignItems:'center', width:'100%', boxSizing:'border-box', marginLeft:'0', marginRight:'0'}}>
                           <span>본문 해석</span>
                         </div>
-                        <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'1.2rem'}}>
+                        <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'0.5rem'}}>
                           {pageLayoutInfo.page2Content === 'C-part1' ? 
                             translatedText.substring(0, Math.floor(translatedText.length / 2)) : 
                             translatedText
@@ -985,10 +1030,10 @@ ${englishText}`;
                     {/* C. 본문해석 제목 컨테이너 + 한글 해석 컨테이너 */}
                     {(pageLayoutInfo.page3Content.includes('C') || pageLayoutInfo.page3Content === 'C') && (
                       <>
-                        <div className="problem-instruction-copy" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', border:'2px solid #333', marginTop:'1.2rem', marginBottom:'1.2rem', display:'flex', justifyContent:'flex-start', alignItems:'center', width:'100%', boxSizing:'border-box', marginLeft:'0', marginRight:'0'}}>
+                        <div className="problem-instruction-copy" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', border:'2px solid #333', marginTop:'0.5rem', marginBottom:'0.5rem', display:'flex', justifyContent:'flex-start', alignItems:'center', width:'100%', boxSizing:'border-box', marginLeft:'0', marginRight:'0'}}>
                           <span>본문 해석</span>
                         </div>
-                        <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'1.2rem'}}>
+                        <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'0.5rem'}}>
                           {pageLayoutInfo.page3Content === 'C-part2' ? 
                             translatedText.substring(Math.floor(translatedText.length / 2)) : 
                             translatedText

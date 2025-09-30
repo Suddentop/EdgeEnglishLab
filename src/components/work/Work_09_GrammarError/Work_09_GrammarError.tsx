@@ -114,7 +114,7 @@ const Work_09_GrammarError: React.FC = () => {
     if (!quiz) return;
 
     const availableHeight = A4_CONFIG.CONTENT_HEIGHT;
-    const safetyMargin = 50;
+    const safetyMargin = 100; // 보수적 여백으로 증가
     const effectiveAvailableHeight = availableHeight - safetyMargin;
 
     // A. 문제 제목 + 영어 본문 컨테이너

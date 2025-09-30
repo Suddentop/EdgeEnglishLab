@@ -1,0 +1,41 @@
+# React Router 지원 (SPA 라우팅) - 수정된 버전
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # API 프록시 파일은 직접 접근 허용
+    RewriteCond %{REQUEST_URI} !^/(api-proxy\.php|secure-api-proxy\.php|test-api\.php)$
+    
+    # 정적 파일이 아닌 경우 index.html로 리다이렉트
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.html [L]
+</IfModule>
+
+# CORS 설정 (API 프록시용)
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "https://edgeenglish.net"
+    Header always set Access-Control-Allow-Methods "POST, GET, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+</IfModule>
+
+# 보안 설정
+<Files "config.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files ".env*">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "api_logs.txt">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "rate_limit.json">
+    Order Allow,Deny
+    Deny from all
+</Files>

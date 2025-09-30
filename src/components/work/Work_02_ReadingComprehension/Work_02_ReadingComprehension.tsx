@@ -76,15 +76,18 @@ const Work_02_ReadingComprehension: React.FC = () => {
     setIsCalculatingLayout(true);
     
     try {
-      // A4 페이지 크기 (인쇄용) - 더 정확한 계산
-      const A4_WIDTH = 21; // cm
-      const A4_HEIGHT = 29.7; // cm
-      const MARGIN = 1.5; // cm (상하좌우) - 여백 줄임
-      const HEADER_HEIGHT = 1.5; // cm (헤더 높이) - 헤더 높이 줄임
+      // A4 페이지 크기 (실제 A4 크기 기준, px 단위)
+      const A4_WIDTH = 794; // px (210mm * 3.78px/mm)
+      const A4_HEIGHT = 1123; // px (297mm * 3.78px/mm)
+      const TOP_MARGIN = 25; // px (6.6mm)
+      const BOTTOM_MARGIN = 25; // px (6.6mm)
+      const LEFT_MARGIN = 20; // px (5.3mm)
+      const RIGHT_MARGIN = 20; // px (5.3mm)
+      const HEADER_HEIGHT = 30; // px (8mm)
       
-      // cm를 px로 변환 (1cm = 37.8px)
-      const availableWidth = (A4_WIDTH - MARGIN * 2) * 37.8;
-      const availableHeight = (A4_HEIGHT - MARGIN * 2 - HEADER_HEIGHT) * 37.8;
+      // 실제 A4 콘텐츠 영역 계산
+      const availableWidth = A4_WIDTH - LEFT_MARGIN - RIGHT_MARGIN; // 754px
+      const availableHeight = A4_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN - HEADER_HEIGHT; // 1048px
       
       console.log(`📏 A4 페이지 크기: ${availableWidth}px × ${availableHeight}px`);
       
@@ -290,7 +293,7 @@ const Work_02_ReadingComprehension: React.FC = () => {
       const A = firstPageHeight;        // 문제 제목 + 영어 본문
       const B = replacementsHeight;     // 교체된 단어들 제목 + 테이블
       const C = koreanTranslationHeight; // 한글 해석
-      const availableSpace = availableHeight; // 950px
+      const availableSpace = availableHeight; // 1048px (실제 A4 크기 기준)
       
       console.log(`📏 측정된 높이:`);
       console.log(`- A (문제+본문): ${A}px`);
@@ -306,25 +309,25 @@ const Work_02_ReadingComprehension: React.FC = () => {
       console.log(`- B + C = ${B} + ${C} = ${B + C}px`);
       
       if (totalHeight <= availableSpace) {
-        // A+B+C ≤ 950 → 1페이지
+        // A+B+C ≤ 1048px → 1페이지
         needsSecondPage = false;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(true);
         console.log('✅ 1페이지: A+B+C 모두 1페이지에 들어갑니다');
       } else if (A + B <= availableSpace) {
-        // A+B+C > 950, A+B ≤ 950 → 1페이지(A+B), 2페이지(C)
+        // A+B+C > 1048px, A+B ≤ 1048px → 1페이지(A+B), 2페이지(C)
         needsSecondPage = true;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(true);
         console.log('✅ 2페이지: 1페이지(A+B), 2페이지(C)');
       } else if (A <= availableSpace && B + C <= availableSpace) {
-        // A+B+C > 950, A+B > 950, A ≤ 950, B+C ≤ 950 → 1페이지(A), 2페이지(B+C)
+        // A+B+C > 1048px, A+B > 1048px, A ≤ 1048px, B+C ≤ 1048px → 1페이지(A), 2페이지(B+C)
         needsSecondPage = true;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(false);
         console.log('✅ 2페이지: 1페이지(A), 2페이지(B+C)');
       } else {
-        // A+B+C > 950, A+B > 950, A > 950 또는 B+C > 950 → 1페이지(A), 2페이지(B), 3페이지(C)
+        // A+B+C > 1048px, A+B > 1048px, A > 1048px 또는 B+C > 1048px → 1페이지(A), 2페이지(B), 3페이지(C)
         needsSecondPage = true;
         needsThirdPage = true;
         setFirstPageIncludesReplacements(false);

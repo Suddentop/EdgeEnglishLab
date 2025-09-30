@@ -1,4 +1,5 @@
 // Work13 (빈칸 채우기 단어) 관련 AI 서비스 함수들
+import { openAIProxyService } from './openaiProxyService';
 
 export interface BlankFillItem {
   blankedText: string;
@@ -14,129 +15,62 @@ export interface Work_13_BlankFillWordData {
   items: BlankFillItem[];
 }
 
-// 문장 분할 함수 (개선된 버전)
-export const splitSentences = (text: string): string[] => {
-  // 1. 먼저 문장 끝 구분자로 분할
-  let sentences = text
-    .split(/(?<=[.!?])\s+/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+// 문장을 분할하는 함수
+const splitSentences = (text: string): string[] => {
+  // 기본 문장 분할 (마침표, 느낌표, 물음표 기준)
+  let sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 0);
   
-  // 2. 문장이 너무 적으면 다른 방법으로 분할 시도
   if (sentences.length < 2) {
-    // 마침표로만 분할
-    sentences = text
-      .split(/\.\s+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
+    // 세미콜론으로도 분할 시도
+    sentences = text.split(';').map(s => s.trim()).filter(s => s.length > 0);
   }
   
-  // 3. 여전히 문장이 적으면 세미콜론으로도 분할
   if (sentences.length < 2) {
-    const semicolonSplit = text
-      .split(/;\s+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-    
-    if (semicolonSplit.length > sentences.length) {
-      sentences = semicolonSplit;
-    }
+    // 문장이 부족하면 전체 텍스트를 하나의 문장으로 처리
+    return [text.trim()];
   }
-  
-  // 4. 각 문장의 끝에 마침표가 없으면 추가
-  sentences = sentences.map(sentence => {
+
+  // 세미콜론 분할이 더 많은 문장을 만들었다면 사용
+  const semicolonSplit = text.split(';').map(s => s.trim()).filter(s => s.length > 0);
+  if (semicolonSplit.length > sentences.length) {
+    sentences = semicolonSplit;
+  }
+
+  // 각 문장이 마침표로 끝나지 않으면 마침표 추가
+  return sentences.map(sentence => {
     if (!sentence.match(/[.!?]$/)) {
       return sentence + '.';
     }
     return sentence;
   });
-  
-  console.log('문장 분할 결과:', {
-    원본텍스트: text.substring(0, 100) + '...',
-    분할된문장수: sentences.length,
-    문장들: sentences.map((s, i) => `${i+1}. ${s.substring(0, 50)}...`)
-  });
-  
-  return sentences;
 };
 
-// 문장의 단어 수 계산
-export const countWordsInSentence = (sentence: string): number => {
+// 문장의 단어 수를 계산하는 함수
+const countWordsInSentence = (sentence: string): number => {
   return sentence.trim().split(/\s+/).filter(word => word.length > 0).length;
 };
 
-// 유효한 문장 필터링
-export const filterValidSentences = (sentences: string[]): { 
-  validSentences: string[], 
-  skippedSentences: string[] 
-} => {
+// 유효한 문장들을 필터링하는 함수
+const filterValidSentences = (sentences: string[]) => {
   const validSentences: string[] = [];
   const skippedSentences: string[] = [];
   
-  for (const sentence of sentences) {
+  sentences.forEach(sentence => {
     const wordCount = countWordsInSentence(sentence);
-    
-    // 5-50단어 사이의 문장만 유효
     if (wordCount >= 5 && wordCount <= 50) {
       validSentences.push(sentence);
     } else {
       skippedSentences.push(sentence);
     }
-  }
+  });
   
   return { validSentences, skippedSentences };
 };
 
-// 이미지 → 텍스트 (OpenAI Vision API)
-export const imageToTextWithOpenAIVision = async (imageFile: File): Promise<string> => {
-  const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-  
-  const base64 = await fileToBase64(imageFile);
-  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-  
-  const prompt = `영어문제로 사용되는 본문이야.
-이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
-글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
-본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
-원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
-영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'user', content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: base64 } }
-          ]
-        }
-      ],
-      max_tokens: 2048
-    })
-  });
-  
-  const data = await response.json();
-  return data.choices[0].message.content.trim();
-};
-
 // OpenAI API를 사용하여 영어를 한글로 번역
-export const translateToKorean = async (englishText: string, apiKey: string): Promise<string> => {
+export const translateToKorean = async (englishText: string): Promise<string> => {
   try {
     console.log('🌐 번역 시작:', englishText.substring(0, 50) + '...');
-    
-    if (!apiKey) {
-      throw new Error('API 키가 설정되지 않았습니다.');
-    }
 
     const prompt = `다음 영어 본문을 자연스러운 한국어로 번역하세요.
 
@@ -149,36 +83,23 @@ export const translateToKorean = async (englishText: string, apiKey: string): Pr
 
 ${englishText}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const request = {
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
-          { role: 'user', content: prompt }
+          { role: 'system' as const, content: 'You are a helpful assistant that provides natural Korean translations.' },
+          { role: 'user' as const, content: prompt }
         ],
         temperature: 0.3,
         max_tokens: 800,
-      }),
-    });
+    };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ API 오류:', response.status, errorText);
-      throw new Error(`API 호출 실패: ${response.status}`);
-    }
-    
-    const data = await response.json();
+    const data = await openAIProxyService.callOpenAI(request);
     console.log('✅ 번역 완료');
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       throw new Error('API 응답 형식 오류');
     }
-    
+
     return data.choices[0].message.content.trim();
   } catch (error) {
     console.error('❌ 번역 오류:', error);
@@ -188,7 +109,6 @@ ${englishText}`;
 
 // 본문 → 빈칸 채우기 문제 생성 (AI) - 문장별로 주제어(핵심 의미 단어) 1개씩 선택
 export const generateBlankFillQuizWithAI = async (passage: string, retryCount: number = 0): Promise<BlankFillItem> => {
-  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
   
   // 먼저 문장을 분할하고 필터링
   const allSentences = splitSentences(passage);
@@ -214,41 +134,23 @@ ${sentenceList}
 **작업 방법:**
 1. 문장 1을 읽고 → 핵심 단어 1개 선택
 2. 문장 2를 읽고 → 핵심 단어 1개 선택
-3. 문장 3을 읽고 → 핵심 단어 1개 선택
-4. ... (모든 ${validSentences.length}개 문장에 대해 반복)
+3. ... 모든 문장 처리
 
-**단어 선택 기준:**
-- 문장의 핵심 의미를 나타내는 단어 (명사, 동사, 형용사)
-- 관사(a, an, the), 전치사(in, on, at), 접속사(and, or, but)는 피하세요
-- 각 문장에서 정확히 1개씩만 선택하세요
-
-**출력 형식 (JSON만):**
-{
-  "blankedText": "빈칸이 포함된 전체 본문",
-  "correctAnswers": ["단어1", "단어2", "단어3", ...]
-}
-
-**중요:**
-- 정확히 ${validSentences.length}개 단어를 선택해야 합니다
-- 모든 문장에서 1개씩 선택하세요 (건너뛰지 마세요)
-- JSON 형식으로만 응답하세요
+**중요 규칙:**
+- 각 문장에서 정확히 1개씩만 선택
+- 모든 문장을 처리 (건너뛰지 않음)
+- JSON 형식으로만 응답
 
 입력된 영어 본문:
 ${passage}`;
   
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { 
-            role: 'system', 
-            content: `You are an expert English teacher creating blank-fill problems.
+    const request = {
+      model: 'gpt-4o',
+      messages: [
+        { 
+          role: 'system' as const, 
+          content: `You are an expert English teacher creating blank-fill problems.
 
 CRITICAL RULES:
 1. You will receive ${validSentences.length} sentences
@@ -270,19 +172,14 @@ Return JSON only:
 }
 
 Remember: ${validSentences.length} sentences = exactly ${validSentences.length} words!` 
-          },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 2000,
-        temperature: 0.01
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API 호출 실패: ${response.status}`);
-    }
-    
-    const data = await response.json();
+        },
+        { role: 'user' as const, content: prompt }
+      ],
+      max_tokens: 2000,
+      temperature: 0.01
+    };
+
+    const data = await openAIProxyService.callOpenAI(request);
     console.log('AI 응답 전체:', data);
     console.log('AI 응답 내용:', data.choices[0].message.content);
     
@@ -310,43 +207,21 @@ Remember: ${validSentences.length} sentences = exactly ${validSentences.length} 
     console.log('문장 수 검증:', {
       validSentencesCount: validSentences.length,
       selectedWordsCount: selectedWordsCount,
-      validSentences: validSentences.map(s => s.substring(0, 50) + '...')
+      일치여부: validSentences.length === selectedWordsCount
     });
     
-    // 1단계: 개수 검증 (개선된 버전)
-    console.log('🔢 1단계: 개수 검증');
-    console.log('문장별 상세 정보:', validSentences.map((sentence, index) => ({
-      문장번호: index + 1,
-      문장내용: sentence.substring(0, 80) + (sentence.length > 80 ? '...' : ''),
-      단어수: countWordsInSentence(sentence)
-    })));
-    
     if (validSentences.length !== selectedWordsCount) {
-      console.error('❌ 개수 불일치 상세:', {
-        유효문장수: validSentences.length,
-        선택된단어수: selectedWordsCount,
-        차이: validSentences.length - selectedWordsCount,
-        비율: `${selectedWordsCount}/${validSentences.length} (${Math.round(selectedWordsCount/validSentences.length*100)}%)`,
-        선택된단어들: result.correctAnswers,
-        문장목록: validSentences.map((s, i) => `${i+1}. ${s.substring(0, 50)}...`)
-      });
+      console.warn(`⚠️ 문장 수 불일치: ${validSentences.length}개 문장에서 ${selectedWordsCount}개 단어 선택됨`);
       
-      // 재시도 로직 (최대 3회로 증가)
       if (retryCount < 3) {
-        console.log(`🔄 재시도 ${retryCount + 1}/3 - 문장별 단어 선택 강화로 재시도`);
+        console.log(`🔄 재시도 ${retryCount + 1}/3...`);
         
-        // 재시도 시 더 간단한 프롬프트 사용
-        const retryPrompt = `다음 ${validSentences.length}개 문장에서 각 문장마다 핵심 단어 1개씩을 선택하세요.
+        const retryPrompt = `다시 시도: 다음 ${validSentences.length}개 문장에서 각 문장마다 정확히 1개씩 단어를 선택하세요.
 
 문장 목록:
-${validSentences.map((sentence, index) => `${index + 1}. "${sentence}"`).join('\n')}
+${validSentences.map((s, i) => `${i+1}. ${s}`).join('\n')}
 
-규칙:
-- 각 문장에서 정확히 1개씩 선택
-- 총 ${validSentences.length}개 단어 선택
-- JSON 형식으로 응답
-
-출력 형식:
+JSON 형식으로 응답:
 {
   "blankedText": "빈칸이 포함된 전체 본문",
   "correctAnswers": ["단어1", "단어2", ...]
@@ -356,45 +231,34 @@ ${validSentences.map((sentence, index) => `${index + 1}. "${sentence}"`).join('\
 ${passage}`;
 
         // 재시도용 간단한 프롬프트로 다시 시도
-        const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              { 
-                role: 'system', 
-                content: `You are an expert English teacher. Select exactly ONE word from each sentence. Process all ${validSentences.length} sentences. Return JSON format only.`
-              },
-              { role: 'user', content: retryPrompt }
-            ],
-            max_tokens: 2000,
-            temperature: 0.01
-          })
-        });
-        
-        if (retryResponse.ok) {
-          const retryData = await retryResponse.json();
-          const retryJsonMatch = retryData.choices[0].message.content.match(/\{[\s\S]*\}/);
-          if (retryJsonMatch) {
-            try {
-              const retryResult = JSON.parse(retryJsonMatch[0]);
-              if (retryResult.blankedText && retryResult.correctAnswers && 
-                  Array.isArray(retryResult.correctAnswers) && 
-                  retryResult.correctAnswers.length === validSentences.length) {
-                console.log('✅ 재시도 성공 - 모든 문장에서 단어 선택 완료');
-                result = retryResult;
-              } else {
-                throw new Error('재시도 결과가 유효하지 않습니다.');
-              }
-            } catch (retryError) {
-              console.error('재시도 JSON 파싱 오류:', retryError);
-              return generateBlankFillQuizWithAI(passage, retryCount + 1);
+        const retryRequest = {
+          model: 'gpt-4o',
+          messages: [
+            { 
+              role: 'system' as const, 
+              content: `You are an expert English teacher. Select exactly ONE word from each sentence. Process all ${validSentences.length} sentences. Return JSON format only.`
+            },
+            { role: 'user' as const, content: retryPrompt }
+          ],
+          max_tokens: 2000,
+          temperature: 0.01
+        };
+
+        const retryData = await openAIProxyService.callOpenAI(retryRequest);
+        const retryJsonMatch = retryData.choices[0].message.content.match(/\{[\s\S]*\}/);
+        if (retryJsonMatch) {
+          try {
+            const retryResult = JSON.parse(retryJsonMatch[0]);
+            if (retryResult.blankedText && retryResult.correctAnswers && 
+                Array.isArray(retryResult.correctAnswers) && 
+                retryResult.correctAnswers.length === validSentences.length) {
+              console.log('✅ 재시도 성공 - 모든 문장에서 단어 선택 완료');
+              result = retryResult;
+            } else {
+              throw new Error('재시도 결과가 유효하지 않습니다.');
             }
-          } else {
+          } catch (retryError) {
+            console.error('재시도 JSON 파싱 오류:', retryError);
             return generateBlankFillQuizWithAI(passage, retryCount + 1);
           }
         } else {
@@ -412,162 +276,104 @@ ${passage}`;
       }
     }
   
-     // 2단계: 문장별 단어 매핑 검증 (개선된 버전)
-     console.log('🔍 2단계: 문장별 단어 매핑 검증');
-     const selectedWords = result.correctAnswers;
-     
-     // 각 문장에 대해 선택된 단어 중 하나가 있는지 확인 (더 유연한 검색)
-     const sentenceWordMapping: { 
-       sentenceIndex: number, 
-       sentence: string, 
-       matchedWord?: string,
-       allWordsInSentence: string[],
-       searchResults: { word: string, found: boolean }[]
-     }[] = [];
-     
-     for (let i = 0; i < validSentences.length; i++) {
-       const sentence = validSentences[i];
-       const sentenceWords = sentence.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-       const searchResults: { word: string, found: boolean }[] = [];
-       let matchedWord: string | undefined;
-       
-       // 선택된 단어들을 이 문장에서 검색 (더 유연한 매칭)
-       for (const selectedWord of selectedWords) {
-         const selectedWordLower = selectedWord.toLowerCase().trim();
-         const found = sentenceWords.some(word => {
-           const wordClean = word.replace(/[.,!?;:]/g, '').toLowerCase();
-           return wordClean === selectedWordLower || 
-                  wordClean.includes(selectedWordLower) || 
-                  selectedWordLower.includes(wordClean);
-         });
-         searchResults.push({ word: selectedWord, found });
-         
-         if (found && !matchedWord) {
-           matchedWord = selectedWord;
-         }
-       }
-       
-       sentenceWordMapping.push({
-         sentenceIndex: i + 1,
-         sentence: sentence.substring(0, 100) + (sentence.length > 100 ? '...' : ''),
-         matchedWord,
-         allWordsInSentence: sentenceWords,
-         searchResults
-       });
-       
-       console.log(`  문장 ${i + 1}: ${matchedWord ? '✅' : '❌'} ${matchedWord ? `"${matchedWord}"` : '단어 없음'}`);
-       if (!matchedWord) {
-         console.log(`    문장의 단어들: [${sentenceWords.slice(0, 10).join(', ')}${sentenceWords.length > 10 ? '...' : ''}]`);
-         console.log(`    선택된 단어들: [${selectedWords.join(', ')}]`);
-       }
-     }
-     
-     const missingSentences = sentenceWordMapping.filter(item => !item.matchedWord);
-     
-     if (missingSentences.length > 0) {
-       console.error('❌ 문장별 단어 매핑 실패 상세:');
-       missingSentences.forEach(item => {
-         console.error(`  문장 ${item.sentenceIndex}: "${item.sentence}"`);
-         console.error(`    문장의 단어들: [${item.allWordsInSentence.join(', ')}]`);
-         console.error(`    검색 결과:`, item.searchResults);
-       });
-       
-       // 재시도 로직 (최대 3회)
-       if (retryCount < 3) {
-         console.log(`🔄 재시도 ${retryCount + 1}/3 - 문장별 단어 매핑 실패로 재시도`);
-         return generateBlankFillQuizWithAI(passage, retryCount + 1);
-       }
-       
-       const missingDetails = missingSentences.map(item => 
-         `문장 ${item.sentenceIndex}: "${item.sentence.substring(0, 80)}..."`
-       ).join('\n');
-       
-       throw new Error(`AI가 ${missingSentences.length}개 문장에서 단어를 선택하지 않았습니다. 모든 문장에서 단어를 선택해야 합니다. 다시 시도해주세요.\n\n누락된 문장들:\n${missingDetails}`);
-     }
+    // 2단계: 문장별 단어 매핑 검증 (개선된 버전)
+    console.log('🔍 2단계: 문장별 단어 매핑 검증');
+    const selectedWords = result.correctAnswers;
     
-    console.log('✅ 모든 문장에서 단어 선택 완료 - 검증 통과');
-    console.log('🔍 === AI 응답 상세 분석 완료 ===');
+    // 각 문장에 대해 선택된 단어 중 하나가 있는지 확인 (더 유연한 검색)
+    const sentenceWordMapping: { 
+      sentenceIndex: number, 
+      sentence: string, 
+      matchedWord?: string,
+      allWordsInSentence: string[],
+      searchResults: { word: string, found: boolean }[]
+    }[] = [];
     
-    // 각 정답 단어가 본문에 실제로 존재하는지 검증 (대소문자 구분 없이)
-    const correctAnswers = result.correctAnswers;
-    const passageLower = passage.toLowerCase();
-    
-    console.log('검증 정보:', {
-      originalPassage: passage.substring(0, 100) + '...',
-      correctAnswers: correctAnswers,
-      passageLower: passageLower.substring(0, 100) + '...'
-    });
-    
-    // 본문에서 이미 ()로 묶인 단어나 구 추출 (제외할 단어들)
-    const excludedWords: string[] = [];
-    const bracketRegex = /\(([^)]+)\)/g;
-    let match;
-    while ((match = bracketRegex.exec(passage)) !== null) {
-      excludedWords.push(match[1].trim());
+    for (let i = 0; i < validSentences.length; i++) {
+      const sentence = validSentences[i];
+      const sentenceWords = sentence.toLowerCase().split(/\s+/);
+      const searchResults = selectedWords.map((word: string) => ({
+        word,
+        found: sentenceWords.some(sentenceWord => 
+          sentenceWord.includes(word.toLowerCase()) || 
+          word.toLowerCase().includes(sentenceWord)
+        )
+      }));
+      
+      const matchedWord = searchResults.find((sr: { word: string; found: boolean }) => sr.found)?.word;
+      
+      sentenceWordMapping.push({
+        sentenceIndex: i,
+        sentence,
+        matchedWord,
+        allWordsInSentence: sentenceWords,
+        searchResults
+      });
     }
     
-    for (let i = 0; i < correctAnswers.length; i++) {
-      const answerLower = correctAnswers[i].toLowerCase();
+    // 매핑 결과 출력
+    console.log('📊 문장-단어 매핑 결과:');
+    sentenceWordMapping.forEach(mapping => {
+      console.log(`문장 ${mapping.sentenceIndex + 1}: "${mapping.sentence}"`);
+      console.log(`  선택된 단어: ${mapping.matchedWord || '없음'}`);
+      console.log(`  검색 결과:`, mapping.searchResults);
+    });
+    
+    // 매핑되지 않은 문장들 확인
+    const missingSentences = sentenceWordMapping.filter(mapping => !mapping.matchedWord);
+    
+    if (missingSentences.length > 0) {
+      console.warn(`⚠️ ${missingSentences.length}개 문장에서 단어를 찾을 수 없음`);
       
-      if (!passageLower.includes(answerLower)) {
-        // 정확한 단어 경계로 다시 검증
-        const wordBoundaryRegex = new RegExp(`\\b${answerLower}\\b`);
-        if (!wordBoundaryRegex.test(passageLower)) {
-          console.error('정답 단어 검증 실패:', {
-            correctAnswer: correctAnswers[i],
-            passage: passage.substring(0, 200),
-            excludedWords
-          });
-          throw new Error(`정답 단어 "${correctAnswers[i]}"가 본문에 존재하지 않습니다. AI 응답 오류입니다.`);
-        }
+      if (retryCount < 3) {
+        console.log('🔄 매핑 실패로 인한 재시도...');
+        return generateBlankFillQuizWithAI(passage, retryCount + 1);
+      } else {
+        throw new Error(`❌ 매핑 실패: ${missingSentences.length}개 문장에서 선택된 단어를 찾을 수 없습니다.`);
       }
     }
-
-    // 주제어 선정 품질 검증
-    console.log('주제어 선정 품질 검증:', {
-      correctAnswers: correctAnswers,
-      passage: passage.substring(0, 200)
+    
+    // 3단계: 빈칸 본문 검증
+    console.log('🔍 3단계: 빈칸 본문 검증');
+    const originalLower = passage.toLowerCase();
+    const blankedLower = result.blankedText.toLowerCase();
+    
+    // 각 정답이 원본에 존재하는지 확인
+    const allAnswersExist = result.correctAnswers.every((answer: string) => {
+      const answerLower = answer.toLowerCase();
+      const found = originalLower.includes(answerLower);
+      
+      if (!found) {
+        console.warn(`❌ 정답 "${answer}"이 원본에 없음`);
+        
+        // 단어 경계를 고려한 검색 시도
+        const wordBoundaryRegex = new RegExp(`\\b${answerLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+        const wordBoundaryFound = wordBoundaryRegex.test(originalLower);
+        
+        if (!wordBoundaryFound) {
+          console.warn(`❌ 단어 경계 검색으로도 "${answer}"를 찾을 수 없음`);
+          return false;
+        }
+      }
+      
+      return true;
     });
     
-    // 빈칸 본문이 원본 본문과 일치하는지 검증
-    let blankRestore = result.blankedText;
-    for (let i = 0; i < correctAnswers.length; i++) {
-      blankRestore = blankRestore.replace(/\(_{15}\)/, correctAnswers[i]);
+    if (!allAnswersExist) {
+      throw new Error('선택된 단어 중 일부가 원본 본문에 존재하지 않습니다.');
     }
     
-    // 공백과 구두점을 정규화하여 비교
-    const normalizeText = (text: string) => {
-      return text
-        .trim()
-        .replace(/\s+/g, ' ')  // 여러 공백을 하나로
-        .replace(/[.,!?;:]/g, '')  // 구두점 제거
-        .toLowerCase();
-    };
+    // 빈칸 본문이 원본과 일치하는지 확인 (빈칸 부분 제외)
+    const normalizedOriginal = originalLower.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
+    const normalizedBlanked = blankedLower.replace(/\(_______________\)/g, '').replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
     
-    const normalizedOriginal = normalizeText(passage);
-    const normalizedRestored = normalizeText(blankRestore);
-    
-    console.log('빈칸 본문 검증:', {
-      original: normalizedOriginal.substring(0, 100),
-      restored: normalizedRestored.substring(0, 100),
-      blankedText: result.blankedText.substring(0, 100),
-      match: normalizedRestored === normalizedOriginal
-    });
-    
-    if (normalizedRestored !== normalizedOriginal) {
-      console.warn('빈칸 본문 검증 실패 - 상세 정보:', {
-        original: passage.substring(0, 300),
-        blankedText: result.blankedText.substring(0, 300),
-        restored: blankRestore.substring(0, 300),
-        correctAnswers: correctAnswers
-      });
+    if (normalizedBlanked !== normalizedOriginal) {
+      console.warn('⚠️ 빈칸 본문이 원본과 일치하지 않음');
+      console.log('원본:', normalizedOriginal.substring(0, 100));
+      console.log('빈칸:', normalizedBlanked.substring(0, 100));
       
-      // 정답 단어가 본문에 존재하고, 빈칸이 적절히 배치되어 있으면 통과
-      const allAnswersExist = correctAnswers.every((answer: string) => 
-        passageLower.includes(answer.toLowerCase())
-      );
       if (allAnswersExist && result.blankedText.includes('(_______________)')) {
-        console.log('정답 단어가 본문에 존재하고 빈칸이 적절히 배치되어 있어 통과합니다.');
+        console.log('✅ 정답은 모두 존재하고 빈칸 표시도 있음 - 허용');
       } else {
         throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
       }
@@ -575,7 +381,7 @@ ${passage}`;
     
     // 번역은 별도 함수로 처리
     console.log('번역 시작...');
-    const translation = await translateToKorean(passage, apiKey);
+    const translation = await translateToKorean(passage);
     result.translation = translation;
     
     console.log('최종 검증 전 결과:', {
@@ -584,6 +390,7 @@ ${passage}`;
       translation: result.translation
     });
     
+    // 최종 검증
     if (!result.blankedText || !result.correctAnswers || !result.translation) {
       throw new Error('AI 응답에 필수 필드가 누락되었습니다.');
     }
@@ -595,4 +402,40 @@ ${passage}`;
     console.error('AI 문제 생성 오류:', error);
     throw error;
   }
+};
+
+// 이미지를 텍스트로 변환하는 함수 (OpenAI Vision API 사용)
+export const imageToTextWithOpenAIVision = async (imageFile: File): Promise<string> => {
+  const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  
+  const base64 = await fileToBase64(imageFile);
+  
+  const prompt = `영어문제로 사용되는 본문이야.
+이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
+글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
+본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
+원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
+영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
+  
+  const request = {
+    model: 'gpt-4o',
+    messages: [
+      { 
+        role: 'user' as const, 
+        content: [
+          { type: 'text' as const, text: prompt },
+          { type: 'image_url' as const, image_url: { url: base64 } }
+        ]
+      }
+    ],
+    max_tokens: 2048
+  };
+  
+  const data = await openAIProxyService.callOpenAI(request);
+  return data.choices[0].message.content.trim();
 };
