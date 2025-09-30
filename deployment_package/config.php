@@ -6,7 +6,7 @@
 
 // 환경 변수 로드 (서버에서 설정)
 $config = [
-    'OPENAI_API_KEY' => getenv('OPENAI_API_KEY') ?: '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',
+    'OPENAI_API_KEY' => getenv('OPENAI_API_KEY') ?: 'YOUR_OPENAI_API_KEY_HERE',
     'API_RATE_LIMIT' => 300,
     'API_TIMEOUT' => 60,
     'ALLOWED_ORIGINS' => [
