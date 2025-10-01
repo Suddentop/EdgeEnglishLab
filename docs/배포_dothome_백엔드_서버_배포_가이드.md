@@ -10,11 +10,6 @@
 - 보안 강화된 프록시 서버 구축
 - 실시간 모니터링 및 로깅 시스템 구축
 
-### 🔑 사용된 API Key
-```
-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
-```
-
 ## 🏗️ 시스템 아키텍처
 
 ```

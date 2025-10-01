@@ -3514,20 +3514,17 @@ ${inputText}`;
 
                   {/* 문제 제목 */}
                   <div className="work-06-title" style={{
-                    fontWeight: '800',
-                    fontSize: '1.18rem',
+                    fontWeight: 800,
+                    fontSize: '1rem !important',
                     background: '#222',
                     color: '#fff',
-                    padding: '0.7rem 1.2rem',
+                    padding: '0.7rem 0.5rem',
                     borderRadius: '8px',
-                    marginBottom: '1.5rem', /* 문제제목과 주요문장 사이 간격 늘림 */
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    marginBottom: '1.2rem',
+                    display: 'block',
                     width: '100%'
                   }}>
-                    <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
+                    문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
                   </div>
 
                   {/* 빠진 문장 표시 */}
@@ -3536,24 +3533,26 @@ ${inputText}`;
                     borderRadius: '6px',
                     background: '#f7f8fc',
                     padding: '0.8em 1.2em',
-                    marginBottom: '0.8rem', /* 주요문장과 본문 사이 간격 줄임 */
+                    marginTop: '1rem',
+                    marginBottom: '1rem',
                     fontWeight: 700,
-                    fontSize: '1.1rem'
+                    fontSize: '1rem !important'
                   }}>
                     <span style={{color: '#222'}}>주요 문장:</span> <span style={{color: '#6a5acd'}}>{quizItem.work06Data.missingSentence}</span>
                   </div>
 
                   {/* 번호가 매겨진 본문 */}
                   <div className="work-06-passage" style={{
-                    fontSize: '1.1rem',
+                    fontSize: '1rem !important',
                     lineHeight: 1.7,
-                    margin: '1.2rem 0',
+                    margin: '0.3rem 0 0 0',
                     background: '#FFF3CD',
-                    border: '1.5px solid #e3e6f0',
                     borderRadius: '8px',
-                    padding: '1.2rem',
+                    padding: '1rem',
                     fontFamily: 'inherit',
-                    whiteSpace: 'pre-line'
+                    color: '#222',
+                    whiteSpace: 'pre-line',
+                    border: '1.5px solid #e3e6f0'
                   }}>
                     {quizItem.work06Data.numberedPassage}
                   </div>
@@ -3561,14 +3560,11 @@ ${inputText}`;
                   {/* 정답 표시 */}
                   {printMode === 'with-answer' && (
                     <div className="work-06-answer" style={{
-                      background: '#e8f5e8',
-                      border: '2px solid #4caf50',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      marginBottom: '1rem',
+                      marginTop: '0',
+                      marginBottom: '0',
                       color: '#1976d2',
                       fontWeight: '700',
-                      fontSize: '1.1rem'
+                      fontSize: '1rem !important'
                     }}>
                       정답: {`①②③④⑤`[quizItem.work06Data.answerIndex] || quizItem.work06Data.answerIndex + 1}
                     </div>

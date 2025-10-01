@@ -1993,6 +1993,116 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
   translatedText,
   printMode
 }) => {
+  // A4 페이지 설정 (원래 유형#06과 동일)
+  const A4_CONFIG = {
+    // 실제 A4 크기: 210mm × 297mm = 794px × 1123px (96 DPI)
+    PAGE_WIDTH: 794,          // px (210mm * 3.78px/mm)
+    PAGE_HEIGHT: 1123,        // px (297mm * 3.78px/mm)
+    
+    // 인쇄 여백 (실제 인쇄 시 표준 여백)
+    TOP_MARGIN: 25,           // px (6.6mm)
+    BOTTOM_MARGIN: 25,        // px (6.6mm)
+    LEFT_MARGIN: 20,          // px (5.3mm)
+    RIGHT_MARGIN: 20,         // px (5.3mm)
+    
+    // 헤더/푸터 영역
+    HEADER_HEIGHT: 30,        // px (8mm)
+    FOOTER_HEIGHT: 20,        // px (5.3mm)
+    
+    // 콘텐츠 영역 계산
+    CONTENT_WIDTH: 754,       // px (794 - 20 - 20)
+    CONTENT_HEIGHT: 1048,     // px (1123 - 25 - 25 - 30 - 20)
+    
+    // 섹션별 높이 설정
+    INSTRUCTION_HEIGHT: 30,   // px
+    INSTRUCTION_MARGIN: 11,   // px
+    TRANSLATION_HEADER_HEIGHT: 30,  // px
+    TRANSLATION_HEADER_MARGIN: 11,  // px
+    ANSWER_HEADER_HEIGHT: 30,       // px
+    ANSWER_HEADER_MARGIN: 11,       // px
+  };
+
+  // 컨테이너 높이 계산 함수 (원래 유형#06과 동일)
+  const calculateContainerHeight = (text: string, padding: number = 38, fontSize: number = 16, lineHeight: number = 1.7): number => {
+    // 실제 A4 콘텐츠 너비 사용 (754px - 좌우 패딩 40px = 714px)
+    const availableWidthPx = A4_CONFIG.CONTENT_WIDTH - 40; // px
+    const charWidthPx = fontSize * 0.55; // px 단위 문자 폭
+    const charsPerLine = Math.floor(availableWidthPx / charWidthPx);
+    const lines = Math.ceil(text.length / charsPerLine);
+    return (lines * fontSize * lineHeight) + padding; // px 단위로 반환
+  };
+
+  // 페이지 분할 계산 (원래 유형#06과 동일한 로직)
+  const calculatePageLayout = () => {
+    // A. 문제제목 + 주요문장 + 영어본문 + 정답 컨테이너
+    const problemTitleHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN; // 41px
+    const missingSentenceHeight = calculateContainerHeight(`주요 문장: ${work06Data.missingSentence}`, 38, 16, 1.7);
+    const englishPassageHeight = calculateContainerHeight(work06Data.numberedPassage, 38, 16, 1.7);
+    const answerText = `정답: ${`①②③④⑤`[work06Data.answerIndex] || work06Data.answerIndex+1}`;
+    const answerHeight = calculateContainerHeight(answerText, 38, 16, 1.7);
+    const sectionAHeight = problemTitleHeight + missingSentenceHeight + englishPassageHeight + answerHeight;
+
+    // B. 본문해석 제목 + 한글해석 컨테이너
+    const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT + A4_CONFIG.TRANSLATION_HEADER_MARGIN; // 41px
+    const finalTranslatedText = work06Data.translation || translatedText || '본문 해석이 생성되지 않았습니다.';
+    const translationHeight = calculateContainerHeight(finalTranslatedText, 38, 16, 1.7);
+    const sectionBHeight = translationHeaderHeight + translationHeight;
+
+    // 이용 가능한 공간 계산 (실제 A4 크기 기준)
+    const availableHeight = A4_CONFIG.CONTENT_HEIGHT; // 1048px
+    const safetyMargin = 50; // px (실제 A4 기준 적절한 여백)
+    const effectiveAvailableHeight = availableHeight - safetyMargin; // 998px
+
+    const totalHeight = sectionAHeight + sectionBHeight;
+
+    console.log('📊 패키지#01-유형#06 페이지 분할 계산:', {
+      sectionAHeight: sectionAHeight.toFixed(2) + 'px',
+      sectionBHeight: sectionBHeight.toFixed(2) + 'px',
+      totalHeight: totalHeight.toFixed(2) + 'px',
+      effectiveAvailableHeight: effectiveAvailableHeight.toFixed(2) + 'px',
+      quizTextLength: work06Data.numberedPassage.length,
+      translationTextLength: finalTranslatedText.length
+    });
+
+    // 실제 A4 크기 기준 검증
+    console.log('🔍 패키지#01-유형#06 A4 크기 기준 계산:', {
+      A4_SIZE: '210mm × 297mm = 794px × 1123px (96 DPI)',
+      CONTENT_AREA: A4_CONFIG.CONTENT_WIDTH + 'px × ' + A4_CONFIG.CONTENT_HEIGHT + 'px',
+      TOP_MARGIN: A4_CONFIG.TOP_MARGIN + 'px',
+      BOTTOM_MARGIN: A4_CONFIG.BOTTOM_MARGIN + 'px',
+      LEFT_MARGIN: A4_CONFIG.LEFT_MARGIN + 'px',
+      RIGHT_MARGIN: A4_CONFIG.RIGHT_MARGIN + 'px',
+      HEADER_HEIGHT: A4_CONFIG.HEADER_HEIGHT + 'px',
+      FOOTER_HEIGHT: A4_CONFIG.FOOTER_HEIGHT + 'px',
+      availableHeight: availableHeight + 'px',
+      safetyMargin: safetyMargin + 'px',
+      effectiveAvailableHeight: effectiveAvailableHeight + 'px'
+    });
+
+    // 페이지 분할 로직 (유형#06 전용 2가지 케이스)
+    if (totalHeight <= effectiveAvailableHeight) {
+      // 케이스 1: A+B ≤ 998px → 1페이지에 A, B 모두 포함
+      return {
+        needsSecondPage: false,
+        needsThirdPage: false,
+        page1Content: 'A+B',
+        page2Content: null,
+        page3Content: null
+      };
+    } else {
+      // 케이스 2: A+B > 998px → 1페이지에 A, 2페이지에 B
+      return {
+        needsSecondPage: true,
+        needsThirdPage: false,
+        page1Content: 'A',
+        page2Content: 'B',
+        page3Content: null
+      };
+    }
+  };
+
+  const pageLayoutInfo = calculatePageLayout();
+
   if (printMode === 'no-answer') {
     return (
       <div className="only-print work-06-print">
@@ -2003,14 +2113,13 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
-                <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
               </div>
-              <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'0.9rem'}}>
+              <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
                 <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
               </div>
-              <div style={{fontSize:'1rem', lineHeight:'1.7', margin:'0.3rem 0', background:'#FFF3CD', border:'1.5px solid #e3e6f0', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line'}}>
+              <div style={{fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0 0 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
                 {work06Data.numberedPassage}
               </div>
             </div>
@@ -2021,50 +2130,85 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
   }
 
   if (printMode === 'with-answer') {
-    return (
-      <div className="only-print work-06-print">
-        {/* 1페이지: 문제 + 정답 */}
-        <div className="a4-page-template">
-          <div className="a4-page-header">
-            <PrintHeaderPackage01 />
-          </div>
-          <div className="a4-page-content">
-            <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
-                <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
-              </div>
-              <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'0.9rem'}}>
-                <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
-              </div>
-              <div style={{fontSize:'1rem', lineHeight:'1.7', margin:'0.3rem 0', background:'#FFF3CD', border:'1.5px solid #e3e6f0', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line'}}>
-                {work06Data.numberedPassage}
-              </div>
-              <div className="problem-answer" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700, fontSize:'0.9rem'}}>
-                정답: {`①②③④⑤`[work06Data.answerIndex] || work06Data.answerIndex + 1}
+    if (pageLayoutInfo.needsSecondPage) {
+      // 2페이지 분할: 1페이지에 A, 2페이지에 B
+      return (
+        <div className="only-print work-06-print">
+          {/* 1페이지: 문제 + 정답 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                </div>
+                <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
+                  <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
+                </div>
+                <div style={{fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0 0 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
+                  {work06Data.numberedPassage}
+                </div>
+                <div className="problem-answer" style={{marginTop:'0', marginBottom:'0', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
+                  정답: {`①②③④⑤`[work06Data.answerIndex] || work06Data.answerIndex + 1}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* 2페이지: 본문 해석 */}
-        <div className="a4-page-template">
-          <div className="a4-page-header">
-            <PrintHeaderPackage01 />
-          </div>
-          <div className="a4-page-content">
-            <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
-                본문 해석
-              </div>
-              <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {translatedText || '번역을 생성하는 중...'}
+          {/* 2페이지: 본문 해석 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  본문 해석
+                </div>
+                <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {work06Data.translation || translatedText || '번역을 생성하는 중...'}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // 1페이지: 모든 내용 (A+B)
+      return (
+        <div className="only-print work-06-print">
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                </div>
+                <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
+                  <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
+                </div>
+                <div style={{fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0 0 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
+                  {work06Data.numberedPassage}
+                </div>
+                <div className="problem-answer" style={{marginTop:'0', marginBottom:'0', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
+                  정답: {`①②③④⑤`[work06Data.answerIndex] || work06Data.answerIndex + 1}
+                </div>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'1.2rem', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  본문 해석
+                </div>
+                <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {work06Data.translation || translatedText || '번역을 생성하는 중...'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
   }
 
   return null;
