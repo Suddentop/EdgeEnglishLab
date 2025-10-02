@@ -2298,15 +2298,49 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
       quizTextLength: work07Data.passage.length
     });
 
-    const needsSecondPage = totalHeight > effectiveAvailableHeight;
+    // 유형#03과 동일한 페이지 분할 로직
+    let pageLayoutInfo = {
+      needsSecondPage: false,
+      needsThirdPage: false,
+      page1Content: '',
+      page2Content: '',
+      page3Content: ''
+    };
+
+    if (totalHeight <= effectiveAvailableHeight) {
+      // 케이스 1: A+B ≤ 998px → 1페이지에 A+B 모두 포함
+      pageLayoutInfo = {
+        needsSecondPage: false,
+        needsThirdPage: false,
+        page1Content: 'A+B',
+        page2Content: '',
+        page3Content: ''
+      };
+    } else if (sectionAHeight <= effectiveAvailableHeight) {
+      // 케이스 2: A+B > 998px, A ≤ 998px → 1페이지에 A, 2페이지에 B
+      pageLayoutInfo = {
+        needsSecondPage: true,
+        needsThirdPage: false,
+        page1Content: 'A',
+        page2Content: 'B',
+        page3Content: ''
+      };
+    } else {
+      // 케이스 3: A+B > 998px, A > 998px → 1페이지에 A, 2페이지에 B
+      pageLayoutInfo = {
+        needsSecondPage: true,
+        needsThirdPage: false,
+        page1Content: 'A',
+        page2Content: 'B',
+        page3Content: ''
+      };
+    }
     
     return (
       <div className="only-print work-07-print">
-        {needsSecondPage ? (
-          // 2페이지 분할: 문제제목+본문, 객관식
-          <>
-            {/* 첫 번째 페이지: 문제제목 + 본문 */}
-        <div className="a4-page-template">
+        {!pageLayoutInfo.needsSecondPage && !pageLayoutInfo.needsThirdPage ? (
+          // 1페이지만
+          <div className="a4-page-template">
           <div className="a4-page-header">
             <PrintHeaderPackage01 />
           </div>
@@ -2393,8 +2427,6 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
       INSTRUCTION_MARGIN: 11,   // px
       TRANSLATION_HEADER_HEIGHT: 30,  // px
       TRANSLATION_HEADER_MARGIN: 11,  // px
-      OPTIONS_HEADER_HEIGHT: 30,      // px
-      OPTIONS_HEADER_MARGIN: 11,      // px
     };
 
     // 텍스트 높이 계산 함수 (원래 유형#07과 동일)
@@ -2406,42 +2438,34 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
       return (lines * fontSize * lineHeight) + padding; // px 단위로 반환
     };
 
-    // 동적 페이지 분할 계산 (요청된 4가지 케이스 로직)
-    // A. 문제 제목 + 영어 본문 컨테이너
+    // 동적 페이지 분할 계산 (원래 유형#07과 동일한 로직)
     const problemTitleHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN; // 41px
     const englishPassageHeight = calculateContainerHeight(work07Data.passage, 38, 16, 1.7);
-    const sectionAHeight = problemTitleHeight + englishPassageHeight;
-
-    // B. 4지선다 선택항목 컨테이너
-    const optionsHeaderHeight = A4_CONFIG.OPTIONS_HEADER_HEIGHT + A4_CONFIG.OPTIONS_HEADER_MARGIN; // 41px
     let optionsHeight = 0;
     work07Data.options.forEach(option => {
-      optionsHeight += calculateContainerHeight(`${option} (정답)`, 11, 16, 1.3);
+      optionsHeight += calculateContainerHeight(option, 11, 16, 1.3);
     });
-    const sectionBHeight = optionsHeaderHeight + optionsHeight;
-
-    // C. 본문해석 제목 + 한글 해석 컨테이너
     const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT + A4_CONFIG.TRANSLATION_HEADER_MARGIN; // 41px
     const translationHeight = calculateContainerHeight(translatedText || '번역을 생성하는 중...', 38, 16, 1.7);
-    const sectionCHeight = translationHeaderHeight + translationHeight;
+    
+    const sectionAHeight = problemTitleHeight + englishPassageHeight + optionsHeight;
+    const sectionBHeight = translationHeaderHeight + translationHeight;
     
     const availableHeight = A4_CONFIG.CONTENT_HEIGHT; // 1048px
     const safetyMargin = 50; // px
     const effectiveAvailableHeight = availableHeight - safetyMargin; // 998px
-    const totalHeight = sectionAHeight + sectionBHeight + sectionCHeight;
+    const totalHeight = sectionAHeight + sectionBHeight;
 
-    console.log('📊 패키지#01-유형#07 인쇄(정답) 페이지 분할 계산:', {
-      availableHeight: availableHeight.toFixed(2) + 'px',
+    console.log('📊 패키지#01-유형#07 페이지 분할 계산:', {
       sectionAHeight: sectionAHeight.toFixed(2) + 'px',
       sectionBHeight: sectionBHeight.toFixed(2) + 'px',
-      sectionCHeight: sectionCHeight.toFixed(2) + 'px',
       totalHeight: totalHeight.toFixed(2) + 'px',
       effectiveAvailableHeight: effectiveAvailableHeight.toFixed(2) + 'px',
       quizTextLength: work07Data.passage.length,
       translationTextLength: (translatedText || '').length
     });
 
-    // 페이지 분할 로직 (요청된 4가지 케이스)
+    // 유형#03과 동일한 페이지 분할 로직
     let pageLayoutInfo = {
       needsSecondPage: false,
       needsThirdPage: false,
@@ -2451,7 +2475,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
     };
 
     if (totalHeight <= effectiveAvailableHeight) {
-      // 케이스 1: A+B+C ≤ 998px → 1페이지에 A, B, C 모두 포함
+      // 케이스 1: A+B+C ≤ 998px → 1페이지에 A+B+C 모두 포함
       pageLayoutInfo = {
         needsSecondPage: false,
         needsThirdPage: false,
@@ -2460,7 +2484,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
         page3Content: ''
       };
     } else if (sectionAHeight + sectionBHeight <= effectiveAvailableHeight) {
-      // 케이스 2: A+B+C > 998px, A+B ≤ 998px → 1페이지에 A+B 포함, 2페이지에 C 포함
+      // 케이스 2: A+B+C > 998px, A+B ≤ 998px → 1페이지에 A+B, 2페이지에 C
       pageLayoutInfo = {
         needsSecondPage: true,
         needsThirdPage: false,
@@ -2469,7 +2493,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
         page3Content: ''
       };
     } else if (sectionAHeight <= effectiveAvailableHeight) {
-      // 케이스 3: A+B+C > 998px, A+B > 998px, A ≤ 998px → 1페이지에 A 포함, 2페이지에 B+C 포함
+      // 케이스 3: A+B+C > 998px, A+B > 998px, A ≤ 998px → 1페이지에 A, 2페이지에 B+C
       pageLayoutInfo = {
         needsSecondPage: true,
         needsThirdPage: false,
@@ -2478,7 +2502,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
         page3Content: ''
       };
     } else {
-      // 케이스 4: A+B+C > 998px, A+B > 998px, A > 998px → 1페이지에 A 포함, 2페이지에 B 포함, 3페이지에 C 포함
+      // 케이스 4: A+B+C > 998px, A+B > 998px, A > 998px → 1페이지에 A, 2페이지에 B, 3페이지에 C
       pageLayoutInfo = {
         needsSecondPage: true,
         needsThirdPage: true,
@@ -2488,19 +2512,61 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
       };
     }
 
-    // 원래 유형#07과 동일한 스타일 정의
-    const commonStyles = {
-      instruction: {fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'},
-      passage: {marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'},
-      options: {margin:'1rem 0'},
-      option: {fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'},
-      optionTranslation: {fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500, paddingLeft:'1.5rem'},
-      translation: {marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
-    };
+    return (
+      <div className="only-print work-07-print">
+        {!pageLayoutInfo.needsSecondPage && !pageLayoutInfo.needsThirdPage ? (
+          // 1페이지만
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.5rem 0.4rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.3rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
+                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
+                </div>
+                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', marginBottom:'0', padding:'1rem 1rem 0 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {work07Data.passage}
+                </div>
+                <div className="problem-options" style={{background:'#f8f9fa', border:'1px solid #e9ecef', borderRadius:'8px', padding:'0 1rem 1rem 1rem', marginTop:'0', marginBottom:'0.5rem'}}>
+                  {work07Data.options.map((option, index) => (
+                    <div key={index} style={{fontSize:'0.9rem', marginBottom:'0.5rem', marginTop: '0'}}>
+                      <div style={{fontWeight: '500'}}>
+                        {String.fromCharCode(65 + index)}. {option}{index === work07Data.answerIndex ? ' (정답)' : ''}
+                      </div>
+                      {work07Data.optionTranslations && work07Data.optionTranslations[index] && (
+                        <div style={{fontSize:'0.8rem', color:'#666', marginTop:'0.2rem', paddingLeft:'1rem'}}>
+                          {work07Data.optionTranslations[index]}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
-    // 페이지 분할 로직에 따른 렌더링
-    if (pageLayoutInfo.page1Content === 'A+B+C') {
-      // 케이스 1: 1페이지에 A, B, C 모두 포함
+          {/* 2페이지: 본문 해석 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', marginTop: '0.5rem', display: 'block', width:'100%'}}>
+                  본문 해석
+                </div>
+                <div className="translation-content" style={{fontSize:'0.9rem', lineHeight:'1.6', padding:'1rem', border:'1px solid #ddd', borderRadius:'8px', backgroundColor:'#f1f8e9', marginTop:'1.5rem'}}>
+                  {translatedText}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      // 1페이지: 모든 내용 포함
       return (
         <div className="only-print work-07-print">
           <div className="a4-page-template">
@@ -2509,37 +2575,31 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                {/* A. 문제 제목 + 영어 본문 */}
-                <div className="problem-instruction" style={{...commonStyles.instruction, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <span>다음 글의 주제로 가장 적절한 것을 고르시오.</span>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.5rem 0.4rem', borderRadius:'8px', marginBottom:'0.8rem', marginTop:'0.3rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
                 </div>
-                <div style={commonStyles.passage}>
+                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', marginBottom:'0', padding:'1rem 1rem 0 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work07Data.passage}
                 </div>
-
-                {/* B. 4지선다 선택항목 */}
-                <div className="problem-options" style={commonStyles.options}>
-                  {work07Data.options.map((opt, i) => (
-                    <div key={i} style={commonStyles.option}>
-                      <div>
-                        {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                        {work07Data.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        )}
+                <div className="problem-options" style={{background:'#f8f9fa', border:'1px solid #e9ecef', borderRadius:'8px', padding:'0 1rem 1rem 1rem', marginTop:'0', marginBottom:'0.5rem'}}>
+                  {work07Data.options.map((option, index) => (
+                    <div key={index} style={{fontSize:'0.9rem', marginBottom:'0.5rem', marginTop: '0'}}>
+                      <div style={{fontWeight: '500'}}>
+                        {String.fromCharCode(65 + index)}. {option}{index === work07Data.answerIndex ? ' (정답)' : ''}
                       </div>
-                      <div style={commonStyles.optionTranslation}>
-                        {work07Data.optionTranslations && work07Data.optionTranslations[i] ? work07Data.optionTranslations[i] : '해석 없음'}
-                      </div>
+                      {work07Data.optionTranslations && work07Data.optionTranslations[index] && (
+                        <div style={{fontSize:'0.8rem', color:'#666', marginTop:'0.2rem', paddingLeft:'1rem'}}>
+                          {work07Data.optionTranslations[index]}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-
-                {/* C. 본문해석 제목 + 한글 해석 */}
-                <div className="problem-instruction" style={commonStyles.instruction}>
+                <div className="problem-instruction" style={{fontWeight: '800', fontSize: '0.9rem', background: '#222', color: '#fff', padding: '0.5rem 0.4rem', borderRadius: '8px', marginBottom: '0.6rem', display: 'block', width:'100%'}}>
                   본문 해석
                 </div>
-                <div className="problem-passage translation" style={commonStyles.translation}>
+                <div className="translation-content" style={{fontSize:'0.9rem', lineHeight:'1.5', padding:'0.8rem', borderRadius:'8px', backgroundColor:'#F1F8E9'}}>
                   {translatedText}
                 </div>
               </div>
@@ -2547,190 +2607,6 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
           </div>
         </div>
       );
-    } else if (pageLayoutInfo.page1Content === 'A+B') {
-      // 케이스 2: 1페이지에 A+B, 2페이지에 C
-      return (
-        <div className="only-print work-07-print">
-          {/* 1페이지: A + B */}
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
-                {/* A. 문제 제목 + 영어 본문 */}
-                <div className="problem-instruction" style={{...commonStyles.instruction, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <span>다음 글의 주제로 가장 적절한 것을 고르시오.</span>
-                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
-                </div>
-                <div style={commonStyles.passage}>
-                  {work07Data.passage}
-                </div>
-
-                {/* B. 4지선다 선택항목 */}
-                <div className="problem-options" style={commonStyles.options}>
-                  {work07Data.options.map((opt, i) => (
-                    <div key={i} style={commonStyles.option}>
-                      <div>
-                        {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                        {work07Data.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        )}
-                      </div>
-                      <div style={commonStyles.optionTranslation}>
-                        {work07Data.optionTranslations && work07Data.optionTranslations[i] ? work07Data.optionTranslations[i] : '해석 없음'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 2페이지: C */}
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
-                <div className="problem-instruction" style={commonStyles.instruction}>
-                  본문 해석
-                </div>
-                <div className="problem-passage translation" style={commonStyles.translation}>
-                  {translatedText}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    } else if (pageLayoutInfo.page1Content === 'A') {
-      if (pageLayoutInfo.page2Content === 'B+C') {
-        // 케이스 3: 1페이지에 A, 2페이지에 B+C
-        return (
-          <div className="only-print work-07-print">
-            {/* 1페이지: A */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="quiz-content">
-                  <div className="problem-instruction" style={{...commonStyles.instruction, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                    <span>다음 글의 주제로 가장 적절한 것을 고르시오.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
-                  </div>
-                  <div style={commonStyles.passage}>
-                    {work07Data.passage}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 2페이지: B + C */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="quiz-content">
-                  {/* B. 4지선다 선택항목 */}
-                  <div className="problem-options" style={commonStyles.options}>
-                    {work07Data.options.map((opt, i) => (
-                      <div key={i} style={commonStyles.option}>
-                        <div>
-                          {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                          {work07Data.answerIndex === i && (
-                            <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                          )}
-                        </div>
-                        <div style={commonStyles.optionTranslation}>
-                          {work07Data.optionTranslations && work07Data.optionTranslations[i] ? work07Data.optionTranslations[i] : '해석 없음'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* C. 본문해석 제목 + 한글 해석 */}
-                  <div className="problem-instruction" style={commonStyles.instruction}>
-                    본문 해석
-                  </div>
-                  <div className="problem-passage translation" style={commonStyles.translation}>
-                    {translatedText}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      } else {
-        // 케이스 4: 1페이지에 A, 2페이지에 B, 3페이지에 C
-        return (
-          <div className="only-print work-07-print">
-            {/* 1페이지: A */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="quiz-content">
-                  <div className="problem-instruction" style={{...commonStyles.instruction, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                    <span>다음 글의 주제로 가장 적절한 것을 고르시오.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
-                  </div>
-                  <div style={commonStyles.passage}>
-                    {work07Data.passage}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 2페이지: B */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="quiz-content">
-                  <div className="problem-options" style={commonStyles.options}>
-                    {work07Data.options.map((opt, i) => (
-                      <div key={i} style={commonStyles.option}>
-                        <div>
-                          {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                          {work07Data.answerIndex === i && (
-                            <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                          )}
-                        </div>
-                        <div style={commonStyles.optionTranslation}>
-                          {work07Data.optionTranslations && work07Data.optionTranslations[i] ? work07Data.optionTranslations[i] : '해석 없음'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 3페이지: C */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="quiz-content">
-                  <div className="problem-instruction" style={commonStyles.instruction}>
-                    본문 해석
-                  </div>
-                  <div className="problem-passage translation" style={commonStyles.translation}>
-                    {translatedText}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
     }
   }
 

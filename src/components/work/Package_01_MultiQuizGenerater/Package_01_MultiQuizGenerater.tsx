@@ -56,13 +56,13 @@ ${englishText}`;
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
+      model: 'gpt-3.5-turbo',
+      messages: [
           { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
           { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 800,
+      ],
+      temperature: 0.3,
+      max_tokens: 800,
       }),
     });
 
@@ -158,7 +158,7 @@ You will receive a list of sentences. Process each sentence in order and select 
         max_tokens: 2000,
         temperature: 0.1
       })
-    });
+      });
     
     if (!response.ok) {
       throw new Error(`API 호출 실패: ${response.status}`);
@@ -728,26 +728,26 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
               'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-              model: 'gpt-3.5-turbo',
-              messages: [
-                {
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
                   role: 'system',
-                  content: 'You are a professional English to Korean translator. Translate the given English text into natural Korean. Maintain the original paragraph structure and formatting.'
-                },
-                {
+              content: 'You are a professional English to Korean translator. Translate the given English text into natural Korean. Maintain the original paragraph structure and formatting.'
+            },
+            {
                   role: 'user',
-                  content: inputText
-                }
-              ],
-              max_tokens: 2000,
-              temperature: 0.3
+              content: inputText
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.3
             })
-          });
-          
+        });
+        
           if (response.ok) {
             const data = await response.json();
             translation = data.choices[0].message.content;
-            console.log('✅ 번역 완료');
+        console.log('✅ 번역 완료');
           } else {
             console.error('❌ 번역 API 오류:', response.status);
             translation = '번역 실패';
@@ -836,13 +836,13 @@ ${inputText}`;
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            {
+        model: 'gpt-4o',
+        messages: [
+          {
               role: 'user',
-              content: prompt
-            }
-          ],
+            content: prompt
+          }
+        ],
           max_tokens: 2048
         })
       });
@@ -939,10 +939,10 @@ ${inputText}`;
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 2000,
-          temperature: 0.7
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000,
+        temperature: 0.7
         })
       });
 
@@ -1161,9 +1161,9 @@ ${inputText}
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 2000,
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000,
           temperature: 0.3
         })
       });
@@ -1314,7 +1314,7 @@ ${inputText}
         max_tokens: 2000,
         temperature: 0.3
       })
-    });
+      });
 
     const data = await response.json();
     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
@@ -1361,7 +1361,7 @@ ${inputText}
         max_tokens: 2000,
         temperature: 0.7
       })
-    });
+      });
 
     const data = await response.json();
     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
@@ -1419,7 +1419,7 @@ ${passage}`;
         max_tokens: 1000,
         temperature: 0.3
       })
-    });
+      });
 
     if (!response.ok) {
       throw new Error(`API 요청 실패: ${response.status}`);
@@ -1504,13 +1504,13 @@ Make sure the transformed word is actually DIFFERENT and WRONG compared to the o
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
+        model: 'gpt-4o',
+        messages: [
             { role: 'system', content: 'You are a helpful assistant that only returns valid JSON objects.' },
             { role: 'user', content: prompt }
           ],
-          max_tokens: 1000,
-          temperature: 0.7
+        max_tokens: 1000,
+        temperature: 0.7
         })
       });
 
@@ -1693,7 +1693,7 @@ ${passage}`;
         max_tokens: 2000,
         temperature: 0.3
       })
-    });
+      });
 
     if (!response.ok) {
       throw new Error(`번역 API 요청 실패: ${response.status}`);
@@ -1769,10 +1769,10 @@ ${inputText}`;
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 2000,
-          temperature: 0.7
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000,
+        temperature: 0.7
         })
       });
 
@@ -1912,8 +1912,8 @@ ${inputText}`;
               'Authorization': `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: 'gpt-4o',
-              messages: [
+        model: 'gpt-4o',
+        messages: [
                 {
                   role: 'system',
                   content: '당신은 영어-한국어 번역 전문가입니다. 주어진 영어 문장을 자연스러운 한국어로 번역해주세요.'
@@ -1923,10 +1923,10 @@ ${inputText}`;
                   content: `다음 영어 문장을 한국어로 번역해주세요:\n\n${sentence}`
                 }
               ],
-              max_tokens: 500,
+        max_tokens: 500,
               temperature: 0.3
             })
-          });
+      });
           
           if (!response.ok) {
             throw new Error(`번역 API 오류: ${response.status}`);
@@ -2003,7 +2003,7 @@ ${passage}`;
         max_tokens: 2000,
         temperature: 0.7
       })
-    });
+      });
 
     const data = await response.json();
     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
@@ -2266,10 +2266,10 @@ ${inputText}`;
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1200,
-          temperature: 0.7
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1200,
+        temperature: 0.7
         })
       });
 
@@ -3655,13 +3655,24 @@ ${inputText}`;
                         fontSize: '1rem',
                         lineHeight: '1.5'
                       }}>
-                        <input
-                          type="radio"
-                          name={`work-07-${index}`}
-                          value={optionIndex}
-                          style={{ marginRight: '0.5rem' }}
-                        />
-                        {option}
+                        <div style={{display: 'flex', alignItems: 'flex-start'}}>
+                          <input
+                            type="radio"
+                            name={`work-07-${index}`}
+                            value={optionIndex}
+                            style={{ marginRight: '0.5rem', marginTop: '0.1rem' }}
+                          />
+                          <div>
+                            <div style={{fontWeight: '500'}}>
+                              {String.fromCharCode(65 + optionIndex)}. {option}
+                            </div>
+                            {quizItem.work07Data?.optionTranslations && quizItem.work07Data?.optionTranslations[optionIndex] && (
+                              <div style={{fontSize:'0.85rem', color:'#666', marginTop:'0.3rem'}}>
+                                {quizItem.work07Data?.optionTranslations[optionIndex]}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </label>
                     ))}
                   </div>
