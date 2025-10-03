@@ -137,6 +137,8 @@ const Work_02_ReadingComprehension: React.FC = () => {
 
       const englishPassage = document.createElement('div');
       englishPassage.style.cssText = `
+        margin-top: 10px;
+        margin-bottom: 13px;
         font-size: 14px;
         padding: 16px;
         background: #fff3cd;
@@ -146,7 +148,6 @@ const Work_02_ReadingComprehension: React.FC = () => {
         line-height: 1.7;
         box-sizing: border-box;
         word-wrap: break-word;
-        margin: 0;
       `;
       englishPassage.textContent = quiz.modifiedText;
       
@@ -154,7 +155,7 @@ const Work_02_ReadingComprehension: React.FC = () => {
       firstPageContent.appendChild(englishPassage);
       tempContainer.appendChild(firstPageContent);
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 300));
       const firstPageHeight = firstPageContent.scrollHeight;
       
       console.log(`📏 1페이지 높이 상세 분석:`);
@@ -179,8 +180,8 @@ const Work_02_ReadingComprehension: React.FC = () => {
         color: #fff;
         padding: 11px 8px;
         border-radius: 8px;
-        margin-bottom: 8px;
-        margin-top: 16px;
+        margin-bottom: 13px;
+        margin-top: 24px;
         width: 100%;
         box-sizing: border-box;
       `;
@@ -254,12 +255,13 @@ const Work_02_ReadingComprehension: React.FC = () => {
       replacementsContent.appendChild(replacementsTable);
       tempContainer.appendChild(replacementsContent);
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 300));
       const replacementsHeight = replacementsContent.scrollHeight;
       
       // 3. 한글 해석 높이 측정 (실제 인쇄 스타일과 동일하게)
       const koreanTranslation = document.createElement('div');
       koreanTranslation.style.cssText = `
+        margin-top: 10px;
         font-size: 16px;
         padding: 16px;
         background: #F1F8E9;
@@ -273,13 +275,12 @@ const Work_02_ReadingComprehension: React.FC = () => {
         max-width: 100%;
         overflow-wrap: break-word;
         white-space: normal;
-        margin: 0;
       `;
       koreanTranslation.textContent = quiz.translation || '번역을 생성하는 중...';
       
       tempContainer.appendChild(koreanTranslation);
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 300));
       const koreanTranslationHeight = koreanTranslation.scrollHeight;
       
       // 임시 컨테이너 제거
@@ -307,6 +308,11 @@ const Work_02_ReadingComprehension: React.FC = () => {
       console.log(`- A + B + C = ${A} + ${B} + ${C} = ${totalHeight}px`);
       console.log(`- A + B = ${A} + ${B} = ${A + B}px`);
       console.log(`- B + C = ${B} + ${C} = ${B + C}px`);
+      console.log(`- 조건 검사:`);
+      console.log(`  * A+B+C ≤ ${availableSpace}? ${totalHeight <= availableSpace} (${totalHeight} <= ${availableSpace})`);
+      console.log(`  * A+B ≤ ${availableSpace}? ${A + B <= availableSpace} (${A + B} <= ${availableSpace})`);
+      console.log(`  * A ≤ ${availableSpace}? ${A <= availableSpace} (${A} <= ${availableSpace})`);
+      console.log(`  * B+C ≤ ${availableSpace}? ${B + C <= availableSpace} (${B + C} <= ${availableSpace})`);
       
       if (totalHeight <= availableSpace) {
         // A+B+C ≤ 1048px → 1페이지
