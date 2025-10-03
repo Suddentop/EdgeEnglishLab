@@ -754,7 +754,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
   };
 
   // Work_02용 페이지 분할 로직 (원래 유형#02와 동일)
-  const getWork02PageLayout = (work02Data: Work02QuizData) => {
+  const getWork02PageLayout = async (work02Data: Work02QuizData) => {
     if (!work02Data) return { needsSecondPage: false, needsThirdPage: false, firstPageIncludesReplacements: true };
 
     // 임시 컨테이너 생성하여 실제 높이 측정
@@ -775,28 +775,26 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     const problemTitle = document.createElement('div');
     problemTitle.style.cssText = `
       font-weight: 800;
-      font-size: 0.9rem;
+      font-size: 16px;
       background: #222;
       color: #fff;
-      padding: 0.7rem 0.5rem;
+      padding: 11px 8px;
       border-radius: 8px;
-      margin-bottom: 0.8rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      margin-bottom: 19px;
       width: 100%;
       box-sizing: border-box;
+      display: block;
     `;
-    problemTitle.innerHTML = '<span>문제: 다음 본문을 읽고 해석하세요</span><span style="font-size:0.9rem; font-weight:700; color:#FFD700;">유형#02</span>';
+    problemTitle.textContent = '문제: 다음 본문을 읽고 해석하세요';
     
     const englishPassage = document.createElement('div');
     englishPassage.style.cssText = `
-      margin-top: 0.9rem;
-      font-size: 0.9rem;
-      padding: 1rem;
-      background: #FFF3CD;
+      margin-top: 10px;
+      margin-bottom: 13px;
+      font-size: 14px;
+      padding: 16px;
+      background: #fff3cd;
       border-radius: 8px;
-      border: 1.5px solid #e3f2fd;
       font-family: inherit;
       color: #222;
       line-height: 1.7;
@@ -806,26 +804,36 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
       max-width: 100%;
       overflow-wrap: break-word;
       white-space: normal;
-      margin: 0;
     `;
     englishPassage.textContent = work02Data.modifiedText || '';
     
-    tempContainer.appendChild(problemTitle);
-    tempContainer.appendChild(englishPassage);
+    const firstPageContent = document.createElement('div');
+    firstPageContent.style.cssText = `
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    `;
     
-    const firstPageHeight = problemTitle.scrollHeight + englishPassage.scrollHeight + 20; // 20px 여백
+    firstPageContent.appendChild(problemTitle);
+    firstPageContent.appendChild(englishPassage);
+    tempContainer.appendChild(firstPageContent);
+    
+    // DOM 렌더링 완료 대기
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const firstPageHeight = firstPageContent.scrollHeight;
 
     // B: 교체된 단어들 제목 + 테이블 높이 측정
     const replacementsTitle = document.createElement('div');
     replacementsTitle.style.cssText = `
       font-weight: 800;
-      font-size: 0.9rem;
+      font-size: 16px;
       background: #222;
       color: #fff;
-      padding: 0.7rem 0.5rem;
+      padding: 11px 8px;
       border-radius: 8px;
-      margin-bottom: 0rem;
-      display: block;
+      margin-bottom: 13px;
+      margin-top: 24px;
       width: 100%;
       box-sizing: border-box;
     `;
@@ -860,14 +868,25 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     tableHTML += '</tbody></table>';
     replacementsTable.innerHTML = tableHTML;
     
-    tempContainer.appendChild(replacementsTitle);
-    tempContainer.appendChild(replacementsTable);
+    const replacementsContent = document.createElement('div');
+    replacementsContent.style.cssText = `
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    `;
     
-    const replacementsHeight = replacementsTitle.scrollHeight + replacementsTable.scrollHeight + 20; // 20px 여백
+    replacementsContent.appendChild(replacementsTitle);
+    replacementsContent.appendChild(replacementsTable);
+    tempContainer.appendChild(replacementsContent);
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const replacementsHeight = replacementsContent.scrollHeight;
 
     // C: 한글 해석 높이 측정
     const koreanTranslation = document.createElement('div');
     koreanTranslation.style.cssText = `
+      margin-top: 10px;
       font-size: 16px;
       padding: 16px;
       background: #F1F8E9;
@@ -881,13 +900,13 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
       max-width: 100%;
       overflow-wrap: break-word;
       white-space: normal;
-      margin: 0;
     `;
     koreanTranslation.textContent = work02Data.translation || '번역을 생성하는 중...';
     
     tempContainer.appendChild(koreanTranslation);
     
-    const koreanTranslationHeight = koreanTranslation.scrollHeight + 20; // 20px 여백
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const koreanTranslationHeight = koreanTranslation.scrollHeight;
 
     // 임시 컨테이너 제거
     document.body.removeChild(tempContainer);
@@ -959,8 +978,21 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     return { needsSecondPage, needsThirdPage, firstPageIncludesReplacements };
   };
 
-  // Work_02용 페이지 분할 로직 적용
-  const work02PageLayout = getWork02PageLayout(work02Data);
+  // Work_02용 페이지 분할 로직 적용 (동기 처리)
+  const [work02PageLayout, setWork02PageLayout] = React.useState({
+    needsSecondPage: false,
+    needsThirdPage: false,
+    firstPageIncludesReplacements: true
+  });
+
+  React.useEffect(() => {
+    const calculateLayout = async () => {
+      const layout = await getWork02PageLayout(work02Data);
+      setWork02PageLayout(layout);
+    };
+    calculateLayout();
+  }, [work02Data]);
+
   const needsAnswerSecondPage = work02PageLayout.needsSecondPage;
   const needsAnswerThirdPage = work02PageLayout.needsThirdPage;
   const firstPageIncludesReplacements = work02PageLayout.firstPageIncludesReplacements;
