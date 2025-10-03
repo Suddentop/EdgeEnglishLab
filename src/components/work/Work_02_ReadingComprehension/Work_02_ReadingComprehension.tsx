@@ -308,30 +308,35 @@ const Work_02_ReadingComprehension: React.FC = () => {
       console.log(`- A + B + C = ${A} + ${B} + ${C} = ${totalHeight}px`);
       console.log(`- A + B = ${A} + ${B} = ${A + B}px`);
       console.log(`- B + C = ${B} + ${C} = ${B + C}px`);
-      console.log(`- 조건 검사:`);
+      console.log(`- 조건 검사 (여유 공간 고려):`);
+      console.log(`  * A+B+C ≤ ${availableSpace - 50}? ${totalHeight <= availableSpace - 50} (${totalHeight} <= ${availableSpace - 50})`);
+      console.log(`  * A+B ≤ ${availableSpace - 30}? ${A + B <= availableSpace - 30} (${A + B} <= ${availableSpace - 30})`);
+      console.log(`  * A ≤ ${availableSpace - 30}? ${A <= availableSpace - 30} (${A} <= ${availableSpace - 30})`);
+      console.log(`  * B+C ≤ ${availableSpace - 30}? ${B + C <= availableSpace - 30} (${B + C} <= ${availableSpace - 30})`);
+      console.log(`- 원래 조건 검사 (참고용):`);
       console.log(`  * A+B+C ≤ ${availableSpace}? ${totalHeight <= availableSpace} (${totalHeight} <= ${availableSpace})`);
       console.log(`  * A+B ≤ ${availableSpace}? ${A + B <= availableSpace} (${A + B} <= ${availableSpace})`);
       console.log(`  * A ≤ ${availableSpace}? ${A <= availableSpace} (${A} <= ${availableSpace})`);
       console.log(`  * B+C ≤ ${availableSpace}? ${B + C <= availableSpace} (${B + C} <= ${availableSpace})`);
       
-      if (totalHeight <= availableSpace) {
-        // A+B+C ≤ 1048px → 1페이지
+      if (totalHeight <= availableSpace - 50) {  // 50px 여유 공간 추가
+        // A+B+C ≤ 998px → 1페이지 (여유 공간 50px 고려)
         needsSecondPage = false;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(true);
-        console.log('✅ 1페이지: A+B+C 모두 1페이지에 들어갑니다');
-      } else if (A + B <= availableSpace) {
-        // A+B+C > 1048px, A+B ≤ 1048px → 1페이지(A+B), 2페이지(C)
+        console.log('✅ 1페이지: A+B+C 모두 1페이지에 들어갑니다 (여유 공간 고려)');
+      } else if (A + B <= availableSpace - 30) {  // 30px 여유 공간 추가
+        // A+B+C > 998px, A+B ≤ 1018px → 1페이지(A+B), 2페이지(C)
         needsSecondPage = true;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(true);
-        console.log('✅ 2페이지: 1페이지(A+B), 2페이지(C)');
-      } else if (A <= availableSpace && B + C <= availableSpace) {
-        // A+B+C > 1048px, A+B > 1048px, A ≤ 1048px, B+C ≤ 1048px → 1페이지(A), 2페이지(B+C)
+        console.log('✅ 2페이지: 1페이지(A+B), 2페이지(C) (여유 공간 고려)');
+      } else if (A <= availableSpace - 30 && B + C <= availableSpace - 30) {  // 30px 여유 공간 추가
+        // A+B+C > 998px, A+B > 1018px, A ≤ 1018px, B+C ≤ 1018px → 1페이지(A), 2페이지(B+C)
         needsSecondPage = true;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(false);
-        console.log('✅ 2페이지: 1페이지(A), 2페이지(B+C)');
+        console.log('✅ 2페이지: 1페이지(A), 2페이지(B+C) (여유 공간 고려)');
       } else {
         // A+B+C > 1048px, A+B > 1048px, A > 1048px 또는 B+C > 1048px → 1페이지(A), 2페이지(B), 3페이지(C)
         needsSecondPage = true;
