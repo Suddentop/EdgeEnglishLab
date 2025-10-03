@@ -303,7 +303,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
 
   async function generateMultiGrammarQuizWithAI(passage: string): Promise<MultiGrammarQuiz> {
     const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 8개를 선정하세요.\n이 중 1~5개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.\n\n아래 JSON 형식으로만 응답하세요:\n{\n  \"originalWords\": [\"...\", ...], // 8개 원본 단어\n  \"transformedWords\": [\"...\", ...], // 8개 변형(틀린/정상) 단어\n  \"wrongIndexes\": [0,2,5], // 틀린 단어의 인덱스(0~7), 개수는 1~5개\n  \"translation\": \"...\" // 본문 번역\n}\n본문:\n${passage}`;
+    const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 8개를 선정하세요.\n이 중 3~8개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.\n\n아래 JSON 형식으로만 응답하세요:\n{\n  \"originalWords\": [\"...\", ...], // 8개 원본 단어\n  \"transformedWords\": [\"...\", ...], // 8개 변형(틀린/정상) 단어\n  \"wrongIndexes\": [0,1,2,5,6,7], // 틀린 단어의 인덱스(0~7), 개수는 3~8개\n  \"translation\": \"...\" // 본문 번역\n}\n본문:\n${passage}`;
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -331,7 +331,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
     }
     // 옵션, 정답 계산
     const wrongCount = result.wrongIndexes.length;
-    const options = [1,2,3,4,5];
+    const options = [3,4,5,6,7,8];
     const answerIndex = options.indexOf(wrongCount);
     return {
       passage, // 원본 본문을 그대로 저장
@@ -773,10 +773,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                     <div className="problem-options" style={{margin:'0.2rem 0'}}>
                       <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
                         {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex + 1}.`} {quiz.options[quiz.answerIndex]}개
-                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                      </div>
-                      <div style={{fontSize:'0.9rem !important', margin:'0.2rem 0 0 0', fontFamily:'inherit', color:'#1976d2', fontWeight:400}}>
-                        어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
+                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span> 어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
                       </div>
                     </div>
                   )}
@@ -823,10 +820,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                       <div className="problem-options" style={{margin:'0.2rem 0'}}>
                         <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
                           {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex + 1}.`} {quiz.options[quiz.answerIndex]}개
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        </div>
-                        <div style={{fontSize:'0.9rem !important', margin:'0.2rem 0 0 0', fontFamily:'inherit', color:'#1976d2', fontWeight:400}}>
-                          어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span> 어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
                         </div>
                       </div>
                     )}
@@ -874,10 +868,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                       <div className="problem-options" style={{margin:'0.2rem 0'}}>
                         <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
                           {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex + 1}.`} {quiz.options[quiz.answerIndex]}개
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        </div>
-                        <div style={{fontSize:'0.9rem !important', margin:'0.2rem 0 0 0', fontFamily:'inherit', color:'#1976d2', fontWeight:400}}>
-                          어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span> 어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
                         </div>
                       </div>
                     )}

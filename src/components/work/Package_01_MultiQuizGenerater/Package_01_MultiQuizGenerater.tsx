@@ -1750,13 +1750,13 @@ ${passage}`;
     try {
       const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
       const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 8개를 선정하세요.
-이 중 1~5개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.
+이 중 3~8개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.
 
 아래 JSON 형식으로만 응답하세요:
 {
   "originalWords": ["...", ...], // 8개 원본 단어
   "transformedWords": ["...", ...], // 8개 변형(틀린/정상) 단어
-  "wrongIndexes": [0,2,5], // 틀린 단어의 인덱스(0~7), 개수는 1~5개
+  "wrongIndexes": [0,1,2,5,6,7], // 틀린 단어의 인덱스(0~7), 개수는 3~8개
   "translation": "..." // 본문 번역
 }
 본문:
@@ -1807,7 +1807,7 @@ ${inputText}`;
 
       // 옵션, 정답 계산
       const wrongCount = result.wrongIndexes.length;
-      const options = [1, 2, 3, 4, 5];
+      const options = [3, 4, 5, 6, 7, 8];
       const answerIndex = options.indexOf(wrongCount);
 
       // 본문에 번호/밑줄 적용
@@ -4678,42 +4678,58 @@ ${inputText}`;
       </div>
 
       {inputMode === 'capture' && (
-        <div
-          className={`input-guide${isPasteFocused ? ' paste-focused' : ''}`}
-          tabIndex={0}
-          onClick={() => setIsPasteFocused(true)}
-          onFocus={() => setIsPasteFocused(true)}
-          onBlur={() => setIsPasteFocused(false)}
-          onPaste={handlePaste}
-        >
-          <div className="drop-icon">📋</div>
-          <div className="drop-text">Ctrl+V로 캡처한 이미지를 붙여넣으세요</div>
-          <div className="drop-desc">스크린샷이나 사진을 클립보드에 복사한 후 여기에 붙여넣기 하세요</div>
-          <div style={{fontSize: '0.9rem', color: '#666', marginTop: '0.5rem'}}>
-            💡 <b>팁:</b> 화면 캡처 후 Ctrl+V로 붙여넣기
+        <div>
+          <div
+            className={`input-guide${isPasteFocused ? ' paste-focused' : ''}`}
+            tabIndex={0}
+            onClick={() => setIsPasteFocused(true)}
+            onFocus={() => setIsPasteFocused(true)}
+            onBlur={() => setIsPasteFocused(false)}
+            onPaste={handlePaste}
+          >
+            <div className="drop-icon">📋</div>
+            <div className="drop-text">Ctrl+V로 캡처한 이미지를 붙여넣으세요</div>
+            <div className="drop-desc">스크린샷이나 사진을 클립보드에 복사한 후 여기에 붙여넣기 하세요</div>
+            <div style={{fontSize: '0.9rem', color: '#666', marginTop: '0.5rem'}}>
+              💡 <b>팁:</b> 화면 캡처 후 Ctrl+V로 붙여넣기
+            </div>
+            {isLoading && (
+              <div style={{color:'#6a5acd', fontWeight:600, marginTop:'0.7rem'}}>
+                OpenAI Vision 처리 중...
+              </div>
+            )}
           </div>
-          {isLoading && (
-            <div style={{color:'#6a5acd', fontWeight:600, marginTop:'0.7rem'}}>
-              OpenAI Vision 처리 중...
+          {/* 캡처 모드에서도 텍스트가 추출되면 글자수 표시 */}
+          {inputText && (
+            <div className="text-info" style={{marginTop: '0.5rem'}}>
+              <span>글자 수: {inputText.length}자</span>
             </div>
           )}
         </div>
       )}
       {inputMode === 'image' && (
-        <div className="file-upload-row">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageFileChange}
-            id="fileInput"
-            style={{ display: 'none' }}
-          />
-          <label htmlFor="fileInput" className="file-upload-btn">
-            📁 파일 선택
-          </label>
-          <div className="file-upload-status">
-            {imageFile ? imageFile.name : '선택된 파일이 없습니다'}
+        <div>
+          <div className="file-upload-row">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageFileChange}
+              id="fileInput"
+              style={{ display: 'none' }}
+            />
+            <label htmlFor="fileInput" className="file-upload-btn">
+              📁 파일 선택
+            </label>
+            <div className="file-upload-status">
+              {imageFile ? imageFile.name : '선택된 파일이 없습니다'}
+            </div>
           </div>
+          {/* 이미지 모드에서도 텍스트가 추출되면 글자수 표시 */}
+          {inputText && (
+            <div className="text-info" style={{marginTop: '0.5rem'}}>
+              <span>글자 수: {inputText.length}자</span>
+            </div>
+          )}
         </div>
       )}
       {inputMode === 'text' && (
@@ -4735,6 +4751,9 @@ ${inputText}`;
             className="text-input"
             rows={8}
           />
+          <div className="text-info">
+            <span>글자 수: {inputText.length}자</span>
+          </div>
         </div>
       )}
 
