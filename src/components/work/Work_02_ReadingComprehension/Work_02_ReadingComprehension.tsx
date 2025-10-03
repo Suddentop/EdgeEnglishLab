@@ -308,38 +308,38 @@ const Work_02_ReadingComprehension: React.FC = () => {
       console.log(`- A + B + C = ${A} + ${B} + ${C} = ${totalHeight}px`);
       console.log(`- A + B = ${A} + ${B} = ${A + B}px`);
       console.log(`- B + C = ${B} + ${C} = ${B + C}px`);
-      console.log(`- 조건 검사 (강화된 여유 공간 고려):`);
+      console.log(`- 조건 검사 (매우 강화된 여유 공간 고려):`);
+      console.log(`  * A+B+C ≤ ${availableSpace - 150}? ${totalHeight <= availableSpace - 150} (${totalHeight} <= ${availableSpace - 150})`);
+      console.log(`  * A+B ≤ ${availableSpace - 120}? ${A + B <= availableSpace - 120} (${A + B} <= ${availableSpace - 120})`);
+      console.log(`  * A ≤ ${availableSpace - 120}? ${A <= availableSpace - 120} (${A} <= ${availableSpace - 120})`);
+      console.log(`  * B+C ≤ ${availableSpace - 120}? ${B + C <= availableSpace - 120} (${B + C} <= ${availableSpace - 120})`);
+      console.log(`- 이전 조건 검사 (참고용):`);
       console.log(`  * A+B+C ≤ ${availableSpace - 100}? ${totalHeight <= availableSpace - 100} (${totalHeight} <= ${availableSpace - 100})`);
       console.log(`  * A+B ≤ ${availableSpace - 80}? ${A + B <= availableSpace - 80} (${A + B} <= ${availableSpace - 80})`);
-      console.log(`  * A ≤ ${availableSpace - 80}? ${A <= availableSpace - 80} (${A} <= ${availableSpace - 80})`);
-      console.log(`  * B+C ≤ ${availableSpace - 80}? ${B + C <= availableSpace - 80} (${B + C} <= ${availableSpace - 80})`);
-      console.log(`- 이전 조건 검사 (참고용):`);
-      console.log(`  * A+B+C ≤ ${availableSpace - 50}? ${totalHeight <= availableSpace - 50} (${totalHeight} <= ${availableSpace - 50})`);
-      console.log(`  * A+B ≤ ${availableSpace - 30}? ${A + B <= availableSpace - 30} (${A + B} <= ${availableSpace - 30})`);
       console.log(`- 원래 조건 검사 (참고용):`);
       console.log(`  * A+B+C ≤ ${availableSpace}? ${totalHeight <= availableSpace} (${totalHeight} <= ${availableSpace})`);
       console.log(`  * A+B ≤ ${availableSpace}? ${A + B <= availableSpace} (${A + B} <= ${availableSpace})`);
       console.log(`  * A ≤ ${availableSpace}? ${A <= availableSpace} (${A} <= ${availableSpace})`);
       console.log(`  * B+C ≤ ${availableSpace}? ${B + C <= availableSpace} (${B + C} <= ${availableSpace})`);
       
-      if (totalHeight <= availableSpace - 100) {  // 100px 여유 공간 추가 (더 강력하게)
-        // A+B+C ≤ 948px → 1페이지 (여유 공간 100px 고려)
+      if (totalHeight <= availableSpace - 150) {  // 150px 여유 공간 추가 (매우 강력하게)
+        // A+B+C ≤ 898px → 1페이지 (여유 공간 150px 고려)
         needsSecondPage = false;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(true);
-        console.log('✅ 1페이지: A+B+C 모두 1페이지에 들어갑니다 (여유 공간 100px 고려)');
-      } else if (A + B <= availableSpace - 80) {  // 80px 여유 공간 추가
-        // A+B+C > 948px, A+B ≤ 968px → 1페이지(A+B), 2페이지(C)
+        console.log('✅ 1페이지: A+B+C 모두 1페이지에 들어갑니다 (여유 공간 150px 고려)');
+      } else if (A + B <= availableSpace - 120) {  // 120px 여유 공간 추가
+        // A+B+C > 898px, A+B ≤ 928px → 1페이지(A+B), 2페이지(C)
         needsSecondPage = true;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(true);
-        console.log('✅ 2페이지: 1페이지(A+B), 2페이지(C) (여유 공간 80px 고려)');
-      } else if (A <= availableSpace - 80 && B + C <= availableSpace - 80) {  // 80px 여유 공간 추가
-        // A+B+C > 948px, A+B > 968px, A ≤ 968px, B+C ≤ 968px → 1페이지(A), 2페이지(B+C)
+        console.log('✅ 2페이지: 1페이지(A+B), 2페이지(C) (여유 공간 120px 고려)');
+      } else if (A <= availableSpace - 120 && B + C <= availableSpace - 120) {  // 120px 여유 공간 추가
+        // A+B+C > 898px, A+B > 928px, A ≤ 928px, B+C ≤ 928px → 1페이지(A), 2페이지(B+C)
         needsSecondPage = true;
         needsThirdPage = false;
         setFirstPageIncludesReplacements(false);
-        console.log('✅ 2페이지: 1페이지(A), 2페이지(B+C) (여유 공간 80px 고려)');
+        console.log('✅ 2페이지: 1페이지(A), 2페이지(B+C) (여유 공간 120px 고려)');
       } else {
         // A+B+C > 1048px, A+B > 1048px, A > 1048px 또는 B+C > 1048px → 1페이지(A), 2페이지(B), 3페이지(C)
         needsSecondPage = true;
