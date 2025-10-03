@@ -775,12 +775,12 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     const problemTitle = document.createElement('div');
     problemTitle.style.cssText = `
       font-weight: 800;
-      font-size: 16px;
+      font-size: 1rem;
       background: #222;
       color: #fff;
       padding: 11px 8px;
       border-radius: 8px;
-      margin-bottom: 19px;
+      margin-bottom: 1.2rem;
       width: 100%;
       box-sizing: border-box;
       display: block;
@@ -789,8 +789,8 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     
     const englishPassage = document.createElement('div');
     englishPassage.style.cssText = `
-      margin-top: 10px;
-      margin-bottom: 13px;
+      margin-top: 0.63rem;
+      margin-bottom: 0.8rem;
       font-size: 14px;
       padding: 16px;
       background: #fff3cd;
@@ -827,13 +827,13 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     const replacementsTitle = document.createElement('div');
     replacementsTitle.style.cssText = `
       font-weight: 800;
-      font-size: 16px;
+      font-size: 1rem;
       background: #222;
       color: #fff;
       padding: 11px 8px;
       border-radius: 8px;
-      margin-bottom: 13px;
-      margin-top: 24px;
+      margin-bottom: 0rem;
+      margin-top: 1.5rem;
       width: 100%;
       box-sizing: border-box;
     `;
@@ -886,8 +886,8 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     // C: 한글 해석 높이 측정
     const koreanTranslation = document.createElement('div');
     koreanTranslation.style.cssText = `
-      margin-top: 10px;
-      font-size: 16px;
+      margin-top: 0.63rem;
+      font-size: 1rem;
       padding: 16px;
       background: #F1F8E9;
       border-radius: 8px;
@@ -1034,15 +1034,14 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                  <span>문제: 다음 본문을 읽고 해석하세요</span>
-                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  문제: 다음 본문을 읽고 해석하세요
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                 </div>
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                   교체된 단어들
-              </div>
+                </div>
                 {work02Data.replacements && work02Data.replacements.length > 0 ? (
                   <div style={{marginTop:'0rem'}}>
                     {(() => {
@@ -1141,7 +1140,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                   </div>
                   <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                   </div>
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                   교체된 단어들
                 </div>
                 {work02Data.replacements && work02Data.replacements.length > 0 ? (
@@ -1245,11 +1244,10 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                  <span>문제: 다음 본문을 읽고 해석하세요</span>
-                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  문제: 다음 본문을 읽고 해석하세요
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                 </div>
                 </div>
               </div>
@@ -1262,7 +1260,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                   교체된 단어들
                 </div>
                 {work02Data.replacements && work02Data.replacements.length > 0 ? (
@@ -1356,11 +1354,10 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                  <span>문제: 다음 본문을 읽고 해석하세요</span>
-                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  문제: 다음 본문을 읽고 해석하세요
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                 </div>
               </div>
             </div>
@@ -1373,7 +1370,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%'}}>
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                   교체된 단어들
                 </div>
                 {work02Data.replacements && work02Data.replacements.length > 0 ? (
