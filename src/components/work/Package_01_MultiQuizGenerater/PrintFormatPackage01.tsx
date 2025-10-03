@@ -892,7 +892,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     // 임시 컨테이너 제거
     document.body.removeChild(tempContainer);
     
-    // 페이지 분할 로직 결정 (실제 A4 크기 기준)
+    // 페이지 분할 로직 결정 (실제 A4 크기 기준, 여유 공간 고려)
     const A = firstPageHeight;        // 문제 제목 + 영어 본문
     const B = replacementsHeight;     // 교체된 단어들 제목 + 테이블
     const C = koreanTranslationHeight; // 한글 해석
@@ -900,31 +900,61 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
     
     const totalHeight = A + B + C;
     
+    console.log(`📏 패키지#01-유형#02 측정된 높이:`);
+    console.log(`- A (문제+본문): ${A}px`);
+    console.log(`- B (교체된단어들): ${B}px`);
+    console.log(`- C (한글해석): ${C}px`);
+    console.log(`- 사용 가능 공간: ${availableSpace}px`);
+    
+    console.log(`🔍 패키지#01-유형#02 페이지 분할 로직 분석:`);
+    console.log(`- A + B + C = ${A} + ${B} + ${C} = ${totalHeight}px`);
+    console.log(`- A + B = ${A} + ${B} = ${A + B}px`);
+    console.log(`- B + C = ${B} + ${C} = ${B + C}px`);
+    console.log(`- 조건 검사 (여유 공간 고려):`);
+    console.log(`  * A+B+C ≤ ${availableSpace - 50}? ${totalHeight <= availableSpace - 50} (${totalHeight} <= ${availableSpace - 50})`);
+    console.log(`  * A+B ≤ ${availableSpace - 30}? ${A + B <= availableSpace - 30} (${A + B} <= ${availableSpace - 30})`);
+    console.log(`  * A ≤ ${availableSpace - 30}? ${A <= availableSpace - 30} (${A} <= ${availableSpace - 30})`);
+    console.log(`  * B+C ≤ ${availableSpace - 30}? ${B + C <= availableSpace - 30} (${B + C} <= ${availableSpace - 30})`);
+    console.log(`- 원래 조건 검사 (참고용):`);
+    console.log(`  * A+B+C ≤ ${availableSpace}? ${totalHeight <= availableSpace} (${totalHeight} <= ${availableSpace})`);
+    console.log(`  * A+B ≤ ${availableSpace}? ${A + B <= availableSpace} (${A + B} <= ${availableSpace})`);
+    console.log(`  * A ≤ ${availableSpace}? ${A <= availableSpace} (${A} <= ${availableSpace})`);
+    console.log(`  * B+C ≤ ${availableSpace}? ${B + C <= availableSpace} (${B + C} <= ${availableSpace})`);
+    
     let needsSecondPage = false;
     let needsThirdPage = false;
     let firstPageIncludesReplacements = true;
     
-    if (totalHeight <= availableSpace) {
-      // A+B+C ≤ 1048px → 1페이지
+    if (totalHeight <= availableSpace - 50) {  // 50px 여유 공간 추가
+      // A+B+C ≤ 998px → 1페이지 (여유 공간 50px 고려)
       needsSecondPage = false;
       needsThirdPage = false;
       firstPageIncludesReplacements = true;
-    } else if (A + B <= availableSpace) {
-      // A+B+C > 1048px, A+B ≤ 1048px → 1페이지(A+B), 2페이지(C)
+      console.log('✅ 패키지#01-유형#02 1페이지: A+B+C 모두 1페이지에 들어갑니다 (여유 공간 고려)');
+    } else if (A + B <= availableSpace - 30) {  // 30px 여유 공간 추가
+      // A+B+C > 998px, A+B ≤ 1018px → 1페이지(A+B), 2페이지(C)
       needsSecondPage = true;
       needsThirdPage = false;
       firstPageIncludesReplacements = true;
-    } else if (A <= availableSpace && B + C <= availableSpace) {
-      // A+B+C > 1048px, A+B > 1048px, A ≤ 1048px, B+C ≤ 1048px → 1페이지(A), 2페이지(B+C)
+      console.log('✅ 패키지#01-유형#02 2페이지: 1페이지(A+B), 2페이지(C) (여유 공간 고려)');
+    } else if (A <= availableSpace - 30 && B + C <= availableSpace - 30) {  // 30px 여유 공간 추가
+      // A+B+C > 998px, A+B > 1018px, A ≤ 1018px, B+C ≤ 1018px → 1페이지(A), 2페이지(B+C)
       needsSecondPage = true;
       needsThirdPage = false;
       firstPageIncludesReplacements = false;
+      console.log('✅ 패키지#01-유형#02 2페이지: 1페이지(A), 2페이지(B+C) (여유 공간 고려)');
     } else {
-      // A+B+C > 1048px, A+B > 1048px, A > 1048px 또는 B+C > 1048px → 1페이지(A), 2페이지(B), 3페이지(C)
+      // A+B+C > 998px, A+B > 1018px, A > 1018px 또는 B+C > 1018px → 1페이지(A), 2페이지(B), 3페이지(C)
       needsSecondPage = true;
       needsThirdPage = true;
       firstPageIncludesReplacements = false;
+      console.log('✅ 패키지#01-유형#02 3페이지: 1페이지(A), 2페이지(B), 3페이지(C) (여유 공간 고려)');
     }
+    
+    console.log(`=== 패키지#01-유형#02 최종 페이지 분할 결과 ===`);
+    console.log(`2페이지 필요: ${needsSecondPage}`);
+    console.log(`3페이지 필요: ${needsThirdPage}`);
+    console.log(`✅ 패키지#01-유형#02 상태 설정 완료`);
     
     return { needsSecondPage, needsThirdPage, firstPageIncludesReplacements };
   };
