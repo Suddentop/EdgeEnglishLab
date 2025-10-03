@@ -1047,19 +1047,15 @@ ${passage}`;
                     </>
                   )}
 
-                  {/* B. 4지선다 선택항목 컨테이너 */}
-                  {(pageLayoutInfo.page1Content.includes('B') || pageLayoutInfo.page1Content === 'B') && (
-                    <div className="problem-options" style={{margin:'0.2rem 0'}}>
-                      {quiz.options.map((opt, i) => (
-                        <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
-                          {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                          {quiz.answerIndex === i && (
-                            <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>정답: ③ {opt} / 원래(정상) 단어/구: {quiz.original}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                   {/* B. 4지선다 선택항목 컨테이너 */}
+                   {(pageLayoutInfo.page1Content.includes('B') || pageLayoutInfo.page1Content === 'B') && (
+                     <div className="problem-options" style={{margin:'0.2rem 0'}}>
+                       <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                         {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex+1}.`} {quiz.options[quiz.answerIndex]}
+                         <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답: 원래/정상 단어 : {quiz.original})</span>
+                       </div>
+                     </div>
+                   )}
 
                   {/* C. 본문해석 제목 + 한글 해석 컨테이너 */}
                   {(pageLayoutInfo.page1Content.includes('C') || pageLayoutInfo.page1Content === 'C') && (
@@ -1097,19 +1093,15 @@ ${passage}`;
                       </>
                     )}
 
-                    {/* B. 4지선다 선택항목 컨테이너 */}
-                    {(pageLayoutInfo.page2Content.includes('B') || pageLayoutInfo.page2Content === 'B') && (
-                      <div className="problem-options" style={{margin:'0.2rem 0'}}>
-                        {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
-                            {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                            {quiz.answerIndex === i && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>정답: ③ {opt} / 원래(정상) 단어/구: {quiz.original}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                     {/* B. 4지선다 선택항목 컨테이너 */}
+                     {(pageLayoutInfo.page2Content.includes('B') || pageLayoutInfo.page2Content === 'B') && (
+                       <div className="problem-options" style={{margin:'0.2rem 0'}}>
+                         <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                           {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex+1}.`} {quiz.options[quiz.answerIndex]}
+                           <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답: 원래/정상 단어 : {quiz.original})</span>
+                         </div>
+                       </div>
+                     )}
 
                     {/* C. 본문해석 제목 + 한글 해석 컨테이너 */}
                     {(pageLayoutInfo.page2Content.includes('C') || pageLayoutInfo.page2Content === 'C') && (
@@ -1148,19 +1140,15 @@ ${passage}`;
                       </>
                     )}
 
-                    {/* B. 4지선다 선택항목 컨테이너 */}
-                    {(pageLayoutInfo.page3Content.includes('B') || pageLayoutInfo.page3Content === 'B') && (
-                      <div className="problem-options" style={{margin:'0.2rem 0'}}>
-                        {quiz.options.map((opt, i) => (
-                          <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
-                            {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                            {quiz.answerIndex === i && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>정답: ③ {opt} / 원래(정상) 단어/구: {quiz.original}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                     {/* B. 4지선다 선택항목 컨테이너 */}
+                     {(pageLayoutInfo.page3Content.includes('B') || pageLayoutInfo.page3Content === 'B') && (
+                       <div className="problem-options" style={{margin:'0.2rem 0'}}>
+                         <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                           {`①②③④⑤`[quiz.answerIndex] || `${quiz.answerIndex+1}.`} {quiz.options[quiz.answerIndex]}
+                           <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답: 원래/정상 단어 : {quiz.original})</span>
+                         </div>
+                       </div>
+                     )}
 
                     {/* C. 본문해석 제목 + 한글 해석 컨테이너 */}
                     {(pageLayoutInfo.page3Content.includes('C') || pageLayoutInfo.page3Content === 'C') && (
