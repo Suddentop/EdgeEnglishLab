@@ -3768,7 +3768,7 @@ ${inputText}`;
                         fontSize: '1rem',
                         lineHeight: '1.5'
                       }}>
-                        {String.fromCharCode(65 + optionIndex)}. {option}
+                        {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}
                       </div>
                     ))}
                   </div>
@@ -3785,7 +3785,7 @@ ${inputText}`;
                       fontWeight: '700',
                       fontSize: '1.1rem'
                     }}>
-                      정답: {String.fromCharCode(65 + quizItem.work08Data.answerIndex)}. {quizItem.work08Data.options[quizItem.work08Data.answerIndex]}
+                      정답: {`①②③④⑤`[quizItem.work08Data.answerIndex] || `${quizItem.work08Data.answerIndex+1}.`} {quizItem.work08Data.options[quizItem.work08Data.answerIndex]}
                     </div>
                   )}
 
