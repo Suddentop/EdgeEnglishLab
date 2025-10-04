@@ -78,6 +78,12 @@ node_modules/
 secrets/
 config/secrets/
 
+# OpenAI API Keys (절대 커밋하지 않음)
+*openai*key*
+*api*key*
+.env.production
+.env.local.production
+
 # PHP API Proxy (루트의 간단한 버전들은 제외, php_api_proxy/ 폴더만 포함)
 # secure-api-proxy.php
 # config.php
