@@ -78,5 +78,11 @@ node_modules/
 secrets/
 config/secrets/
 
+# PHP API Proxy (루트의 간단한 버전들은 제외, php_api_proxy/ 폴더만 포함)
+# secure-api-proxy.php
+# config.php
+# api-proxy.php
+# rate-limiter.php
+
 # dataconnect generated files
 .dataconnect

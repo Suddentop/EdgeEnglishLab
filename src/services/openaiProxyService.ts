@@ -37,8 +37,8 @@ class OpenAIProxyService {
   private readonly timeout: number;
 
   constructor() {
-    // dothome.co.kr 서버의 API 프록시 URL
-    this.proxyUrl = process.env.REACT_APP_API_PROXY_URL || 'https://edgeenglish.net/api-proxy.php';
+    // dothome.co.kr 서버의 API 프록시 URL (php_api_proxy 폴더 사용)
+    this.proxyUrl = process.env.REACT_APP_API_PROXY_URL || 'https://edgeenglish.net/php_api_proxy/secure-api-proxy.php';
     this.timeout = 60000; // 60초
   }
 
