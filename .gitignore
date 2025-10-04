@@ -84,6 +84,17 @@ config/secrets/
 .env.production
 .env.local.production
 
+# 백업 폴더들 (API 키 포함 파일들)
+Backup/
+backup/
+*backup*/
+deployment_package/
+test-api.php
+production.env
+react-env-example.txt
+DEPLOYMENT_CHECKLIST.md
+DEPLOYMENT_GUIDE.md
+
 # PHP API Proxy (루트의 간단한 버전들은 제외, php_api_proxy/ 폴더만 포함)
 # secure-api-proxy.php
 # config.php
