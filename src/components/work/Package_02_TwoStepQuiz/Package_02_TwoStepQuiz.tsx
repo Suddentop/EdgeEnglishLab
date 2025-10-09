@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import './Package_02_TwoStepQuiz.css';
 
 const Package_02_TwoStepQuiz: React.FC = () => {
-  const [inputMethod, setInputMethod] = useState<'screenshot' | 'image' | 'text'>('text');
-  const [englishText, setEnglishText] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState<Record<string, boolean>>({
+  const [inputMode, setInputMode] = useState<'capture' | 'image' | 'text'>('text');
+  const [inputText, setInputText] = useState('');
+  const [selectedWorkTypes, setSelectedWorkTypes] = useState<Record<string, boolean>>({
     '01': true,
     '02': true,
     '03': true,
@@ -21,42 +21,45 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     '14': true
   });
 
-  const workTypes = [
-    { id: '01', name: '문단 순서 맞추기', points: 200 },
-    { id: '02', name: '독해 문제', points: 200 },
-    { id: '03', name: '빈칸(단어) 문제', points: 200 },
-    { id: '04', name: '빈칸(구) 문제', points: 200 },
-    { id: '05', name: '빈칸(문장) 문제', points: 200 },
-    { id: '06', name: '문장 위치 찾기', points: 200 },
-    { id: '07', name: '주제 추론', points: 200 },
-    { id: '08', name: '제목 추론', points: 200 },
-    { id: '09', name: '어법 오류 문제', points: 200 },
-    { id: '10', name: '다중 어법 오류 문제', points: 200 },
-    { id: '11', name: '본문 문장별 해석', points: 200 },
-    { id: '12', name: '빈칸 채우기 문제 (단어-주관식)', points: 200 },
-    { id: '13', name: '빈칸 채우기 문제 (문장-주관식)', points: 200 },
-    { id: '14', name: '빈칸 채우기 문제 (문장-주관식)', points: 200 }
+  const WORK_TYPES = [
+    { id: '01', name: '문단 순서 맞추기' },
+    { id: '02', name: '유사단어 독해' },
+    { id: '03', name: '빈칸(단어) 찾기' },
+    { id: '04', name: '빈칸(구) 찾기' },
+    { id: '05', name: '빈칸(문장) 찾기' },
+    { id: '06', name: '문장 위치 찾기' },
+    { id: '07', name: '주제 추론' },
+    { id: '08', name: '제목 추론' },
+    { id: '09', name: '어법 오류 찾기' },
+    { id: '10', name: '다중 어법 오류 찾기' },
+    { id: '11', name: '본문 문장별 해석' },
+    { id: '12', name: '단어 학습' },
+    { id: '13', name: '빈칸 채우기 (단어-주관식)' },
+    { id: '14', name: '빈칸 채우기 (문장-주관식)' }
   ];
 
-  const handleInputMethodChange = (method: 'screenshot' | 'image' | 'text') => {
-    setInputMethod(method);
+  const handleInputModeChange = (mode: 'capture' | 'image' | 'text') => {
+    setInputMode(mode);
   };
 
-  const handleTypeToggle = (typeId: string) => {
-    setSelectedTypes(prev => ({
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value);
+  };
+
+  const handleWorkTypeToggle = (typeId: string) => {
+    setSelectedWorkTypes(prev => ({
       ...prev,
       [typeId]: !prev[typeId]
     }));
   };
 
-  const handleDeselectAll = () => {
-    setSelectedTypes(prev => {
-      const newState: Record<string, boolean> = {};
-      Object.keys(prev).forEach(key => {
-        newState[key] = false;
-      });
-      return newState;
+  const handleSelectAll = () => {
+    const allSelected = Object.values(selectedWorkTypes).every(selected => selected);
+    const newState: Record<string, boolean> = {};
+    Object.keys(selectedWorkTypes).forEach(key => {
+      newState[key] = !allSelected;
     });
+    setSelectedWorkTypes(newState);
   };
 
   const handleGenerateQuiz = () => {
@@ -64,118 +67,102 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     alert('패키지 퀴즈 2단 생성 기능은 구현 예정입니다.');
   };
 
-  const getSelectedCount = () => {
-    return Object.values(selectedTypes).filter(Boolean).length;
-  };
-
   return (
-    <div className="package-02-container">
-      <div className="package-02-header">
-        <h1>📦 패키지 퀴즈 (2단)</h1>
+    <div className="quiz-generator">
+      <div className="generator-header">
+        <h2>📦 패키지 퀴즈 (2단)</h2>
         <p>하나의 영어 본문으로 유형#01부터 #14까지 모든 유형의 문제를 두 단계로 생성합니다.</p>
       </div>
-
-      {/* 입력 방법 선택 */}
-      <div className="input-method-section">
-        <div className="input-method-options">
-          <label className={`input-method-option ${inputMethod === 'screenshot' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="inputMethod"
-              value="screenshot"
-              checked={inputMethod === 'screenshot'}
-              onChange={() => handleInputMethodChange('screenshot')}
-            />
-            <span className="option-icon">🖥️▶️</span>
-            <span className="option-text">캡처화면 붙여넣기</span>
-            <span className="help-icon">❓</span>
-          </label>
-
-          <label className={`input-method-option ${inputMethod === 'image' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="inputMethod"
-              value="image"
-              checked={inputMethod === 'image'}
-              onChange={() => handleInputMethodChange('image')}
-            />
-            <span className="option-icon">🖼️</span>
-            <span className="option-text">이미지 파일 첨부</span>
-          </label>
-
-          <label className={`input-method-option ${inputMethod === 'text' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="inputMethod"
-              value="text"
-              checked={inputMethod === 'text'}
-              onChange={() => handleInputMethodChange('text')}
-            />
-            <span className="option-icon">✍️</span>
-            <span className="option-text">영어 본문 직접 붙여넣기</span>
-          </label>
-        </div>
+      <div className="input-type-section">
+        <label>
+          <input
+            type="radio"
+            name="inputMode"
+            checked={inputMode === 'capture'}
+            onChange={() => handleInputModeChange('capture')}
+          />
+          📸 캡처화면 붙여넣기
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="inputMode"
+            checked={inputMode === 'image'}
+            onChange={() => handleInputModeChange('image')}
+          />
+          🖼️ 이미지 파일 첨부
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="inputMode"
+            checked={inputMode === 'text'}
+            onChange={() => handleInputModeChange('text')}
+          />
+          ✍️ 영어 본문 직접 붙여넣기
+        </label>
       </div>
 
-      {/* 영어 본문 입력 */}
-      {inputMethod === 'text' && (
-        <div className="text-input-section">
-          <div className="section-header">
-            <h3>영어 본문 직접 붙여넣기: (2,000자 미만 권장)</h3>
-            <div className="warning-box">
-              <span className="warning-icon">⚠️</span>
-              <span className="warning-text">더 긴 본문을 입력하면 더 좋은 결과를 얻을 수 있습니다.</span>
-            </div>
+      {inputMode === 'text' && (
+        <div className="input-section">
+          <div className="input-label-row">
+            <label htmlFor="textInput" className="input-label">
+              영어 본문 직접 붙여넣기: (2,000자 미만 권장)
+            </label>
+            {inputText.length < 100 && (
+              <span className="warning">⚠️ 더 긴 본문을 입력하면 더 좋은 결과를 얻을 수 있습니다.</span>
+            )}
           </div>
           <textarea
-            value={englishText}
-            onChange={(e) => setEnglishText(e.target.value)}
+            id="textInput"
+            value={inputText}
+            onChange={handleTextChange}
             placeholder="영어 본문을 직접 붙여넣어 주세요. 최소 100자 이상 권장합니다."
-            className="english-textarea"
+            className="text-input"
+            rows={8}
           />
-          <div className="character-count">
-            글자 수: {englishText.length}자
+          <div className="text-info">
+            <span>글자 수: {inputText.length}자</span>
           </div>
         </div>
       )}
 
-      {/* 문제 유형 선택 */}
-      <div className="problem-type-section">
-        <div className="section-header">
+      <div className="work-types-selection">
+        <div className="work-types-header">
           <h3>생성할 문제 유형 선택</h3>
           <button 
-            className="deselect-all-btn"
-            onClick={handleDeselectAll}
+            type="button" 
+            className="select-all-button"
+            onClick={handleSelectAll}
           >
-            전체 해제
+            {Object.values(selectedWorkTypes).every(selected => selected) ? '전체 해제' : '전체 선택'}
           </button>
         </div>
-        <div className="problem-types-grid">
-          {workTypes.map(type => (
-            <label key={type.id} className="problem-type-item">
+        <div className="work-types-grid">
+          {WORK_TYPES.map(type => (
+            <label key={type.id} className="work-type-checkbox">
               <input
                 type="checkbox"
-                checked={selectedTypes[type.id]}
-                onChange={() => handleTypeToggle(type.id)}
+                checked={selectedWorkTypes[type.id] || false}
+                onChange={() => handleWorkTypeToggle(type.id)}
               />
-              <span className="type-number">#{type.id}</span>
-              <span className="type-name">{type.name}</span>
-              <span className="type-points">({type.points}P)</span>
+              <div className="checkbox-label">
+                <span className="work-type-id">#{type.id}</span>
+                <span className="work-type-name">{type.name}</span>
+                <span className="work-type-points">(200P)</span>
+              </div>
             </label>
           ))}
         </div>
       </div>
-
-      {/* 생성 버튼 */}
-      <div className="generate-section">
-        <button 
-          className="generate-btn"
-          onClick={handleGenerateQuiz}
-          disabled={getSelectedCount() === 0}
-        >
-          패키지 퀴즈 (2단) 생성
-        </button>
-      </div>
+      
+      <button
+        type="button"
+        className="generate-button"
+        onClick={handleGenerateQuiz}
+      >
+        패키지 퀴즈 (2단) 생성
+      </button>
     </div>
   );
 };
