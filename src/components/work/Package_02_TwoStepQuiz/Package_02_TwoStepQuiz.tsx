@@ -1,5 +1,7 @@
 import React, { useState, useRef, ChangeEvent } from 'react';
 import './Package_02_TwoStepQuiz.css';
+import { generateWork01Quiz } from '../../../services/work01Service';
+import { generateWork02Quiz } from '../../../services/work02Service';
 import { generateWork03Quiz } from '../../../services/work03Service';
 import { generateWork04Quiz } from '../../../services/work04Service';
 import { generateWork05Quiz } from '../../../services/work05Service';
@@ -10,6 +12,8 @@ import { generateWork09Quiz } from '../../../services/work09Service';
 import { generateWork10Quiz } from '../../../services/work10Service';
 import { generateWork11Quiz } from '../../../services/work11Service';
 import { generateWork12Quiz } from '../../../services/work12Service';
+import { generateBlankFillQuizWithAI } from '../../../services/work13Service';
+import { generateBlankQuizWithAI } from '../../../services/work14Service';
 import { translateToKorean } from '../../../services/common';
 
 const Package_02_TwoStepQuiz: React.FC = () => {
@@ -148,6 +152,22 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
       const results: string[] = [];
 
+      // 유형#01 테스트
+      if (selectedWorkTypes['01']) {
+        console.log('🔄 유형#01 문제 생성 중...');
+        const quiz01 = await generateWork01Quiz(inputText);
+        console.log('✅ 유형#01 문제 생성 완료:', quiz01);
+        results.push(`✅ 유형#01: ${quiz01.shuffledParagraphs.length}개 문단 순서`);
+      }
+
+      // 유형#02 테스트
+      if (selectedWorkTypes['02']) {
+        console.log('🔄 유형#02 문제 생성 중...');
+        const quiz02 = await generateWork02Quiz(inputText);
+        console.log('✅ 유형#02 문제 생성 완료:', quiz02);
+        results.push(`✅ 유형#02: ${quiz02.replacements.length}개 단어 교체`);
+      }
+
       // 유형#03 테스트
       if (selectedWorkTypes['03']) {
         console.log('🔄 유형#03 문제 생성 중...');
@@ -226,6 +246,22 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         const quiz12 = await generateWork12Quiz(inputText, 'english-to-korean');
         console.log('✅ 유형#12 문제 생성 완료:', quiz12);
         results.push(`✅ 유형#12: ${quiz12.words.length}개 단어 학습`);
+      }
+
+      // 유형#13 테스트
+      if (selectedWorkTypes['13']) {
+        console.log('🔄 유형#13 문제 생성 중...');
+        const quiz13 = await generateBlankFillQuizWithAI(inputText);
+        console.log('✅ 유형#13 문제 생성 완료:', quiz13);
+        results.push(`✅ 유형#13: ${quiz13.blankedText.substring(0, 30)}...`);
+      }
+
+      // 유형#14 테스트
+      if (selectedWorkTypes['14']) {
+        console.log('🔄 유형#14 문제 생성 중...');
+        const quiz14 = await generateBlankQuizWithAI(inputText);
+        console.log('✅ 유형#14 문제 생성 완료:', quiz14);
+        results.push(`✅ 유형#14: ${quiz14.blankedText.substring(0, 30)}...`);
       }
 
       // 번역 테스트
