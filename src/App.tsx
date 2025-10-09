@@ -34,6 +34,7 @@ import Work_12_WordStudy from './components/work/Work_12_WordStudy/Work_12_WordS
 import Work_13_BlankFillWord from './components/work/Work_13_BlankFillWord/Work_13_BlankFillWord';
 import Work_14_BlankFillSentence from './components/work/Work_14_BlankFillSentence/Work_14_BlankFillSentence';
 import Package_01_MultiQuizGenerater from './components/work/Package_01_MultiQuizGenerater/Package_01_MultiQuizGenerater';
+import Package_02_TwoStepQuiz from './components/work/Package_02_TwoStepQuiz/Package_02_TwoStepQuiz';
 import SampleProblemsBoard from './components/quiz/SampleProblemsBoard';
 import Feedback from './components/feedback/Feedback';
 import AdminPage from './components/admin/AdminPage';
@@ -189,6 +190,14 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <Package_01_MultiQuizGenerater />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/package-quiz-2step" 
+            element={
+              <PrivateRoute>
+                <Package_02_TwoStepQuiz />
               </PrivateRoute>
             } 
           />

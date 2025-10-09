@@ -7,6 +7,7 @@ import { isAdmin } from '../../utils/adminUtils';
 
 const WORK_MENUS = [
   { label: '📦 패키지 퀴즈 (01~14 통합)', path: '/package-quiz' },
+  { label: '📦 패키지 퀴즈 (2단)', path: '/package-quiz-2step' },
   { label: '01. 문단 순서 맞추기', path: '/work_01_article-order' },
   { label: '02. 유사단어 독해', path: '/work_02_reading-comprehension' },
   { label: '03. 빈칸(단어) 찾기', path: '/work_03_vocabulary-word' },
