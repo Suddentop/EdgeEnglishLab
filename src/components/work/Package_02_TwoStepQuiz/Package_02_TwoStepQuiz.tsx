@@ -1,6 +1,15 @@
 import React, { useState, useRef, ChangeEvent } from 'react';
 import './Package_02_TwoStepQuiz.css';
 import { generateWork03Quiz } from '../../../services/work03Service';
+import { generateWork04Quiz } from '../../../services/work04Service';
+import { generateWork05Quiz } from '../../../services/work05Service';
+import { generateWork06Quiz } from '../../../services/work06Service';
+import { generateWork07Quiz } from '../../../services/work07Service';
+import { generateWork08Quiz } from '../../../services/work08Service';
+import { generateWork09Quiz } from '../../../services/work09Service';
+import { generateWork10Quiz } from '../../../services/work10Service';
+import { generateWork11Quiz } from '../../../services/work11Service';
+import { generateWork12Quiz } from '../../../services/work12Service';
 import { translateToKorean } from '../../../services/common';
 
 const Package_02_TwoStepQuiz: React.FC = () => {
@@ -137,19 +146,93 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       console.log('📦 패키지 퀴즈 (A4용지 2단) 생성 시작...');
       console.log('선택된 유형:', selectedTypes.map(t => `#${t.id} ${t.name}`).join(', '));
 
-      // 테스트: 유형#03만 생성
+      const results: string[] = [];
+
+      // 유형#03 테스트
       if (selectedWorkTypes['03']) {
         console.log('🔄 유형#03 문제 생성 중...');
         const quiz03 = await generateWork03Quiz(inputText);
         console.log('✅ 유형#03 문제 생성 완료:', quiz03);
-
-        const translation = await translateToKorean(inputText);
-        console.log('✅ 번역 완료:', translation.substring(0, 50) + '...');
-
-        alert(`테스트 성공!\n\n생성된 문제:\n- 빈칸: ${quiz03.blankedText.substring(0, 50)}...\n- 정답: ${quiz03.options[quiz03.answerIndex]}\n- 번역: ${translation.substring(0, 50)}...`);
-      } else {
-        alert('테스트를 위해 유형#03을 선택해주세요.');
+        results.push(`✅ 유형#03: ${quiz03.blankedText.substring(0, 30)}...`);
       }
+
+      // 유형#04 테스트
+      if (selectedWorkTypes['04']) {
+        console.log('🔄 유형#04 문제 생성 중...');
+        const quiz04 = await generateWork04Quiz(inputText);
+        console.log('✅ 유형#04 문제 생성 완료:', quiz04);
+        results.push(`✅ 유형#04: ${quiz04.blankedText.substring(0, 30)}...`);
+      }
+
+      // 유형#05 테스트
+      if (selectedWorkTypes['05']) {
+        console.log('🔄 유형#05 문제 생성 중...');
+        const quiz05 = await generateWork05Quiz(inputText);
+        console.log('✅ 유형#05 문제 생성 완료:', quiz05);
+        results.push(`✅ 유형#05: ${quiz05.blankedText.substring(0, 30)}...`);
+      }
+
+      // 유형#06 테스트
+      if (selectedWorkTypes['06']) {
+        console.log('🔄 유형#06 문제 생성 중...');
+        const quiz06 = await generateWork06Quiz(inputText);
+        console.log('✅ 유형#06 문제 생성 완료:', quiz06);
+        results.push(`✅ 유형#06: ${quiz06.missingSentence.substring(0, 30)}...`);
+      }
+
+      // 유형#07 테스트
+      if (selectedWorkTypes['07']) {
+        console.log('🔄 유형#07 문제 생성 중...');
+        const quiz07 = await generateWork07Quiz(inputText);
+        console.log('✅ 유형#07 문제 생성 완료:', quiz07);
+        results.push(`✅ 유형#07: ${quiz07.options[quiz07.answerIndex].substring(0, 30)}...`);
+      }
+
+      // 유형#08 테스트
+      if (selectedWorkTypes['08']) {
+        console.log('🔄 유형#08 문제 생성 중...');
+        const quiz08 = await generateWork08Quiz(inputText);
+        console.log('✅ 유형#08 문제 생성 완료:', quiz08);
+        results.push(`✅ 유형#08: ${quiz08.options[quiz08.answerIndex].substring(0, 30)}...`);
+      }
+
+      // 유형#09 테스트
+      if (selectedWorkTypes['09']) {
+        console.log('🔄 유형#09 문제 생성 중...');
+        const quiz09 = await generateWork09Quiz(inputText);
+        console.log('✅ 유형#09 문제 생성 완료:', quiz09);
+        results.push(`✅ 유형#09: ${quiz09.original} → ${quiz09.options[quiz09.answerIndex]}`);
+      }
+
+      // 유형#10 테스트
+      if (selectedWorkTypes['10']) {
+        console.log('🔄 유형#10 문제 생성 중...');
+        const quiz10 = await generateWork10Quiz(inputText);
+        console.log('✅ 유형#10 문제 생성 완료:', quiz10);
+        results.push(`✅ 유형#10: 틀린 단어 ${quiz10.wrongIndexes.length}개`);
+      }
+
+      // 유형#11 테스트
+      if (selectedWorkTypes['11']) {
+        console.log('🔄 유형#11 문제 생성 중...');
+        const quiz11 = await generateWork11Quiz(inputText);
+        console.log('✅ 유형#11 문제 생성 완료:', quiz11);
+        results.push(`✅ 유형#11: ${quiz11.sentences.length}개 문장 해석`);
+      }
+
+      // 유형#12 테스트
+      if (selectedWorkTypes['12']) {
+        console.log('🔄 유형#12 문제 생성 중...');
+        const quiz12 = await generateWork12Quiz(inputText, 'english-to-korean');
+        console.log('✅ 유형#12 문제 생성 완료:', quiz12);
+        results.push(`✅ 유형#12: ${quiz12.words.length}개 단어 학습`);
+      }
+
+      // 번역 테스트
+      const translation = await translateToKorean(inputText);
+      console.log('✅ 번역 완료:', translation.substring(0, 50) + '...');
+
+      alert(`🎉 모든 선택된 유형 테스트 성공!\n\n${results.join('\n')}\n\n번역: ${translation.substring(0, 100)}...`);
 
     } catch (error) {
       console.error('❌ 문제 생성 실패:', error);
