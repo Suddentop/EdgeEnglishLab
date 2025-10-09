@@ -120,7 +120,7 @@ rm test-api.php
 `.env` 파일에 다음 내용 추가:
 ```bash
 # API 프록시 서버 URL
-REACT_APP_API_PROXY_URL=https://edgeenglish.net/php_api_proxy/secure-api-proxy.php
+REACT_APP_API_PROXY_URL=https://edgeenglish.net/secure-api-proxy.php
 
 # 기존 Firebase 설정 유지
 REACT_APP_FIREBASE_API_KEY=your_firebase_api_key

@@ -11,6 +11,11 @@
  * - 침입 탐지 시스템
  */
 
+// .env 파일 로드 (로컬 개발 환경)
+if (file_exists(__DIR__ . '/load-env.php')) {
+    require_once __DIR__ . '/load-env.php';
+}
+
 // 오류 보고 설정
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
@@ -128,7 +133,7 @@ function logRequest($endpoint, $responseTime, $success, $error = null) {
 // 메인 처리 로직
 try {
     // Rate Limiting 확인
-    $rateLimiter = new SecureRateLimiter();
+    $rateLimiter = new RateLimiter();
     if (!$rateLimiter->checkRateLimit()) {
         http_response_code(429);
         echo json_encode(['error' => 'Rate limit exceeded. Please try again later.']);

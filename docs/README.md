@@ -98,7 +98,7 @@ https://edgeenglish.net/test-api.php
 ### 4단계: React 앱 설정
 ```bash
 # .env 파일에 추가
-REACT_APP_API_PROXY_URL=https://edgeenglish.net/php_api_proxy/secure-api-proxy.php
+REACT_APP_API_PROXY_URL=https://edgeenglish.net/secure-api-proxy.php
 ```
 
 ### 5단계: 모니터링 설정
@@ -153,7 +153,7 @@ API_RATE_LIMIT=300
 API_TIMEOUT=60
 
 # React 앱 환경 변수
-REACT_APP_API_PROXY_URL=https://edgeenglish.net/php_api_proxy/secure-api-proxy.php
+REACT_APP_API_PROXY_URL=https://edgeenglish.net/secure-api-proxy.php
 ```
 
 ## 🚨 긴급 상황 대응

@@ -38,6 +38,9 @@ import SampleProblemsBoard from './components/quiz/SampleProblemsBoard';
 import Feedback from './components/feedback/Feedback';
 import AdminPage from './components/admin/AdminPage';
 import ProfilePage from './components/profile/ProfilePage';
+import PointCharge from './components/point/PointCharge';
+import PaymentSuccess from './components/payment/PaymentSuccess';
+import PaymentFail from './components/payment/PaymentFail';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 
 // 🔍 앱 초기화 진단 로그
@@ -213,6 +216,22 @@ const AppContent: React.FC = () => {
                 <ProfilePage />
               </PrivateRoute>
             } 
+          />
+          <Route 
+            path="/point-charge" 
+            element={
+              <PrivateRoute>
+                <PointCharge />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/payment/success" 
+            element={<PaymentSuccess />} 
+          />
+          <Route 
+            path="/payment/fail" 
+            element={<PaymentFail />} 
           />
 
         </Routes>

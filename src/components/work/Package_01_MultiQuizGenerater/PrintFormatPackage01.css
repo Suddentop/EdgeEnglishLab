@@ -222,6 +222,11 @@
     margin-top: 0rem !important;
   }
 
+  /* 패키지#01-유형#04 전용: 4지선다컨테이너와 본문 제목 컨테이너 사이 여백 증가 */
+  .only-print.print-answer-mode .work-04-problem-passage {
+    margin-bottom: 2.0rem !important;
+  }
+
   
   .only-print .problem-options {
     font-size: 1rem !important;
@@ -356,7 +361,7 @@
   
   .only-print .option {
     page-break-inside: avoid !important;
-    margin-bottom: 0.3rem !important;
+    /* margin-bottom: 0.3rem !important; - 인라인 스타일과 충돌하므로 제거 */
   }
   
   /* 다중 페이지 구성을 위한 페이지 브레이크 - 첫 번째 페이지는 자동 분할 */

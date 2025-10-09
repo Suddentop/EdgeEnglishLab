@@ -37,44 +37,64 @@ class OpenAIProxyService {
   private readonly timeout: number;
 
   constructor() {
-    // dothome.co.kr 서버의 API 프록시 URL (php_api_proxy 폴더 사용)
-    this.proxyUrl = process.env.REACT_APP_API_PROXY_URL || 'https://edgeenglish.net/php_api_proxy/secure-api-proxy.php';
+    // 프로덕션: 프록시 URL 사용, 개발: 빈 문자열 (직접 호출)
+    this.proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
     this.timeout = 60000; // 60초
   }
 
   /**
-   * OpenAI API 호출 (프록시 서버를 통해)
+   * OpenAI API 호출 (환경에 따라 프록시 또는 직접 호출)
    */
   async callOpenAI(request: OpenAIRequest): Promise<OpenAIResponse> {
     try {
-      console.log('🤖 OpenAI 프록시 서버 호출 중...');
-      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      let response: Response;
 
-      const response = await fetch(this.proxyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-        signal: controller.signal
-      });
+      // 프록시 URL이 설정되어 있으면 프록시 사용 (프로덕션)
+      if (this.proxyUrl) {
+        console.log('🤖 OpenAI 프록시 서버 호출 중...');
+        response = await fetch(this.proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request),
+          signal: controller.signal
+        });
+      } else {
+        // 프록시 URL이 없으면 직접 호출 (개발 환경)
+        const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+        if (!apiKey) {
+          throw new Error('API Key가 설정되지 않았습니다. .env.local 파일에 REACT_APP_OPENAI_API_KEY를 설정해주세요.');
+        }
+        
+        console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
+        response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(request),
+          signal: controller.signal
+        });
+      }
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ API 프록시 서버 오류:', response.status, errorText);
-        throw new Error(`API 프록시 서버 오류: ${response.status} - ${errorText}`);
+        console.error('❌ API 오류:', response.status, errorText);
+        throw new Error(`API 오류: ${response.status} - ${errorText}`);
       }
 
       const data: OpenAIResponse = await response.json();
-      console.log('✅ OpenAI 프록시 서버 응답 성공');
+      console.log('✅ OpenAI API 응답 성공');
       
       return data;
     } catch (error: any) {
-      console.error('❌ OpenAI 프록시 서버 호출 실패:', error);
+      console.error('❌ OpenAI API 호출 실패:', error);
       
       if (error.name === 'AbortError') {
         throw new Error('요청 시간 초과 (60초)');

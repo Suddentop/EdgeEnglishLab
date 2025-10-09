@@ -9,7 +9,7 @@ import {
 import { db } from '../firebase/config';
 import { Payment } from '../types/types';
 import { PAYMENT_STATUS, POINT_POLICY } from '../utils/pointConstants';
-// PointService import 제거 - 기존 기능과 충돌 방지
+import { chargePoints, adminManagePoints } from './pointService';
 
 // 결제 서비스 클래스
 export class PaymentService {
@@ -76,13 +76,22 @@ export class PaymentService {
 
       const paymentData = paymentDoc.data();
       
-      // 포인트 충전 처리 - 임시로 주석 처리
-      // await PointService.chargePoints(
-      //   paymentData.userId,
-      //   paymentData.pointsEarned,
-      //   paymentId
-      // );
-      console.log('포인트 충전 처리 - PointService.chargePoints 호출 필요');
+      // 사용자 정보 조회
+      const userRef = doc(db, 'users', paymentData.userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // 포인트 충전 처리
+        await chargePoints(
+          paymentData.userId,
+          paymentData.pointsEarned,
+          paymentId,
+          userData.name,
+          userData.nickname
+        );
+      }
 
       return true;
     } catch (error) {
@@ -126,15 +135,14 @@ export class PaymentService {
         updatedAt: serverTimestamp()
       });
 
-      // 포인트 차감 (환불) - 임시로 주석 처리
-      // await PointService.adminManagePoints(
-      //   'system', // 시스템 관리자
-      //   paymentData.userId,
-      //   'subtract',
-      //   paymentData.pointsEarned,
-      //   `결제 취소: ${reason}`
-      // );
-      console.log('포인트 차감 처리 - PointService.adminManagePoints 호출 필요');
+      // 포인트 차감 (환불)
+      await adminManagePoints(
+        'system', // 시스템 관리자
+        paymentData.userId,
+        'subtract',
+        paymentData.pointsEarned,
+        `결제 취소: ${reason}`
+      );
 
     } catch (error) {
       console.error('결제 취소 오류:', error);
@@ -252,10 +260,10 @@ export class PaymentService {
       };
     }
 
-    if (amount % 1000 !== 0) { // 1000원 단위 검증
+    if (amount % 10000 !== 0) { // 10000원 단위 검증
       return {
         isValid: false,
-        message: '결제 금액은 1000원 단위로 입력해주세요.'
+        message: '결제 금액은 만원 단위로 입력해주세요.'
       };
     }
 

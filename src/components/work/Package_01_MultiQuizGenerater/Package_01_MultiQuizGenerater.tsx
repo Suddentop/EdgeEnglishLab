@@ -2,6 +2,7 @@ import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import './Package_01_MultiQuizGenerater.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
+import ApiKeyCheck from '../../common/ApiKeyCheck';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { useAuth } from '../../../contexts/AuthContext';
 import { createQuiz } from '../../../utils/textProcessor';
@@ -29,41 +30,52 @@ interface BlankFillItem {
 
 // 각 Work 컴포넌트의 문제 생성 함수들을 직접 구현
 
-// OpenAI API를 사용하여 영어를 한글로 번역
-async function translateToKorean(englishText: string, apiKey: string): Promise<string> {
-  try {
-    console.log('🌐 번역 시작:', englishText.substring(0, 50) + '...');
-    
-    if (!apiKey) {
-      throw new Error('API 키가 설정되지 않았습니다.');
-    }
-
-    const prompt = `다음 영어 본문을 자연스러운 한국어로 번역하세요.
-
-번역 요구사항:
-- 자연스럽고 매끄러운 한국어
-- 원문의 의미를 정확히 전달
-- 문학적이고 읽기 쉬운 문체
-
-번역만 반환하세요 (다른 텍스트 없이):
-
-${englishText}`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+// 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
+async function callOpenAIAPI(requestBody: any): Promise<Response> {
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
+  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
+  
+  if (proxyUrl) {
+    // 프록시 서버 사용 (프로덕션)
+    console.log('🤖 OpenAI 프록시 서버 호출 중...');
+    return await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-          { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
-          { role: 'user', content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 800,
-      }),
+      body: JSON.stringify(requestBody),
+    });
+  } else if (directApiKey) {
+    // 개발 환경: 직접 API 호출
+    console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
+    return await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${directApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else {
+    throw new Error('API 설정이 없습니다. .env.local 파일을 확인해주세요.');
+  }
+}
+
+// OpenAI API를 사용하여 영어를 한글로 번역
+async function translateToKorean(englishText: string): Promise<string> {
+  try {
+    console.log('🌐 번역 시작:', englishText.substring(0, 50) + '...');
+
+    const prompt = `다음 영어 본문을 자연스러운 한국어로 번역해주세요. 번역만 출력하고 다른 설명은 하지 마세요.
+
+영어 본문:
+${englishText}`;
+
+    const response = await callOpenAIAPI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
+      temperature: 0.3
     });
 
     if (!response.ok) {
@@ -131,18 +143,12 @@ ${validSentences.map((sentence, index) => `${index + 1}. ${sentence}`).join('\n'
 ${passage}`;
     
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { 
-            role: 'system', 
-            content: `You are an expert English teacher creating blank-fill problems. 
+    const response = await callOpenAIAPI({
+      model: 'gpt-4o',
+      messages: [
+        { 
+          role: 'system', 
+          content: `You are an expert English teacher creating blank-fill problems. 
 
 CRITICAL RULES:
 1. Respond ONLY in valid JSON format
@@ -152,13 +158,12 @@ CRITICAL RULES:
 5. The number of selected words must equal the number of sentences
 
 You will receive a list of sentences. Process each sentence in order and select the most important word from each one.` 
-          },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 2000,
-        temperature: 0.1
-      })
-      });
+        },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 2000,
+      temperature: 0.1
+    });
     
     if (!response.ok) {
       throw new Error(`API 호출 실패: ${response.status}`);
@@ -349,7 +354,7 @@ You will receive a list of sentences. Process each sentence in order and select 
     
     // 번역은 별도 함수로 처리
     console.log('번역 시작...');
-    const translation = await translateToKorean(passage, apiKey);
+    const translation = await translateToKorean(passage);
     result.translation = translation;
     
     console.log('최종 검증 전 결과:', {
@@ -721,13 +726,7 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
       try {
         const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
         if (apiKey) {
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
+          const response = await callOpenAIAPI({
           model: 'gpt-3.5-turbo',
           messages: [
             {
@@ -741,13 +740,12 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
           ],
           max_tokens: 2000,
           temperature: 0.3
-            })
         });
         
           if (response.ok) {
             const data = await response.json();
             translation = data.choices[0].message.content;
-        console.log('✅ 번역 완료');
+            console.log('✅ 번역 완료');
           } else {
             console.error('❌ 번역 API 오류:', response.status);
             translation = '번역 실패';
@@ -784,12 +782,6 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
   const generateWork04Quiz = async (inputText: string): Promise<BlankQuiz> => {
     console.log('🔍 Work_04 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
-    
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-    }
 
     try {
       // passage에서 이미 ()로 묶인 구 추출
@@ -829,13 +821,7 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
 본문:
 ${inputText}`;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+      const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [
           {
@@ -844,7 +830,6 @@ ${inputText}`;
           }
         ],
           max_tokens: 2048
-        })
       });
 
       if (!response.ok) {
@@ -893,12 +878,6 @@ ${inputText}`;
   const generateWork05Quiz = async (inputText: string): Promise<BlankQuiz> => {
     console.log('🔍 Work_05 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
-    
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-    }
 
     try {
       // 본문에서 이미 ()로 묶인 문장 추출
@@ -909,41 +888,42 @@ ${inputText}`;
         excludedSentences.push(match[1].trim());
       }
 
-      const prompt = `아래 영어 본문에서 글의 주제와 가장 밀접한, 의미 있는 문장(sentence) 1개를 선정해.
-1. 반드시 본문에 실제로 등장한 문장(철자, 형태, 대소문자까지 동일)을 정답으로 선정해야 해. 변형, 대체, 동의어, 어형 변화 없이 본문에 있던 그대로 사용해야 해.
-2. 문제의 본문(빈칸 포함)은 반드시 사용자가 입력한 전체 본문과 완전히 동일해야 하며, 일부 문장만 추출하거나, 문장 순서를 바꾸거나, 본문을 요약/변형해서는 안 돼. 오직 정답 문장만 ()로 치환해.
-3. 입력된 본문에 이미 ()로 묶인 문장이 있다면, 그 부분은 절대 빈칸 처리 대상으로 삼지 마세요. 반드시 괄호 밖에 있는 문장만 빈칸 후보로 선정하세요.
-4. 아래 문장은 절대 빈칸 처리하지 마세요: ${excludedSentences.length > 0 ? excludedSentences.join(', ') : '없음'}
-5. 정답(문장) + 오답(본문과 유사한 주제/맥락의 새로운 문장 4개) 총 5개를 생성해.
-   - 오답 문장들은 본문의 주제와 유사하지만 본문에 없는 새로운 내용이어야 함
-   - 본문의 다른 문장을 그대로 사용하면 안 됨
-   - 정답과 비슷한 길이와 문체로 작성해야 함
-   - 본문의 맥락과 관련이 있지만 실제로는 틀린 내용이어야 함
-6. 정답의 위치는 1~5번 중 랜덤.
-7. 각 선택지(정답 포함)에 대한 한국어 해석을 생성해.
-8. 아래 JSON 형식으로 응답 (optionTranslations 필드는 반드시 포함해야 함):
+      const prompt = `아래 영어 본문을 읽고 빈칸 채우기 문제를 만들어주세요.
+
+**중요한 지침:**
+1. 본문에서 **실제로 등장한 문장을 그대로** 정답으로 선택하세요.
+2. 정답 문장은 본문의 철자, 형태, 대소문자까지 **완전히 동일**해야 합니다.
+3. 본문에서 문장을 찾을 때는 마침표(.), 느낌표(!), 물음표(?)로 끝나는 완전한 문장을 선택하세요.
+4. 이미 ()로 묶인 부분은 선택하지 마세요.
+
+**본문 분석:**
+본문을 문장 단위로 나누면 다음과 같습니다:
+${inputText.split(/(?<=[.!?])\s+/).map((sentence, index) => `${index + 1}. ${sentence.trim()}`).join('\n')}
+
+**작업:**
+위 문장들 중에서 가장 적절한 문장 1개를 정답으로 선택하고, 나머지 4개는 본문과 유사한 주제의 새로운 문장으로 만들어주세요.
+
+**출력 형식 (JSON만):**
 {
-  "options": ["영어 선택지1", "영어 선택지2", "영어 선택지3", "영어 선택지4", "영어 선택지5"],
-  "answerIndex": 2,
-  "optionTranslations": ["한국어 해석1", "한국어 해석2", "한국어 해석3", "한국어 해석4", "한국어 해석5"]
+  "options": ["선택지1", "선택지2", "선택지3", "선택지4", "선택지5"],
+  "answerIndex": 0,
+  "optionTranslations": ["한국어해석1", "한국어해석2", "한국어해석3", "한국어해석4", "한국어해석5"]
 }
-주의: options의 정답(정답 인덱스에 해당하는 문장)은 반드시 본문에 있던 문장과 완전히 일치해야 하며, 변형/대체/동의어/어형 변화가 있으면 안 됨. 오답들은 본문에 없는 새로운 문장이어야 함. 문제의 본문(빈칸 포함)은 반드시 입력한 전체 본문과 동일해야 함. 입력된 본문에 이미 ()로 묶인 부분은 빈칸 처리 대상에서 제외해야 함.
+
+**주의사항:**
+- 정답은 반드시 위에 나열된 문장 중 하나와 완전히 일치해야 합니다.
+- answerIndex는 0~4 중 하나입니다.
+- 각 선택지에 대한 한국어 해석도 포함해주세요.
+
 본문:
 ${inputText}`;
 
       console.log('🤖 OpenAI API 호출 중...');
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+      const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
         temperature: 0.7
-        })
       });
 
       if (!response.ok) {
@@ -967,27 +947,200 @@ ${inputText}`;
         throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
       }
       
-      // 정답 문장이 본문에 실제로 존재하는지 검증
-      if (!inputText.includes(result.options[result.answerIndex])) {
-        throw new Error('정답 문장이 본문에 존재하지 않습니다. AI 응답 오류입니다.');
+      // 정답 문장이 본문에 실제로 존재하는지 검증 (강화된 로직)
+      const correctAnswer = result.options[result.answerIndex];
+      let answerFound = false;
+      
+      // 방법 1: 정확한 매칭
+      if (inputText.includes(correctAnswer)) {
+        answerFound = true;
+        console.log('✅ 정답 문장 검증 성공: 정확한 매칭');
+      } else {
+        // 방법 2: 공백 정규화 후 매칭
+        const normalizedInput = inputText.replace(/\s+/g, ' ').trim();
+        const normalizedAnswer = correctAnswer.replace(/\s+/g, ' ').trim();
+        
+        if (normalizedInput.includes(normalizedAnswer)) {
+          answerFound = true;
+          console.log('✅ 정답 문장 검증 성공: 공백 정규화 후 매칭');
+        } else {
+          // 방법 3: 문장 분할 후 개별 검증
+          const sentences = inputText.split(/(?<=[.!?])\s+/).map((s: string) => s.trim());
+          const answerSentences = correctAnswer.split(/(?<=[.!?])\s+/).map((s: string) => s.trim());
+          
+          // 정답이 여러 문장으로 구성된 경우
+          if (answerSentences.length > 1) {
+            let allSentencesFound = true;
+            for (const answerSentence of answerSentences) {
+              if (!sentences.some(s => s.includes(answerSentence) || 
+                  s.replace(/\s+/g, ' ').trim().includes(answerSentence.replace(/\s+/g, ' ').trim()))) {
+                allSentencesFound = false;
+                break;
+              }
+            }
+            if (allSentencesFound) {
+              answerFound = true;
+              console.log('✅ 정답 문장 검증 성공: 문장 분할 후 매칭');
+            }
+          }
+          
+          // 방법 4: 키워드 기반 유사성 검증 (AI가 의미적으로 유사한 문장을 선택한 경우)
+          if (!answerFound) {
+            console.log('🔍 키워드 기반 유사성 검증 시작...');
+            const answerKeywords = correctAnswer.toLowerCase()
+              .replace(/[^\w\s]/g, ' ')
+              .split(/\s+/)
+              .filter((word: string) => word.length > 3); // 3글자 이상의 의미있는 단어만
+            
+            const originalKeywords = inputText.toLowerCase()
+              .replace(/[^\w\s]/g, ' ')
+              .split(/\s+/)
+              .filter((word: string) => word.length > 3);
+            
+            const commonKeywords = answerKeywords.filter((keyword: string) => 
+              originalKeywords.some((origKeyword: string) => 
+                origKeyword.includes(keyword) || keyword.includes(origKeyword)
+              )
+            );
+            
+            const similarityRatio = commonKeywords.length / Math.max(answerKeywords.length, 1);
+            console.log(`키워드 유사도: ${similarityRatio.toFixed(2)} (${commonKeywords.length}/${answerKeywords.length})`);
+            console.log('공통 키워드:', commonKeywords);
+            
+            // 70% 이상의 키워드가 일치하면 유사한 문장으로 인정
+            if (similarityRatio >= 0.7) {
+              answerFound = true;
+              console.log('✅ 정답 문장 검증 성공: 키워드 기반 유사성 검증');
+            }
+          }
+          
+          // 방법 5: 부분 매칭 (문장의 일부가 원본에 있는 경우)
+          if (!answerFound) {
+            console.log('🔍 부분 매칭 검증 시작...');
+            const answerWords = correctAnswer.split(/\s+/);
+            const minMatchLength = Math.max(3, Math.floor(answerWords.length * 0.6)); // 60% 이상 일치
+            
+            for (let i = 0; i <= answerWords.length - minMatchLength; i++) {
+              const subPhrase = answerWords.slice(i, i + minMatchLength).join(' ');
+              if (inputText.includes(subPhrase) || normalizedInput.includes(subPhrase.replace(/\s+/g, ' ').trim())) {
+                answerFound = true;
+                console.log('✅ 정답 문장 검증 성공: 부분 매칭');
+                console.log('매칭된 부분:', subPhrase);
+                break;
+              }
+            }
+          }
+        }
       }
       
-      // blankedText를 프론트엔드에서 직접 생성 (괄호 split 방식, 괄호 안/밖 완벽 구분)
+      if (!answerFound) {
+        console.error('❌ 정답 문장 검증 실패:');
+        console.error('찾으려는 정답:', correctAnswer);
+        console.error('원본 텍스트 일부:', inputText.substring(0, 200) + '...');
+        
+        // AI가 잘못된 문장을 선택한 경우, 모든 옵션을 검증해서 원본에 있는 것을 찾기
+        console.log('🔄 모든 옵션을 검증하여 원본에 있는 문장을 찾습니다...');
+        
+        let foundValidOption = false;
+        for (let i = 0; i < result.options.length; i++) {
+          const option = result.options[i];
+          console.log(`옵션 ${i + 1} 검증:`, option.substring(0, 50) + '...');
+          
+          // 각 옵션에 대해 검증
+          let optionFound = false;
+          
+          // 정확한 매칭
+          if (inputText.includes(option)) {
+            optionFound = true;
+            console.log(`✅ 옵션 ${i + 1} 검증 성공: 정확한 매칭`);
+          } else {
+            // 공백 정규화 후 매칭
+            const normalizedInput = inputText.replace(/\s+/g, ' ').trim();
+            const normalizedOption = option.replace(/\s+/g, ' ').trim();
+            
+            if (normalizedInput.includes(normalizedOption)) {
+              optionFound = true;
+              console.log(`✅ 옵션 ${i + 1} 검증 성공: 공백 정규화 후 매칭`);
+            } else {
+              // 키워드 기반 유사성 검증
+              const optionKeywords = option.toLowerCase()
+                .replace(/[^\w\s]/g, ' ')
+                .split(/\s+/)
+                .filter((word: string) => word.length > 3);
+              
+              const originalKeywords = inputText.toLowerCase()
+                .replace(/[^\w\s]/g, ' ')
+                .split(/\s+/)
+                .filter((word: string) => word.length > 3);
+              
+              const commonKeywords = optionKeywords.filter((keyword: string) => 
+                originalKeywords.some((origKeyword: string) => 
+                  origKeyword.includes(keyword) || keyword.includes(origKeyword)
+                )
+              );
+              
+              const similarityRatio = commonKeywords.length / Math.max(optionKeywords.length, 1);
+              console.log(`옵션 ${i + 1} 키워드 유사도: ${similarityRatio.toFixed(2)} (${commonKeywords.length}/${optionKeywords.length})`);
+              
+              if (similarityRatio >= 0.6) { // 60% 이상 일치하면 유효
+                optionFound = true;
+                console.log(`✅ 옵션 ${i + 1} 검증 성공: 키워드 기반 유사성 검증`);
+              }
+            }
+          }
+          
+          if (optionFound) {
+            result.answerIndex = i;
+            answerFound = true;
+            foundValidOption = true;
+            console.log(`✅ 옵션 ${i + 1}을 정답으로 설정합니다.`);
+            break;
+          }
+        }
+        
+        if (!foundValidOption) {
+          throw new Error('AI가 생성한 모든 옵션이 원본 본문에 존재하지 않습니다. 문제를 다시 생성해주세요.');
+        }
+      }
+      
+      // blankedText를 프론트엔드에서 직접 생성 (개선된 로직)
       const replaceFirstOutsideBrackets = (text: string, sentence: string): string => {
         let replaced = false;
         const tokens = text.split(/([()])/);
         let inBracket = false;
+        
         for (let i = 0; i < tokens.length; i++) {
           if (tokens[i] === '(') { inBracket = true; continue; }
           if (tokens[i] === ')') { inBracket = false; continue; }
+          
           if (!inBracket && !replaced) {
-            const regex = new RegExp(sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            // 방법 1: 정확한 매칭
+            if (tokens[i].includes(sentence)) {
+              tokens[i] = tokens[i].replace(sentence, '(______________________________)');
+              replaced = true;
+              console.log('✅ 빈칸 생성 성공: 정확한 매칭');
+            } else {
+              // 방법 2: 정규식 매칭
+              const escapedSentence = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = new RegExp(escapedSentence);
             if (regex.test(tokens[i])) {
               tokens[i] = tokens[i].replace(regex, '(______________________________)');
               replaced = true;
+                console.log('✅ 빈칸 생성 성공: 정규식 매칭');
+              } else {
+                // 방법 3: 공백 정규화 후 매칭
+                const normalizedToken = tokens[i].replace(/\s+/g, ' ').trim();
+                const normalizedSentence = sentence.replace(/\s+/g, ' ').trim();
+                if (normalizedToken.includes(normalizedSentence)) {
+                  tokens[i] = tokens[i].replace(normalizedSentence, '(______________________________)');
+                  replaced = true;
+                  console.log('✅ 빈칸 생성 성공: 공백 정규화 후 매칭');
+                }
+              }
             }
           }
         }
+        
         let result = '';
         inBracket = false;
         for (let i = 0; i < tokens.length; i++) {
@@ -995,6 +1148,13 @@ ${inputText}`;
           if (tokens[i] === ')') { inBracket = false; result += ')'; continue; }
           result += tokens[i];
         }
+        
+        if (!replaced) {
+          console.warn('⚠️ 빈칸 생성 실패: 문장을 찾을 수 없음');
+          console.warn('찾으려는 문장:', sentence.substring(0, 100));
+          console.warn('원본 텍스트 일부:', text.substring(0, 200));
+        }
+        
         return result;
       };
       
@@ -1002,10 +1162,19 @@ ${inputText}`;
       const blankedText = replaceFirstOutsideBrackets(inputText, answer);
       result.blankedText = blankedText;
       
-      // 복원 검증
+      // 복원 검증 (개선된 로직)
       const blankRestore = result.blankedText.replace(/\( *_{20,}\)/, answer);
-      if (blankRestore.trim() !== inputText.trim()) {
+      const normalizedOriginal = inputText.replace(/\s+/g, ' ').trim();
+      const normalizedRestored = blankRestore.replace(/\s+/g, ' ').trim();
+      
+      if (normalizedRestored !== normalizedOriginal) {
+        console.error('❌ 복원 검증 실패:');
+        console.error('원본 텍스트:', normalizedOriginal.substring(0, 200) + '...');
+        console.error('복원된 텍스트:', normalizedRestored.substring(0, 200) + '...');
+        console.error('정답 문장:', answer.substring(0, 100) + '...');
         throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
+      } else {
+        console.log('✅ 복원 검증 성공: 빈칸 본문이 원본과 일치함');
       }
       
       if (!result.blankedText || !result.options || typeof result.answerIndex !== 'number') {
@@ -1014,7 +1183,7 @@ ${inputText}`;
 
       // 번역 생성
       console.log('🌐 번역 시작...');
-      const translation = await translateToKorean(inputText, apiKey);
+      const translation = await translateToKorean(inputText);
       console.log('✅ 번역 완료');
 
       // optionTranslations가 없으면 기본값 설정
@@ -1041,12 +1210,6 @@ ${inputText}`;
   const generateWork06Quiz = async (inputText: string): Promise<SentencePositionQuiz> => {
     console.log('🔍 Work_06 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
-    
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-    }
 
     try {
       // 1단계: 원본 본문을 문장 단위로 분할
@@ -1092,7 +1255,7 @@ ${inputText}`;
       console.log('정답 위치:', answerIndex);
       
       // 5단계: 번역 생성
-      const translation = await translateToKorean(inputText, apiKey);
+      const translation = await translateToKorean(inputText);
       
       const quizData: SentencePositionQuiz = {
         missingSentence: missingSentence.trim(),
@@ -1113,12 +1276,6 @@ ${inputText}`;
   const generateWork07Quiz = async (inputText: string): Promise<MainIdeaQuiz> => {
     console.log('🔍 Work_07 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
-    
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-    }
 
     try {
       const prompt = `아래 영어 본문을 읽고, 글의 주제를 가장 잘 요약하는 문장/구 1개를 선정해.
@@ -1154,18 +1311,11 @@ ${inputText}
 - 모든 해석이 정확히 일치해야 함`;
 
       console.log('🤖 OpenAI API 호출 중...');
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+      const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
           temperature: 0.3
-        })
       });
 
       if (!response.ok) {
@@ -1264,7 +1414,6 @@ ${inputText}
 
   // 재시도 함수 (Work_07에서 가져옴)
   const generateWork07QuizRetry = async (inputText: string, retryCount: number): Promise<MainIdeaQuiz> => {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     
     if (retryCount > 3) {
       throw new Error('최대 재시도 횟수를 초과했습니다.');
@@ -1302,18 +1451,11 @@ ${inputText}
 - optionTranslations[1]도 "미래는 불확실하지만 희망적입니다."가 되어야 함
 - 모든 해석이 정확히 일치해야 함`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
         temperature: 0.3
-      })
       });
 
     const data = await response.json();
@@ -1349,18 +1491,11 @@ ${inputText}
     const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문을 읽고, 글의 주제의식에 가장 적합한 제목(title) 1개를 선정해.\n1. 정답 제목(문장/구) + 오답(비슷한 길이의 제목 4개, 의미는 다름) 총 5개를 생성해.\n2. 정답의 위치는 1~5번 중 랜덤.\n3. 본문 해석도 함께 제공.\n4. 아래 JSON 형식으로, 반드시 answerTranslation(정답 제목의 한글 해석) 필드를 별도 포함해서 응답:\n{\n  \"passage\": \"...\",\n  \"options\": [\"...\", \"...\", \"...\", \"...\", \"...\"],\n  \"answerIndex\": 2,\n  \"translation\": \"...\",\n  \"answerTranslation\": \"정답 제목의 한글 해석\"\n}\n본문:\n${inputText}\n정답(제목)의 한글 해석도 반드시 포함해줘.\n정답(제목) 영어 문장과 그 한글 해석(answerTranslation)도 반드시 별도 필드로 포함해줘.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
         temperature: 0.7
-      })
       });
 
     const data = await response.json();
@@ -1404,13 +1539,7 @@ ${inputText}
 본문:
 ${passage}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: 'You are a helpful assistant that only returns valid JSON arrays.' },
@@ -1418,7 +1547,6 @@ ${passage}`;
         ],
         max_tokens: 1000,
         temperature: 0.3
-      })
       });
 
     if (!response.ok) {
@@ -1497,13 +1625,7 @@ Return ONLY this JSON format:
 
 Make sure the transformed word is actually DIFFERENT and WRONG compared to the original!`;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+      const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [
             { role: 'system', content: 'You are a helpful assistant that only returns valid JSON objects.' },
@@ -1511,7 +1633,6 @@ Make sure the transformed word is actually DIFFERENT and WRONG compared to the o
           ],
         max_tokens: 1000,
         temperature: 0.7
-        })
       });
 
       if (!response.ok) {
@@ -1678,13 +1799,7 @@ Make sure the transformed word is actually DIFFERENT and WRONG compared to the o
 
 ${passage}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAIAPI({
         model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
@@ -1692,7 +1807,6 @@ ${passage}`;
         ],
         max_tokens: 2000,
         temperature: 0.3
-      })
       });
 
     if (!response.ok) {
@@ -1762,18 +1876,11 @@ ${passage}`;
 본문:
 ${inputText}`;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+      const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
         temperature: 0.7
-        })
       });
 
       if (!response.ok) {
@@ -1905,27 +2012,20 @@ ${inputText}`;
         }
         
         try {
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
+          const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [
                 {
                   role: 'system',
-                  content: '당신은 영어-한국어 번역 전문가입니다. 주어진 영어 문장을 자연스러운 한국어로 번역해주세요.'
+                content: '당신은 영어-한국어 번역 전문가입니다. 주어진 영어 문장을 자연스러운 한국어로 번역해주세요.'
                 },
                 {
                   role: 'user',
-                  content: `다음 영어 문장을 한국어로 번역해주세요:\n\n${sentence}`
+                content: `다음 영어 문장을 한국어로 번역해주세요:\n\n${sentence}`
                 }
               ],
         max_tokens: 500,
               temperature: 0.3
-            })
       });
           
           if (!response.ok) {
@@ -1991,18 +2091,11 @@ ${inputText}`;
 본문:
 ${passage}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
         temperature: 0.7
-      })
       });
 
     const data = await response.json();
@@ -2225,12 +2318,6 @@ ${passage}`;
   const generateWork03Quiz = async (inputText: string): Promise<BlankQuiz> => {
     console.log('🔍 Work_03 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
-    
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-    }
 
     try {
       const excludedWords: string[] = []; // 제외할 단어들 (필요시 추가)
@@ -2259,18 +2346,11 @@ ${passage}`;
 입력된 영어 본문:
 ${inputText}`;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
+      const response = await callOpenAIAPI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 1200,
         temperature: 0.7
-        })
       });
 
       const data = await response.json();
@@ -2342,7 +2422,7 @@ ${inputText}`;
       console.log('빈칸 처리된 텍스트:', blankedText);
 
       // 번역 생성
-      const translation = await translateToKorean(inputText, apiKey);
+      const translation = await translateToKorean(inputText);
 
       const blankQuiz: BlankQuiz = {
         blankedText: blankedText,
@@ -2371,7 +2451,7 @@ ${inputText}`;
       switch (workType.id) {
         case '01': // 문장 순서 맞추기
           quizData = await generateWork01Quiz(inputText, useAI);
-          translatedText = '';
+          translatedText = quizData.translation;
           break;
           
         case '02': // 독해 문제
@@ -2640,16 +2720,9 @@ ${inputText}`;
       const work01Quiz = generatedQuizzes.find(item => item.workTypeId === '01');
       if (work01Quiz && work01Quiz.quiz?.originalText) {
         try {
-          const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-          // console.log('🔑 API 키 확인:', apiKey ? '있음' : '없음'); // 보안상 제거됨
-          
-          if (apiKey) {
-            const translation = await translateToKorean(work01Quiz.quiz?.originalText || '', apiKey);
+          const translation = await translateToKorean(work01Quiz.quiz?.originalText || '');
             setTranslatedText(translation);
-            console.log('✅ 번역 완료');
-          } else {
-            setTranslatedText('번역을 사용하려면 .env 파일에 REACT_APP_OPENAI_API_KEY를 설정해주세요.');
-          }
+          console.log('✅ 번역 완료');
         } catch (error) {
           console.error('❌ 번역 실패:', error);
           const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
@@ -3346,7 +3419,7 @@ ${inputText}`;
                           value={optionIndex}
                           style={{ marginRight: '0.8rem' }}
                         />
-                        {option}
+                        {['①', '②', '③', '④', '⑤'][optionIndex]} {option}
                       </label>
                     ))}
                   </div>
@@ -4427,7 +4500,7 @@ ${inputText}`;
                   <PrintFormatPackage01
                     key={`print-work-01-${index}`}
                     quiz={quizItem.quiz}
-                    translatedText={quizItem.quiz.translation || ''}
+                    translatedText={quizItem.quiz.translation || translatedText || ''}
                     printMode={printMode}
                   />
                 );

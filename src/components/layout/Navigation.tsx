@@ -142,6 +142,16 @@ const Navigation: React.FC = () => {
                 </button>
               )}
               
+              {/* 포인트구매 */}
+              {currentUser && (
+                <button
+                  className="mobile-menu-item mobile-single-item"
+                  onClick={() => { setShowMobileMenu(false); navigate('/point-charge'); }}
+                >
+                  포인트구매
+                </button>
+              )}
+              
               {/* 관리자 */}
               {currentUser && isAdmin(userData) && (
                 <button
@@ -208,6 +218,17 @@ const Navigation: React.FC = () => {
               </div>
             )}
           </div>
+        )}
+        {/* 포인트구매 버튼: PC 화면에서만 보임 */}
+        {currentUser && !isMobile && (
+          <button
+            className="nav-text-link point-purchase-link"
+            onClick={() => {
+              navigate('/point-charge');
+            }}
+          >
+            포인트구매
+          </button>
         )}
         {/* Feedback 메뉴 */}
         {!isMobile && (

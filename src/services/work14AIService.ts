@@ -1,5 +1,35 @@
 // Work14 관련 AI 서비스 함수들
 
+// 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
+async function callOpenAIAPI(requestBody: any): Promise<Response> {
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
+  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
+  
+  if (proxyUrl) {
+    // 프록시 서버 사용 (프로덕션)
+    console.log('🤖 OpenAI 프록시 서버 호출 중...');
+    return await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else if (directApiKey) {
+    // 개발 환경: 직접 API 호출
+    console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
+    return await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${directApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else {
+    throw new Error('API 설정이 없습니다. .env.local 파일을 확인해주세요.');
+  }
+}
 
 export interface BlankQuizData {
   blankedText: string;
@@ -23,8 +53,6 @@ export interface BlankFillSentenceData {
 
 // 이미지를 텍스트로 변환하는 함수
 export const imageToTextWithOpenAIVision = async (imageData: string | File): Promise<string> => {
-  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-  
   // File 객체인 경우 base64로 변환
   let base64Image: string;
   if (imageData instanceof File) {
@@ -41,34 +69,27 @@ export const imageToTextWithOpenAIVision = async (imageData: string | File): Pro
     base64Image = imageData;
   }
   
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'user',
-          content: [
+  const response = await callOpenAIAPI({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: '이 이미지에서 영어 텍스트를 추출해주세요. 텍스트만 반환하고 다른 설명은 하지 마세요.'
+          },
             {
-              type: 'text',
-              text: '이 이미지에서 영어 텍스트를 추출해주세요. 텍스트만 반환하고 다른 설명은 하지 마세요.'
-            },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: base64Image
-                }
+              type: 'image_url',
+              image_url: {
+                url: base64Image
               }
-          ]
-        }
-      ],
-      max_tokens: 2000,
-      temperature: 0.1
-    })
+            }
+        ]
+      }
+    ],
+    max_tokens: 2000,
+    temperature: 0.1
   });
 
   const data = await response.json();
@@ -129,8 +150,6 @@ export const filterValidSentences = (sentences: string[]): { validSentences: str
 
 // 빈칸 문제를 생성하는 AI 함수
 export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQuizData> => {
-  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-  
   // 문장 개수 확인
   const sentences = splitSentences(passage);
   const { validSentences, skippedSentences } = filterValidSentences(sentences);
@@ -156,7 +175,7 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
   
   // AI 문장 선택 재활성화 (더 많은 빈칸 생성을 위해)
   try {
-    const result = await selectSentencesForBlanksWithAI(validSentences, apiKey);
+    const result = await selectSentencesForBlanksWithAI(validSentences);
     selectedIndices = result.selectedIndices;
     selectedSentences = result.selectedSentences;
     console.log('=== AI 문장 선택 성공 ===');
@@ -300,7 +319,7 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
   
   // 번역은 별도 함수로 처리
   console.log('번역 시작...');
-  const translation = await translateToKorean(passage, apiKey);
+  const translation = await translateToKorean(passage);
   
   const result: BlankQuizData = {
     blankedText,
@@ -316,20 +335,13 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
 };
 
 // 한국어로 번역하는 함수
-export const translateToKorean = async (text: string, apiKey: string): Promise<string> => {
+export const translateToKorean = async (text: string, _apiKey?: string): Promise<string> => {
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: `다음 영어 텍스트를 자연스러운 한국어로 번역해주세요:\n\n${text}` }],
-        max_tokens: 2000,
-        temperature: 0.3
-      })
+    const response = await callOpenAIAPI({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: `다음 영어 텍스트를 자연스러운 한국어로 번역해주세요:\n\n${text}` }],
+      max_tokens: 2000,
+      temperature: 0.3
     });
     const data = await response.json();
     return data.choices[0].message.content.trim();
@@ -340,7 +352,7 @@ export const translateToKorean = async (text: string, apiKey: string): Promise<s
 };
 
 // AI를 사용한 문장 선택 로직
-export const selectSentencesForBlanksWithAI = async (sentences: string[], apiKey: string): Promise<{ selectedIndices: number[], selectedSentences: string[] }> => {
+export const selectSentencesForBlanksWithAI = async (sentences: string[]): Promise<{ selectedIndices: number[], selectedSentences: string[] }> => {
   const sentenceCount = sentences.length;
   
   // 문장 수에 따른 빈칸 개수 결정 (개선된 로직)
@@ -383,18 +395,11 @@ Sentences:
 ${sentences.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1000,
-        temperature: 0.3
-      })
+    const response = await callOpenAIAPI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
+      temperature: 0.3
     });
     
     const data = await response.json();
@@ -465,8 +470,6 @@ ${sentences.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
 
 // 빈칸 채우기 문장 문제 생성 함수
 export const generateBlankFillSentenceQuizWithAI = async (passage: string): Promise<BlankFillSentenceData> => {
-  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-  
   // 문장 개수 확인
   const sentences = splitSentences(passage);
   const { validSentences, skippedSentences } = filterValidSentences(sentences);
@@ -489,7 +492,7 @@ export const generateBlankFillSentenceQuizWithAI = async (passage: string): Prom
   
   // AI 문장 선택 재활성화 (더 많은 빈칸 생성을 위해)
   try {
-    const result = await selectSentencesForBlanksWithAI(validSentences, apiKey);
+    const result = await selectSentencesForBlanksWithAI(validSentences);
     selectedIndices = result.selectedIndices;
     selectedSentences = result.selectedSentences;
     console.log('=== AI 문장 선택 성공 ===');
@@ -633,7 +636,7 @@ export const generateBlankFillSentenceQuizWithAI = async (passage: string): Prom
   
   // 번역은 별도 함수로 처리
   console.log('번역 시작...');
-  const translation = await translateToKorean(passage, apiKey);
+  const translation = await translateToKorean(passage);
   
   const result: BlankFillSentenceData = {
     blankedText,

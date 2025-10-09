@@ -3,6 +3,8 @@
  * 요청 제한 설정 변경 예시
  */
 
+require_once 'rate-limiter.php';
+
 // 기본 설정 (시간당 300회)
 $defaultRateLimit = new RateLimiter('rate_limit.json', 300, 3600);
 
@@ -20,3 +22,5 @@ $dailyLimit = new RateLimiter('rate_limit.json', 1000, 86400);
 // 4. 요청 제한 완전 비활성화 (권장하지 않음)
 $unlimited = new RateLimiter('rate_limit.json', 999999, 3600);
 ?>
+
+

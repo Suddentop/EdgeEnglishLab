@@ -115,3 +115,10 @@ export interface SentenceTranslationQuiz {
   translations: string[];   // 각 문장의 번역
   quizText: string;        // 퀴즈 텍스트
 }
+
+// 토스페이먼츠 관련 타입
+declare global {
+  interface Window {
+    TossPayments: (clientKey: string) => any;
+  }
+}

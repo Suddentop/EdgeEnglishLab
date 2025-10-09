@@ -359,7 +359,7 @@
   
   .only-print .option {
     page-break-inside: avoid !important;
-    margin-bottom: 0.3rem !important;
+    /* margin-bottom: 0.3rem !important; - 인라인 스타일과 충돌하므로 제거 */
   }
   
   /* 다중 페이지 구성을 위한 페이지 브레이크 */
@@ -542,7 +542,7 @@
     
     .option {
       page-break-inside: avoid;
-      margin-bottom: 0.5rem;
+      /* margin-bottom: 0.5rem; - 인라인 스타일과 충돌하므로 제거 */
     }
     
     /* 답안 섹션 */

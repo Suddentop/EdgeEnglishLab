@@ -4,7 +4,7 @@ export const POINT_POLICY = {
   PROBLEM_GENERATION_COST: 200,
   
   // 최소 결제 금액 (원)
-  MINIMUM_PURCHASE_AMOUNT: 1000,
+  MINIMUM_PURCHASE_AMOUNT: 10000,
   
   // 1원당 획득 포인트 (1:1 비율)
   POINTS_PER_WON: 1,

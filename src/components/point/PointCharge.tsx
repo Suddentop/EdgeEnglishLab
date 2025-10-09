@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { PaymentService } from '../../services/paymentService';
+import { TossPaymentService } from '../../services/tossPaymentService';
 import { getUserCurrentPoints } from '../../services/pointService';
 import { POINT_POLICY } from '../../utils/pointConstants';
 import './PointCharge.css';
@@ -14,8 +14,8 @@ const PointCharge: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
 
-  // 미리 정의된 충전 금액들
-  const predefinedAmounts = [5000, 10000, 20000, 50000, 100000];
+  // 미리 정의된 충전 금액들 (만원 단위만)
+  const predefinedAmounts = [10000, 20000, 30000, 50000, 100000];
 
   useEffect(() => {
     if (user) {
@@ -45,7 +45,7 @@ const PointCharge: React.FC = () => {
     
     if (value) {
       const amount = parseInt(value);
-      if (amount >= POINT_POLICY.MINIMUM_PURCHASE_AMOUNT) {
+      if (amount >= POINT_POLICY.MINIMUM_PURCHASE_AMOUNT && amount % 10000 === 0) {
         setSelectedAmount(amount);
       }
     }
@@ -68,9 +68,8 @@ const PointCharge: React.FC = () => {
     }
 
     // 결제 금액 유효성 검증
-    const validation = PaymentService.validatePaymentAmount(selectedAmount);
-    if (!validation.isValid) {
-      setMessage({ type: 'error', text: validation.message! });
+    if (selectedAmount < POINT_POLICY.MINIMUM_PURCHASE_AMOUNT || selectedAmount % 10000 !== 0) {
+      setMessage({ type: 'error', text: '결제 금액은 만원 단위로 최소 1만원 이상이어야 합니다.' });
       return;
     }
 
@@ -78,30 +77,59 @@ const PointCharge: React.FC = () => {
     setMessage(null);
 
     try {
-      // 결제 요청 생성
-      const { paymentId, pointsEarned } = await PaymentService.createPaymentRequest(
+      // 토스페이먼츠 결제 요청 생성
+      const { paymentId, pointsEarned, tossData } = await TossPaymentService.createPaymentRequest(
         user.uid,
-        selectedAmount
+        selectedAmount,
+        user.displayName || '사용자',
+        user.email || '',
+        user.phoneNumber || ''
       );
 
-      // 카드결제 처리 (시뮬레이션)
-      const success = await PaymentService.processCardPayment(paymentId);
+      // 토스페이먼츠 결제 위젯 실행
+      if (window.TossPayments) {
+        const tossPayments = window.TossPayments('test_ck_your_client_key'); // 실제 클라이언트 키로 교체 필요
+        
+        await tossPayments.requestPayment('카드', {
+          amount: selectedAmount,
+          orderId: tossData.orderId,
+          orderName: `EngQuiz 포인트 충전 (${selectedAmount.toLocaleString()}원)`,
+          customerName: user.displayName || '사용자',
+          customerEmail: user.email || '',
+          successUrl: `${window.location.origin}/payment/success?paymentKey=${tossData.paymentKey}&orderId=${tossData.orderId}&amount=${selectedAmount}`,
+          failUrl: `${window.location.origin}/payment/fail`
+        });
 
-      if (success) {
+        // 결제 성공 시 포인트 정보 새로고침
+        await loadUserPoints();
+        
         setMessage({
           type: 'success',
           text: `${selectedAmount.toLocaleString()}원 결제가 완료되어 ${pointsEarned.toLocaleString()}포인트가 충전되었습니다.`
         });
-        
-        // 포인트 정보 새로고침
-        await loadUserPoints();
         
         // 입력 필드 초기화
         setSelectedAmount(10000);
         setCustomAmount('');
         setShowCustomInput(false);
       } else {
-        setMessage({ type: 'error', text: '결제 처리에 실패했습니다.' });
+        // 토스페이먼츠 스크립트가 로드되지 않은 경우 시뮬레이션
+        console.log('토스페이먼츠 스크립트가 로드되지 않았습니다. 시뮬레이션 모드로 진행합니다.');
+        
+        // 시뮬레이션: 결제 성공 처리
+        setTimeout(async () => {
+          await loadUserPoints();
+          setMessage({
+            type: 'success',
+            text: `${selectedAmount.toLocaleString()}원 결제가 완료되어 ${pointsEarned.toLocaleString()}포인트가 충전되었습니다. (시뮬레이션)`
+          });
+          
+          // 입력 필드 초기화
+          setSelectedAmount(10000);
+          setCustomAmount('');
+          setShowCustomInput(false);
+          setIsProcessing(false);
+        }, 2000);
       }
     } catch (error: any) {
       console.error('결제 오류:', error);
@@ -129,6 +157,7 @@ const PointCharge: React.FC = () => {
       <div className="point-charge-content">
         <div className="charge-amount-section">
           <h3>충전할 금액 선택</h3>
+          <p className="charge-info">최소 1만원부터 만원 단위로만 결제 가능합니다</p>
           
           <div className="predefined-amounts">
             {predefinedAmounts.map((amount) => (
@@ -159,7 +188,7 @@ const PointCharge: React.FC = () => {
                   type="text"
                   value={customAmount}
                   onChange={handleCustomAmountChange}
-                  placeholder={`${POINT_POLICY.MINIMUM_PURCHASE_AMOUNT.toLocaleString()}원 이상 입력`}
+                  placeholder="만원 단위로 입력 (예: 10000, 20000, 30000)"
                   disabled={isProcessing}
                 />
                 <span className="currency">원</span>

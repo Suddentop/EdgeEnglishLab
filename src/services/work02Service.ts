@@ -1,5 +1,36 @@
 // Work_02 독해 문제 생성 서비스
 
+// 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
+async function callOpenAIAPI(requestBody: any): Promise<Response> {
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
+  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
+  
+  if (proxyUrl) {
+    // 프록시 서버 사용 (프로덕션)
+    console.log('🤖 OpenAI 프록시 서버 호출 중...');
+    return await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else if (directApiKey) {
+    // 개발 환경: 직접 API 호출
+    console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
+    return await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${directApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else {
+    throw new Error('API 설정이 없습니다. .env.local 파일을 확인해주세요.');
+  }
+}
+
 interface WordReplacement {
   original: string;           // 원본 단어/숙어
   replacement: string;        // 교체된 단어/숙어
@@ -16,7 +47,7 @@ export interface Work02QuizData {
 }
 
 // Step 1: 문장 분리
-async function splitSentences(passage: string, apiKey: string): Promise<string[]> {
+async function splitSentences(passage: string): Promise<string[]> {
   const prompt = `You will receive an English passage. Split it into individual sentences.
 Use the following rules:
 - End of sentence is marked by '.', '?', or '!' followed by a space or newline.
@@ -33,18 +64,11 @@ Required JSON format:
   "sentences": ["Sentence 1.", "Sentence 2?", "Sentence 3!"]
 }`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 1000,
-      temperature: 0
-    })
+  const response = await callOpenAIAPI({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 1000,
+    temperature: 0
   });
 
   if (!response.ok) {
@@ -80,7 +104,7 @@ Required JSON format:
 }
 
 // Step 2: 문장별 단어 선택
-async function selectWordFromSentence(sentence: string, index: number, apiKey: string, usedWords: string[] = []): Promise<{index: number, original: string}> {
+async function selectWordFromSentence(sentence: string, index: number, usedWords: string[] = []): Promise<{index: number, original: string}> {
   const usedWordsText = usedWords.length > 0 ? `\n\nALREADY USED WORDS (do not select these): ${usedWords.join(', ')}` : '';
   
   const prompt = `You are selecting one important word from sentence #${index + 1} below.
@@ -100,18 +124,11 @@ Required JSON format:
   "original": "important"
 }`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 200,
-      temperature: 0
-    })
+  const response = await callOpenAIAPI({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 200,
+    temperature: 0
   });
 
   if (!response.ok) {
@@ -147,7 +164,7 @@ Required JSON format:
 }
 
 // Step 3: 단어 교체
-async function replaceWordInSentence(sentence: string, wordIndex: number, originalWord: string, apiKey: string): Promise<{replacement: string, originalMeaning: string, replacementMeaning: string}> {
+async function replaceWordInSentence(sentence: string, wordIndex: number, originalWord: string): Promise<{replacement: string, originalMeaning: string, replacementMeaning: string}> {
   const prompt = `You will replace one word in a sentence with a synonym.
 
 RULES:
@@ -167,18 +184,11 @@ Required JSON format:
   "replacementMeaning": "중요한, 의미있는"
 }`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 300,
-      temperature: 0
-    })
+  const response = await callOpenAIAPI({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 300,
+    temperature: 0
   });
 
   if (!response.ok) {
@@ -258,7 +268,7 @@ function replaceWordsInTextSequentially(originalText: string, sentences: string[
 }
 
 // Step 5: 본문 번역
-async function translatePassage(passage: string, apiKey: string): Promise<string> {
+async function translatePassage(passage: string): Promise<string> {
   const prompt = `Translate the following English passage to Korean. Provide a natural, fluent Korean translation.
 
 Passage:
@@ -266,18 +276,11 @@ ${passage}
 
 IMPORTANT: Return ONLY the Korean translation. No explanations, no markdown, no code blocks.`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 2000,
-      temperature: 0
-    })
+  const response = await callOpenAIAPI({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 2000,
+    temperature: 0
   });
 
   if (!response.ok) {
@@ -294,18 +297,13 @@ IMPORTANT: Return ONLY the Korean translation. No explanations, no markdown, no 
 
 // 메인 함수: 독해 문제 생성
 export async function generateWork02Quiz(passage: string): Promise<Work02QuizData> {
-  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-  
-  if (!apiKey) {
-    throw new Error('OpenAI API 키가 설정되지 않았습니다. 환경변수를 확인해주세요.');
-  }
 
   try {
     console.log('🔍 Work_02 문제 생성 시작...');
     
     // Step 1: 문장 분리
     console.log('📝 Step 1: 문장 분리 중...');
-    const sentences = await splitSentences(passage, apiKey);
+    const sentences = await splitSentences(passage);
     console.log(`✅ ${sentences.length}개 문장으로 분리 완료`);
 
     // Step 2: 각 문장에서 단어 선택
@@ -314,7 +312,7 @@ export async function generateWork02Quiz(passage: string): Promise<Work02QuizDat
     const usedWords: string[] = [];
 
     for (let i = 0; i < sentences.length; i++) {
-      const wordSelection = await selectWordFromSentence(sentences[i], i, apiKey, usedWords);
+      const wordSelection = await selectWordFromSentence(sentences[i], i, usedWords);
       selectedWords.push(wordSelection);
       usedWords.push(wordSelection.original.toLowerCase());
       console.log(`✅ 문장 ${i + 1}: "${wordSelection.original}" 선택`);
@@ -328,7 +326,7 @@ export async function generateWork02Quiz(passage: string): Promise<Work02QuizDat
       const sentence = sentences[i];
       const wordSelection = selectedWords[i];
       
-      const replacement = await replaceWordInSentence(sentence, wordSelection.index, wordSelection.original, apiKey);
+      const replacement = await replaceWordInSentence(sentence, wordSelection.index, wordSelection.original);
       
       replacements.push({
         original: wordSelection.original,
@@ -346,7 +344,7 @@ export async function generateWork02Quiz(passage: string): Promise<Work02QuizDat
 
     // Step 5: 본문 번역
     console.log('🌐 Step 5: 본문 번역 중...');
-    const translation = await translatePassage(passage, apiKey);
+    const translation = await translatePassage(passage);
     console.log('✅ 번역 완료');
 
     const result: Work02QuizData = {

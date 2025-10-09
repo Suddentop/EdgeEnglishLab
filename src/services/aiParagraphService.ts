@@ -1,6 +1,37 @@
 // AI 기반 의미 단락 분할 및 섞기 서비스
 // 서비스 제공자의 OpenAI API 키를 사용하여 모든 사용자에게 AI 기능 제공
 
+// 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
+async function callOpenAIAPI(requestBody: any): Promise<Response> {
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
+  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
+  
+  if (proxyUrl) {
+    // 프록시 서버 사용 (프로덕션)
+    console.log('🤖 OpenAI 프록시 서버 호출 중...');
+    return await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else if (directApiKey) {
+    // 개발 환경: 직접 API 호출
+    console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
+    return await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${directApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else {
+    throw new Error('API 설정이 없습니다. .env.local 파일을 확인해주세요.');
+  }
+}
+
 export interface AIParagraphResponse {
   success: boolean;
   paragraphs?: string[];
@@ -37,15 +68,9 @@ export async function divideParagraphsWithAI(text: string, title?: string): Prom
   try {
     console.log('🤖 AI 기반 단락 분할 및 섞기 시작...');
     
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: [
+    const response = await callOpenAIAPI({
+      model: "gpt-4",
+      messages: [
           {
             role: "system",
             content: `당신은 영어 텍스트 분석 및 문제 생성 전문가입니다. 주어진 영어 본문을 의미와 주제에 따라 정확히 4개의 단락으로 나누고, 이를 적절히 섞어서 문제를 만들 수 있도록 해야 합니다.
@@ -102,10 +127,9 @@ export async function divideParagraphsWithAI(text: string, title?: string): Prom
             role: "user",
             content: `다음 영어 텍스트를 의미 기반으로 정확히 4개의 단락으로 나누고, 4개 단락을 적절히 섞어주세요. 절대로 문장 순서를 바꾸거나 문장을 다른 단락으로 이동시키지 마세요:\n\n${text}`
           }
-        ],
-        max_tokens: 3000,
-        temperature: 0.1 // 더 일관된 결과를 위해 온도 낮춤
-      })
+      ],
+      max_tokens: 3000,
+      temperature: 0.1 // 더 일관된 결과를 위해 온도 낮춤
     });
 
     if (!response.ok) {

@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc, setDoc, increment, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export interface WorkTypePoints {
@@ -197,6 +197,102 @@ export const getUserCurrentPoints = async (userId: string): Promise<number> => {
     return 0;
   } catch (error) {
     console.error('사용자 포인트 조회 오류:', error);
+    throw error;
+  }
+};
+
+// 포인트 충전 (결제 완료 시)
+export const chargePoints = async (
+  userId: string,
+  points: number,
+  paymentId: string,
+  userName: string,
+  userNickname: string
+): Promise<void> => {
+  try {
+    // 사용자 문서 참조
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+    
+    // 포인트 증가
+    await updateDoc(userRef, {
+      points: increment(points),
+      updatedAt: serverTimestamp()
+    });
+    
+    // 포인트 거래 내역 기록 (충전)
+    const transaction: Omit<PointTransaction, 'id'> = {
+      userId,
+      userName,
+      userNickname,
+      type: 'charge',
+      amount: points,
+      reason: `포인트 충전 (결제ID: ${paymentId})`,
+      timestamp: new Date(),
+      workTypeId: undefined,
+      workTypeName: undefined
+    };
+    
+    await addDoc(collection(db, 'pointTransactions'), transaction);
+    
+  } catch (error) {
+    console.error('포인트 충전 오류:', error);
+    throw error;
+  }
+};
+
+// 관리자 포인트 관리
+export const adminManagePoints = async (
+  adminId: string,
+  targetUserId: string,
+  action: 'add' | 'subtract',
+  amount: number,
+  reason: string
+): Promise<void> => {
+  try {
+    // 사용자 정보 조회
+    const userRef = doc(db, 'users', targetUserId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      throw new Error('대상 사용자를 찾을 수 없습니다.');
+    }
+    
+    const userData = userSnap.data();
+    const currentPoints = userData.points || 0;
+    
+    // 포인트 계산
+    const newPoints = action === 'add' 
+      ? currentPoints + amount 
+      : Math.max(0, currentPoints - amount);
+    
+    // 포인트 업데이트
+    await updateDoc(userRef, {
+      points: newPoints,
+      updatedAt: serverTimestamp()
+    });
+    
+    // 포인트 거래 내역 기록
+    const transaction: Omit<PointTransaction, 'id'> = {
+      userId: targetUserId,
+      userName: userData.name,
+      userNickname: userData.nickname,
+      type: action,
+      amount: amount,
+      reason: `관리자 ${action === 'add' ? '지급' : '차감'}: ${reason}`,
+      timestamp: new Date(),
+      workTypeId: undefined,
+      workTypeName: undefined
+    };
+    
+    await addDoc(collection(db, 'pointTransactions'), transaction);
+    
+  } catch (error) {
+    console.error('관리자 포인트 관리 오류:', error);
     throw error;
   }
 };

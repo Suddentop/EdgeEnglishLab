@@ -175,7 +175,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
                     {quiz.shuffledParagraphs.map((paragraph, index) => (
-                    <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         <strong>{paragraph.label}:</strong> {paragraph.content}
                       </div>
                     ))}
@@ -195,7 +195,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
                   {quiz.shuffledParagraphs.slice(3).map((paragraph, index) => (
-                    <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       <strong>{paragraph.label}:</strong> {paragraph.content}
                     </div>
                   ))}
@@ -221,7 +221,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                 </div>
                   {quiz.shuffledParagraphs.map((paragraph, index) => (
-                  <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       <strong>{paragraph.label}:</strong> {paragraph.content}
                     </div>
                   ))}
@@ -267,7 +267,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                         if (!paragraph || !paragraph.content) return null;
                         
                         return (
-                        <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                        <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                             <strong>{paragraph.label}:</strong> {paragraph.content}
                           </div>
                         );
@@ -296,7 +296,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                       if (!paragraph || !paragraph.content) return null;
                       
                       return (
-                      <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                      <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                           <strong>{paragraph.label}:</strong> {paragraph.content}
                         </div>
                       );
@@ -502,7 +502,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
                   </div>
                     {quiz.shuffledParagraphs.map((paragraph, index) => (
-                    <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div key={paragraph.id} className="shuffled-paragraph" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         <strong>{paragraph.label}:</strong> {paragraph.content}
                       </div>
                     ))}
@@ -785,7 +785,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
       box-sizing: border-box;
       display: block;
     `;
-    problemTitle.textContent = '문제: 다음 본문을 읽고 해석하세요';
+    problemTitle.textContent = '문제: 다음 본문을 읽고 해석하세요                                    유형#02';
     
     const englishPassage = document.createElement('div');
     englishPassage.style.cssText = `
@@ -1013,7 +1013,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                 <span>문제: 다음 본문을 읽고 해석하세요</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
               </div>
-              <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+              <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
               </div>
             </div>
           </div>
@@ -1034,8 +1034,9 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                  문제: 다음 본문을 읽고 해석하세요
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 본문을 읽고 해석하세요</span>
+                  <span style={{fontSize:'1rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
                 </div>
                 <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                 </div>
@@ -1138,7 +1139,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                     <span>문제: 다음 본문을 읽고 해석하세요</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
                   </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                  <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                   </div>
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                   교체된 단어들
@@ -1244,8 +1245,9 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                  문제: 다음 본문을 읽고 해석하세요
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 본문을 읽고 해석하세요</span>
+                  <span style={{fontSize:'1rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
                 </div>
                 <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                 </div>
@@ -1354,8 +1356,9 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                  문제: 다음 본문을 읽고 해석하세요
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 본문을 읽고 해석하세요</span>
+                  <span style={{fontSize:'1rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
                 </div>
                 <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                 </div>
@@ -1495,7 +1498,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
                 <span>다음 빈칸에 들어갈 가장 적절한 단어를 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
               </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work03Data.blankedText}
               </div>
                 </div>
@@ -1534,7 +1537,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
                   <span>다음 빈칸에 들어갈 가장 적절한 단어를 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work03Data.blankedText}
                 </div>
                 {work03Data.options.map((option, index) => (
@@ -1778,6 +1781,94 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
   translatedText,
   printMode
 }) => {
+  // A4 페이지 설정
+  const A4_CONFIG = {
+    // 실제 A4 크기: 210mm × 297mm = 794px × 1123px (96 DPI)
+    PAGE_WIDTH: 794,          // px (210mm * 3.78px/mm)
+    PAGE_HEIGHT: 1123,        // px (297mm * 3.78px/mm)
+    
+    // 인쇄 여백 (실제 인쇄 시 표준 여백)
+    TOP_MARGIN: 25,           // px (6.6mm)
+    BOTTOM_MARGIN: 25,        // px (6.6mm)
+    LEFT_MARGIN: 20,          // px (5.3mm)
+    RIGHT_MARGIN: 20,         // px (5.3mm)
+    
+    // 헤더/푸터 영역
+    HEADER_HEIGHT: 30,        // px (8mm)
+    FOOTER_HEIGHT: 20,        // px (5.3mm)
+    
+    // 콘텐츠 영역 계산
+    CONTENT_WIDTH: 754,       // px (794 - 20 - 20)
+    CONTENT_HEIGHT: 1048,     // px (1123 - 25 - 25 - 30 - 20)
+    
+    // 섹션별 높이 설정
+    INSTRUCTION_HEIGHT: 30,   // px
+    INSTRUCTION_MARGIN: 11,   // px
+    TRANSLATION_HEADER_HEIGHT: 30,  // px
+    TRANSLATION_HEADER_MARGIN: 11,  // px
+  };
+
+  // 컨테이너 높이 계산 함수
+  const calculateContainerHeight = (text: string, padding: number = 38, fontSize: number = 14.4, lineHeight: number = 1.7): number => {
+    // 실제 A4 콘텐츠 너비 사용 (754px - 좌우 패딩 40px = 714px)
+    const availableWidthPx = A4_CONFIG.CONTENT_WIDTH - 40; // px
+    const charWidthPx = fontSize * 0.55; // px 단위 문자 폭
+    const charsPerLine = Math.floor(availableWidthPx / charWidthPx);
+    const lines = Math.ceil(text.length / charsPerLine);
+    return (lines * fontSize * lineHeight) + padding; // px 단위로 반환
+  };
+
+  // 정답 모드 페이지 분할 계산
+  const calculateAnswerPageLayout = () => {
+    // A. 문제제목 + 본문 + 정답선택지 컨테이너 (간격 포함)
+    const problemTitleHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN; // 41px
+    const passageHeight = calculateContainerHeight(work04Data.blankedText, 38, 14.4, 1.7);
+    const passageMarginBottom = 0 * 16; // 0rem = 0px
+    const answerOptionText = work04Data.options[work04Data.answerIndex];
+    const answerOptionHeight = calculateContainerHeight(answerOptionText, 20, 14.4, 1.3);
+    const answerOptionMarginBottom = 3.5 * 16; // 3.5rem = 56px
+    const sectionAHeight = problemTitleHeight + passageHeight + passageMarginBottom + answerOptionHeight + answerOptionMarginBottom;
+
+    // B. 본문해석 제목 + 한글해석 컨테이너
+    const translationHeaderHeight = A4_CONFIG.TRANSLATION_HEADER_HEIGHT + (0 * 16); // 30px + 0px = 30px
+    const finalTranslatedText = translatedText || '번역을 생성하는 중...';
+    const translationHeight = calculateContainerHeight(finalTranslatedText, 38, 16, 1.7);
+    const sectionBHeight = translationHeaderHeight + translationHeight;
+
+    // 이용 가능한 공간 계산 (실제 A4 크기 기준)
+    const availableHeight = A4_CONFIG.CONTENT_HEIGHT; // 1048px
+    const safetyMargin = 50; // px (실제 A4 기준 적절한 여백)
+    const effectiveAvailableHeight = availableHeight - safetyMargin; // 998px
+
+    const totalHeight = sectionAHeight + sectionBHeight;
+
+    console.log('📊 패키지#01-유형#04 인쇄(정답) 페이지 분할 계산:', {
+      sectionAHeight: sectionAHeight.toFixed(2) + 'px',
+      sectionBHeight: sectionBHeight.toFixed(2) + 'px',
+      totalHeight: totalHeight.toFixed(2) + 'px',
+      effectiveAvailableHeight: effectiveAvailableHeight.toFixed(2) + 'px',
+      passageLength: work04Data.blankedText.length,
+      translationLength: finalTranslatedText.length
+    });
+
+    // 페이지 분할 로직
+    if (totalHeight <= effectiveAvailableHeight) {
+      // 케이스 1: A+B ≤ 998px → 1페이지에 A, B 모두 포함
+      return {
+        needsSecondPage: false,
+        page1Content: 'A+B',
+        page2Content: null
+      };
+    } else {
+      // 케이스 2: A+B > 998px → 1페이지에 A, 2페이지에 B
+      return {
+        needsSecondPage: true,
+        page1Content: 'A',
+        page2Content: 'B'
+      };
+    }
+  };
+
   // 인쇄용: 문제만
   if (printMode === 'no-answer') {
     const needsSecondPage = work04Data.blankedText.length >= 2000;
@@ -1798,7 +1889,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
                 <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
               </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work04Data.blankedText}
               </div>
                 </div>
@@ -1837,7 +1928,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
                   <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work04Data.blankedText}
                 </div>
                 {work04Data.options.map((option, index) => (
@@ -1855,50 +1946,91 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
 
   // 인쇄용: 정답포함
   if (printMode === 'with-answer') {
-    return (
-      <div className="only-print print-answer-mode">
-        {/* 1페이지: 문제 + 정답 */}
-        <div className="a4-page-template">
-          <div className="a4-page-header">
-            <PrintHeaderPackage01 />
-          </div>
-          <div className="a4-page-content">
-            <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
-                <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
-              </div>
-              <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {work04Data.blankedText}
-              </div>
-              <div className="option option-print" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
-                  {['①', '②', '③', '④', '⑤'][work04Data.answerIndex]} {work04Data.options[work04Data.answerIndex]}
-              </div>
-              <div className="answer-section" style={{textAlign: 'left', color: '#1976d2', fontWeight: 700, fontSize: '1rem', margin: '0', padding: '0'}}>
-                정답: {['①', '②', '③', '④', '⑤'][work04Data.answerIndex]}
-              </div>
-            </div>
-          </div>
-        </div>
+    const answerPageLayout = calculateAnswerPageLayout();
 
-        {/* 2페이지: 본문 해석 */}
-        <div className="a4-page-template">
-          <div className="a4-page-header">
-            <PrintHeaderPackage01 />
-          </div>
-          <div className="a4-page-content">
-            <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%'}}>
-                본문 해석
+    if (answerPageLayout.needsSecondPage) {
+      // 2페이지 분할: 1페이지에 문제+정답, 2페이지에 본문해석
+      return (
+        <div className="only-print print-answer-mode">
+          {/* 1페이지: 문제 + 정답 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
+                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
+                </div>
+                <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {work04Data.blankedText}
+                </div>
+                <div className="option option-print" style={{fontSize:'1rem !important', marginTop:'0', marginBottom:'3.5rem !important', paddingLeft:'0.6rem', paddingRight:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <span>{['①', '②', '③', '④', '⑤'][work04Data.answerIndex]} {work04Data.options[work04Data.answerIndex]}</span>
+                  <span style={{color:'#1976d2', fontWeight:800, marginLeft:'8px'}}>(정답)</span>
+                </div>
               </div>
-              <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {translatedText || '번역을 생성하는 중...'}
+            </div>
+          </div>
+
+          {/* 2페이지: 본문 해석 */}
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'2rem', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+                  본문 해석
+                </div>
+                <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {translatedText || '번역을 생성하는 중...'}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // 1페이지: 문제 + 정답 + 본문해석 모두 포함
+      return (
+        <div className="only-print print-answer-mode">
+          <div className="a4-page-template">
+            <div className="a4-page-header">
+              <PrintHeaderPackage01 />
+            </div>
+            <div className="a4-page-content">
+              <div className="quiz-content">
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
+                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
+                </div>
+                <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {work04Data.blankedText}
+                </div>
+                <div className="problem-options" style={{margin:'1rem 0'}}>
+                  {work04Data.options.map((opt, i) => (
+                    <div key={i} style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
+                      {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                      {work04Data.answerIndex === i && (
+                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+          <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
+            본문 해석
+          </div>
+                <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  {translatedText || '번역을 생성하는 중...'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
   }
 
   return null;
@@ -1931,7 +2063,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                 <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
               </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work05Data.blankedText}
               </div>
                 </div>
@@ -1970,7 +2102,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                   <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work05Data.blankedText}
                 </div>
                 {work05Data.options.map((option, index) => (
@@ -2000,7 +2132,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                 <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
               </div>
-              <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+              <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work05Data.blankedText}
               </div>
               <div className="problem-options" style={{margin:'1rem 0'}}>
@@ -2034,7 +2166,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
               <div className="problem-instruction work05-print-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'1.2rem', marginBottom:'0.8rem', display:'block', width:'100%'}}>
                 본문 해석
               </div>
-              <div className="problem-passage translation work05-print-translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+              <div className="problem-passage translation work05-print-translation" style={{marginTop:'0.3rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {translatedText || '번역을 생성하는 중...'}
               </div>
             </div>
@@ -2173,8 +2305,9 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="quiz-content">
-              <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+              <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
+                <span style={{fontSize:'1rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
               </div>
               <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
                 <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
@@ -2201,8 +2334,9 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                  문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
+                  <span style={{fontSize:'1rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
                 </div>
                 <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
                   <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
@@ -2227,7 +2361,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
                 <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                   본문 해석
                 </div>
-                <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work06Data.translation || translatedText || '번역을 생성하는 중...'}
                 </div>
               </div>
@@ -2245,8 +2379,9 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                  문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
+                  <span style={{fontSize:'1rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
                 </div>
                 <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
                   <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
@@ -2260,7 +2395,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
                 <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'1.2rem', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                   본문 해석
                 </div>
-                <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'0.8rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work06Data.translation || translatedText || '번역을 생성하는 중...'}
                 </div>
               </div>
@@ -2376,7 +2511,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
                 <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
               </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem'}}>
+                  <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem'}}>
                 {work07Data.passage}
               </div>
                 </div>
@@ -2417,7 +2552,7 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
                   <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem'}}>
+                <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem'}}>
                   {work07Data.passage}
                 </div>
                 <div className="problem-options" style={{background:'#f8f9fa', border:'1px solid #e9ecef', borderRadius:'8px', padding:'1rem', marginTop:'1rem'}}>
@@ -2551,11 +2686,11 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
     // 원래 유형#07과 동일한 스타일 정의
     const commonStyles = {
       instruction: {fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'},
-      passage: {marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'},
+      passage: {marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'},
       options: {margin:'1rem 0'},
       option: {fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'},
       optionTranslation: {fontSize:'0.9rem', marginTop:'0.2rem', color:'#333', fontWeight:500, paddingLeft:'1.5rem'},
-      translation: {marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
+      translation: {marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
     };
 
     // 페이지 분할 로직에 따른 렌더링
@@ -2850,7 +2985,7 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
                 <span>문제: 다음 본문에 가장 적합한 제목을 고르세요.</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
               </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.9rem'}}>
+                  <div className="problem-passage" style={{marginTop:'0.3rem', fontSize:'0.9rem'}}>
                 {work08Data.passage}
               </div>
                 </div>
@@ -2889,7 +3024,7 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
                   <span>다음 글의 제목으로 가장 적절한 것을 고르시오.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
                 </div>
-                <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div style={{marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work08Data.passage}
                 </div>
                 <div className="problem-options" style={{marginTop:'0.1rem', marginBottom:'1rem'}}>
@@ -3023,10 +3158,10 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
     // 원래 유형#08과 동일한 스타일 정의
     const commonStyles = {
       instruction: {fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'},
-      passage: {marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'},
+      passage: {marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'},
       options: {margin:'1rem 0'},
       option: {fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'},
-      translation: {marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
+      translation: {marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
     };
 
     // 페이지 분할 로직에 따른 렌더링 (유형#07과 동일한 4가지 케이스)
@@ -3396,7 +3531,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                 <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
               </div>
-                  <div style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work09Data.passage).replace(/\n/g, '<br/>')}} />
               </div>
                 </div>
@@ -3437,7 +3572,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                   <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                 </div>
-                <div style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work09Data.passage).replace(/\n/g, '<br/>')}} />
                 </div>
                 <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
@@ -3494,7 +3629,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
                     본문 해석
                   </div>
-                  <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {translatedText || '번역을 생성하는 중...'}
                   </div>
                 </>
@@ -3540,7 +3675,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
                       본문 해석
                     </div>
-                    <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       {translatedText || '번역을 생성하는 중...'}
                     </div>
                   </>
@@ -3587,7 +3722,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
                       본문 해석
                     </div>
-                    <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       {translatedText || '번역을 생성하는 중...'}
                     </div>
                   </>
@@ -3727,7 +3862,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                   </div>
-                  <div style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work10Data.passage).replace(/\n/g, '<br/>')}} />
                   </div>
                 </div>
@@ -3745,7 +3880,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                   </div>
-                  <div style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work10Data.passage).replace(/\n/g, '<br/>')}} />
                   </div>
                   {work10Data.options.map((option, index) => (
@@ -3776,7 +3911,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                   <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                 </div>
-                <div style={{marginTop:'0.9rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div style={{marginTop:'0.3rem', fontSize:'0.9rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
             <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work10Data.passage).replace(/\n/g, '<br/>')}} />
           </div>
             {work10Data.options.map((option, index) => (
@@ -3839,7 +3974,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
                     본문 해석
                   </div>
-                  <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {translatedText || '번역을 생성하는 중...'}
                   </div>
                 </>
@@ -3887,7 +4022,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
                       본문 해석
                     </div>
-                    <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       {translatedText || '번역을 생성하는 중...'}
                     </div>
                   </>
@@ -3936,7 +4071,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
                       본문 해석
                     </div>
-                    <div className="problem-passage translation" style={{marginTop:'0.9rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div className="problem-passage translation" style={{marginTop:'0.3rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       {translatedText || '번역을 생성하는 중...'}
                     </div>
                   </>

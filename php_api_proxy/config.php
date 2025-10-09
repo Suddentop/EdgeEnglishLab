@@ -7,7 +7,12 @@
  */
 
 // API Key 설정 (환경 변수에서 로드)
-define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: 'YOUR_OPENAI_API_KEY_HERE');
+$apiKey = getenv('OPENAI_API_KEY');
+if (!$apiKey) {
+    error_log('CRITICAL: OPENAI_API_KEY environment variable not set');
+    die('Server configuration error: API key not configured');
+}
+define('OPENAI_API_KEY', $apiKey);
 
 // 보안 설정
 define('SECURE_MODE', true);

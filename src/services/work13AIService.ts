@@ -1,5 +1,36 @@
 // Work13 (빈칸 채우기 단어) 관련 AI 서비스 함수들
-import { openAIProxyService } from './openaiProxyService';
+// import { openAIProxyService } from './openaiProxyService'; // 프록시 서버 대신 직접 API 호출 사용
+
+// 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
+async function callOpenAIAPI(requestBody: any): Promise<Response> {
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
+  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
+  
+  if (proxyUrl) {
+    // 프록시 서버 사용 (프로덕션)
+    console.log('🤖 OpenAI 프록시 서버 호출 중...');
+    return await fetch(proxyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else if (directApiKey) {
+    // 개발 환경: 직접 API 호출
+    console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
+    return await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${directApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+  } else {
+    throw new Error('API 설정이 없습니다. .env.local 파일을 확인해주세요.');
+  }
+}
 
 export interface BlankFillItem {
   blankedText: string;
@@ -93,7 +124,13 @@ ${englishText}`;
         max_tokens: 800,
     };
 
-    const data = await openAIProxyService.callOpenAI(request);
+    const response = await callOpenAIAPI(request);
+
+    if (!response.ok) {
+      throw new Error(`API 호출 실패: ${response.status}`);
+    }
+
+    const data = await response.json();
     console.log('✅ 번역 완료');
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
@@ -179,7 +216,13 @@ Remember: ${validSentences.length} sentences = exactly ${validSentences.length} 
       temperature: 0.01
     };
 
-    const data = await openAIProxyService.callOpenAI(request);
+    const response = await callOpenAIAPI(request);
+
+    if (!response.ok) {
+      throw new Error(`API 호출 실패: ${response.status}`);
+    }
+
+    const data = await response.json();
     console.log('AI 응답 전체:', data);
     console.log('AI 응답 내용:', data.choices[0].message.content);
     
@@ -244,7 +287,26 @@ ${passage}`;
           temperature: 0.01
         };
 
-        const retryData = await openAIProxyService.callOpenAI(retryRequest);
+        // 직접 OpenAI API 호출 (재시도)
+        const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+        if (!apiKey) {
+          throw new Error('OpenAI API 키가 설정되지 않았습니다.');
+        }
+
+        const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(retryRequest)
+        });
+
+        if (!retryResponse.ok) {
+          throw new Error(`API 호출 실패: ${retryResponse.status}`);
+        }
+
+        const retryData = await retryResponse.json();
         const retryJsonMatch = retryData.choices[0].message.content.match(/\{[\s\S]*\}/);
         if (retryJsonMatch) {
           try {
@@ -436,6 +498,25 @@ export const imageToTextWithOpenAIVision = async (imageFile: File): Promise<stri
     max_tokens: 2048
   };
   
-  const data = await openAIProxyService.callOpenAI(request);
+  // 직접 OpenAI API 호출 (이미지 처리)
+  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+  if (!apiKey) {
+    throw new Error('OpenAI API 키가 설정되지 않았습니다.');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(request)
+  });
+
+  if (!response.ok) {
+    throw new Error(`API 호출 실패: ${response.status}`);
+  }
+
+  const data = await response.json();
   return data.choices[0].message.content.trim();
 };
