@@ -93,7 +93,7 @@ ${passage}`;
     }
 
     // blankedText를 프론트엔드에서 직접 생성 (괄호 split 방식, 괄호 안/밖 완벽 구분)
-    function replaceFirstOutsideBrackets(text: string, word: string): string {
+    const replaceFirstOutsideBrackets = (text: string, word: string): string => {
       let replaced = false;
       // 괄호로 split (괄호 안/밖 구분)
       const tokens = text.split(/([()])/);
@@ -133,7 +133,7 @@ ${passage}`;
         result += tokens[i];
       }
       return result;
-    }
+    };
 
     const answer = result.options[result.answerIndex];
     const blankedText = replaceFirstOutsideBrackets(passage, answer);
