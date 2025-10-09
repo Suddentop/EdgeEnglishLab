@@ -70,8 +70,8 @@ const Package_02_TwoStepQuiz: React.FC = () => {
   return (
     <div className="quiz-generator">
       <div className="generator-header">
-        <h2>📦 패키지 퀴즈 (2단)</h2>
-        <p>하나의 영어 본문으로 유형#01부터 #14까지 모든 유형의 문제를 두 단계로 생성합니다.</p>
+        <h2>📦 패키지 퀴즈 (A4용지 2단)</h2>
+        <p>하나의 영어 본문으로 필요한 유형들을 A4용지 2단으로 구성해서 생성합니다.</p>
       </div>
       <div className="input-type-section">
         <label>
@@ -161,7 +161,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         className="generate-button"
         onClick={handleGenerateQuiz}
       >
-        패키지 퀴즈 (2단) 생성
+        패키지 퀴즈 (A4용지 2단) 생성
       </button>
     </div>
   );
