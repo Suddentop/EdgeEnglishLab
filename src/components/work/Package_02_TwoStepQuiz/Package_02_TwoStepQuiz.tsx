@@ -1,5 +1,7 @@
 import React, { useState, useRef, ChangeEvent } from 'react';
 import './Package_02_TwoStepQuiz.css';
+import { generateWork03Quiz } from '../../../services/generators/work03Generator';
+import { translateToKorean } from '../../../services/generators/common';
 
 const Package_02_TwoStepQuiz: React.FC = () => {
   const [inputMode, setInputMode] = useState<'capture' | 'image' | 'text'>('text');
@@ -115,9 +117,46 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     }
   };
 
-  const handleGenerateQuiz = () => {
-    // TODO: 구현 예정
-    alert('패키지 퀴즈 A4용지 2단 생성 기능은 구현 예정입니다.');
+  const handleGenerateQuiz = async () => {
+    // 입력 검증
+    if (!inputText.trim()) {
+      alert('영어 본문을 입력해주세요.');
+      return;
+    }
+
+    // 선택된 유형 확인
+    const selectedTypes = WORK_TYPES.filter(type => selectedWorkTypes[type.id]);
+    if (selectedTypes.length === 0) {
+      alert('생성할 문제 유형을 선택해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      console.log('📦 패키지 퀴즈 (A4용지 2단) 생성 시작...');
+      console.log('선택된 유형:', selectedTypes.map(t => `#${t.id} ${t.name}`).join(', '));
+
+      // 테스트: 유형#03만 생성
+      if (selectedWorkTypes['03']) {
+        console.log('🔄 유형#03 문제 생성 중...');
+        const quiz03 = await generateWork03Quiz(inputText);
+        console.log('✅ 유형#03 문제 생성 완료:', quiz03);
+
+        const translation = await translateToKorean(inputText);
+        console.log('✅ 번역 완료:', translation.substring(0, 50) + '...');
+
+        alert(`테스트 성공!\n\n생성된 문제:\n- 빈칸: ${quiz03.blankedText.substring(0, 50)}...\n- 정답: ${quiz03.options[quiz03.answerIndex]}\n- 번역: ${translation.substring(0, 50)}...`);
+      } else {
+        alert('테스트를 위해 유형#03을 선택해주세요.');
+      }
+
+    } catch (error) {
+      console.error('❌ 문제 생성 실패:', error);
+      alert(`문제 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -266,13 +305,26 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* 로딩 상태 표시 */}
+      {isLoading && (
+        <div className="centered-hourglass-overlay">
+          <div className="centered-hourglass-content">
+            <div className="centered-hourglass-spinner">⏳</div>
+            <div className="loading-text">
+              {isExtractingText ? '📄 텍스트 추출 중...' : '📋 패키지 문제 생성 중...'}
+            </div>
+          </div>
+        </div>
+      )}
       
       <button
         type="button"
         className="generate-button"
         onClick={handleGenerateQuiz}
+        disabled={isLoading}
       >
-        패키지 퀴즈 (A4용지 2단) 생성
+        {isLoading ? '생성 중...' : '패키지 퀴즈 (A4용지 2단) 생성'}
       </button>
     </div>
   );
