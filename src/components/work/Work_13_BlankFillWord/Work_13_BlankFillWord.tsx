@@ -6,7 +6,7 @@ import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { useAuth } from '../../../contexts/AuthContext';
-import { splitSentences, countWordsInSentence, filterValidSentences } from '../../../services/work14AIService';
+import { splitSentences, countWordsInSentence, filterValidSentences } from '../../../services/work14Service';
 import { 
   BlankFillItem, 
   Work_13_BlankFillWordData, 

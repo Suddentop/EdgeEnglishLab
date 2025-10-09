@@ -138,7 +138,7 @@ ${text}`;
     const content = data.choices[0].message.content.trim();
     
     // 개행으로 분할하고 빈 줄 제거
-    const paragraphs = content.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+    const paragraphs = content.split('\n').map((p: string) => p.trim()).filter((p: string) => p.length > 0);
     
     if (paragraphs.length === 4) {
       console.log('✅ AI 섞기 성공');
