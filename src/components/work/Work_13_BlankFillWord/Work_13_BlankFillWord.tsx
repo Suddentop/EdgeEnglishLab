@@ -13,7 +13,7 @@ import {
   imageToTextWithOpenAIVision, 
   translateToKorean, 
   generateBlankFillQuizWithAI 
-} from '../../../services/work13AIService';
+} from '../../../services/work13Service';
 // import '../../../styles/PrintFormat.css'; // 독립적인 CSS로 변경
 
 // 인터페이스는 work13AIService.ts에서 import

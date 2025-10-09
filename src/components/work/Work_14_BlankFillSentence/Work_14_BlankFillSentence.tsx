@@ -13,7 +13,7 @@ import {
   countBlanks, 
   createAnswerText,
   type BlankQuizData 
-} from '../../../services/work14AIService';
+} from '../../../services/work14Service';
 import '../../../styles/PrintFormat.css';
 
 interface VocabularyItem {

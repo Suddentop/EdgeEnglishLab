@@ -8,7 +8,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { createQuiz } from '../../../utils/textProcessor';
 import { Quiz, SentenceTranslationQuiz } from '../../../types/types';
 import { generateWork02Quiz, Work02QuizData } from '../../../services/work02Service';
-import { imageToTextWithOpenAIVision, splitSentences, countWordsInSentence, filterValidSentences, generateBlankQuizWithAI, translateToKorean as work14TranslateToKorean } from '../../../services/work14AIService';
+import { imageToTextWithOpenAIVision, splitSentences, countWordsInSentence, filterValidSentences, generateBlankQuizWithAI, translateToKorean as work14TranslateToKorean } from '../../../services/work14Service';
 import PrintFormatPackage01, { PrintFormatPackage01Work02, PrintFormatPackage01Work03, PrintFormatPackage01Work04, PrintFormatPackage01Work05, PrintFormatPackage01Work06, PrintFormatPackage01Work07, PrintFormatPackage01Work08, PrintFormatPackage01Work09, PrintFormatPackage01Work10, PrintFormatPackage01Work11, PrintFormatPackage01Work13, PrintFormatPackage01Work14 } from './PrintFormatPackage01';
 import './PrintFormatPackage01.css';
 

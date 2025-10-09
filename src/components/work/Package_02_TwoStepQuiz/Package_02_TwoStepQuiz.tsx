@@ -1,7 +1,7 @@
 import React, { useState, useRef, ChangeEvent } from 'react';
 import './Package_02_TwoStepQuiz.css';
-import { generateWork03Quiz } from '../../../services/generators/work03Generator';
-import { translateToKorean } from '../../../services/generators/common';
+import { generateWork03Quiz } from '../../../services/work03Service';
+import { translateToKorean } from '../../../services/common';
 
 const Package_02_TwoStepQuiz: React.FC = () => {
   const [inputMode, setInputMode] = useState<'capture' | 'image' | 'text'>('text');
