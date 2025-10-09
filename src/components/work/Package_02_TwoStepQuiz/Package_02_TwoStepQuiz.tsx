@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, ChangeEvent } from 'react';
 import './Package_02_TwoStepQuiz.css';
 
 const Package_02_TwoStepQuiz: React.FC = () => {
   const [inputMode, setInputMode] = useState<'capture' | 'image' | 'text'>('text');
   const [inputText, setInputText] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isExtractingText, setIsExtractingText] = useState(false);
+  const [isPasteFocused, setIsPasteFocused] = useState(false);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedWorkTypes, setSelectedWorkTypes] = useState<Record<string, boolean>>({
     '01': true,
     '02': true,
@@ -62,13 +67,61 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     setSelectedWorkTypes(newState);
   };
 
+  // 이미지 파일 선택 핸들러
+  const handleImageFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      // TODO: 이미지에서 텍스트 추출 기능 구현
+    }
+  };
+
+  // 붙여넣기(클립보드) 이미지 처리
+  const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
+    console.log('📋 붙여넣기 이벤트 발생:', { inputMode, clipboardItems: e.clipboardData.items.length });
+    
+    if (inputMode !== 'capture') {
+      console.log('❌ 캡처 모드가 아님:', inputMode);
+      return;
+    }
+    
+    const items = e.clipboardData.items;
+    console.log('📋 클립보드 아이템 수:', items.length);
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      console.log(`📋 아이템 ${i}:`, { type: item.type, kind: item.kind });
+      
+      if (item.type.indexOf('image') !== -1) {
+        const blob = item.getAsFile();
+        if (blob) {
+          console.log('📸 이미지 파일 발견:', { size: blob.size, type: blob.type });
+          setIsExtractingText(true);
+          
+          try {
+            // TODO: OpenAI Vision API를 사용한 텍스트 추출 구현
+            // const extractedText = await extractTextFromImage(blob);
+            // setInputText(extractedText);
+            console.log('✅ 텍스트 추출 완료 (구현 예정)');
+          } catch (error) {
+            console.error('❌ 텍스트 추출 실패:', error);
+            alert('이미지에서 텍스트를 추출하는데 실패했습니다.');
+          } finally {
+            setIsExtractingText(false);
+          }
+        }
+        break;
+      }
+    }
+  };
+
   const handleGenerateQuiz = () => {
     // TODO: 구현 예정
-    alert('패키지 퀴즈 2단 생성 기능은 구현 예정입니다.');
+    alert('패키지 퀴즈 A4용지 2단 생성 기능은 구현 예정입니다.');
   };
 
   return (
-    <div className="quiz-generator">
+    <div className="quiz-generator" onPaste={handlePaste}>
       <div className="generator-header">
         <h2>📦 패키지 퀴즈 (A4용지 2단)</h2>
         <p>하나의 영어 본문으로 필요한 유형들을 A4용지 2단으로 구성해서 생성합니다.</p>
@@ -103,6 +156,63 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         </label>
       </div>
 
+      {inputMode === 'capture' && (
+        <div>
+          <div
+            className={`input-guide${isPasteFocused ? ' paste-focused' : ''}`}
+            tabIndex={0}
+            onClick={() => setIsPasteFocused(true)}
+            onFocus={() => setIsPasteFocused(true)}
+            onBlur={() => setIsPasteFocused(false)}
+            onPaste={handlePaste}
+          >
+            <div className="drop-icon">📋</div>
+            <div className="drop-text">Ctrl+V로 캡처한 이미지를 붙여넣으세요</div>
+            <div className="drop-desc">스크린샷이나 사진을 클립보드에 복사한 후 여기에 붙여넣기 하세요</div>
+            <div style={{fontSize: '0.9rem', color: '#666', marginTop: '0.5rem'}}>
+              💡 <b>팁:</b> 화면 캡처 후 Ctrl+V로 붙여넣기
+            </div>
+            {isExtractingText && (
+              <div style={{color:'#6a5acd', fontWeight:600, marginTop:'0.7rem'}}>
+                OpenAI Vision 처리 중...
+              </div>
+            )}
+          </div>
+          {/* 캡처 모드에서도 텍스트가 추출되면 글자수 표시 */}
+          {inputText && (
+            <div className="text-info" style={{marginTop: '0.5rem'}}>
+              <span>글자 수: {inputText.length}자</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {inputMode === 'image' && (
+        <div>
+          <div className="file-upload-row">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageFileChange}
+              id="fileInput"
+              style={{ display: 'none' }}
+            />
+            <label htmlFor="fileInput" className="file-upload-btn">
+              📁 파일 선택
+            </label>
+            <div className="file-upload-status">
+              {imageFile ? imageFile.name : '선택된 파일이 없습니다'}
+            </div>
+          </div>
+          {/* 이미지 모드에서도 텍스트가 추출되면 글자수 표시 */}
+          {inputText && (
+            <div className="text-info" style={{marginTop: '0.5rem'}}>
+              <span>글자 수: {inputText.length}자</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {inputMode === 'text' && (
         <div className="input-section">
           <div className="input-label-row">
@@ -115,6 +225,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           </div>
           <textarea
             id="textInput"
+            ref={textAreaRef}
             value={inputText}
             onChange={handleTextChange}
             placeholder="영어 본문을 직접 붙여넣어 주세요. 최소 100자 이상 권장합니다."

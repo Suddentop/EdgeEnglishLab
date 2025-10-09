@@ -1248,8 +1248,44 @@
   margin-bottom: 0.1rem;
 }
 
-.input-guide .drop-desc {
-  font-size: 0.98rem;
-  color: #7a7a9a;
-  margin-bottom: 0.2rem;
+ .input-guide .drop-desc {
+   font-size: 0.98rem;
+   color: #7a7a9a;
+   margin-bottom: 0.2rem;
+ }
+
+/* 파일 업로드 스타일 */
+.file-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.file-upload-btn {
+  background: #6a5acd;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  border: none;
+  display: inline-block;
+}
+
+.file-upload-btn:hover {
+  background: #5a4fcf;
+}
+
+.file-upload-status {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+  background: #f7f8fc;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  flex: 1;
 }
