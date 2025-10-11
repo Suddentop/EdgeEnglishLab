@@ -51,7 +51,7 @@ export async function generateWork11Quiz(englishText: string): Promise<SentenceT
       return match.replace(/\./g, '§§§');
     });
     
-    // 인용문을 고려한 문장 분리
+    // 인용문을 고려한 문장 분리 (원본 Work_11과 동일한 로직)
     const sentences: string[] = [];
     let currentSentence = '';
     let inQuotes = false;
@@ -72,7 +72,21 @@ export async function generateWork11Quiz(englishText: string): Promise<SentenceT
         if (!inQuotes) {
           if (currentSentence.trim().length > 0) {
             sentences.push(currentSentence.trim());
+          }
+          currentSentence = '';
+        } else {
+          // 인용문 안에서 마침표를 만난 경우, 다음 문자가 따옴표인지 확인
+          if (nextChar === '"') {
+            // 마침표 다음에 따옴표가 오면 인용문이 끝나는 것
+            // 따옴표까지 포함해서 현재 문장에 추가하고 문장 분리
+            currentSentence += nextChar;
+            i++; // 따옴표 문자를 건너뛰기
+            
+            if (currentSentence.trim().length > 0) {
+              sentences.push(currentSentence.trim());
+            }
             currentSentence = '';
+            inQuotes = false; // 인용문 상태 초기화
           }
         }
       } else {

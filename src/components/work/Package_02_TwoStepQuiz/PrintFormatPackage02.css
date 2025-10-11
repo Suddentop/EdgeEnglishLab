@@ -1,0 +1,285 @@
+/* 패키지#02 인쇄 전용 스타일 */
+
+@page {
+  margin: 0.5cm;
+  size: A4;
+}
+
+@media print {
+  /* 전체 페이지 설정 */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 화면 요소 숨기기 */
+  .quiz-generator,
+  .no-print,
+  button,
+  .generator-header,
+  .input-section,
+  .work-types-selection,
+  .centered-hourglass-overlay {
+    display: none !important;
+  }
+
+  /* 헤더 스타일 */
+  .print-header-package02 {
+    width: 100%;
+    padding: 0.2cm 0;
+    margin-bottom: 0.25cm;
+    border-bottom: 2px solid #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-header-text-package02 {
+    font-size: 10pt;
+    font-weight: 700;
+    color: #000;
+    text-align: center;
+  }
+
+  /* 2단 레이아웃 컨테이너 */
+  .print-two-column-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4cm;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* 각 문제 카드 (1단 = 50% 너비) */
+  .print-question-card {
+    width: calc(50% - 0.2cm);
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin-bottom: 0.5cm;
+    border: 1px solid #ddd;
+    padding: 0.4cm;
+    box-sizing: border-box;
+  }
+
+  /* 문제 제목 + 유형번호 */
+  .print-question-title {
+    font-size: 10pt;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 0.2cm;
+    padding-bottom: 0.12cm;
+    border-bottom: 1.5px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .print-question-type-badge {
+    font-size: 7.5pt;
+    color: #555;
+    font-weight: 600;
+  }
+
+  /* 문제 지시문 */
+  .print-instruction {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #000;
+    background: #f0f0f0;
+    padding: 0.18cm;
+    margin-bottom: 0.2cm;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 영어 본문 */
+  .print-passage {
+    font-size: 8pt;
+    line-height: 1.4;
+    color: #000;
+    margin-bottom: 0.2cm;
+    padding: 0.2cm;
+  }
+
+  /* 4지선다 옵션 (컨테이너 없이) */
+  .print-options {
+    margin-top: 0.2cm;
+  }
+
+  .print-option {
+    font-size: 7.5pt;
+    line-height: 1.3;
+    color: #000;
+    margin-bottom: 0.12cm;
+    padding-left: 0.1cm;
+  }
+
+  /* Work_01 전용 */
+  .print-shuffled-paragraphs {
+    font-size: 8pt;
+    line-height: 1.4;
+    color: #000;
+    margin-bottom: 0.2cm;
+    padding: 0.2cm;
+  }
+
+  .print-paragraph-item {
+    margin-bottom: 0.12cm;
+    font-size: 7.5pt;
+  }
+
+  /* Work_02 전용 */
+  .print-word-highlight {
+    text-decoration: underline;
+    font-weight: 700;
+    color: #1976d2;
+  }
+
+  .print-replacements-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6.5pt;
+    margin-top: 0.2cm;
+    margin-bottom: 0.15cm;
+  }
+
+  .print-replacements-table th,
+  .print-replacements-table td {
+    border: 1px solid #999;
+    padding: 0.06cm;
+    text-align: left;
+    line-height: 1.25;
+  }
+
+  .print-replacements-table th {
+    background: #f0f0f0;
+    font-weight: 600;
+    font-size: 6.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Work_06 전용 */
+  .print-missing-sentence {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #6a5acd;
+    border: 1px solid #666;
+    padding: 0.15cm;
+    margin-bottom: 0.2cm;
+    background: #f7f8fc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-numbered-passage {
+    font-size: 8pt;
+    line-height: 1.4;
+    color: #000;
+    padding: 0.2cm;
+    white-space: pre-line;
+  }
+
+  /* Work_10 전용 */
+  .print-underlined-word {
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  /* Work_11 전용 */
+  .print-sentence-item {
+    margin-bottom: 0.2cm;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.1cm;
+  }
+
+  .print-sentence-label {
+    font-size: 6.5pt;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 0.05cm;
+  }
+
+  .print-sentence-english {
+    font-size: 7.5pt;
+    line-height: 1.35;
+    color: #000;
+    padding: 0.1cm;
+    margin-bottom: 0.05cm;
+  }
+
+  .print-sentence-korean {
+    font-size: 7.5pt;
+    line-height: 1.35;
+    color: #1976d2;
+    background: #f1f8e9;
+    padding: 0.1cm;
+    font-weight: 600;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Work_12 전용 */
+  .print-word-item {
+    margin-bottom: 0.15cm;
+    padding: 0.12cm;
+    background: #f8f9fa;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-word-english {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #000;
+  }
+
+  .print-word-korean {
+    font-size: 7.5pt;
+    color: #1976d2;
+    font-weight: 600;
+  }
+
+  .print-word-example {
+    font-size: 7pt;
+    color: #666;
+    font-style: italic;
+    margin-top: 0.05cm;
+  }
+
+  /* Work_13, 14 전용 */
+  .print-blank-answer {
+    font-size: 7.5pt;
+    color: #1976d2;
+    font-weight: 600;
+    margin-top: 0.2cm;
+    padding: 0.12cm;
+    background: #e8f5e8;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Work_02 교체된 단어 강조 */
+  .print-word-highlight {
+    text-decoration: underline;
+    font-weight: 700;
+    color: #1976d2;
+  }
+
+  /* 페이지 구분 */
+  .print-page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  /* 화면 요소 숨기기 */
+  .no-print {
+    display: none !important;
+  }
+}
+

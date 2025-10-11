@@ -35,6 +35,7 @@ import Work_13_BlankFillWord from './components/work/Work_13_BlankFillWord/Work_
 import Work_14_BlankFillSentence from './components/work/Work_14_BlankFillSentence/Work_14_BlankFillSentence';
 import Package_01_MultiQuizGenerater from './components/work/Package_01_MultiQuizGenerater/Package_01_MultiQuizGenerater';
 import Package_02_TwoStepQuiz from './components/work/Package_02_TwoStepQuiz/Package_02_TwoStepQuiz';
+import Package_03_ParagraphOrder from './components/work/Package_03_ParagraphOrder/Package_03_ParagraphOrder';
 import SampleProblemsBoard from './components/quiz/SampleProblemsBoard';
 import Feedback from './components/feedback/Feedback';
 import AdminPage from './components/admin/AdminPage';
@@ -198,6 +199,14 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <Package_02_TwoStepQuiz />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/package-quiz-3order" 
+            element={
+              <PrivateRoute>
+                <Package_03_ParagraphOrder />
               </PrivateRoute>
             } 
           />
