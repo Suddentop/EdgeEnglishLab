@@ -581,6 +581,23 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
     console.log('🖨️ 인쇄(문제) 시작');
     
+    // 가로 페이지 스타일 동적 추가
+    const style = document.createElement('style');
+    style.id = 'print-style-package02';
+    style.textContent = `
+      @page {
+        margin: 0;
+        size: A4 landscape;
+      }
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
     printContainer.id = 'print-root-package02';
@@ -604,6 +621,13 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       setTimeout(() => {
         root.unmount();
         document.body.removeChild(printContainer);
+        
+        // 동적으로 추가한 스타일 제거
+        const styleElement = document.getElementById('print-style-package02');
+        if (styleElement) {
+          document.head.removeChild(styleElement);
+        }
+        
         if (appRoot) {
           appRoot.style.display = 'block';
         }
