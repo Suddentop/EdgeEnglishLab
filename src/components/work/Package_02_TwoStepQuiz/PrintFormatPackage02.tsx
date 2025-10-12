@@ -4,9 +4,10 @@ import './PrintFormatPackage02.css';
 
 interface PrintFormatPackage02Props {
   packageQuiz: any[];
+  isAnswerMode?: boolean;
 }
 
-const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz }) => {
+const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz, isAnswerMode = false }) => {
   // 본문에서 교체된 단어에 밑줄 표시 - Work_02 전용
   const renderTextWithHighlight = (text: string, replacements: any[]) => {
     if (!replacements || replacements.length === 0) return text;
@@ -96,6 +97,9 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       const cardMarginBottom = 0.1; // 하단 마진 0.1cm (실제보다 훨씬 작게)
       const cardFixedHeight = cardPadding + cardMarginBottom;
       
+      // 정답 섹션 기본 높이 (정답 모드일 때)
+      const answerSectionBaseHeight = isAnswerMode ? 0.8 : 0; // 패딩, 마진, 라벨
+      
       // Work_01: 문단 순서
       if (quizItem.work01Data) {
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
@@ -105,6 +109,10 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         });
         // 선택지
         estimatedHeight += 0.8; // 4개 선택지
+        // 정답 섹션 (정답 모드일 때)
+        if (isAnswerMode) {
+          estimatedHeight += answerSectionBaseHeight + 0.3; // 정답 1줄
+        }
         return estimatedHeight + cardFixedHeight; // 카드 패딩과 마진 포함
       }
       
@@ -112,6 +120,11 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       if (quizItem.work02Data) {
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
         estimatedHeight += calculateTextHeight(quizItem.work02Data.modifiedText || '', 0.32);
+        // 정답 섹션 (정답 모드일 때 - 교체 단어 테이블)
+        if (isAnswerMode) {
+          const replacementCount = quizItem.work02Data.replacements?.length || 0;
+          estimatedHeight += answerSectionBaseHeight + (replacementCount * 0.4); // 테이블 행당 0.4cm
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -121,6 +134,10 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
         estimatedHeight += calculateTextHeight(data.blankedText || '', 0.32);
         estimatedHeight += 0.8; // 선택지
+        // 정답 섹션 (정답 모드일 때)
+        if (isAnswerMode) {
+          estimatedHeight += answerSectionBaseHeight + 0.3; // 정답 1줄
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -130,6 +147,10 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         estimatedHeight += calculateTextHeight(quizItem.work06Data.missingSentence || '', 0.28);
         estimatedHeight += calculateTextHeight(quizItem.work06Data.numberedPassage || '', 0.3);
         estimatedHeight += 0.6; // 선택지
+        // 정답 섹션 (정답 모드일 때)
+        if (isAnswerMode) {
+          estimatedHeight += answerSectionBaseHeight + 0.3; // 정답 1줄
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -139,6 +160,10 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
         estimatedHeight += calculateTextHeight(data.passage || '', 0.32);
         estimatedHeight += 1.0; // 선택지
+        // 정답 섹션 (정답 모드일 때)
+        if (isAnswerMode) {
+          estimatedHeight += answerSectionBaseHeight + 0.3; // 정답 1줄
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -147,6 +172,10 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
         estimatedHeight += calculateTextHeight(quizItem.work09Data.passage || '', 0.32);
         estimatedHeight += 1.0; // 선택지
+        // 정답 섹션 (정답 모드일 때)
+        if (isAnswerMode) {
+          estimatedHeight += answerSectionBaseHeight + 0.3; // 정답 1줄
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -155,6 +184,10 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
         estimatedHeight += calculateTextHeight(quizItem.work10Data.passage || '', 0.32);
         estimatedHeight += 0.6; // 선택지
+        // 정답 섹션 (정답 모드일 때)
+        if (isAnswerMode) {
+          estimatedHeight += answerSectionBaseHeight + 0.3; // 정답 1줄
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -167,6 +200,14 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
             estimatedHeight += calculateSentenceHeight(sentence);
           });
         }
+        // 정답 섹션 (정답 모드일 때 - 문장별 해석)
+        if (isAnswerMode && quizItem.work11Data.sentences) {
+          estimatedHeight += answerSectionBaseHeight;
+          quizItem.work11Data.sentences.forEach((s: any) => {
+            const korean = s.korean || '';
+            estimatedHeight += calculateSentenceHeight(korean); // 한글 해석 높이
+          });
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -174,6 +215,11 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       if (quizItem.work12Data) {
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
         estimatedHeight += (quizItem.work12Data.words?.length || 0) * 0.6;
+        // 정답 섹션 (정답 모드일 때 - 단어별 뜻)
+        if (isAnswerMode) {
+          const wordCount = quizItem.work12Data.words?.length || 0;
+          estimatedHeight += answerSectionBaseHeight + (wordCount * 0.3); // 단어당 0.3cm
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -182,6 +228,11 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         const data = quizItem.work13Data || quizItem.work14Data;
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
         estimatedHeight += calculateTextHeight(data.blankedText || '', 0.32);
+        // 정답 섹션 (정답 모드일 때 - 빈칸 정답들)
+        if (isAnswerMode) {
+          const answerCount = data.correctAnswers?.length || 0;
+          estimatedHeight += answerSectionBaseHeight + (answerCount * 0.3); // 정답당 0.3cm
+        }
         return estimatedHeight + cardFixedHeight;
       }
       
@@ -359,7 +410,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
             <div className="print-two-column-container">
               {pageItems.map((quizItem: any, index: number) => {
           // Work_01: 문단 순서 맞추기
-          if (quizItem.workTypeId === '01' && quizItem.quiz) {
+          if (quizItem.work01Data) {
             return (
               <div key={`print-01-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -370,25 +421,33 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   다음 단락들을 원래 순서대로 배열한 것을 고르세요
                 </div>
                 <div className="print-shuffled-paragraphs">
-                  {quizItem.quiz.shuffledParagraphs.map((para: any, pIndex: number) => (
+                  {quizItem.work01Data.shuffledParagraphs?.map((para: any, pIndex: number) => (
                     <div key={pIndex} className="print-paragraph-item">
                       <strong>{para.label}:</strong> {para.content}
                     </div>
                   ))}
                 </div>
                 <div className="print-options">
-                  {quizItem.quiz.choices.map((choice: string[], cIndex: number) => (
+                  {quizItem.work01Data.choices?.map((choice: string[], cIndex: number) => (
                     <div key={cIndex} className="print-option">
                       {['①', '②', '③', '④'][cIndex]} {choice.join(' → ')}
                     </div>
                   ))}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {['①', '②', '③', '④'][quizItem.work01Data.answerIndex]} {quizItem.work01Data.choices?.[quizItem.work01Data.answerIndex]?.join(' → ')}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_02: 유사단어 독해
-          if (quizItem.workTypeId === '02' && quizItem.work02Data) {
+          if (quizItem.work02Data) {
             return (
               <div key={`print-02-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -407,12 +466,39 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                     )
                   }}
                 />
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">교체된 단어들:</div>
+                    <div className="print-replacements-table">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>원래 단어</th>
+                            <th>교체된 단어</th>
+                            <th>원래 의미</th>
+                            <th>교체된 의미</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {quizItem.work02Data.replacements?.map((replacement: any, rIndex: number) => (
+                            <tr key={rIndex}>
+                              <td className="original-word">{replacement.original}</td>
+                              <td className="replacement-word">{replacement.replacement}</td>
+                              <td className="original-meaning">{replacement.originalMeaning}</td>
+                              <td className="replacement-meaning">{replacement.replacementMeaning}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_03: 빈칸(단어) 문제
-          if (quizItem.workTypeId === '03' && quizItem.work03Data) {
+          if (quizItem.work03Data) {
             return (
               <div key={`print-03-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -426,18 +512,26 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {quizItem.work03Data.blankedText}
                 </div>
                 <div className="print-options">
-                  {quizItem.work03Data.options.map((option: string, optIndex: number) => (
+                  {quizItem.work03Data.options?.map((option: string, optIndex: number) => (
                     <div key={optIndex} className="print-option">
                       {['①', '②', '③', '④', '⑤'][optIndex]} {option}
                     </div>
                   ))}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {['①', '②', '③', '④', '⑤'][quizItem.work03Data.answerIndex]} {quizItem.work03Data.options?.[quizItem.work03Data.answerIndex]}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_04: 빈칸(구) 문제
-          if (quizItem.workTypeId === '04' && quizItem.work04Data) {
+          if (quizItem.work04Data) {
             return (
               <div key={`print-04-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -451,18 +545,26 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {quizItem.work04Data.blankedText}
                 </div>
                 <div className="print-options">
-                  {quizItem.work04Data.options.map((option: string, optIndex: number) => (
+                  {quizItem.work04Data.options?.map((option: string, optIndex: number) => (
                     <div key={optIndex} className="print-option">
                       {['①', '②', '③', '④', '⑤'][optIndex]} {option}
                     </div>
                   ))}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {['①', '②', '③', '④', '⑤'][quizItem.work04Data.answerIndex]} {quizItem.work04Data.options?.[quizItem.work04Data.answerIndex]}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_05: 빈칸(문장) 문제
-          if (quizItem.workTypeId === '05' && quizItem.work05Data) {
+          if (quizItem.work05Data) {
             return (
               <div key={`print-05-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -476,18 +578,26 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {quizItem.work05Data.blankedText}
                 </div>
                 <div className="print-options">
-                  {quizItem.work05Data.options.map((option: string, optIndex: number) => (
+                  {quizItem.work05Data.options?.map((option: string, optIndex: number) => (
                     <div key={optIndex} className="print-option">
                       {['①', '②', '③', '④', '⑤'][optIndex]} {option}
                     </div>
                   ))}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {['①', '②', '③', '④', '⑤'][quizItem.work05Data.answerIndex]} {quizItem.work05Data.options?.[quizItem.work05Data.answerIndex]}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_06: 문장 위치 찾기
-          if (quizItem.workTypeId === '06' && quizItem.work06Data) {
+          if (quizItem.work06Data) {
             return (
               <div key={`print-06-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -503,12 +613,20 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                 <div className="print-numbered-passage">
                   {quizItem.work06Data.numberedPassage}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {['①', '②', '③', '④', '⑤'][quizItem.work06Data.answerIndex]}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_07: 주제 추론
-          if (quizItem.workTypeId === '07' && quizItem.work07Data) {
+          if (quizItem.work07Data) {
             return (
               <div key={`print-07-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -522,18 +640,26 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {quizItem.work07Data.passage}
                 </div>
                 <div className="print-options">
-                  {quizItem.work07Data.options.map((option: string, optIndex: number) => (
+                  {quizItem.work07Data.options?.map((option: string, optIndex: number) => (
                     <div key={optIndex} className="print-option">
                       {['①', '②', '③', '④', '⑤'][optIndex]} {option}
                     </div>
                   ))}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {['①', '②', '③', '④', '⑤'][quizItem.work07Data.answerIndex]} {quizItem.work07Data.options?.[quizItem.work07Data.answerIndex]}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_08: 제목 추론
-          if (quizItem.workTypeId === '08' && quizItem.work08Data) {
+          if (quizItem.work08Data) {
             return (
               <div key={`print-08-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -547,18 +673,26 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {quizItem.work08Data.passage}
                 </div>
                 <div className="print-options">
-                  {quizItem.work08Data.options.map((option: string, optIndex: number) => (
+                  {quizItem.work08Data.options?.map((option: string, optIndex: number) => (
                     <div key={optIndex} className="print-option">
                       {`①②③④⑤`[optIndex]} {option}
                     </div>
                   ))}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {`①②③④⑤`[quizItem.work08Data.answerIndex]} {quizItem.work08Data.options?.[quizItem.work08Data.answerIndex]}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_09: 어법 오류 찾기
-          if (quizItem.workTypeId === '09' && quizItem.work09Data) {
+          if (quizItem.work09Data) {
             return (
               <div key={`print-09-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -572,18 +706,26 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {quizItem.work09Data.passage}
                 </div>
                 <div className="print-options">
-                  {quizItem.work09Data.options.map((option: string, optIndex: number) => (
+                  {quizItem.work09Data.options?.map((option: string, optIndex: number) => (
                     <div key={optIndex} className="print-option">
                       {['①', '②', '③', '④', '⑤'][optIndex]} {option}
                     </div>
                   ))}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {['①', '②', '③', '④', '⑤'][quizItem.work09Data.answerIndex]} {quizItem.work09Data.options?.[quizItem.work09Data.answerIndex]}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_10: 다중 어법 오류
-          if (quizItem.workTypeId === '10' && quizItem.work10Data) {
+          if (quizItem.work10Data) {
             return (
               <div key={`print-10-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -600,18 +742,26 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   }}
                 />
                 <div className="print-options">
-                  {quizItem.work10Data.options.map((option: number, optIndex: number) => (
+                  {quizItem.work10Data.options?.map((option: number, optIndex: number) => (
                     <div key={optIndex} className="print-option">
                       {optIndex + 1}. {option}개
                     </div>
                   ))}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {quizItem.work10Data.answerIndex + 1}. {quizItem.work10Data.options?.[quizItem.work10Data.answerIndex]}개
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_11: 본문 문장별 해석
-          if (quizItem.workTypeId === '11' && quizItem.work11Data) {
+          if (quizItem.work11Data) {
             // 전역 문장 번호 계산 (이전 페이지들의 문장 수 고려)
             const getGlobalSentenceNumber = (localIndex: number) => {
               let globalNumber = localIndex + 1;
@@ -657,12 +807,28 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                     </div>
                   );
                 })}
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">해석:</div>
+                    <div className="print-answer-content">
+                      {quizItem.work11Data.sentences.map((sentence: any, sIndex: number) => {
+                        const globalSentenceNumber = getGlobalSentenceNumber(sIndex);
+                        return (
+                          <div key={sIndex} className="print-sentence-translation">
+                            <span className="sentence-number">{String(globalSentenceNumber).padStart(2, '0')}. </span>
+                            {sentence.korean}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_12: 단어 학습
-          if (quizItem.workTypeId === '12' && quizItem.work12Data) {
+          if (quizItem.work12Data) {
             return (
               <div key={`print-12-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -672,17 +838,29 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                 <div className="print-instruction">
                   다음 단어들의 뜻을 학습하세요
                 </div>
-                {quizItem.work12Data.words.map((word: any, wIndex: number) => (
+                {quizItem.work12Data.words?.map((word: any, wIndex: number) => (
                   <div key={wIndex} className="print-word-item">
                     <div className="print-word-english">{wIndex + 1}. {word.english}</div>
                   </div>
                 ))}
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">뜻:</div>
+                    <div className="print-answer-content">
+                      {quizItem.work12Data.words?.map((word: any, wIndex: number) => (
+                        <div key={wIndex} className="print-word-translation">
+                          {wIndex + 1}. {word.english} - {word.korean}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_13: 빈칸 채우기 (단어-주관식)
-          if (quizItem.workTypeId === '13' && quizItem.work13Data) {
+          if (quizItem.work13Data) {
             return (
               <div key={`print-13-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -695,12 +873,24 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                 <div className="print-passage">
                   {quizItem.work13Data.blankedText}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {quizItem.work13Data.correctAnswers?.map((answer: string, aIndex: number) => (
+                        <div key={aIndex} className="print-blank-answer">
+                          {aIndex + 1}. {answer}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
 
           // Work_14: 빈칸 채우기 (문장-주관식)
-          if (quizItem.workTypeId === '14' && quizItem.work14Data) {
+          if (quizItem.work14Data) {
             return (
               <div key={`print-14-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -713,6 +903,18 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                 <div className="print-passage">
                   {quizItem.work14Data.blankedText}
                 </div>
+                {isAnswerMode && (
+                  <div className="print-answer-section">
+                    <div className="print-answer-label">정답:</div>
+                    <div className="print-answer-content">
+                      {quizItem.work14Data.correctAnswers?.map((answer: string, aIndex: number) => (
+                        <div key={aIndex} className="print-blank-answer">
+                          {aIndex + 1}. {answer}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }

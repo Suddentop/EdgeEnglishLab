@@ -621,13 +621,6 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       setTimeout(() => {
         root.unmount();
         document.body.removeChild(printContainer);
-        
-        // 동적으로 추가한 스타일 제거
-        const styleElement = document.getElementById('print-style-package02');
-        if (styleElement) {
-          document.head.removeChild(styleElement);
-        }
-        
         if (appRoot) {
           appRoot.style.display = 'block';
         }
@@ -637,7 +630,69 @@ const Package_02_TwoStepQuiz: React.FC = () => {
   };
 
   const handlePrintAnswer = () => {
-    alert('인쇄(정답) 기능은 곧 구현될 예정입니다.');
+    console.log('🖨️ 인쇄(정답) 시작');
+    
+    // 기존 인쇄 컨테이너 제거
+    const existingContainer = document.getElementById('print-root-package02');
+    if (existingContainer) {
+      existingContainer.remove();
+    }
+
+    // 새로운 인쇄 컨테이너 생성
+    const printContainer = document.createElement('div');
+    printContainer.id = 'print-root-package02';
+    printContainer.className = 'print-container';
+    document.body.appendChild(printContainer);
+
+    // A4 가로 페이지 스타일 동적 주입
+    const style = document.createElement('style');
+    style.id = 'print-style-package02';
+    style.textContent = `
+      @page {
+        margin: 0;
+        size: A4 landscape;
+      }
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        .print-container {
+          display: block !important;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+      @media screen {
+        .print-container {
+          display: none !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // React 18의 createRoot 사용
+    const root = ReactDOM.createRoot(printContainer);
+    root.render(<PrintFormatPackage02 packageQuiz={packageQuiz || []} isAnswerMode={true} />);
+
+    // 인쇄 실행
+    setTimeout(() => {
+      window.print();
+      
+      // 인쇄 후 정리
+      setTimeout(() => {
+        if (printContainer.parentNode) {
+          printContainer.parentNode.removeChild(printContainer);
+        }
+        // 동적으로 추가한 스타일 제거
+        const styleElement = document.getElementById('print-style-package02');
+        if (styleElement) {
+          document.head.removeChild(styleElement);
+        }
+        console.log('✅ 인쇄(정답) 완료');
+      }, 1000);
+    }, 500);
   };
 
   // 문제 생성 후 화면
