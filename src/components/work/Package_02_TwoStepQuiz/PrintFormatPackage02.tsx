@@ -101,10 +101,10 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       const answerSectionBaseHeight = isAnswerMode ? 0.8 : 0; // 패딩, 마진, 라벨
       
       // Work_01: 문단 순서
-      if (quizItem.work01Data) {
+      if (quizItem.quiz) {
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
         // 문단들
-        quizItem.work01Data.shuffledParagraphs?.forEach((para: any) => {
+        quizItem.quiz.shuffledParagraphs?.forEach((para: any) => {
           estimatedHeight += calculateTextHeight(para.content, 0.3);
         });
         // 선택지
@@ -298,7 +298,37 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
     
     for (let i = 0; i < packageQuiz.length; i++) {
       const quizItem = packageQuiz[i];
-      const workTypeId = Object.keys(quizItem).find(key => key.startsWith('work') && quizItem[key])?.replace('work', '').replace('Data', '') || 'unknown';
+      // workTypeId 찾기 로직 개선
+      let workTypeId = 'unknown';
+      if (quizItem.quiz) {
+        workTypeId = '01';
+      } else if (quizItem.work02Data) {
+        workTypeId = '02';
+      } else if (quizItem.work03Data) {
+        workTypeId = '03';
+      } else if (quizItem.work04Data) {
+        workTypeId = '04';
+      } else if (quizItem.work05Data) {
+        workTypeId = '05';
+      } else if (quizItem.work06Data) {
+        workTypeId = '06';
+      } else if (quizItem.work07Data) {
+        workTypeId = '07';
+      } else if (quizItem.work08Data) {
+        workTypeId = '08';
+      } else if (quizItem.work09Data) {
+        workTypeId = '09';
+      } else if (quizItem.work10Data) {
+        workTypeId = '10';
+      } else if (quizItem.work11Data) {
+        workTypeId = '11';
+      } else if (quizItem.work12Data) {
+        workTypeId = '12';
+      } else if (quizItem.work13Data) {
+        workTypeId = '13';
+      } else if (quizItem.work14Data) {
+        workTypeId = '14';
+      }
       
       console.log(`📦 아이템 ${i + 1}/${packageQuiz.length}: 유형#${workTypeId} 처리 중...`);
       
@@ -410,7 +440,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
             <div className="print-two-column-container">
               {pageItems.map((quizItem: any, index: number) => {
           // Work_01: 문단 순서 맞추기
-          if (quizItem.work01Data) {
+          if (quizItem.quiz) {
             return (
               <div key={`print-01-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -421,14 +451,14 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   다음 단락들을 원래 순서대로 배열한 것을 고르세요
                 </div>
                 <div className="print-shuffled-paragraphs">
-                  {quizItem.work01Data.shuffledParagraphs?.map((para: any, pIndex: number) => (
+                  {quizItem.quiz.shuffledParagraphs?.map((para: any, pIndex: number) => (
                     <div key={pIndex} className="print-paragraph-item">
                       <strong>{para.label}:</strong> {para.content}
                     </div>
                   ))}
                 </div>
                 <div className="print-options">
-                  {quizItem.work01Data.choices?.map((choice: string[], cIndex: number) => (
+                  {quizItem.quiz.choices?.map((choice: string[], cIndex: number) => (
                     <div key={cIndex} className="print-option">
                       {['①', '②', '③', '④'][cIndex]} {choice.join(' → ')}
                     </div>
@@ -438,7 +468,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   <div className="print-answer-section">
                     <div className="print-answer-label">정답:</div>
                     <div className="print-answer-content">
-                      {['①', '②', '③', '④'][quizItem.work01Data.answerIndex]} {quizItem.work01Data.choices?.[quizItem.work01Data.answerIndex]?.join(' → ')}
+                      {['①', '②', '③', '④'][quizItem.quiz.answerIndex]} {quizItem.quiz.choices?.[quizItem.quiz.answerIndex]?.join(' → ')}
                     </div>
                   </div>
                 )}

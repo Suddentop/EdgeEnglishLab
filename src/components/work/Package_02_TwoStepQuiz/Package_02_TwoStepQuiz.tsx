@@ -554,7 +554,6 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       setShowQuizDisplay(true);
       
       console.log('✅ 패키지 퀴즈 생성 완료:', generatedQuizzes);
-      alert(`🎉 ${generatedQuizzes.length}개 유형 문제 생성 완료!`);
 
     } catch (error) {
       console.error('❌ 문제 생성 실패:', error);
