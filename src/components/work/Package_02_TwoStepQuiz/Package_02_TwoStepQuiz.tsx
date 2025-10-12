@@ -632,48 +632,64 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     console.log('🖨️ 인쇄(정답) 시작');
     
     // 기존 인쇄 컨테이너 제거
-    const existingContainer = document.getElementById('print-root-package02');
+    const existingContainer = document.getElementById('print-root-package02-answer');
     if (existingContainer) {
       existingContainer.remove();
     }
 
     // 새로운 인쇄 컨테이너 생성
     const printContainer = document.createElement('div');
-    printContainer.id = 'print-root-package02';
-    printContainer.className = 'print-container';
+    printContainer.id = 'print-root-package02-answer';
+    printContainer.className = 'print-container-answer';
     document.body.appendChild(printContainer);
 
-    // A4 가로 페이지 스타일 동적 주입
+    // A4 페이지 스타일 동적 주입
     const style = document.createElement('style');
-    style.id = 'print-style-package02';
+    style.id = 'print-style-package02-answer';
     style.textContent = `
       @page {
         margin: 0;
-        size: A4 landscape;
+        size: A4;
       }
       @media print {
         body {
           margin: 0;
           padding: 0;
         }
-        .print-container {
+        .print-container-answer {
           display: block !important;
+          width: 21cm;
+          min-height: 29.7cm;
+          background: white;
+          padding: 1cm;
+          box-sizing: border-box;
         }
         .no-print {
           display: none !important;
         }
       }
       @media screen {
-        .print-container {
+        .print-container-answer {
           display: none !important;
         }
       }
     `;
     document.head.appendChild(style);
 
-    // React 18의 createRoot 사용
+    // 빈 페이지 렌더링
     const root = ReactDOM.createRoot(printContainer);
-    root.render(<PrintFormatPackage02 packageQuiz={packageQuiz || []} isAnswerMode={true} />);
+    root.render(
+      <div style={{ 
+        width: '100%', 
+        minHeight: '27.7cm',
+        background: 'white',
+        padding: '1cm',
+        boxSizing: 'border-box'
+      }}>
+        <h1 style={{ textAlign: 'center', marginTop: '10cm' }}>인쇄(정답) 페이지</h1>
+        <p style={{ textAlign: 'center', color: '#666' }}>이 페이지는 곧 구현될 예정입니다.</p>
+      </div>
+    );
 
     // 인쇄 실행
     setTimeout(() => {
@@ -685,7 +701,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           printContainer.parentNode.removeChild(printContainer);
         }
         // 동적으로 추가한 스타일 제거
-        const styleElement = document.getElementById('print-style-package02');
+        const styleElement = document.getElementById('print-style-package02-answer');
         if (styleElement) {
           document.head.removeChild(styleElement);
         }
