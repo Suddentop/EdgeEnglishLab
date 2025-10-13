@@ -37,6 +37,7 @@ import { generateBlankQuizWithAI } from '../../../services/work14Service';
 import { translateToKorean } from '../../../services/common';
 
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
+import PrintHeaderPackage02 from './PrintHeaderPackage02';
 
 
 // 인터페이스 정의
@@ -276,7 +277,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       if (replacement) {
         const word = replacement.replacement;
         const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        result += sentence.replace(regex, `<span style="color: #1976d2; font-weight: 700; text-decoration: underline;">${word}</span>`) + ' ';
+        result += sentence.replace(regex, `<span class="print-word-highlight">${word}</span>`) + ' ';
       } else {
         result += sentence + ' ';
       }
@@ -518,7 +519,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
         sentenceElements.push(
 
-          <span key={elementIndex++} style={{textDecoration: 'underline', fontWeight: 'bold', color: '#1976d2'}}>
+          <span key={elementIndex++} className="print-word-highlight">
 
             {match[0]}
 
@@ -1257,7 +1258,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
     console.log('🖨️ 인쇄(정답) 시작');
     
-    // A4 세로 페이지 스타일 동적 추가 (원래 유형과 동일)
+    // A4 가로 페이지 스타일 동적 추가
     const style = document.createElement('style');
 
     style.id = 'print-style-package02-answer';
@@ -1268,7 +1269,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
         margin: 0;
 
-        size: A4;
+        size: A4 landscape;
 
       }
 
@@ -1286,9 +1287,9 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
           display: block !important;
 
-          width: 21cm;
+          width: 29.7cm;
 
-          min-height: 29.7cm;
+          min-height: 21cm;
 
           background: white;
 
@@ -1324,7 +1325,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
     printContainer.id = 'print-root-package02-answer';
-    printContainer.className = 'print-container-answer';
+    printContainer.className = 'print-container-answer print-answer-mode';
     document.body.appendChild(printContainer);
 
     // 기존 화면 숨기기
@@ -1345,50 +1346,34 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_01: 문단 순서 맞추기
           if (quizItem.workTypeId === '01' && quizItem.quiz) {
             return (
-              <div key={`answer-01-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-01-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#01</span>
+                    <div className="print-question-title">
+                      <span>#01. 문단 순서 맞추기</span>
+                      <span className="print-question-type-badge">유형#01</span>
                     </div>
-                    <div className="problem-passage" style={{marginTop: '0.9rem', marginBottom: '0', fontSize: '1rem'}}>
+                    <div className="print-instruction">
+                      다음 단락들을 원래 순서대로 배열한 것을 고르세요
+                    </div>
+                    <div className="print-shuffled-paragraphs">
                       {quizItem.quiz.shuffledParagraphs.map((paragraph: any, pIndex: number) => (
-                        <div key={paragraph.id} className="shuffled-paragraph">
+                        <div key={paragraph.id} className="print-paragraph-item">
                           <strong>{paragraph.label}:</strong> {paragraph.content}
                         </div>
                       ))}
                     </div>
-      <div style={{ 
-
-                      fontWeight: 700, 
-                      fontSize: '1rem', 
-                      margin: '0.5rem 0 0 0', 
-                      padding: '0.6rem 0.8rem', 
-                      background: '#fff', 
-                      border: '1px solid #ddd', 
-                      borderRadius: '5px'
-                    }}>
-                      <span style={{color: '#000000'}}>
-                        {['①', '②', '③', '④'][quizItem.quiz.answerIndex]} {quizItem.quiz.choices[quizItem.quiz.answerIndex].join(' → ')}
-                      </span> 
-                      <span style={{color: '#1976d2'}}>(정답)</span>
-      </div>
+                    <div className="print-options">
+                      <div className="print-option">
+                        {['①', '②', '③', '④'][quizItem.quiz?.answerIndex || 0]} {quizItem.quiz.choices?.[quizItem.quiz?.answerIndex || 0]?.join(' → ')}
+                        <span className="print-answer-label">
+                          (정답)
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
       </div>
@@ -1400,39 +1385,21 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_02: 유사단어 독해 (교체된 단어 테이블 제외)
           if (quizItem.workTypeId === '02' && quizItem.work02Data) {
             return (
-              <div key={`answer-02-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-02-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 본문을 읽고 해석하세요</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#02</span>
+                    <div className="print-question-title">
+                      <span>#02. 유사단어 독해</span>
+                      <span className="print-question-type-badge">유형#02</span>
+                    </div>
+                    <div className="print-instruction">
+                      다음 본문을 읽고 해석하세요
                     </div>
                     <div 
-                      className="problem-passage" 
-                      style={{
-                        marginTop: '0.9rem', 
-                        marginBottom: '1.6rem', 
-                        fontSize: '1rem',
-                        paddingLeft: '1rem',
-                        paddingRight: '1rem',
-                        paddingTop: '0.5rem',
-                        paddingBottom: '0.3rem'
-                      }}
+                      className="print-passage"
                       dangerouslySetInnerHTML={{
                         __html: renderTextWithHighlight(
                           quizItem.work02Data.modifiedText || '', 
@@ -1450,67 +1417,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_03: 빈칸(단어) 문제
           if (quizItem.workTypeId === '03' && quizItem.work03Data) {
             return (
-              <div key={`answer-03-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-03-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 빈칸에 들어갈 가장 적절한 단어를 고르세요</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#03</span>
+                    <div className="print-question-title">
+                      <span>#03. 빈칸(단어) 문제</span>
+                      <span className="print-question-type-badge">유형#03</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
-                    }}>
+                    <div className="print-instruction">
+                      다음 빈칸에 들어갈 가장 적절한 단어를 고르세요
+                    </div>
+                    <div className="print-passage">
                       {quizItem.work03Data.blankedText}
                     </div>
-                    <div className="options-container" style={{
-                      marginTop: '0.5rem',
-                      marginBottom: '0.5rem',
-                      paddingLeft: '0.6rem',
-                      paddingRight: '0.6rem',
-                      paddingTop: '0.8rem',
-                      paddingBottom: '0.8rem',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      background: '#f8f9fa'
-                    }}>
-                      {quizItem.work03Data.options?.map((option: string, optIndex: number) => (
-                        <div key={optIndex} style={{
-                          marginBottom: '0',
-                          marginTop: '0',
-                          paddingBottom: '0',
-                          paddingTop: '0',
-                          lineHeight: '1',
-                          fontSize: '1rem'
-                        }}>
-                          {['①', '②', '③', '④', '⑤'][optIndex]} {option}
-                          {optIndex === quizItem.work03Data?.answerIndex && (
-                            <span style={{ color: '#1976d2', fontWeight: 'bold', marginLeft: '0.5rem' }}>
-                              (정답)
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                    <div className="print-options">
+                      <div className="print-option">
+                        {['①', '②', '③', '④', '⑤'][quizItem.work03Data?.answerIndex || 0]} {quizItem.work03Data.options?.[quizItem.work03Data?.answerIndex || 0]}
+                        <span className="print-answer-label">
+                          (정답)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1521,67 +1450,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_04: 빈칸(구) 문제
           if (quizItem.workTypeId === '04' && quizItem.work04Data) {
             return (
-              <div key={`answer-04-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-04-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#04</span>
+                    <div className="print-question-title">
+                      <span>#04. 빈칸(구) 문제</span>
+                      <span className="print-question-type-badge">유형#04</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
-                    }}>
+                    <div className="print-instruction">
+                      다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오
+                    </div>
+                    <div className="print-passage">
                       {quizItem.work04Data.blankedText}
                     </div>
-                    <div className="options-container" style={{
-                      marginTop: '0.5rem',
-                      marginBottom: '0.5rem',
-                      paddingLeft: '0.6rem',
-                      paddingRight: '0.6rem',
-                      paddingTop: '0.8rem',
-                      paddingBottom: '0.8rem',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      background: '#f8f9fa'
-                    }}>
-                      {quizItem.work04Data.options?.map((option: string, optIndex: number) => (
-                        <div key={optIndex} style={{
-                          marginBottom: '0',
-                          marginTop: '0',
-                          paddingBottom: '0',
-                          paddingTop: '0',
-                          lineHeight: '1',
-                          fontSize: '1rem'
-                        }}>
-                          {['①', '②', '③', '④', '⑤'][optIndex]} {option}
-                          {optIndex === quizItem.work04Data?.answerIndex && (
-                            <span style={{ color: '#1976d2', fontWeight: 'bold', marginLeft: '0.5rem' }}>
-                              (정답)
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                    <div className="print-options">
+                      <div className="print-option">
+                        {['①', '②', '③', '④', '⑤'][quizItem.work04Data?.answerIndex || 0]} {quizItem.work04Data.options?.[quizItem.work04Data?.answerIndex || 0]}
+                        <span className="print-answer-label">
+                          (정답)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1592,67 +1483,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_05: 빈칸(문장) 문제
           if (quizItem.workTypeId === '05' && quizItem.work05Data) {
             return (
-              <div key={`answer-05-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-05-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#05</span>
+                    <div className="print-question-title">
+                      <span>#05. 빈칸(문장) 문제</span>
+                      <span className="print-question-type-badge">유형#05</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
-                    }}>
+                    <div className="print-instruction">
+                      다음 빈칸에 들어갈 가장 적절한 문장을 고르세요
+                    </div>
+                    <div className="print-passage">
                       {quizItem.work05Data.blankedText}
                     </div>
-                    <div className="options-container" style={{
-                      marginTop: '0.5rem',
-                      marginBottom: '0.5rem',
-                      paddingLeft: '0.6rem',
-                      paddingRight: '0.6rem',
-                      paddingTop: '0.8rem',
-                      paddingBottom: '0.8rem',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      background: '#f8f9fa'
-                    }}>
-                      {quizItem.work05Data.options?.map((option: string, optIndex: number) => (
-                        <div key={optIndex} style={{
-                          marginBottom: '0',
-                          marginTop: '0',
-                          paddingBottom: '0',
-                          paddingTop: '0',
-                          lineHeight: '1',
-                          fontSize: '1rem'
-                        }}>
-                          {['①', '②', '③', '④', '⑤'][optIndex]} {option}
-                          {optIndex === quizItem.work05Data?.answerIndex && (
-                            <span style={{ color: '#1976d2', fontWeight: 'bold', marginLeft: '0.5rem' }}>
-                              (정답)
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                    <div className="print-options">
+                      <div className="print-option">
+                        {['①', '②', '③', '④', '⑤'][quizItem.work05Data?.answerIndex || 0]} {quizItem.work05Data.options?.[quizItem.work05Data?.answerIndex || 0]}
+                        <span className="print-answer-label">
+                          (정답)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1663,67 +1516,28 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_06: 문장 위치 찾기
           if (quizItem.workTypeId === '06' && quizItem.work06Data) {
             return (
-              <div key={`answer-06-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-06-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#06</span>
+                    <div className="print-question-title">
+                      <span>#06. 문장 위치 찾기</span>
+                      <span className="print-question-type-badge">유형#06</span>
                     </div>
-                    <div style={{
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      color: '#6a5acd',
-                      border: '1px solid #666',
-                      padding: '0.8rem 1rem',
-                      marginBottom: '0.2rem',
-                      background: '#f7f8fc',
-                      marginTop: '0.9rem'
-                    }}>
+                    <div className="print-instruction">
+                      아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오
+                    </div>
+                    <div className="work06-main-sentence">
                       주요 문장: {quizItem.work06Data.missingSentence}
                     </div>
-                    <div style={{
-                      fontSize: '1rem',
-                      lineHeight: '1.4',
-                      color: '#000',
-                      padding: '1.2rem',
-                      whiteSpace: 'pre-line',
-                      marginBottom: '1rem',
-                      marginTop: '0.75rem',
-                      background: '#FFF3CD',
-                      border: '1.5px solid #e3e6f0',
-                      borderRadius: '8px'
-                    }}>
+                    <div className="print-passage">
                       {quizItem.work06Data.numberedPassage}
                     </div>
-                    <div className="answer-section" style={{
-                      marginTop: '0.5rem',
-                      padding: '0.6rem 0.8rem',
-                      background: '#f8f9fa',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '5px'
-                    }}>
-                      <div style={{
-                        fontWeight: 'bold',
-                        color: '#1976d2',
-                        fontSize: '1rem'
-                      }}>
-                        정답 : {['①', '②', '③', '④', '⑤'][quizItem.work06Data.answerIndex]}
+                    <div className="work06-answer-section">
+                      <div className="work06-answer-text">
+                        정답 : {['①', '②', '③', '④', '⑤'][quizItem.work06Data.answerIndex || 0]}번
                       </div>
                     </div>
                   </div>
@@ -1735,67 +1549,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_07: 주제 추론
           if (quizItem.workTypeId === '07' && quizItem.work07Data) {
             return (
-              <div key={`answer-07-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-07-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#07</span>
+                    <div className="print-question-title">
+                      <span>#07. 주제 추론</span>
+                      <span className="print-question-type-badge">유형#07</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
-                    }}>
+                    <div className="print-instruction">
+                      다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요
+                    </div>
+                    <div className="print-passage">
                       {quizItem.work07Data.passage}
                     </div>
-                    <div className="options-container" style={{
-                      marginTop: '0.5rem',
-                      marginBottom: '0.5rem',
-                      paddingLeft: '0.6rem',
-                      paddingRight: '0.6rem',
-                      paddingTop: '0.8rem',
-                      paddingBottom: '0.8rem',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      background: '#f8f9fa'
-                    }}>
-                      {quizItem.work07Data.options?.map((option: string, optIndex: number) => (
-                        <div key={optIndex} style={{
-                          marginBottom: '0',
-                          marginTop: '0',
-                          paddingBottom: '0',
-                          paddingTop: '0',
-                          lineHeight: '1',
-                          fontSize: '1rem'
-                        }}>
-                          {['①', '②', '③', '④', '⑤'][optIndex]} {option}
-                          {optIndex === quizItem.work07Data?.answerIndex && (
-                            <span style={{ color: '#1976d2', fontWeight: 'bold', marginLeft: '0.5rem' }}>
-                              (정답)
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                    <div className="print-options">
+                      <div className="print-option">
+                        {['①', '②', '③', '④', '⑤'][quizItem.work07Data?.answerIndex || 0]} {quizItem.work07Data.options?.[quizItem.work07Data?.answerIndex || 0]}
+                        <span className="print-answer-label">
+                          (정답)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1806,67 +1582,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_08: 제목 추론
           if (quizItem.workTypeId === '08' && quizItem.work08Data) {
             return (
-              <div key={`answer-08-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-08-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 본문에 가장 적합한 제목을 고르세요</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#08</span>
+                    <div className="print-question-title">
+                      <span>#08. 제목 추론</span>
+                      <span className="print-question-type-badge">유형#08</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
-                    }}>
+                    <div className="print-instruction">
+                      다음 본문에 가장 적합한 제목을 고르세요
+                    </div>
+                    <div className="print-passage">
                       {quizItem.work08Data.passage}
                     </div>
-                    <div className="options-container" style={{
-                      marginTop: '0.5rem',
-                      marginBottom: '0.5rem',
-                      paddingLeft: '0.6rem',
-                      paddingRight: '0.6rem',
-                      paddingTop: '0.8rem',
-                      paddingBottom: '0.8rem',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      background: '#f8f9fa'
-                    }}>
-                      {quizItem.work08Data.options?.map((option: string, optIndex: number) => (
-                        <div key={optIndex} style={{
-                          marginBottom: '0',
-                          marginTop: '0',
-                          paddingBottom: '0',
-                          paddingTop: '0',
-                          lineHeight: '1',
-                          fontSize: '1rem'
-                        }}>
-                          {`①②③④⑤`[optIndex]} {option}
-                          {optIndex === quizItem.work08Data?.answerIndex && (
-                            <span style={{ color: '#1976d2', fontWeight: 'bold', marginLeft: '0.5rem' }}>
-                              (정답)
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                    <div className="print-options">
+                      <div className="print-option">
+                        {`①②③④⑤`[quizItem.work08Data?.answerIndex || 0]} {quizItem.work08Data.options?.[quizItem.work08Data?.answerIndex || 0]}
+                        <span className="print-answer-label">
+                          (정답)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1877,67 +1615,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_09: 어법 오류 찾기
           if (quizItem.workTypeId === '09' && quizItem.work09Data) {
             return (
-              <div key={`answer-09-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-09-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 글의 밑줄 친 부분 중, 어법상 틀린 것을 고르시오</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#09</span>
+                    <div className="print-question-title">
+                      <span>#09. 어법 오류 찾기</span>
+                      <span className="print-question-type-badge">유형#09</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
-                    }}>
+                    <div className="print-instruction">
+                      다음 글의 밑줄 친 부분 중, 어법상 틀린 것을 고르시오
+                    </div>
+                    <div className="print-passage">
                       {quizItem.work09Data.passage}
                     </div>
-                    <div className="options-container" style={{
-                      marginTop: '0.5rem',
-                      marginBottom: '0.5rem',
-                      paddingLeft: '0.6rem',
-                      paddingRight: '0.6rem',
-                      paddingTop: '0.8rem',
-                      paddingBottom: '0.8rem',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      background: '#f8f9fa'
-                    }}>
-                      {quizItem.work09Data.options?.map((option: string, optIndex: number) => (
-                        <div key={optIndex} style={{
-                          marginBottom: '0',
-                          marginTop: '0',
-                          paddingBottom: '0',
-                          paddingTop: '0',
-                          lineHeight: '1',
-                          fontSize: '1rem'
-                        }}>
-                          {['①', '②', '③', '④', '⑤'][optIndex]} {option}
-                          {optIndex === quizItem.work09Data?.answerIndex && (
-                            <span style={{ color: '#1976d2', fontWeight: 'bold', marginLeft: '0.5rem' }}>
-                              (정답)
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                    <div className="print-options">
+                      <div className="print-option">
+                        {['①', '②', '③', '④', '⑤'][quizItem.work09Data?.answerIndex || 0]} {quizItem.work09Data.options?.[quizItem.work09Data?.answerIndex || 0]}
+                        <span className="print-answer-label">
+                          (정답)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1948,69 +1648,39 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_10: 다중 어법 오류
           if (quizItem.workTypeId === '10' && quizItem.work10Data) {
             return (
-              <div key={`answer-10-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-10-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#10</span>
+                    <div className="print-question-title">
+                      <span>#10. 다중 어법 오류</span>
+                      <span className="print-question-type-badge">유형#10</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
+                    <div className="print-instruction">
+                      다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?
+                    </div>
+                    <div className="print-passage" style={{
+                      marginTop: '0.6rem', 
+                      marginBottom: '0.7rem', 
+                      fontSize: '9pt',
+                      paddingLeft: '0.8rem',
+                      paddingRight: '0.8rem',
+                      paddingTop: '0.4rem',
+                      paddingBottom: '0.2rem'
                     }}
                     dangerouslySetInnerHTML={{
                       __html: quizItem.work10Data.passage.replace(/\n/g, '<br/>')
                     }}
                     />
-                    <div className="options-container" style={{
-                      marginTop: '0.5rem',
-                      marginBottom: '0.5rem',
-                      paddingLeft: '0.6rem',
-                      paddingRight: '0.6rem',
-                      paddingTop: '0.8rem',
-                      paddingBottom: '0.8rem',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      background: '#f8f9fa'
-                    }}>
-                      {quizItem.work10Data.options?.map((option: number, optIndex: number) => (
-                        <div key={optIndex} style={{
-                          marginBottom: '0',
-                          marginTop: '0',
-                          paddingBottom: '0',
-                          paddingTop: '0',
-                          lineHeight: '1',
-                          fontSize: '1rem'
-                        }}>
-                          {['①', '②', '③', '④', '⑤', '⑥'][optIndex]} {option}개
-                          {optIndex === quizItem.work10Data?.answerIndex && (
-                            <span style={{ color: '#1976d2', fontWeight: 'bold', marginLeft: '0.5rem' }}>
-                              (정답)
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                    <div className="print-options">
+                      <div className="print-option">
+                        {['①', '②', '③', '④', '⑤', '⑥'][quizItem.work10Data?.answerIndex || 0]} {quizItem.work10Data.options?.[quizItem.work10Data?.answerIndex || 0]}개
+                        <span className="print-answer-label">
+                          (정답)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2020,11 +1690,11 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
           // Work_11: 본문 문장별 해석 (동적 페이지 분할)
           if (quizItem.workTypeId === '11' && quizItem.work11Data) {
-            // 페이지 분할을 위한 높이 계산
-            const A4_CONTENT_HEIGHT = 24; // cm (사용 가능한 콘텐츠 높이)
-            const INSTRUCTION_HEIGHT = 3; // cm (문제 설명 높이)
-            const CONTAINER_BASE_HEIGHT = 2.5; // cm (기본 컨테이너 높이)
-            const CHAR_HEIGHT_PER_LINE = 0.5; // cm (텍스트 한 줄 높이)
+            // 페이지 분할을 위한 높이 계산 (A4 가로형)
+            const A4_CONTENT_HEIGHT = 17; // cm (A4 가로형: 21cm 높이 - 헤더/여백)
+            const INSTRUCTION_HEIGHT = 2; // cm (문제 설명 높이 축소)
+            const CONTAINER_BASE_HEIGHT = 1.8; // cm (기본 컨테이너 높이 축소)
+            const CHAR_HEIGHT_PER_LINE = 0.4; // cm (텍스트 한 줄 높이 축소)
             
             // 각 문장 컨테이너의 예상 높이 계산
             const containerHeights = quizItem.work11Data.sentences.map((sentence: any) => {
@@ -2058,53 +1728,42 @@ const Package_02_TwoStepQuiz: React.FC = () => {
             
             // 각 페이지 렌더링
             return pages.map((pageIndices, pageIdx) => (
-              <div key={`answer-11-page-${pageIdx}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-11-page-${pageIdx}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>
-                        {pageIdx === 0 
-                          ? '문제: 다음 본문을 문장별로 해석하세요'
-                          : `번역할 문장들 (계속) - ${pageIdx + 1}페이지`
-                        }
-                      </span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#11</span>
+                    <div className="print-question-title">
+                      <span>#11. 문장별 해석</span>
+                      <span className="print-question-type-badge">유형#11</span>
+                    </div>
+                    <div className="print-instruction">
+                      {pageIdx === 0 
+                        ? '다음 본문을 문장별로 해석하세요'
+                        : `번역할 문장들 (계속) - ${pageIdx + 1}페이지`
+                      }
                     </div>
                     {pageIndices.map((sIndex: number) => {
                       const sentence = quizItem.work11Data?.sentences[sIndex];
                       if (!sentence) return null;
                       return (
                         <div key={sIndex} className="work11-print-answer-sentence" style={{
-                          marginBottom: '1rem',
-                          padding: '0.5rem 1rem 0 1rem',
-                          borderRadius: '8px',
-                          backgroundColor: '#F1F8E9',
-                          border: '1px solid #e3f2fd',
+                          marginBottom: '0.7rem',
+                          padding: '0.4rem 0.8rem 0 0.8rem',
+                          borderRadius: '6px',
+                          backgroundColor: '#f8f9fa',
+                          border: '1px solid #dee2e6',
                           pageBreakInside: 'avoid',
                           breakInside: 'avoid',
                           display: 'flex',
                           flexDirection: 'column'
                         }}>
-                          <div style={{
-                            fontSize: '1rem',
-                            lineHeight: '1.6',
+      <div style={{ 
+                            fontSize: '8.5pt',
+                            lineHeight: '1.5',
                             color: '#000',
-                            marginBottom: '0.5rem'
+                            marginBottom: '0.3rem'
                           }}>
                             <span style={{fontWeight: 'bold', color: '#333'}}>
                               {sIndex + 1}. 
@@ -2112,17 +1771,17 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                             {sentence.english}
                           </div>
                           <div style={{
-                            fontSize: '0.75rem',
-                            lineHeight: '1.4',
+                            fontSize: '7.5pt',
+                            lineHeight: '1.3',
                             color: '#1976d2',
                             fontWeight: '500',
-                            marginTop: '0.3rem',
-                            paddingBottom: '0.5rem'
+                            marginTop: '0.2rem',
+                            paddingBottom: '0.4rem'
                           }}>
                             {sentence.korean}
                           </div>
-                        </div>
-                      );
+      </div>
+    );
                     })}
                   </div>
                 </div>
@@ -2133,65 +1792,42 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_13: 빈칸 채우기 (단어-주관식)
           if (quizItem.workTypeId === '13' && quizItem.work13Data) {
             return (
-              <div key={`answer-13-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-13-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 빈칸에 들어갈 적절한 단어를 쓰시오</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#13</span>
+                    <div className="print-question-title">
+                      <span>#13. 빈칸 채우기 (단어)</span>
+                      <span className="print-question-type-badge">유형#13</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
+                    <div className="print-instruction">
+                      다음 빈칸에 들어갈 적절한 단어를 쓰시오
+                    </div>
+                    <div className="print-passage" style={{
+                      marginTop: '0.6rem', 
+                      marginBottom: '0.7rem', 
+                      fontSize: '9pt',
+                      paddingLeft: '0.8rem',
+                      paddingRight: '0.8rem',
+                      paddingTop: '0.4rem',
+                      paddingBottom: '0.2rem'
                     }}>
                       {quizItem.work13Data.blankedText}
                     </div>
-                    <div className="answer-section" style={{
-                      marginTop: '0.3rem',
-                      padding: '0.6rem 0.8rem',
-                      background: '#f8f9fa',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '5px'
-                    }}>
-                      <div style={{
-                        fontWeight: 'bold',
-                        color: '#1976d2',
-                        fontSize: '1rem',
-                        marginBottom: '0.3rem'
-                      }}>
-                        정답:
-                      </div>
-                      <div style={{
-                        fontSize: '1rem',
-                        color: '#333'
-                      }}>
-                        {quizItem.work13Data.correctAnswers?.map((answer: string, aIndex: number) => (
-                          <div key={aIndex} style={{
-                            marginBottom: '0.3rem'
-                          }}>
-                            {aIndex + 1}. {answer}
-                          </div>
-                        ))}
+                    <div className="work13-answer-section">
+                      <div className="work13-answer-text">
+                        <div className="work13-answer-label">
+                          정답:
+                        </div>
+                        <div className="work13-answer-content">
+                          {quizItem.work13Data.correctAnswers?.map((answer: string, aIndex: number) => (
+                            <div key={aIndex} className="work13-answer-item">
+                              {aIndex + 1}. {answer}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2203,65 +1839,42 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           // Work_14: 빈칸 채우기 (문장-주관식)
           if (quizItem.workTypeId === '14' && quizItem.work14Data) {
             return (
-              <div key={`answer-14-${index}`} className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
+              <div key={`answer-14-${index}`} className="a4-landscape-page-template">
+                <div className="a4-landscape-page-header">
+                  <PrintHeaderPackage02 />
                 </div>
-                <div className="a4-page-content">
+                <div className="a4-landscape-page-content">
                   <div className="quiz-content">
-                    <div className="problem-instruction" style={{
-                      fontWeight: 800, 
-                      fontSize: '1rem', 
-                      background: '#222', 
-                      color: '#fff', 
-                      padding: '0.7rem 0.5rem', 
-                      borderRadius: '8px', 
-                      marginBottom: '1.2rem', 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      width: '100%'
-                    }}>
-                      <span>문제: 다음 빈칸에 들어갈 적절한 문장을 쓰시오</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#14</span>
+                    <div className="print-question-title">
+                      <span>#14. 빈칸 채우기 (문장)</span>
+                      <span className="print-question-type-badge">유형#14</span>
                     </div>
-                    <div className="problem-passage" style={{
-                      marginTop: '0.9rem', 
-                      marginBottom: '1rem', 
-                      fontSize: '1rem',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      paddingTop: '0.5rem',
-                      paddingBottom: '0.3rem'
+                    <div className="print-instruction">
+                      다음 빈칸에 들어갈 적절한 문장을 쓰시오
+                    </div>
+                    <div className="print-passage" style={{
+                      marginTop: '0.6rem', 
+                      marginBottom: '0.7rem', 
+                      fontSize: '9pt',
+                      paddingLeft: '0.8rem',
+                      paddingRight: '0.8rem',
+                      paddingTop: '0.4rem',
+                      paddingBottom: '0.2rem'
                     }}>
                       {quizItem.work14Data.blankedText}
                     </div>
-                    <div className="answer-section" style={{
-                      marginTop: '0.3rem',
-                      padding: '0.6rem 0.8rem',
-                      background: '#f8f9fa',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '5px'
-                    }}>
-                      <div style={{
-                        fontWeight: 'bold',
-                        color: '#1976d2',
-                        fontSize: '1rem',
-                        marginBottom: '0.3rem'
-                      }}>
-                        정답:
-                      </div>
-                      <div style={{
-                        fontSize: '1rem',
-                        color: '#333'
-                      }}>
-                        {quizItem.work14Data.correctAnswers?.map((answer: string, aIndex: number) => (
-                          <div key={aIndex} style={{
-                            marginBottom: '0.3rem'
-                          }}>
-                            {aIndex + 1}. {answer}
-                          </div>
-                        ))}
+                    <div className="work14-answer-section">
+                      <div className="work14-answer-text">
+                        <div className="work14-answer-label">
+                          정답:
+                        </div>
+                        <div className="work14-answer-content">
+                          {quizItem.work14Data.correctAnswers?.map((answer: string, aIndex: number) => (
+                            <div key={aIndex} className="work14-answer-item">
+                              {aIndex + 1}. {answer}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2369,7 +1982,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                 padding: '0.75rem 1rem',
 
-                fontSize: '1rem',
+                fontSize: '11pt',
 
                 fontWeight: '600',
 
@@ -2405,7 +2018,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                 padding: '0.75rem 1rem',
 
-                fontSize: '1rem',
+                fontSize: '11pt',
 
                 fontWeight: '600',
 
@@ -2443,7 +2056,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                 padding: '0.75rem 1rem',
 
-                fontSize: '1rem',
+                fontSize: '11pt',
 
                 fontWeight: '600',
 
@@ -3583,7 +3196,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                       border: '1px solid #dee2e6',
 
-                      fontSize: '1rem',
+                      fontSize: '11pt',
 
                       lineHeight: '1.5'
 
@@ -3737,7 +3350,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                   marginBottom: '1.5rem',
 
-                  fontSize: '1rem',
+                  fontSize: '11pt',
 
                   lineHeight: '1.6'
 
@@ -3765,7 +3378,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                       backgroundColor: '#fff',
 
-                      fontSize: '1rem',
+                      fontSize: '11pt',
 
                       lineHeight: '1.5'
 
@@ -4293,7 +3906,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                     <div style={{
 
-                      fontSize: '0.85rem',
+                      fontSize: '9pt',
 
                       fontWeight: '700',
 
@@ -4343,9 +3956,9 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                       {sentence.korean}
 
-                    </div>
+                </div>
 
-                  </div>
+                    </div>
 
                 ))}
 
@@ -4457,7 +4070,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                   <div style={{
 
-                    fontSize: '1rem',
+                    fontSize: '11pt',
 
                     fontWeight: '700',
 
@@ -4627,7 +4240,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
                   <div style={{
 
-                    fontSize: '1rem',
+                    fontSize: '11pt',
 
                     fontWeight: '700',
 
