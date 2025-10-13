@@ -211,18 +211,6 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         return estimatedHeight + cardFixedHeight;
       }
       
-      // Work_12: 단어 학습
-      if (quizItem.work12Data) {
-        estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
-        estimatedHeight += (quizItem.work12Data.words?.length || 0) * 0.6;
-        // 정답 섹션 (정답 모드일 때 - 단어별 뜻)
-        if (isAnswerMode) {
-          const wordCount = quizItem.work12Data.words?.length || 0;
-          estimatedHeight += answerSectionBaseHeight + (wordCount * 0.3); // 단어당 0.3cm
-        }
-        return estimatedHeight + cardFixedHeight;
-      }
-      
       // Work_13, 14: 빈칸 채우기
       if (quizItem.work13Data || quizItem.work14Data) {
         const data = quizItem.work13Data || quizItem.work14Data;
@@ -322,8 +310,6 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         workTypeId = '10';
       } else if (quizItem.work11Data) {
         workTypeId = '11';
-      } else if (quizItem.work12Data) {
-        workTypeId = '12';
       } else if (quizItem.work13Data) {
         workTypeId = '13';
       } else if (quizItem.work14Data) {
@@ -496,33 +482,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                     )
                   }}
                 />
-                {isAnswerMode && (
-                  <div className="print-answer-section">
-                    <div className="print-answer-label">교체된 단어들:</div>
-                    <div className="print-replacements-table">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>원래 단어</th>
-                            <th>교체된 단어</th>
-                            <th>원래 의미</th>
-                            <th>교체된 의미</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {quizItem.work02Data.replacements?.map((replacement: any, rIndex: number) => (
-                            <tr key={rIndex}>
-                              <td className="original-word">{replacement.original}</td>
-                              <td className="replacement-word">{replacement.replacement}</td>
-                              <td className="original-meaning">{replacement.originalMeaning}</td>
-                              <td className="replacement-meaning">{replacement.replacementMeaning}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+                {/* 교체된 단어 테이블은 handlePrintAnswer에서 별도 페이지로 처리 */}
               </div>
             );
           }
@@ -850,38 +810,6 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                           </div>
                         );
                       })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          // Work_12: 단어 학습
-          if (quizItem.work12Data) {
-            return (
-              <div key={`print-12-${index}`} className="print-question-card">
-                <div className="print-question-title">
-                  <span>#12. 단어 학습</span>
-                  <span className="print-question-type-badge">유형#12</span>
-                </div>
-                <div className="print-instruction">
-                  다음 단어들의 뜻을 학습하세요
-                </div>
-                {quizItem.work12Data.words?.map((word: any, wIndex: number) => (
-                  <div key={wIndex} className="print-word-item">
-                    <div className="print-word-english">{wIndex + 1}. {word.english}</div>
-                  </div>
-                ))}
-                {isAnswerMode && (
-                  <div className="print-answer-section">
-                    <div className="print-answer-label">뜻:</div>
-                    <div className="print-answer-content">
-                      {quizItem.work12Data.words?.map((word: any, wIndex: number) => (
-                        <div key={wIndex} className="print-word-translation">
-                          {wIndex + 1}. {word.english} - {word.korean}
-                        </div>
-                      ))}
                     </div>
                   </div>
                 )}

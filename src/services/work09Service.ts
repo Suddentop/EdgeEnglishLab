@@ -109,13 +109,20 @@ ${passage}`;
   const data = await response.json();
   const content = data.choices[0].message.content.trim();
 
+  // 마크다운 코드 블록 제거
+  let wordsJson = content;
+  if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+    wordsJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+  }
+
   try {
-    const words = JSON.parse(content);
+    const words = JSON.parse(wordsJson);
     if (!Array.isArray(words) || words.length !== 5) {
       throw new Error('선택된 단어가 5개가 아닙니다.');
     }
     return words;
   } catch (parseError) {
+    console.error('파싱 실패한 내용:', wordsJson);
     throw new Error('단어 선택 결과를 파싱할 수 없습니다.');
   }
 }
@@ -187,8 +194,14 @@ Return ONLY this JSON format:
     const data = await response.json();
     const content = data.choices[0].message.content.trim();
 
+    // 마크다운 코드 블록 제거
+    let resultJson = content;
+    if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+      resultJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+    }
+
     try {
-      const result = JSON.parse(content);
+      const result = JSON.parse(resultJson);
       
       // 검증
       if (!result.transformedWords || !Array.isArray(result.transformedWords) || 

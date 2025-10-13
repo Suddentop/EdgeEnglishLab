@@ -57,13 +57,22 @@ ${passage}`;
     }
 
     const data = await response.json();
-    const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+    const content = data.choices[0].message.content.trim();
+    
+    // 마크다운 코드 블록 제거
+    let cleanedContent = content;
+    if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+      cleanedContent = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+    }
+    
+    const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
     
     let result: any;
     try {
       result = JSON.parse(jsonMatch[0]);
     } catch {
+      console.error('파싱 실패한 내용:', jsonMatch[0]);
       throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
     }
 
