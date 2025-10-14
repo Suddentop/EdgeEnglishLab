@@ -6,6 +6,7 @@ import '../../../styles/PrintFormat.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const INPUT_MODES = [
@@ -830,6 +831,27 @@ ${passage}
       
       const quizData = await generateTitleQuizWithAI(passage);
       setQuiz(quizData);
+
+      // 문제 생성 내역 저장
+      if (userData?.uid && workTypePoints.length > 0) {
+        try {
+          const workTypePoint = workTypePoints.find(wt => wt.id === '8');
+          await saveQuizWithPDF({
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            workTypeId: '08',
+            workTypeName: getWorkTypeName('08'),
+            points: workTypePoint?.points || 0,
+            inputText: passage,
+            quizData: quizData,
+            status: 'success'
+          });
+          console.log('✅ Work_08 내역 저장 완료');
+        } catch (historyError) {
+          console.error('❌ Work_08 내역 저장 실패:', historyError);
+        }
+      }
       
     } catch (err: any) {
       console.error('제목 추론 문제 생성 오류:', err);

@@ -6,6 +6,7 @@ import '../../../styles/PrintFormat.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const INPUT_MODES = [
@@ -743,6 +744,27 @@ ${passage}`;
       
       const quizData = await generateGrammarQuizStepByStep(passage);
       setQuiz(quizData);
+
+      // 문제 생성 내역 저장
+      if (userData?.uid && workTypePoints.length > 0) {
+        try {
+          const workTypePoint = workTypePoints.find(wt => wt.id === '9');
+          await saveQuizWithPDF({
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            workTypeId: '09',
+            workTypeName: getWorkTypeName('09'),
+            points: workTypePoint?.points || 0,
+            inputText: passage,
+            quizData: quizData,
+            status: 'success'
+          });
+          console.log('✅ Work_09 내역 저장 완료');
+        } catch (historyError) {
+          console.error('❌ Work_09 내역 저장 실패:', historyError);
+        }
+      }
       
     } catch (err: any) {
       console.error('문법 오류 문제 생성 오류:', err);

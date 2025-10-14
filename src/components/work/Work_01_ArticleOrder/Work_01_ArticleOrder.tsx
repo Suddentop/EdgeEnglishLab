@@ -5,6 +5,7 @@ import { isAIServiceAvailable } from '../../../services/aiParagraphService';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import PrintHeader from '../../common/PrintHeader';
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
@@ -155,7 +156,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
   const [showPointModal, setShowPointModal] = useState(false);
   const [pointsToDeduct, setPointsToDeduct] = useState(0);
   const [userCurrentPoints, setUserCurrentPoints] = useState(0);
-  const [workTypePoints, setWorkTypePoints] = useState<number>(0);
+  const [workTypePoints, setWorkTypePoints] = useState<any[]>([]);
 
   // 포인트 초기화
   useEffect(() => {
@@ -167,9 +168,10 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
             getUserCurrentPoints(userData.uid)
           ]);
           
-          const workType = workTypePointsData.find(wt => wt.id === '1');
+          setWorkTypePoints(workTypePointsData);
+          
+          const workType = workTypePointsData.find((wt: any) => wt.id === '1');
           if (workType) {
-            setWorkTypePoints(workType.points);
             setPointsToDeduct(workType.points);
           }
           
@@ -183,7 +185,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
     if (!loading) {
       initializePoints();
     }
-  }, [userData?.uid, loading]);
+  }, [loading, userData]);
 
   // 본문 글자 수 기반 페이지 분할 결정
   const checkContentLength = () => {
@@ -424,6 +426,27 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
         });
         
                  setQuiz(quiz);
+
+                   // 문제 생성 내역 저장
+          if (userData?.uid && workTypePoints.length > 0) {
+            try {
+              const workTypePoint = workTypePoints.find(wt => wt.id === '1');
+              await saveQuizWithPDF({
+                userId: userData.uid,
+                userName: userData.name || '사용자',
+                userNickname: userData.nickname || '사용자',
+                workTypeId: '01',
+                workTypeName: getWorkTypeName('01'),
+                points: workTypePoint?.points || 0,
+                inputText: text,
+                quizData: quiz,
+                status: 'success'
+              });
+              console.log('✅ Work_01 내역 저장 완료');
+            } catch (historyError) {
+              console.error('❌ Work_01 내역 저장 실패:', historyError);
+            }
+          }
          
                    // 영어 원본문을 한글로 번역 (단락별 개별 번역)
           try {

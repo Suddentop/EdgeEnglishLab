@@ -5,6 +5,7 @@ import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import '../../../styles/PrintFormat.css';
 
@@ -1196,6 +1197,27 @@ Korean translation:`;
       // 2. AI로 단어 교체 및 독해 문제 생성
       const quizData = await generateReadingComprehensionWithAI(passage);
       setQuiz(quizData);
+
+      // 문제 생성 내역 저장
+      if (userData?.uid && workTypePoints.length > 0) {
+        try {
+          const workTypePoint = workTypePoints.find(wt => wt.id === '2');
+          await saveQuizWithPDF({
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            workTypeId: '02',
+            workTypeName: getWorkTypeName('02'),
+            points: workTypePoint?.points || 0,
+            inputText: passage,
+            quizData: quizData,
+            status: 'success'
+          });
+          console.log('✅ Work_02 내역 저장 완료');
+        } catch (historyError) {
+          console.error('❌ Work_02 내역 저장 실패:', historyError);
+        }
+      }
       
     } catch (err: any) {
       // 포인트 환불

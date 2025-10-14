@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getUserCurrentPoints, getWorkTypePoints, deductUserPoints, refundUserPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PrintHeader from '../../common/PrintHeader';
@@ -508,6 +509,27 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
       // 문장별 해석 문제 생성
       const quizData = await generateSentenceTranslationQuiz(inputText, apiKey);
       setQuizData(quizData);
+
+      // 문제 생성 내역 저장
+      if (userData?.uid && workTypePoints.length > 0) {
+        try {
+          const workTypePoint = workTypePoints.find(wt => wt.id === '11');
+          await saveQuizWithPDF({
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            workTypeId: '11',
+            workTypeName: getWorkTypeName('11'),
+            points: workTypePoint?.points || 0,
+            inputText: inputText,
+            quizData: quizData,
+            status: 'success'
+          });
+          console.log('✅ Work_11 내역 저장 완료');
+        } catch (historyError) {
+          console.error('❌ Work_11 내역 저장 실패:', historyError);
+        }
+      }
       
       console.log('✅ 문장별 해석 문제 생성 완료');
     } catch (error) {

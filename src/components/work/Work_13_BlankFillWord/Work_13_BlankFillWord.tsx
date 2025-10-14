@@ -5,6 +5,7 @@ import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import { splitSentences, countWordsInSentence, filterValidSentences } from '../../../services/work14Service';
 import { 
@@ -368,6 +369,27 @@ const Work_13_BlankFillWord: React.FC = () => {
       console.log('생성된 퀴즈 데이터:', quizData);
       console.log('quizData.translation:', quizData.translation);
       setQuiz(quizData);
+
+      // 문제 생성 내역 저장
+      if (userData?.uid && workTypePoints.length > 0) {
+        try {
+          const workTypePoint = workTypePoints.find(wt => wt.id === '13');
+          await saveQuizWithPDF({
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            workTypeId: '13',
+            workTypeName: getWorkTypeName('13'),
+            points: workTypePoint?.points || 0,
+            inputText: passage,
+            quizData: quizData,
+            status: 'success'
+          });
+          console.log('✅ Work_13 내역 저장 완료');
+        } catch (historyError) {
+          console.error('❌ Work_13 내역 저장 실패:', historyError);
+        }
+      }
       
     } catch (err: any) {
       console.error('빈칸 채우기 문제 생성 오류:', err);

@@ -5,6 +5,7 @@ import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import '../../../styles/PrintFormat.css';
 
@@ -651,6 +652,27 @@ ${englishText}`;
       const quizData = await generateBlankQuizWithAI(passage);
       console.log('생성된 퀴즈 데이터:', quizData);
       setQuiz(quizData);
+
+      // 문제 생성 내역 저장
+      if (userData?.uid && workTypePoints.length > 0) {
+        try {
+          const workTypePoint = workTypePoints.find(wt => wt.id === '3');
+          await saveQuizWithPDF({
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            workTypeId: '03',
+            workTypeName: getWorkTypeName('03'),
+            points: workTypePoint?.points || 0,
+            inputText: passage,
+            quizData: quizData,
+            status: 'success'
+          });
+          console.log('✅ Work_03 내역 저장 완료');
+        } catch (historyError) {
+          console.error('❌ Work_03 내역 저장 실패:', historyError);
+        }
+      }
       
       // 영어본문을 한글로 번역
       const translation = await translateToKorean(passage);

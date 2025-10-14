@@ -1,6 +1,10 @@
-import React, { useState, useRef, ChangeEvent } from 'react';
+import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './Package_03_ParagraphOrder.css';
+import PointDeductionModal from '../../modal/PointDeductionModal';
+import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { savePackageQuizHistory } from '../../../utils/quizHistoryHelper';
+import { useAuth } from '../../../contexts/AuthContext';
 import { generateWork01Quiz } from '../../../services/work01Service';
 import { Quiz } from '../../../types/types';
 import { generateWork02Quiz, Work02QuizData } from '../../../services/work02Service';
@@ -51,6 +55,7 @@ interface PackageQuizItem {
 }
 
 const Package_03_ParagraphOrder: React.FC = () => {
+  const { userData, loading } = useAuth();
   // 입력 모드 상태
   const [inputMode, setInputMode] = useState<'capture' | 'image' | 'text'>('text');
   const [inputText, setInputText] = useState('');
@@ -76,6 +81,23 @@ const Package_03_ParagraphOrder: React.FC = () => {
 
   // 선택된 문제 유형 상태 (라디오 버튼) - 기본값: 07 선택
   const [selectedRadioType, setSelectedRadioType] = useState<string>('07');
+
+  // 포인트 관련 상태
+  const [showPointModal, setShowPointModal] = useState(false);
+  const [pointsToDeduct, setPointsToDeduct] = useState(0);
+  const [userCurrentPoints, setUserCurrentPoints] = useState(0);
+  const [workTypePoints, setWorkTypePoints] = useState<any[]>([]);
+
+  // UI ID와 Firebase ID 매핑
+  const UI_TO_FIREBASE_ID_MAP: { [key: string]: string } = {
+    '01': '1',
+    '02': '2', 
+    '07': '7',
+    '08': '8',
+    '11': '11',
+    '13': '13',
+    '14': '14'
+  };
 
   // 교체된 단어에 밑줄 표시하는 함수
   const renderTextWithUnderlines = (text: string, replacements: any[], isOriginal: boolean = true) => {
@@ -225,6 +247,86 @@ const Package_03_ParagraphOrder: React.FC = () => {
     setSelectedRadioType(typeId);
   };
 
+  // 포인트 관련 함수들
+  useEffect(() => {
+    const loadPointData = async () => {
+      if (!userData?.uid) return;
+      
+      try {
+        // 사용자 현재 포인트 조회
+        const currentPoints = await getUserCurrentPoints(userData.uid);
+        setUserCurrentPoints(currentPoints);
+        
+        // 유형별 포인트 설정 조회
+        const workTypePointsData = await getWorkTypePoints();
+        setWorkTypePoints(workTypePointsData);
+      } catch (error) {
+        console.error('포인트 데이터 로드 오류:', error);
+      }
+    };
+    
+    loadPointData();
+  }, [userData?.uid]);
+
+  // 선택된 유형들의 총 포인트 계산 함수
+  const calculateTotalPoints = () => {
+    const selectedTypes = Object.keys(selectedWorkTypes).filter(typeId => selectedWorkTypes[typeId]);
+    const radioType = selectedRadioType;
+    let totalPoints = 0;
+    
+    // 체크박스로 선택된 유형들
+    selectedTypes.forEach(typeId => {
+      const firebaseId = UI_TO_FIREBASE_ID_MAP[typeId];
+      const workTypePoint = workTypePoints.find(wt => wt.id === firebaseId);
+      if (workTypePoint) {
+        totalPoints += workTypePoint.points;
+      }
+    });
+    
+    // 라디오 버튼으로 선택된 유형
+    const firebaseId = UI_TO_FIREBASE_ID_MAP[radioType];
+    const workTypePoint = workTypePoints.find(wt => wt.id === firebaseId);
+    if (workTypePoint) {
+      totalPoints += workTypePoint.points;
+    }
+    
+    return totalPoints;
+  };
+
+  // 포인트 차감 확인 핸들러
+  const handlePointDeductionConfirm = () => {
+    setShowPointModal(false);
+    executeQuizGeneration();
+  };
+
+  // 포인트 환불 처리 함수
+  const handlePointRefund = async (deductedPoints: number, reason: string) => {
+    if (deductedPoints > 0 && userData?.uid) {
+      try {
+        const selectedTypes = Object.keys(selectedWorkTypes).filter(typeId => selectedWorkTypes[typeId]);
+        await refundUserPoints(
+          userData.uid,
+          deductedPoints,
+          `패키지 퀴즈 생성 (${selectedTypes.length + 1}개 유형)`,
+          userData.name || '사용자',
+          userData.nickname || '사용자',
+          reason
+        );
+        
+        // 사용자 포인트 다시 조회
+        const currentPoints = await getUserCurrentPoints(userData.uid);
+        setUserCurrentPoints(currentPoints);
+        
+        console.log('💰 포인트 환불 완료:', deductedPoints);
+        return true;
+      } catch (refundError) {
+        console.error('❌ 포인트 환불 실패:', refundError);
+        return false;
+      }
+    }
+    return true;
+  };
+
   // 새문제 만들기 핸들러 - 이전 선택 상태 유지
   const handleNewProblem = () => {
     setShowQuizDisplay(false);
@@ -292,9 +394,14 @@ const Package_03_ParagraphOrder: React.FC = () => {
   };
 
   // 패키지 퀴즈 생성 함수
-  const generatePackageQuiz = async (inputText: string) => {
+  // 실제 문제 생성 실행
+  const executeQuizGeneration = async () => {
+    if (!userData?.uid) return;
+
     setIsLoading(true);
     setShowQuizDisplay(false);
+    let deductedPoints = 0;
+    let successfulTypes: string[] = [];
 
     try {
       // 선택된 유형들 수집
@@ -320,12 +427,85 @@ const Package_03_ParagraphOrder: React.FC = () => {
 
       console.log('선택된 유형들:', selectedTypes);
 
+      // 포인트 차감
+      let remainingPoints = userCurrentPoints;
+      
+      for (const typeId of selectedTypes) {
+        const firebaseId = UI_TO_FIREBASE_ID_MAP[typeId];
+        console.log(`🔍 포인트 차감 대상: 유형#${typeId} -> Firebase ID: ${firebaseId}`);
+        
+        const workTypePoint = workTypePoints.find(wt => wt.id === firebaseId);
+        console.log(`🔍 찾은 포인트 설정:`, workTypePoint);
+        
+        if (workTypePoint) {
+          console.log(`💰 포인트 차감: 유형#${typeId} - ${workTypePoint.points}P`);
+          
+          const deductionResult = await deductUserPoints(
+            userData.uid,
+            firebaseId,
+            `유형#${typeId}`,
+            userData.name || '사용자',
+            userData.nickname || '사용자'
+          );
+
+          console.log(`💰 포인트 차감 결과:`, deductionResult);
+
+          if (!deductionResult.success) {
+            throw new Error(deductionResult.error || '포인트 차감에 실패했습니다.');
+          }
+
+          deductedPoints += deductionResult.deductedPoints;
+          remainingPoints = deductionResult.remainingPoints;
+        } else {
+          console.error(`❌ 유형#${typeId}의 포인트 설정을 찾을 수 없습니다.`);
+          throw new Error(`유형#${typeId}의 포인트 설정을 찾을 수 없습니다.`);
+        }
+      }
+
+      setUserCurrentPoints(remainingPoints);
+
       // 병렬로 문제 생성
       const quizPromises = selectedTypes.map(typeId => 
         generateSingleWorkTypeQuiz(inputText, typeId)
       );
 
       const quizResults = await Promise.all(quizPromises);
+      
+      // 성공한 유형들 추적
+      successfulTypes = quizResults.map((item, index) => {
+        if (item.work01Data) return '01';
+        if (item.work02Data) return '02';
+        if (item.work07Data) return '07';
+        if (item.work08Data) return '08';
+        if (item.work11Data) return '11';
+        if (item.work13Data) return '13';
+        if (item.work14Data) return '14';
+        return selectedTypes[index];
+      }).filter(typeId => typeId !== null);
+      
+      // 부분적 실패 확인: 일부 유형만 생성된 경우
+      const failedTypes = selectedTypes.filter(typeId => !successfulTypes.includes(typeId));
+      
+      if (failedTypes.length > 0) {
+        console.warn(`⚠️ 일부 유형 생성 실패: ${failedTypes.join(', ')}`);
+        
+        // 실패한 유형들의 포인트만 환불
+        let refundAmount = 0;
+        for (const failedType of failedTypes) {
+          const firebaseId = UI_TO_FIREBASE_ID_MAP[failedType];
+          const workTypePoint = workTypePoints.find(wt => wt.id === firebaseId);
+          if (workTypePoint) {
+            refundAmount += workTypePoint.points;
+          }
+        }
+        
+        if (refundAmount > 0) {
+          await handlePointRefund(
+            refundAmount, 
+            `일부 유형 생성 실패로 인한 포인트 환불 (${failedTypes.join(', ')})`
+          );
+        }
+      }
       
       // 문제 순서 정렬: 01 → 07/08 → 02 → 11 → 13 → 14
       const typeOrder = ['01', '07', '08', '02', '11', '13', '14'];
@@ -356,9 +536,48 @@ const Package_03_ParagraphOrder: React.FC = () => {
       setShowQuizDisplay(true);
       console.log('패키지 퀴즈 생성 완료:', quizResults);
 
+      // 문제 생성 내역 저장
+      if (userData?.uid && sortedQuizResults.length > 0) {
+        try {
+          // sortedQuizResults를 generatedQuizzes 형태로 변환
+          const quizzesWithId = sortedQuizResults.map((quiz, index) => {
+            let workTypeId = '01';
+            if (quiz.work01Data) workTypeId = '01';
+            else if (quiz.work02Data) workTypeId = '02';
+            else if (quiz.work07Data) workTypeId = '07';
+            else if (quiz.work08Data) workTypeId = '08';
+            else if (quiz.work11Data) workTypeId = '11';
+            else if (quiz.work13Data) workTypeId = '13';
+            else if (quiz.work14Data) workTypeId = '14';
+            
+            return { ...quiz, workTypeId };
+          });
+          
+          await savePackageQuizHistory(
+            userData.uid,
+            userData.name || '사용자',
+            userData.nickname || '사용자',
+            quizzesWithId,
+            inputText,
+            workTypePoints,
+            UI_TO_FIREBASE_ID_MAP,
+            'P03' // 패키지#03 식별자
+          );
+        } catch (historyError) {
+          console.error('📝 내역 저장 실패:', historyError);
+        }
+      }
+
     } catch (error) {
-      console.error('패키지 퀴즈 생성 실패:', error);
-      alert('문제 생성 중 오류가 발생했습니다.');
+      console.error('❌ 문제 생성 실패:', error);
+      
+      // 전체 실패 시 모든 차감된 포인트 환불
+      await handlePointRefund(
+        deductedPoints, 
+        '문제 생성 실패로 인한 포인트 환불'
+      );
+      
+      alert(`문제 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
     } finally {
       setIsLoading(false);
     }
@@ -371,12 +590,21 @@ const Package_03_ParagraphOrder: React.FC = () => {
       return;
     }
 
-    generatePackageQuiz(inputText);
+    // 포인트 부족 확인
+    const totalPoints = calculateTotalPoints();
+    if (userCurrentPoints < totalPoints) {
+      alert(`포인트가 부족합니다. 현재 보유 포인트: ${userCurrentPoints.toLocaleString()}P, 필요 포인트: ${totalPoints.toLocaleString()}P`);
+      return;
+    }
+
+    // 포인트 차감 모달 표시
+    setPointsToDeduct(totalPoints);
+    setShowPointModal(true);
   };
 
 
   // 인쇄 핸들러 - 가로 A4 페이지
-  const handlePrintProblem = () => {
+  const handlePrintProblem = async () => {
     if (!packageQuiz || packageQuiz.length === 0) {
       alert('인쇄할 문제가 없습니다.');
       return;
@@ -421,7 +649,38 @@ const Package_03_ParagraphOrder: React.FC = () => {
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} />);
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      // PDF 생성 및 Firebase Storage 업로드
+      try {
+        const { generateAndUploadPDF } = await import('../../../services/pdfService');
+        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+        
+        const element = document.getElementById('print-root-package03');
+        if (element) {
+          const result = await generateAndUploadPDF(
+            element as HTMLElement,
+            userData?.uid || '',
+            `package03_problem_${Date.now()}`,
+            '패키지#03_문제',
+            { isAnswerMode: false, orientation: 'landscape' }
+          );
+          
+          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
+          if (userData?.uid) {
+            const { getQuizHistory } = await import('../../../services/quizHistoryService');
+            const history = await getQuizHistory(userData.uid, { limit: 10 });
+            const packageHistory = history.find(h => h.workTypeId === 'P03');
+            
+            if (packageHistory) {
+              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
+              console.log('📁 패키지#03 문제 PDF 저장 완료:', result.fileName);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ PDF 저장 실패:', error);
+      }
+
       window.print();
 
       setTimeout(() => {
@@ -443,7 +702,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
   };
 
   // 인쇄(정답) 핸들러 - 가로 A4 페이지
-  const handlePrintAnswer = () => {
+  const handlePrintAnswer = async () => {
     if (!packageQuiz || packageQuiz.length === 0) {
       alert('인쇄할 문제가 없습니다.');
       return;
@@ -488,7 +747,38 @@ const Package_03_ParagraphOrder: React.FC = () => {
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} isAnswerMode={true} />);
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      // PDF 생성 및 Firebase Storage 업로드
+      try {
+        const { generateAndUploadPDF } = await import('../../../services/pdfService');
+        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+        
+        const element = document.getElementById('print-root-package03-answer');
+        if (element) {
+          const result = await generateAndUploadPDF(
+            element as HTMLElement,
+            userData?.uid || '',
+            `package03_answer_${Date.now()}`,
+            '패키지#03_정답',
+            { isAnswerMode: true, orientation: 'landscape' }
+          );
+          
+          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
+          if (userData?.uid) {
+            const { getQuizHistory } = await import('../../../services/quizHistoryService');
+            const history = await getQuizHistory(userData.uid, { limit: 10 });
+            const packageHistory = history.find(h => h.workTypeId === 'P03');
+            
+            if (packageHistory) {
+              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
+              console.log('📁 패키지#03 정답 PDF 저장 완료:', result.fileName);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ PDF 저장 실패:', error);
+      }
+
       window.print();
 
       setTimeout(() => {
@@ -1554,6 +1844,17 @@ const Package_03_ParagraphOrder: React.FC = () => {
       >
         {isLoading ? '생성 중...' : '문제 생성'}
       </button>
+
+      {/* 포인트 차감 확인 모달 */}
+      <PointDeductionModal
+        isOpen={showPointModal}
+        onClose={() => setShowPointModal(false)}
+        onConfirm={handlePointDeductionConfirm}
+        workTypeName={`패키지 퀴즈 생성 (${Object.values(selectedWorkTypes).filter(selected => selected).length + 1}개 유형)`}
+        pointsToDeduct={pointsToDeduct}
+        userCurrentPoints={userCurrentPoints}
+        remainingPoints={userCurrentPoints - pointsToDeduct}
+      />
     </div>
   );
 };

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { updatePassword } from 'firebase/auth';
+import { getQuizHistory, getQuizHistoryStats, QuizHistoryItem, QuizHistorySearchParams } from '../../services/quizHistoryService';
+import { downloadFile } from '../../services/fileService';
 import './ProfilePage.css';
 
 const ProfilePage: React.FC = () => {
@@ -22,6 +24,13 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const [message, setMessage] = useState('');
+
+  // 문제 생성 내역 관련 상태
+  const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (userData) {
@@ -158,6 +167,110 @@ const ProfilePage: React.FC = () => {
       [name]: value
     }));
   };
+
+  // 문제 생성 내역 로드
+  const loadQuizHistory = async () => {
+    if (!userData?.uid) return;
+    
+    setHistoryLoading(true);
+    try {
+      // 기본적으로 최근 1주일 데이터를 로드
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const params = {
+        startDate: oneWeekAgo,
+        limit: 50 // 더 많은 데이터를 가져오도록 증가
+      };
+      
+      const history = await getQuizHistory(userData.uid, params);
+      
+      console.log('📊 로드된 내역:', {
+        totalCount: history.length,
+        workTypeIds: history.map(h => h.workTypeId),
+        workTypeNames: history.map(h => h.workTypeName),
+        packageEntries: history.filter(h => h.workTypeId.startsWith('P'))
+      });
+      
+      setQuizHistory(history);
+      
+      // 총 페이지 수 계산 (임시로 10개씩 나누어 계산)
+      setTotalPages(Math.ceil(history.length / itemsPerPage));
+    } catch (error) {
+      console.error('문제 생성 내역 로드 실패:', error);
+      setMessage('문제 생성 내역을 불러오는데 실패했습니다.');
+      setQuizHistory([]); // 에러 시 빈 배열로 설정
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // 파일 다운로드 (문제/정답 구분)
+  const handleDownload = async (historyItem: QuizHistoryItem, fileType: 'problem' | 'answer') => {
+    const fileUrl = fileType === 'problem' ? historyItem.problemFileUrl : historyItem.answerFileUrl;
+    const fileName = fileType === 'problem' ? historyItem.problemFileName : historyItem.answerFileName;
+    
+    if (!fileUrl) {
+      alert(`${fileType === 'problem' ? '문제' : '정답'} 파일이 없습니다.`);
+      return;
+    }
+
+    try {
+      await downloadFile(fileUrl, fileName || `quiz_${historyItem.id}_${fileType}.pdf`);
+    } catch (error) {
+      console.error('파일 다운로드 실패:', error);
+      alert('파일 다운로드에 실패했습니다.');
+    }
+  };
+
+  // 컴포넌트 마운트 시 자동으로 최근 1주일 데이터 로드
+  useEffect(() => {
+    if (userData?.uid) {
+      loadQuizHistory();
+    }
+  }, [userData?.uid, currentPage]);
+
+  // 상태별 스타일 클래스
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'success': return 'status-success';
+      case 'partial': return 'status-partial';
+      case 'failed': return 'status-failed';
+      case 'refunded': return 'status-refunded';
+      default: return 'status-unknown';
+    }
+  };
+
+  // 상태별 한글 표시
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'success': return '성공';
+      case 'partial': return '부분성공';
+      case 'failed': return '실패';
+      case 'refunded': return '환불됨';
+      default: return '알수없음';
+    }
+  };
+
+  // 패키지 유형명 표시
+  const getDisplayWorkTypeName = (workTypeId: string, workTypeName: string) => {
+    if (workTypeId.startsWith('P')) {
+      const packageNumber = workTypeId.replace('P', '');
+      return `패키지#${packageNumber}`;
+    }
+    return workTypeName;
+  };
+
+  // 파일 만료 여부 확인
+  const isFileExpired = (expiresAt: Date) => {
+    return new Date() > expiresAt;
+  };
+
 
 
 
@@ -313,6 +426,7 @@ const ProfilePage: React.FC = () => {
             </div>
           )}
 
+
           <div className="profile-actions">
             {isEditing ? (
               <>
@@ -332,6 +446,111 @@ const ProfilePage: React.FC = () => {
                 정보 수정
               </button>
             )}
+          </div>
+
+          {/* 문제 생성 내역 섹션 */}
+          <div className="profile-section">
+            <h2>문제 생성 내역</h2>
+            
+            <div className="quiz-history-table">
+              {historyLoading ? (
+                <div className="loading">로딩 중...</div>
+              ) : quizHistory.length === 0 ? (
+                <div className="no-data">문제 생성 내역이 없습니다.</div>
+              ) : (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>날짜</th>
+                      <th>유형번호</th>
+                      <th>유형명</th>
+                      <th>차감</th>
+                      <th>성공/실패</th>
+                      <th>환불</th>
+                      <th>인쇄(문제)</th>
+                      <th>인쇄(정답)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {quizHistory.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.createdAt.toLocaleDateString()}</td>
+                        <td>{item.workTypeId}</td>
+                        <td>{getDisplayWorkTypeName(item.workTypeId, item.workTypeName)}</td>
+                        <td className="deduction">-{item.pointsDeducted.toLocaleString()}</td>
+                        <td>
+                          <span className={`status ${getStatusClass(item.status)}`}>
+                            {getStatusText(item.status)}
+                          </span>
+                        </td>
+                        <td className="refund">
+                          {item.pointsRefunded > 0 ? `+${item.pointsRefunded.toLocaleString()}` : ''}
+                        </td>
+                        <td>
+                          {item.problemFileUrl ? (
+                            <button
+                              onClick={() => handleDownload(item, 'problem')}
+                              disabled={isFileExpired(item.expiresAt)}
+                              className="download-btn"
+                              title={
+                                isFileExpired(item.expiresAt) 
+                                  ? '파일이 만료되었습니다 (7일 초과)' 
+                                  : '문제 PDF 다운로드'
+                              }
+                            >
+                              📄
+                            </button>
+                          ) : (
+                            <span className="no-file">-</span>
+                          )}
+                        </td>
+                        <td>
+                          {item.answerFileUrl ? (
+                            <button
+                              onClick={() => handleDownload(item, 'answer')}
+                              disabled={isFileExpired(item.expiresAt)}
+                              className="download-btn"
+                              title={
+                                isFileExpired(item.expiresAt) 
+                                  ? '파일이 만료되었습니다 (7일 초과)' 
+                                  : '정답 PDF 다운로드'
+                              }
+                            >
+                              📄
+                            </button>
+                          ) : (
+                            <span className="no-file">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              
+              {/* 페이지네이션 */}
+              {quizHistory.length > 0 && totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    이전
+                  </button>
+                  <span className="pagination-info">
+                    {currentPage} / {totalPages} 페이지
+                  </span>
+                  <button 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    다음
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

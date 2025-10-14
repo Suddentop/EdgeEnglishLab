@@ -6,6 +6,7 @@ import '../../../styles/PrintFormat.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 
 // A4 페이지 설정 상수 (실제 A4 크기 기준, px 단위)
@@ -699,6 +700,27 @@ const Work_05_BlankSentenceInference: React.FC = () => {
       
       const quizData = await generateBlankQuizWithAI(passage);
       setQuiz(quizData);
+
+      // 문제 생성 내역 저장
+      if (userData?.uid && workTypePoints.length > 0) {
+        try {
+          const workTypePoint = workTypePoints.find(wt => wt.id === '5');
+          await saveQuizWithPDF({
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            workTypeId: '05',
+            workTypeName: getWorkTypeName('05'),
+            points: workTypePoint?.points || 0,
+            inputText: passage,
+            quizData: quizData,
+            status: 'success'
+          });
+          console.log('✅ Work_05 내역 저장 완료');
+        } catch (historyError) {
+          console.error('❌ Work_05 내역 저장 실패:', historyError);
+        }
+      }
       
     } catch (err: any) {
       console.error('빈칸 문제 생성 오류:', err);

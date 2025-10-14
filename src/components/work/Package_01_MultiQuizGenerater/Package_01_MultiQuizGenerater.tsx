@@ -4,6 +4,7 @@ import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import ApiKeyCheck from '../../common/ApiKeyCheck';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { savePackageQuizHistory } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import { createQuiz } from '../../../utils/textProcessor';
 import { Quiz, SentenceTranslationQuiz } from '../../../types/types';
@@ -2655,6 +2656,34 @@ ${inputText}`;
     executeQuizGeneration();
   };
 
+  // 포인트 환불 처리 함수
+  const handlePointRefund = async (deductedPoints: number, reason: string) => {
+    if (deductedPoints > 0 && userData?.uid) {
+      try {
+        const selectedTypes = WORK_TYPES.filter(type => selectedWorkTypes[type.id]);
+        await refundUserPoints(
+          userData.uid,
+          deductedPoints,
+          `패키지 퀴즈 생성 (${selectedTypes.length}개 유형)`,
+          userData.name || '사용자',
+          userData.nickname || '사용자',
+          reason
+        );
+        
+        // 사용자 포인트 다시 조회
+        const currentPoints = await getUserCurrentPoints(userData.uid);
+        setUserCurrentPoints(currentPoints);
+        
+        console.log('💰 포인트 환불 완료:', deductedPoints);
+        return true;
+      } catch (refundError) {
+        console.error('❌ 포인트 환불 실패:', refundError);
+        return false;
+      }
+    }
+    return true;
+  };
+
   // 실제 문제 생성 실행
   const executeQuizGeneration = async () => {
     if (!userData?.uid) return;
@@ -2662,6 +2691,7 @@ ${inputText}`;
     setIsLoading(true);
     setPackageQuiz(null);
     let deductedPoints = 0;
+    let successfulTypes: string[] = [];
     
     try {
       // 선택된 유형들에 대해서만 포인트 차감
@@ -2712,6 +2742,33 @@ ${inputText}`;
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');
       }
+
+      // 성공한 유형들 추적
+      successfulTypes = generatedQuizzes.map(quiz => quiz.workTypeId);
+      
+      // 부분적 실패 확인: 일부 유형만 생성된 경우
+      const failedTypes = selectedTypes.filter(type => !successfulTypes.includes(type.id));
+      
+      if (failedTypes.length > 0) {
+        console.warn(`⚠️ 일부 유형 생성 실패: ${failedTypes.map(t => t.name).join(', ')}`);
+        
+        // 실패한 유형들의 포인트만 환불
+        let refundAmount = 0;
+        for (const failedType of failedTypes) {
+          const firebaseId = UI_TO_FIREBASE_ID_MAP[failedType.id];
+          const workTypePoint = workTypePoints.find(wt => wt.id === firebaseId);
+          if (workTypePoint) {
+            refundAmount += workTypePoint.points;
+          }
+        }
+        
+        if (refundAmount > 0) {
+          await handlePointRefund(
+            refundAmount, 
+            `일부 유형 생성 실패로 인한 포인트 환불 (${failedTypes.map(t => t.name).join(', ')})`
+          );
+        }
+      }
       
       // 생성된 퀴즈들을 패키지 퀴즈로 설정
       setPackageQuiz(generatedQuizzes);
@@ -2734,31 +2791,36 @@ ${inputText}`;
       setShowQuizDisplay(true);
       
       console.log('✅ 패키지 퀴즈 생성 완료:', generatedQuizzes);
-      
-    } catch (error) {
-      console.error('포인트 차감 실패:', error);
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-      
-      // 포인트 환불 시도
-      if (deductedPoints > 0 && userData?.uid) {
+
+      // 문제 생성 내역 저장
+      if (userData?.uid) {
         try {
-          console.log(`💰 포인트 환불 시도: ${deductedPoints}P`);
-          await refundUserPoints(
+          await savePackageQuizHistory(
             userData.uid,
-            deductedPoints,
-            '패키지 퀴즈 생성',
             userData.name || '사용자',
             userData.nickname || '사용자',
-            '문제 생성 실패로 인한 포인트 환불'
+            generatedQuizzes,
+            inputText,
+            workTypePoints,
+            UI_TO_FIREBASE_ID_MAP,
+            'P01' // 패키지#01 식별자
           );
-          setUserCurrentPoints(prev => prev + deductedPoints);
-          console.log('✅ 포인트 환불 완료');
-        } catch (refundError) {
-          console.error('❌ 포인트 환불 실패:', refundError);
+        } catch (historyError) {
+          console.error('📝 내역 저장 실패:', historyError);
         }
       }
       
-      alert(`포인트 차감에 실패했습니다: ${errorMessage}`);
+    } catch (error) {
+      console.error('❌ 문제 생성 실패:', error);
+      
+      // 전체 실패 시 모든 차감된 포인트 환불
+      await handlePointRefund(
+        deductedPoints, 
+        '문제 생성 실패로 인한 포인트 환불'
+      );
+      
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      alert(`문제 생성 중 오류가 발생했습니다: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -2854,7 +2916,7 @@ ${inputText}`;
   };
 
   // 인쇄(문제) 함수 - 패키지#02 전용: 모든 유형이 연결된 하나의 인쇄물
-  const handlePrintProblem = () => {
+  const handlePrintProblem = async () => {
     console.log('🖨️ 인쇄(문제) 시작 - printMode:', 'no-answer');
     console.log('📦 packageQuiz:', packageQuiz);
     
@@ -2890,8 +2952,40 @@ ${inputText}`;
     document.head.appendChild(style);
     
     setPrintMode('no-answer');
-    setTimeout(() => {
+    setTimeout(async () => {
       console.log('🖨️ 인쇄 실행 - printMode:', 'no-answer');
+      
+      // PDF 생성 및 Firebase Storage 업로드
+      try {
+        const { generateAndUploadPDF } = await import('../../../services/pdfService');
+        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+        
+        const element = document.getElementById('print-root');
+        if (element) {
+          const result = await generateAndUploadPDF(
+            element as HTMLElement,
+            userData?.uid || '',
+            `package01_problem_${Date.now()}`,
+            '패키지#01_문제',
+            { isAnswerMode: false, orientation: 'portrait' }
+          );
+          
+          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
+          if (userData?.uid) {
+            const { getQuizHistory } = await import('../../../services/quizHistoryService');
+            const history = await getQuizHistory(userData.uid, { limit: 10 });
+            const packageHistory = history.find(h => h.workTypeId === 'P01');
+            
+            if (packageHistory) {
+              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
+              console.log('📁 패키지#01 문제 PDF 저장 완료:', result.fileName);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ PDF 저장 실패:', error);
+      }
+      
       window.print();
       setTimeout(() => {
         const printStyle = document.getElementById('print-style');
@@ -2905,7 +2999,7 @@ ${inputText}`;
   };
 
   // 인쇄(정답) 함수 - 패키지#02 전용: 모든 유형이 연결된 하나의 인쇄물
-  const handlePrintAnswer = () => {
+  const handlePrintAnswer = async () => {
     console.log('🖨️ 인쇄(정답) 시작 - printMode:', 'with-answer');
     console.log('📦 packageQuiz:', packageQuiz);
     
@@ -2941,8 +3035,40 @@ ${inputText}`;
     document.head.appendChild(style);
     
     setPrintMode('with-answer');
-    setTimeout(() => {
+    setTimeout(async () => {
       console.log('🖨️ 인쇄 실행 - printMode:', 'with-answer');
+      
+      // PDF 생성 및 Firebase Storage 업로드
+      try {
+        const { generateAndUploadPDF } = await import('../../../services/pdfService');
+        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+        
+        const element = document.getElementById('print-root');
+        if (element) {
+          const result = await generateAndUploadPDF(
+            element as HTMLElement,
+            userData?.uid || '',
+            `package01_answer_${Date.now()}`,
+            '패키지#01_정답',
+            { isAnswerMode: true, orientation: 'portrait' }
+          );
+          
+          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
+          if (userData?.uid) {
+            const { getQuizHistory } = await import('../../../services/quizHistoryService');
+            const history = await getQuizHistory(userData.uid, { limit: 10 });
+            const packageHistory = history.find(h => h.workTypeId === 'P01');
+            
+            if (packageHistory) {
+              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
+              console.log('📁 패키지#01 정답 PDF 저장 완료:', result.fileName);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ PDF 저장 실패:', error);
+      }
+      
       window.print();
       setTimeout(() => {
         const printStyle = document.getElementById('print-style');
