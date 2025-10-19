@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
 import './Package_02_TwoStepQuiz.css';
 import PointDeductionModal from '../../modal/PointDeductionModal';
@@ -125,6 +126,7 @@ interface PackageQuizItem {
 
 const Package_02_TwoStepQuiz: React.FC = () => {
   const { userData, loading } = useAuth();
+  const navigate = useNavigate();
   const [inputMode, setInputMode] = useState<'capture' | 'image' | 'text'>('text');
   const [inputText, setInputText] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -268,6 +270,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     
     loadPointData();
   }, [userData?.uid]);
+
 
   // 선택된 유형들의 총 포인트 계산 함수
   const calculateTotalPoints = () => {
@@ -844,36 +847,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
     // 렌더링 완료 후 인쇄 및 PDF 생성
     setTimeout(async () => {
-      // PDF 생성 및 Firebase Storage 업로드
-      try {
-        const { generateAndUploadPDF } = await import('../../../services/pdfService');
-        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-        
-        const element = document.getElementById('print-root-package02');
-        if (element) {
-          const result = await generateAndUploadPDF(
-            element as HTMLElement,
-            userData?.uid || '',
-            `package02_problem_${Date.now()}`,
-            '패키지#02_문제',
-            { isAnswerMode: false, orientation: 'landscape' }
-          );
-          
-          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
-          if (userData?.uid) {
-            const { getQuizHistory } = await import('../../../services/quizHistoryService');
-            const history = await getQuizHistory(userData.uid, { limit: 10 });
-            const packageHistory = history.find(h => h.workTypeId === 'P02');
-            
-            if (packageHistory) {
-              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
-              console.log('📁 패키지#02 문제 PDF 저장 완료:', result.fileName);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ PDF 저장 실패:', error);
-      }
+      // 브라우저 인쇄만 실행 (Firebase 업로드 제거)
 
       // 브라우저 인쇄
       window.print();
@@ -1498,36 +1472,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
     // 렌더링 완료 후 인쇄 및 PDF 생성
     setTimeout(async () => {
-      // PDF 생성 및 Firebase Storage 업로드
-      try {
-        const { generateAndUploadPDF } = await import('../../../services/pdfService');
-        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-        
-        const element = document.getElementById('print-root-package02-answer');
-        if (element) {
-          const result = await generateAndUploadPDF(
-            element as HTMLElement,
-            userData?.uid || '',
-            `package02_answer_${Date.now()}`,
-            '패키지#02_정답',
-            { isAnswerMode: true, orientation: 'landscape' }
-          );
-          
-          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
-          if (userData?.uid) {
-            const { getQuizHistory } = await import('../../../services/quizHistoryService');
-            const history = await getQuizHistory(userData.uid, { limit: 10 });
-            const packageHistory = history.find(h => h.workTypeId === 'P02');
-            
-            if (packageHistory) {
-              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-              console.log('📁 패키지#02 정답 PDF 저장 완료:', result.fileName);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ PDF 저장 실패:', error);
-      }
+      // 브라우저 인쇄만 실행 (Firebase 업로드 제거)
 
       // 브라우저 인쇄
       window.print();
@@ -1570,14 +1515,14 @@ const Package_02_TwoStepQuiz: React.FC = () => {
             fontWeight: '800',
             color: '#000',
             margin: '0'
-          }}>📦 패키지 퀴즈 (A4용지 2단)</h2>
+          }}>📦 패키지 퀴즈 (2단 출력)</h2>
           
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button
               type="button"
               onClick={handleNewProblem}
               style={{
-                width: '160px',
+                width: '120px',
                 height: '48px',
                 padding: '0.75rem 1rem',
                 fontSize: '11pt',
@@ -1585,17 +1530,36 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                 border: 'none',
                 borderRadius: '8px',
                 background: '#e2e8f0',
-                color: '#475569',
-                cursor: 'pointer'
+              color: '#475569',
+              cursor: 'pointer'
+            }}
+          >
+            새문제
+          </button>
+            <button
+              type="button"
+              onClick={() => navigate('/quiz-list')}
+              style={{
+                width: '130px',
+                height: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '11pt',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '8px',
+                background: '#14b8a6',
+                color: 'white',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(20, 184, 166, 0.25)'
               }}
             >
-              새 문제 만들기
+              문제생성목록
             </button>
             <button
               type="button"
               onClick={handlePrintProblem}
               style={{
-                width: '160px',
+                width: '130px',
                 height: '48px',
                 padding: '0.75rem 1rem',
                 fontSize: '11pt',
@@ -1614,7 +1578,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
               type="button"
               onClick={handlePrintAnswer}
               style={{
-                width: '160px',
+                width: '130px',
                 height: '48px',
                 padding: '0.75rem 1rem',
                 fontSize: '11pt',
@@ -2774,7 +2738,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
   return (
     <div className="quiz-generator" onPaste={handlePaste}>
       <div className="generator-header">
-        <h2>📦 패키지 퀴즈 (A4용지 2단)</h2>
+        <h2>📦 패키지 퀴즈 (2단 출력)</h2>
         <p>하나의 영어 본문으로 필요한 유형들을 A4용지 2단으로 구성해서 생성합니다.</p>
       </div>
 
@@ -2945,14 +2909,66 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         </div>
       )}
 
-      <button
-        type="button"
-        className="generate-button"
-        onClick={handleGenerateQuiz}
-        disabled={isLoading}
-      >
-        {isLoading ? '생성 중...' : '패키지 퀴즈 (A4용지 2단) 생성'}
-      </button>
+      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
+        <button
+          type="button"
+          onClick={handleGenerateQuiz}
+          disabled={isLoading}
+          style={{
+            padding: '0.75rem 3.75rem',
+            fontSize: '1.18rem',
+            fontWeight: '700',
+            border: 'none',
+            borderRadius: '10px',
+            background: 'linear-gradient(90deg, #4a90e2 0%, #6a5acd 100%)',
+            color: 'white',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(44,62,80,0.08)',
+            transition: 'all 0.2s ease',
+            minWidth: '270px',
+            height: '48px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(90deg, #6a5acd 0%, #4a90e2 100%)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(90deg, #4a90e2 0%, #6a5acd 100%)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          {isLoading ? '생성 중...' : '문제 생성'}
+        </button>
+        
+        <button
+          type="button"
+          onClick={() => navigate('/quiz-list')}
+          style={{
+            padding: '0.75rem 2.5rem',
+            fontSize: '1.18rem',
+            fontWeight: '700',
+            border: 'none',
+            borderRadius: '10px',
+            background: '#14b8a6',
+            color: 'white',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(20, 184, 166, 0.08)',
+            transition: 'all 0.2s ease',
+            minWidth: '180px',
+            height: '48px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#0d9488';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#14b8a6';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          문제생성 목록
+        </button>
+      </div>
 
       {/* 포인트 차감 확인 모달 */}
       <PointDeductionModal

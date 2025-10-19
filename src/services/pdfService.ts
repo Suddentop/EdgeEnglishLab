@@ -37,12 +37,12 @@ export const generateAndUploadPDF = async (
       backgroundColor: '#ffffff',
       foreignObjectRendering: false,
       removeContainer: true,
-      onclone: (clonedDoc) => {
+      onclone: (clonedDoc: Document) => {
         // 복제된 문서에서 요소가 제대로 렌더링되도록 보장
         const clonedElement = clonedDoc.querySelector(`#${element.id}`) || clonedDoc.body;
         if (clonedElement) {
-          clonedElement.style.width = `${elementWidth}px`;
-          clonedElement.style.height = `${elementHeight}px`;
+          (clonedElement as HTMLElement).style.width = `${elementWidth}px`;
+          (clonedElement as HTMLElement).style.height = `${elementHeight}px`;
         }
       }
     } as any);

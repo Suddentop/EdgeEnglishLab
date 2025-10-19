@@ -286,9 +286,16 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
     
     for (let i = 0; i < packageQuiz.length; i++) {
       const quizItem = packageQuiz[i];
-      // workTypeId 찾기 로직 개선
+      
+      // workTypeId 찾기 로직 개선 - 저장된 데이터에서 직접 가져오기
       let workTypeId = 'unknown';
-      if (quizItem.quiz) {
+      
+      // 저장된 데이터 구조에 따라 workTypeId 찾기
+      if (quizItem.workTypeId) {
+        // 새로운 구조: workTypeId가 직접 포함됨
+        workTypeId = quizItem.workTypeId;
+      } else if (quizItem.quiz) {
+        // 기존 구조: quiz 속성으로 판단
         workTypeId = '01';
       } else if (quizItem.work02Data) {
         workTypeId = '02';
@@ -310,6 +317,8 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         workTypeId = '10';
       } else if (quizItem.work11Data) {
         workTypeId = '11';
+      } else if (quizItem.work12Data) {
+        workTypeId = '12';
       } else if (quizItem.work13Data) {
         workTypeId = '13';
       } else if (quizItem.work14Data) {
@@ -417,7 +426,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       console.log(`  📋 페이지 ${pageIndex + 1}: ${pageItems.length}개 아이템`);
       
       pages.push(
-        <div key={`page-${pageIndex}`} className="a4-landscape-page-template">
+        <div key={`page-${pageIndex}`} id={`print-page-${pageIndex}`} className="print-page a4-landscape-page-template">
           <div className="a4-landscape-page-header">
             <PrintHeaderPackage02 />
           </div>
@@ -889,7 +898,10 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
   };
 
   return (
-    <div className="print-container">
+    <div 
+      id={isAnswerMode ? "print-root-package02-answer" : "print-root-package02"}
+      className={isAnswerMode ? "print-container-answer" : "print-container"}
+    >
       {renderQuizItems()}
     </div>
   );

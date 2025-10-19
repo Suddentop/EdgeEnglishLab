@@ -236,7 +236,7 @@ body, .App {
 .App-footer {
   background: var(--gradient-secondary);
   color: white;
-  padding: var(--spacing-2xl) 0 var(--spacing-lg);
+  padding: 0.4rem 0;
   margin-top: var(--spacing-3xl);
   border-top: 3px solid var(--primary-500);
   width: 100vw;
@@ -250,9 +250,8 @@ body, .App {
 
 .footer-content {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
+  justify-content: space-between;
+  align-items: flex-start;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--spacing-xl);
@@ -301,18 +300,7 @@ body, .App {
   content: none;
 }
 
-.footer-bottom {
-  border-top: 1px solid #4a5568;
-  margin-top: 1rem;
-  padding: 0.75rem var(--spacing-xl) 0;
-  text-align: center;
-}
-
-.footer-bottom p {
-  color: #a0aec0;
-  margin: 0;
-  font-size: 0.9rem;
-}
+/* footer-bottom 스타일 제거됨 - 새로운 레이아웃에서 불필요 */
 
 .footer-link {
   color: #63b3ed;
@@ -341,6 +329,63 @@ body, .App {
   text-decoration: underline;
 }
 
+/* 새로운 푸터 스타일 */
+.footer-left {
+  flex: 1;
+}
+
+.footer-right {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.company-info {
+  line-height: 1.6;
+}
+
+.company-name {
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.company-details,
+.contact-info {
+  color: #cbd5e0;
+  margin: 0.3rem 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.copyright {
+  color: #a0aec0;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.policy-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.policy-links .footer-link-btn {
+  color: #63b3ed;
+  font-size: 0.85rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.policy-links .footer-link-btn:hover {
+  color: #4299e1;
+  text-decoration: underline;
+}
+
 /* 모달 스타일 */
 .modal-overlay {
   position: fixed;
@@ -357,10 +402,11 @@ body, .App {
 
 .modal-content {
   background: white;
-  border-radius: 12px;
-  max-width: 800px;
+  border-radius: 8px;
+  max-width: 95%;
   width: 95%;
-  max-height: 85vh;
+  min-width: 1200px;
+  max-height: 95vh;
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
@@ -369,48 +415,51 @@ body, .App {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 2rem 2rem 1rem 2rem;
+  border-bottom: 1px solid #000;
 }
 
 .modal-header h2 {
   margin: 0;
-  color: #2d3748;
-  font-size: 1.5rem;
-  font-weight: 700;
+  color: #000;
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-decoration: underline;
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
-  color: #718096;
+  font-size: 1.8rem;
+  color: #000;
   cursor: pointer;
-  padding: 0;
+  padding: 0.3rem;
   width: 30px;
   height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 4px;
   transition: background-color 0.2s;
+  font-weight: bold;
 }
 
 .modal-close:hover {
-  background-color: #f7fafc;
-  color: #4a5568;
+  background-color: #f0f0f0;
+  color: #333;
 }
 
 .modal-body {
   padding: 2rem;
-  color: #4a5568;
-  line-height: 1.6;
+  color: #000;
+  line-height: 1.8;
+  font-family: sans-serif;
 }
 
 .modal-body h3 {
-  color: #2d3748;
-  font-size: 1.2rem;
-  font-weight: 600;
+  color: #000;
+  font-size: 1.1rem;
+  font-weight: bold;
   margin: 1.5rem 0 0.5rem 0;
 }
 
@@ -419,16 +468,18 @@ body, .App {
 }
 
 .modal-body p {
-  margin: 0.5rem 0;
+  margin: 0.8rem 0;
+  text-align: left;
 }
 
 .modal-body ul {
-  margin: 0.5rem 0;
+  margin: 0.8rem 0;
   padding-left: 1.5rem;
 }
 
 .modal-body li {
-  margin: 0.25rem 0;
+  margin: 0.4rem 0;
+  line-height: 1.6;
 }
 
 .modal-body table {

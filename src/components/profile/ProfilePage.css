@@ -17,7 +17,7 @@
 .profile-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 2rem;
+  padding: 1rem 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -271,7 +271,7 @@
   }
 
   .profile-header {
-    padding: 1.5rem;
+    padding: 0.75rem 1.5rem;
     flex-direction: column;
     text-align: center;
   }
@@ -315,7 +315,7 @@
   }
 
   .profile-header {
-    padding: 1rem;
+    padding: 0.5rem 1rem;
   }
 
   .profile-content {
@@ -417,17 +417,6 @@
   margin: 0;
 }
 
-.quiz-history-section {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 1.5rem;
-  border: 1px solid #e2e8f0;
-}
-
-/* 통계 정보 스타일 */
-.quiz-stats {
-  margin-bottom: 2rem;
-}
 
 .stats-grid {
   display: grid;
@@ -514,53 +503,6 @@
   min-width: auto;
 }
 
-/* 내역 테이블 스타일 */
-.quiz-history-table {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.quiz-history-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.quiz-history-table th,
-.quiz-history-table td {
-  padding: 0.5rem 0.8rem;
-  text-align: center;
-  border-bottom: 1px solid #e2e8f0;
-  border-left: none;
-  border-right: none;
-}
-
-/* 유형명 컬럼만 왼쪽 정렬 */
-.quiz-history-table th:nth-child(3),
-.quiz-history-table td:nth-child(3) {
-  text-align: left;
-}
-
-.quiz-history-table th {
-  background: #f8fafc;
-  font-weight: 600;
-  color: #4a5568;
-  font-size: 0.9rem;
-  border-top: none;
-}
-
-.quiz-history-table td {
-  font-size: 0.9rem;
-  color: #2d3748;
-}
-
-/* 차감 포인트 스타일 */
-.deduction {
-  color: #e53e3e;
-  font-weight: 600;
-}
 
 /* 환불 포인트 스타일 */
 .refund {
@@ -586,21 +528,6 @@
 .download-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.quiz-history-table tr:hover {
-  background: #f7fafc;
-}
-
-/* 상태 표시 스타일 */
-.status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-align: center;
-  display: inline-block;
-  min-width: 70px;
 }
 
 .status-success {
@@ -654,45 +581,6 @@
   font-size: 0.8rem;
 }
 
-/* 페이지네이션 스타일 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding: 1rem 0;
-}
-
-.pagination-btn {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-  transform: translateY(-1px);
-}
-
-.pagination-btn:disabled {
-  background: #e2e8f0;
-  color: #a0aec0;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.pagination-info {
-  font-size: 0.9rem;
-  color: #4a5568;
-  font-weight: 500;
-}
 
 .loading,
 .no-data {
@@ -714,10 +602,6 @@
 }
 
 @media (max-width: 768px) {
-  .quiz-history-section {
-    padding: 1rem;
-  }
-  
   .search-filters {
     padding: 1rem;
   }
@@ -735,19 +619,6 @@
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .quiz-history-table {
-    overflow-x: auto;
-  }
-  
-  .quiz-history-table table {
-    min-width: 600px;
-  }
-  
-  .quiz-history-table th,
-  .quiz-history-table td {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -761,12 +632,6 @@
   
   .stat-value {
     font-size: 1.2rem;
-  }
-  
-  .quiz-history-table th,
-  .quiz-history-table td {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
   }
   
   .download-btn {

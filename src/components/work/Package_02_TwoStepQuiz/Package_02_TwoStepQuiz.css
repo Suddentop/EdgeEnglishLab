@@ -1,6 +1,12 @@
 /* 인쇄 전용 스타일 import */
 @import './PrintFormatPackage02.css';
 
+/* PDF 생성 로딩 스핀 애니메이션 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* 인쇄용 컨테이너는 화면에서 숨김 */
 .print-container {
   display: none;

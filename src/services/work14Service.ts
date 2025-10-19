@@ -289,10 +289,8 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
         const escapedSentence = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(escapedSentence, 'g');
         const beforeReplace = blankedText;
-        // A, B, C 형태의 빈칸 생성 (좌우 언더스코어 20개씩)
-        const blankLabels = ['A', 'B', 'C', 'D', 'E'];
-        const blankLabel = blankLabels[index] || String.fromCharCode(65 + index);
-        const blankText = `(____________________${blankLabel}____________________)`;
+        // 패키지#01과 동일한 형식의 빈칸 생성 (언더스코어 30개)
+        const blankText = `(______________________________)`;
         
         blankedText = blankedText.replace(regex, blankText);
         
@@ -606,10 +604,8 @@ export const generateBlankFillSentenceQuizWithAI = async (passage: string): Prom
         const escapedSentence = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(escapedSentence, 'g');
         const beforeReplace = blankedText;
-        // A, B, C 형태의 빈칸 생성 (좌우 언더스코어 20개씩)
-        const blankLabels = ['A', 'B', 'C', 'D', 'E'];
-        const blankLabel = blankLabels[index] || String.fromCharCode(65 + index);
-        const blankText = `(____________________${blankLabel}____________________)`;
+        // 패키지#01과 동일한 형식의 빈칸 생성 (언더스코어 30개)
+        const blankText = `(______________________________)`;
         
         blankedText = blankedText.replace(regex, blankText);
         

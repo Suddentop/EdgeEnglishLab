@@ -5,10 +5,38 @@
   size: A4 landscape; /* 가로 페이지 설정 */
 }
 
-/* 화면에서 숨김 */
+/* 화면에서 숨김 (PDF 생성 시에는 보이도록 예외 처리) */
 @media screen {
-  .print-container, .a4-landscape-page-template, .print-header-package02 {
+  .print-container, .a4-landscape-page-template, .print-header-package02,
+  .print-container-answer {
     display: none !important;
+  }
+  
+  /* PDF 생성 중일 때는 보이도록 함 */
+  .print-container.pdf-generation-active,
+  .a4-landscape-page-template.pdf-generation-active,
+  .print-header-package02.pdf-generation-active,
+  .print-container-answer.pdf-generation-active {
+    display: block !important;
+    position: fixed !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 1441px !important;
+    height: 600px !important;
+    min-width: 1441px !important;
+    min-height: 600px !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+  
+  /* PDF 생성 중 자식 요소들도 보이도록 */
+  .print-container.pdf-generation-active *,
+  .print-container-answer.pdf-generation-active * {
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
   }
 }
 
@@ -19,6 +47,8 @@
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 0.1cm;
+  display: block !important;
+  visibility: visible !important;
 }
 
 .print-answer-label {
@@ -177,6 +207,17 @@
     height: 100%; /* 높이 100%로 설정 */
   }
 
+  /* 정답 모드용 2단 레이아웃 컨테이너 */
+  .print-container-answer .print-two-column-container {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.6cm !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+    flex-direction: row !important;
+  }
+
   /* 각 문제 카드 (1단 = 50% 너비) */
   .print-question-card {
     width: calc(50% - 0.3cm); /* 각 문제 카드 너비 조정 */
@@ -187,6 +228,27 @@
     border: none; /* 테두리 제거 */
     padding: 0.5cm; /* 패딩 조정 */
     box-sizing: border-box;
+  }
+
+  /* 정답 모드용 문제 카드 */
+  .print-container-answer .print-question-card {
+    width: calc(50% - 0.3cm) !important;
+    max-width: calc(50% - 0.3cm) !important;
+    min-width: calc(50% - 0.3cm) !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+    margin-bottom: 0.3cm !important;
+    border: none !important;
+    padding: 0.5cm !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    float: left !important;
+  }
+
+  /* 정답 모드용 홀수 번째 문제 카드 (왼쪽 정렬) */
+  .print-container-answer .print-question-card:nth-child(odd) {
+    clear: left !important;
   }
 
   /* 문제 제목 + 유형번호 */

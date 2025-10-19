@@ -15,6 +15,8 @@ import Login from './components/auth/Login';
 import SignUp from './components/auth/SignUp';
 import HomePage from './components/common/HomePage';
 import QuizDisplay from './components/quiz/QuizDisplay';
+import QuizListPage from './components/quiz/QuizListPage';
+import QuizDisplayPage from './components/quiz/QuizDisplayPage';
 import Work_03_VocabularyWord from './components/work/Work_03_VocabularyWord/Work_03_VocabularyWord';
 import Work_02_ReadingComprehension from './components/work/Work_02_ReadingComprehension/Work_02_ReadingComprehension';
 import Work_01_ArticleOrder from './components/work/Work_01_ArticleOrder/Work_01_ArticleOrder';
@@ -74,6 +76,22 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<HomePage setCurrentQuiz={handleQuizGenerated} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route 
+            path="/quiz-list" 
+            element={
+              <PrivateRoute>
+                <QuizListPage />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/quiz-display" 
+            element={
+              <PrivateRoute>
+                <QuizDisplayPage />
+              </PrivateRoute>
+            } 
+          />
           <Route 
             path="/work_02_reading-comprehension" 
             element={

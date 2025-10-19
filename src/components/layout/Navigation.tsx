@@ -126,6 +126,14 @@ const Navigation: React.FC = () => {
                 </button>
               ))}
               
+              {/* 나의문제목록 */}
+              <button
+                className="mobile-menu-item mobile-single-item"
+                onClick={() => { setShowMobileMenu(false); navigate('/quiz-list'); }}
+              >
+                나의문제목록
+              </button>
+              
               {/* Feedback */}
               <button
                 className="mobile-menu-item mobile-single-item"
@@ -221,6 +229,17 @@ const Navigation: React.FC = () => {
             )}
           </div>
         )}
+        
+        {/* 나의문제목록 버튼: PC 화면에서만 보임 */}
+        {currentUser && !isMobile && (
+          <button
+            className="nav-text-link"
+            onClick={() => navigate('/quiz-list')}
+          >
+            나의문제목록
+          </button>
+        )}
+        
         {/* 포인트구매 버튼: PC 화면에서만 보임 */}
         {currentUser && !isMobile && (
           <button
