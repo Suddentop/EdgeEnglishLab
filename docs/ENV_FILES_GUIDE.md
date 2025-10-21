@@ -27,7 +27,7 @@ engquiz/
 #### `.env.local` (수동 생성 필요)
 ```env
 # 직접 OpenAI API 호출 (PHP 서버 불필요)
-REACT_APP_OPENAI_API_KEY=sk-proj-...
+REACT_APP_OPENAI_API_KEY=your-api-key-here
 REACT_APP_FIREBASE_API_KEY=...
 ```
 

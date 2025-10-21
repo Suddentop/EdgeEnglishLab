@@ -148,7 +148,7 @@ php security_monitor.php
 ### 환경 변수
 ```bash
 # 서버 환경 변수
-OPENAI_API_KEY=sk-proj-...
+OPENAI_API_KEY=your-api-key-here
 API_RATE_LIMIT=300
 API_TIMEOUT=60
 

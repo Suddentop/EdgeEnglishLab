@@ -74,7 +74,7 @@ exports.callOpenAI = functions.https.onCall(async (data, context) => {
 ```bash
 # 빌드 파일에서 API 키 검색
 npm run build
-grep -r "sk-proj-" build/
+grep -r "your-api-key-" build/
 ```
 
 ### 2. 새로운 API 키 발급 및 제한 설정

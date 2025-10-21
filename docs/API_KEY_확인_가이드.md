@@ -22,7 +22,7 @@ https://platform.openai.com/api-keys
 
 현재 사용 중인 키:
 ```
-sk-proj-AS19yhM7Rv9M...iIkA
+your-api-key-here
 ```
 
 **확인 사항**:
@@ -50,7 +50,7 @@ sk-proj-AS19yhM7Rv9M...iIkA
 Copy-Item .env.local .env.local.backup
 
 # 새 키로 업데이트 (YOUR_NEW_KEY_HERE 부분을 실제 키로 교체)
-$newKey = "sk-proj-YOUR_NEW_KEY_HERE"
+$newKey = "your-new-key-here"
 $content = Get-Content .env.local
 $content = $content -replace "REACT_APP_OPENAI_API_KEY=.*", "REACT_APP_OPENAI_API_KEY=$newKey"
 $content | Out-File -FilePath .env.local -Encoding utf8
@@ -83,7 +83,7 @@ npm start
 PowerShell에서:
 
 ```powershell
-$apiKey = "sk-proj-YOUR_KEY_HERE"
+$apiKey = "your-key-here"
 $headers = @{
     "Content-Type" = "application/json"
     "Authorization" = "Bearer $apiKey"
