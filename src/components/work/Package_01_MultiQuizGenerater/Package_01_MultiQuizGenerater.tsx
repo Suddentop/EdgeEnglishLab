@@ -12,6 +12,7 @@ import { generateWork02Quiz, Work02QuizData } from '../../../services/work02Serv
 import { imageToTextWithOpenAIVision, splitSentences, countWordsInSentence, filterValidSentences, generateBlankQuizWithAI, translateToKorean as work14TranslateToKorean } from '../../../services/work14Service';
 import PrintFormatPackage01, { PrintFormatPackage01Work02, PrintFormatPackage01Work03, PrintFormatPackage01Work04, PrintFormatPackage01Work05, PrintFormatPackage01Work06, PrintFormatPackage01Work07, PrintFormatPackage01Work08, PrintFormatPackage01Work09, PrintFormatPackage01Work10, PrintFormatPackage01Work11, PrintFormatPackage01Work13, PrintFormatPackage01Work14 } from './PrintFormatPackage01';
 import './PrintFormatPackage01.css';
+import { callOpenAI } from '../../../services/common';
 
 interface WordReplacement {
   original: string;           // 원본 단어/숙어
@@ -33,33 +34,8 @@ interface BlankFillItem {
 
 // 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
 async function callOpenAIAPI(requestBody: any): Promise<Response> {
-  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
-  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
-  
-  if (proxyUrl) {
-    // 프록시 서버 사용 (프로덕션)
-    console.log('🤖 OpenAI 프록시 서버 호출 중...');
-    return await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-  } else if (directApiKey) {
-    // 개발 환경: 직접 API 호출
-    console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
-    return await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${directApiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-  } else {
-    throw new Error('API 설정이 없습니다. .env.local 파일을 확인해주세요.');
-  }
+  // common.ts의 callOpenAI 함수를 사용하여 프록시 서버 우선 사용
+  return await callOpenAI(requestBody);
 }
 
 // OpenAI API를 사용하여 영어를 한글로 번역
@@ -3096,7 +3072,7 @@ ${inputText}`;
       <React.Fragment>
         <div className="quiz-display no-print">
           <div className="quiz-header">
-            <h2 className="no-print">📦 패키지 퀴즈 결과</h2>
+            <h2 className="no-print">📦 패키지 퀴즈 #01 (여러 유형 생성)</h2>
             <div className="quiz-header-buttons no-print">
               <button 
                 type="button" 
@@ -4565,7 +4541,7 @@ ${inputText}`;
                           color: '#495057',
                           minWidth: '2rem'
                         }}>
-                          {`①②③④⑤`[optionIndex] || `${optionIndex + 1}.`}
+                          {`①②③④⑤⑥`[optionIndex] || `${optionIndex + 1}.`}
                         </span>
                         <span>{option}</span>
                       </div>

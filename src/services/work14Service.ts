@@ -2,33 +2,23 @@
 
 // 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
 async function callOpenAIAPI(requestBody: any): Promise<Response> {
-  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL || 'http://localhost:8000/api-proxy.php';
   const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
   
-  if (proxyUrl) {
-    // 프록시 서버 사용 (프로덕션)
-    console.log('🤖 OpenAI 프록시 서버 호출 중...');
-    return await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-  } else if (directApiKey) {
-    // 개발 환경: 직접 API 호출
-    console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
-    return await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${directApiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-  } else {
-    throw new Error('API 설정이 없습니다. .env.local 파일을 확인해주세요.');
-  }
+  console.log('🔍 Work14 환경 변수 확인:', {
+    proxyUrl: proxyUrl ? '설정됨' : '없음',
+    directApiKey: directApiKey ? '설정됨' : '없음'
+  });
+  
+  // 프록시 서버를 우선적으로 사용
+  console.log('🤖 OpenAI 프록시 서버 호출 중...');
+  return await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
 }
 
 export interface BlankQuizData {

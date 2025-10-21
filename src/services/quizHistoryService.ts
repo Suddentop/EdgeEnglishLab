@@ -83,12 +83,6 @@ export const getQuizHistory = async (
       where('userId', '==', userId)
     );
 
-    // 복합 쿼리 제거 (인덱스 문제 방지)
-
-    if (searchParams?.limit) {
-      q = query(q, limit(searchParams.limit));
-    }
-
     const querySnapshot = await getDocs(q);
     const history: QuizHistoryItem[] = [];
 
@@ -117,7 +111,7 @@ export const getQuizHistory = async (
       });
     });
 
-    // 클라이언트 사이드에서 정렬 및 필터링 (인덱스 문제 방지)
+    // 클라이언트 사이드에서 정렬 및 필터링
     let filteredHistory = history;
     
     // 날짜순 내림차순 정렬 (최신순)
@@ -137,6 +131,11 @@ export const getQuizHistory = async (
     
     if (searchParams?.endDate) {
       filteredHistory = filteredHistory.filter(item => item.createdAt <= searchParams.endDate!);
+    }
+    
+    // limit 적용 (정렬 후)
+    if (searchParams?.limit) {
+      filteredHistory = filteredHistory.slice(0, searchParams.limit);
     }
 
     return filteredHistory;

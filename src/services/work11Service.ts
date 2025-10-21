@@ -116,7 +116,7 @@ export async function generateWork11Quiz(englishText: string): Promise<SentenceT
         const translation = await translateToKorean(sentence);
         translations.push(translation);
       } catch (error) {
-        console.error(`문장 ${i + 1} 번역 실패:`, error);
+        console.error(`❌ 문장 ${i + 1} 번역 실패:`, error);
         translations.push(`번역 실패: ${sentence}`);
       }
     }

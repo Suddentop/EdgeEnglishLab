@@ -2,7 +2,7 @@
 # 실제 서버에서는 이 파일을 .env로 복사하여 사용
 
 # OpenAI API Key (서버에서만 사용)
-OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
+OPENAI_API_KEY=your_openai_api_key_here
 
 # API 설정
 API_RATE_LIMIT=300

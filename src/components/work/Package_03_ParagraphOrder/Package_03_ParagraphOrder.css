@@ -987,6 +987,58 @@
   }
 }
 
+/* 화면 중앙 모래시계 오버레이 */
+.centered-hourglass-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.centered-hourglass-content {
+  background: white;
+  padding: 2rem 3rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.centered-hourglass-spinner {
+  font-size: 3rem;
+  animation: hourglass-rotate 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #3a3a5a;
+}
+
+.loading-progress {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+@keyframes hourglass-rotate {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
 @media (max-width: 480px) {
   .generator-header h2,
   .package-quiz-generator h2,

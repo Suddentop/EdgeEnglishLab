@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
 import './Package_03_ParagraphOrder.css';
 import PointDeductionModal from '../../modal/PointDeductionModal';
@@ -56,6 +57,7 @@ interface PackageQuizItem {
 
 const Package_03_ParagraphOrder: React.FC = () => {
   const { userData, loading } = useAuth();
+  const navigate = useNavigate();
   // 입력 모드 상태
   const [inputMode, setInputMode] = useState<'capture' | 'image' | 'text'>('text');
   const [inputText, setInputText] = useState('');
@@ -87,6 +89,9 @@ const Package_03_ParagraphOrder: React.FC = () => {
   const [pointsToDeduct, setPointsToDeduct] = useState(0);
   const [userCurrentPoints, setUserCurrentPoints] = useState(0);
   const [workTypePoints, setWorkTypePoints] = useState<any[]>([]);
+
+  // 로딩 진행 상황 상태
+  const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 });
 
   // UI ID와 Firebase ID 매핑
   const UI_TO_FIREBASE_ID_MAP: { [key: string]: string } = {
@@ -338,56 +343,65 @@ const Package_03_ParagraphOrder: React.FC = () => {
   };
 
   // 문제 생성 함수
-  const generateSingleWorkTypeQuiz = async (inputText: string, typeId: string): Promise<PackageQuizItem> => {
+  const generateSingleWorkTypeQuiz = async (inputText: string, typeId: string, currentIndex: number, totalCount: number): Promise<PackageQuizItem> => {
     const quizItem: PackageQuizItem = {};
 
     try {
+      console.log(`📝 유형#${typeId} 문제 생성 시작... (${currentIndex + 1}/${totalCount})`);
+      
       switch (typeId) {
         case '01': {
           const quiz = await generateWork01Quiz(inputText);
           quizItem.work01Data = quiz;
           quizItem.translatedText = quiz.translation;
+          console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
         case '02': {
           const quiz = await generateWork02Quiz(inputText);
           quizItem.work02Data = quiz;
           quizItem.translatedText = quiz.translation;
+          console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
         case '07': {
           const quiz = await generateWork07Quiz(inputText);
           quizItem.work07Data = quiz;
           quizItem.translatedText = quiz.translation;
+          console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
         case '08': {
           const quiz = await generateWork08Quiz(inputText);
           quizItem.work08Data = quiz;
           quizItem.translatedText = quiz.translation;
+          console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
         case '11': {
           const quiz = await generateWork11Quiz(inputText);
           quizItem.work11Data = quiz;
           quizItem.translatedText = quiz.translations.join(' ');
+          console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
         case '13': {
           const quiz = await generateBlankFillQuizWithAI(inputText);
           quizItem.work13Data = quiz;
           quizItem.translatedText = quiz.translation;
+          console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
         case '14': {
           const quiz = await generateBlankQuizWithAI(inputText);
           quizItem.work14Data = quiz;
           quizItem.translatedText = quiz.translation;
+          console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
       }
     } catch (error) {
-      console.error(`유형 ${typeId} 문제 생성 실패:`, error);
+      console.error(`❌ 유형#${typeId} 문제 생성 실패 (${currentIndex + 1}/${totalCount}):`, error);
     }
 
     return quizItem;
@@ -465,11 +479,34 @@ const Package_03_ParagraphOrder: React.FC = () => {
       setUserCurrentPoints(remainingPoints);
 
       // 병렬로 문제 생성
-      const quizPromises = selectedTypes.map(typeId => 
-        generateSingleWorkTypeQuiz(inputText, typeId)
-      );
+      console.log('📦 패키지 퀴즈 생성 시작 (병렬 처리)...');
+      console.log('📝 입력 텍스트:', inputText.substring(0, 100) + '...');
+      console.log('📊 선택된 유형 수:', selectedTypes.length);
+      
+      const startTime = performance.now();
+      
+      // 진행 상황 초기화
+      setLoadingProgress({ current: 0, total: selectedTypes.length });
+      
+      // 병렬로 모든 유형 생성 (실시간 진행 상황 업데이트)
+      const quizPromises = selectedTypes.map(async (typeId, index) => {
+        const result = await generateSingleWorkTypeQuiz(inputText, typeId, index, selectedTypes.length);
+        
+        // 각 유형이 완료될 때마다 진행 상황 업데이트
+        setLoadingProgress(prev => ({
+          ...prev,
+          current: prev.current + 1
+        }));
+        
+        return result;
+      });
 
       const quizResults = await Promise.all(quizPromises);
+      
+      const endTime = performance.now();
+      const duration = (endTime - startTime) / 1000;
+      console.log(`📦 패키지 퀴즈 생성 완료: ${duration.toFixed(2)}초 소요`);
+      console.log('📊 생성된 퀴즈 수:', quizResults.length);
       
       // 성공한 유형들 추적
       successfulTypes = quizResults.map((item, index) => {
@@ -553,6 +590,15 @@ const Package_03_ParagraphOrder: React.FC = () => {
             return { ...quiz, workTypeId };
           });
           
+          console.log('📦 패키지#03 내역 저장 시작:', {
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            quizzesCount: quizzesWithId.length,
+            inputTextLength: inputText.length,
+            workTypePointsCount: workTypePoints.length
+          });
+          
           await savePackageQuizHistory(
             userData.uid,
             userData.name || '사용자',
@@ -563,8 +609,10 @@ const Package_03_ParagraphOrder: React.FC = () => {
             UI_TO_FIREBASE_ID_MAP,
             'P03' // 패키지#03 식별자
           );
+          
+          console.log('✅ 패키지#03 내역 저장 완료');
         } catch (historyError) {
-          console.error('📝 내역 저장 실패:', historyError);
+          console.error('❌ 패키지#03 내역 저장 실패:', historyError);
         }
       }
 
@@ -649,38 +697,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} />);
 
-    setTimeout(async () => {
-      // PDF 생성 및 Firebase Storage 업로드
-      try {
-        const { generateAndUploadPDF } = await import('../../../services/pdfService');
-        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-        
-        const element = document.getElementById('print-root-package03');
-        if (element) {
-          const result = await generateAndUploadPDF(
-            element as HTMLElement,
-            userData?.uid || '',
-            `package03_problem_${Date.now()}`,
-            '패키지#03_문제',
-            { isAnswerMode: false, orientation: 'landscape' }
-          );
-          
-          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
-          if (userData?.uid) {
-            const { getQuizHistory } = await import('../../../services/quizHistoryService');
-            const history = await getQuizHistory(userData.uid, { limit: 10 });
-            const packageHistory = history.find(h => h.workTypeId === 'P03');
-            
-            if (packageHistory) {
-              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
-              console.log('📁 패키지#03 문제 PDF 저장 완료:', result.fileName);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ PDF 저장 실패:', error);
-      }
-
+    setTimeout(() => {
       window.print();
 
       setTimeout(() => {
@@ -710,9 +727,36 @@ const Package_03_ParagraphOrder: React.FC = () => {
 
     console.log('🖨️ 인쇄(정답) 시작 - 가로 A4 페이지');
     
+    // 폰트 미리 로드
+    const fontPreload = document.createElement('link');
+    fontPreload.rel = 'preload';
+    fontPreload.href = 'https://fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Regular.woff2';
+    fontPreload.as = 'font';
+    fontPreload.type = 'font/woff2';
+    fontPreload.crossOrigin = 'anonymous';
+    document.head.appendChild(fontPreload);
+    
     const style = document.createElement('style');
     style.id = 'print-style-package03-answer';
     style.textContent = `
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Regular.woff2') format('woff2'),
+             url('https://fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Regular.woff') format('woff'),
+             url('https://fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Regular.otf') format('opentype');
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Bold.woff2') format('woff2'),
+             url('https://fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Bold.woff') format('woff'),
+             url('https://fonts.gstatic.com/ea/notosanskr/v2/NotoSansKR-Bold.otf') format('opentype');
+      }
       @page {
         margin: 0;
         size: A4 landscape;
@@ -723,10 +767,12 @@ const Package_03_ParagraphOrder: React.FC = () => {
           padding: 0 !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
         }
         * {
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
         }
         .no-print {
           display: none !important;
@@ -747,38 +793,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} isAnswerMode={true} />);
 
-    setTimeout(async () => {
-      // PDF 생성 및 Firebase Storage 업로드
-      try {
-        const { generateAndUploadPDF } = await import('../../../services/pdfService');
-        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-        
-        const element = document.getElementById('print-root-package03-answer');
-        if (element) {
-          const result = await generateAndUploadPDF(
-            element as HTMLElement,
-            userData?.uid || '',
-            `package03_answer_${Date.now()}`,
-            '패키지#03_정답',
-            { isAnswerMode: true, orientation: 'landscape' }
-          );
-          
-          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
-          if (userData?.uid) {
-            const { getQuizHistory } = await import('../../../services/quizHistoryService');
-            const history = await getQuizHistory(userData.uid, { limit: 10 });
-            const packageHistory = history.find(h => h.workTypeId === 'P03');
-            
-            if (packageHistory) {
-              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-              console.log('📁 패키지#03 정답 PDF 저장 완료:', result.fileName);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ PDF 저장 실패:', error);
-      }
-
+    setTimeout(() => {
       window.print();
 
       setTimeout(() => {
@@ -788,6 +803,11 @@ const Package_03_ParagraphOrder: React.FC = () => {
         const styleElement = document.getElementById('print-style-package03-answer');
         if (styleElement) {
           document.head.removeChild(styleElement);
+        }
+        
+        const fontPreloadElement = document.querySelector('link[href*="NotoSansKR-Regular.woff2"]');
+        if (fontPreloadElement) {
+          document.head.removeChild(fontPreloadElement);
         }
 
         if (appRoot) {
@@ -804,87 +824,107 @@ const Package_03_ParagraphOrder: React.FC = () => {
     return (
       <React.Fragment>
         <div className="quiz-display no-print">
-          <div className="quiz-header">
-            <h2 className="no-print">📦 패키지 퀴즈 결과 - 문단 순서</h2>
-            <div className="quiz-header-buttons no-print">
-              <button 
-                type="button" 
-                className="new-problem-btn"
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '2rem',
+            marginTop: '0.1rem',
+            paddingBottom: '1rem',
+            borderBottom: '2px solid #d1d5db'
+          }}>
+            <h2 style={{
+              fontFamily: "'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif",
+              fontSize: '2rem',
+              fontWeight: '800',
+              color: '#000000',
+              margin: '0',
+              letterSpacing: '-1px'
+            }}>📦 패키지 퀴즈 #03 (본문 집중 문제)</h2>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                type="button"
                 onClick={handleNewProblem}
                 style={{
-                  width: '160px',
+                  width: '120px',
                   height: '48px',
                   padding: '0.75rem 1rem',
-                  fontSize: '1rem',
+                  fontSize: '11pt',
                   fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   border: 'none',
                   borderRadius: '8px',
-                  transition: 'all 0.3s ease',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)'
+                  background: '#e2e8f0',
+                  color: '#475569',
+                  cursor: 'pointer'
                 }}
               >
-                새 문제 만들기
+                새문제
               </button>
-              
-              <button 
-                type="button" 
-                className="print-problem-btn"
+              <button
+                type="button"
+                onClick={() => navigate('/quiz-list')}
+                style={{
+                  width: '130px',
+                  height: '48px',
+                  padding: '0.75rem 1rem',
+                  fontSize: '11pt',
+                  fontWeight: '600',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: '#14b8a6',
+                  color: 'white',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px rgba(20, 184, 166, 0.25)'
+                }}
+              >
+                문제생성목록
+              </button>
+              <button
+                type="button"
                 onClick={handlePrintProblem}
                 style={{
-                  width: '160px',
+                  width: '130px',
                   height: '48px',
                   padding: '0.75rem 1rem',
-                  fontSize: '1rem',
+                  fontSize: '11pt',
                   fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   border: 'none',
                   borderRadius: '8px',
-                  transition: 'all 0.3s ease',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: 'white',
+                  cursor: 'pointer',
                   boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)'
                 }}
               >
-                인쇄 (문제)
+                🖨️ 인쇄 (문제)
               </button>
-              
-              <button 
-                type="button" 
-                className="print-answer-btn"
+              <button
+                type="button"
                 onClick={handlePrintAnswer}
                 style={{
-                  width: '160px',
+                  width: '130px',
                   height: '48px',
                   padding: '0.75rem 1rem',
-                  fontSize: '1rem',
+                  fontSize: '11pt',
                   fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   border: 'none',
                   borderRadius: '8px',
-                  transition: 'all 0.3s ease',
-                  background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                   color: 'white',
-                  boxShadow: '0 4px 6px rgba(40, 167, 69, 0.25)'
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
                 }}
               >
-                인쇄 (정답)
+                🖨️ 인쇄 (정답)
               </button>
             </div>
           </div>
 
           {/* 생성된 퀴즈들 표시 */}
-          <div className="quiz-items-container">
+          <div className="quiz-items-container" style={{ marginTop: '2rem' }}>
             {packageQuiz.map((quizItem, index) => (
-              <div key={index} className="quiz-item">
+              <>
                 {/* Work_01 */}
                 {quizItem.work01Data && (
                   <div key={`work-01-${index}`} className="work-section" style={{
@@ -1613,7 +1653,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
+              </>
             ))}
           </div>
         </div>
@@ -1625,8 +1665,34 @@ const Package_03_ParagraphOrder: React.FC = () => {
   return (
     <div className="quiz-generator" onPaste={handlePaste}>
       <div className="generator-header">
-        <h2>📦 패키지 퀴즈 #03 - 문단 순서</h2>
-        <p>하나의 영어 본문으로 여러 유형의 문제를 한번에 생성합니다.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div>
+            <h2>📦 패키지 퀴즈 #03 (본문 집중 문제)</h2>
+            <p>하나의 영어 본문으로 여러 유형의 문제를 한번에 생성합니다.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/quiz-list')}
+            style={{
+              width: '160px',
+              height: '48px',
+              padding: '0.75rem 1rem',
+              fontSize: '1rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              borderRadius: '8px',
+              transition: 'all 0.3s ease',
+              background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+              color: 'white',
+              boxShadow: '0 4px 6px rgba(20, 184, 166, 0.25)'
+            }}
+          >
+            📋 문제생성목록
+          </button>
+        </div>
       </div>
       
       <div className="input-type-section">
@@ -1855,6 +1921,23 @@ const Package_03_ParagraphOrder: React.FC = () => {
         userCurrentPoints={userCurrentPoints}
         remainingPoints={userCurrentPoints - pointsToDeduct}
       />
+
+      {/* 모래시계 로딩 모달 */}
+      {(isLoading || isExtractingText) && (
+        <div className="centered-hourglass-overlay">
+          <div className="centered-hourglass-content">
+            <div className="centered-hourglass-spinner">⏳</div>
+            <div className="loading-text">
+              {isExtractingText ? '📄 텍스트 추출 중...' : '📋 패키지 문제 생성 중...'}
+            </div>
+            {isLoading && loadingProgress.total > 0 && (
+              <div className="loading-progress">
+                ({loadingProgress.current + 1}/{loadingProgress.total})
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -165,27 +165,6 @@
   color: #1e40af;
 }
 
-/* 다운로드 버튼 */
-.download-btn {
-  background: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  padding: 0.2rem 0.4rem;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.download-btn:hover {
-  background: #b91c1c;
-  transform: translateY(-1px);
-}
-
-.no-file {
-  color: #9ca3af;
-  font-style: italic;
-}
 
 /* 불러오기 버튼 */
 .load-btn {
@@ -313,10 +292,6 @@
     font-size: 0.75rem;
   }
   
-  .download-btn {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.7rem;
-  }
   
   .load-btn {
     padding: 0.2rem 0.4rem;

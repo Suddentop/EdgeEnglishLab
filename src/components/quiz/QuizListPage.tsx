@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getQuizHistory, QuizHistoryItem } from '../../services/quizHistoryService';
-import { downloadFile } from '../../services/fileService';
 import './QuizListPage.css';
 
 const QuizListPage: React.FC = () => {
@@ -20,19 +19,35 @@ const QuizListPage: React.FC = () => {
     
     setLoading(true);
     try {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      // 최근 30일로 확장하여 더 많은 데이터 가져오기
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       const params = {
-        startDate: oneWeekAgo,
-        limit: 100
+        startDate: thirtyDaysAgo,
+        limit: 200 // 더 많은 데이터 가져오기
       };
       
+      console.log('📋 문제생성목록 로드 시작:', {
+        userId: userData.uid,
+        startDate: thirtyDaysAgo,
+        limit: 200
+      });
+      
       const history = await getQuizHistory(userData.uid, params);
+      console.log('📋 문제생성목록 로드 완료:', {
+        totalCount: history.length,
+        recentItems: history.slice(0, 5).map(item => ({
+          date: item.createdAt,
+          workTypeId: item.workTypeId,
+          workTypeName: item.workTypeName
+        }))
+      });
+      
       setQuizHistory(history);
       setTotalPages(Math.ceil(history.length / itemsPerPage));
     } catch (error) {
-      console.error('문제 생성 내역 로드 실패:', error);
+      console.error('❌ 문제 생성 내역 로드 실패:', error);
     } finally {
       setLoading(false);
     }
@@ -41,24 +56,6 @@ const QuizListPage: React.FC = () => {
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  // 파일 다운로드
-  const handleDownload = async (historyItem: QuizHistoryItem) => {
-    const fileUrl = historyItem.problemFileUrl;
-    const fileName = historyItem.problemFileName;
-    
-    if (!fileUrl) {
-      alert('파일이 없습니다.');
-      return;
-    }
-
-    try {
-      await downloadFile(fileUrl, fileName || `quiz_${historyItem.id}.pdf`);
-    } catch (error) {
-      console.error('파일 다운로드 실패:', error);
-      alert('파일 다운로드에 실패했습니다.');
-    }
   };
 
   // 문제 불러오기 (새 페이지로 이동)
@@ -124,7 +121,10 @@ const QuizListPage: React.FC = () => {
         <div className="quiz-list-header">
           <h1>문제 생성 목록</h1>
           <button 
-            onClick={loadQuizHistory} 
+            onClick={() => {
+              console.log('🔄 문제생성목록 새로고침 버튼 클릭');
+              loadQuizHistory();
+            }} 
             className="refresh-btn"
             disabled={loading}
           >
@@ -149,14 +149,20 @@ const QuizListPage: React.FC = () => {
                     <th>차감</th>
                     <th>성공/실패</th>
                     <th>환불</th>
-                    <th>다운로드</th>
                     <th>불러오기</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentData.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.createdAt.toLocaleDateString()}</td>
+                      <td>{item.createdAt.toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                      }).replace(/(\d{4})\. (\d{2})\. (\d{2})\. (\d{2}:\d{2})/, '$1-$2-$3 $4')}</td>
                       <td>{item.workTypeId}</td>
                       <td className="type-name">{getDisplayWorkTypeName(item.workTypeId, item.workTypeName)}</td>
                       <td className="deduction">-{item.pointsDeducted.toLocaleString()}</td>
@@ -167,19 +173,6 @@ const QuizListPage: React.FC = () => {
                       </td>
                       <td className="refund">
                         {item.pointsRefunded > 0 ? `+${item.pointsRefunded.toLocaleString()}` : ''}
-                      </td>
-                      <td>
-                        {item.problemFileUrl ? (
-                          <button
-                            onClick={() => handleDownload(item)}
-                            className="download-btn"
-                            title="PDF 다운로드"
-                          >
-                            📄
-                          </button>
-                        ) : (
-                          <span className="no-file">-</span>
-                        )}
                       </td>
                       <td>
                         <button

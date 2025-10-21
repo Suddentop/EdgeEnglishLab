@@ -3892,7 +3892,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
             fontFamily: 'inherit',
                       color: '#222'
                     }}>
-                      {`①②③④⑤`[index] || `${index + 1}`} {option}개
+                      {`①②③④⑤⑥`[index] || `${index + 1}`} {option}개
                     </div>
                   ))}
                 </div>
@@ -3923,7 +3923,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     fontFamily: 'inherit',
                     color: '#222'
                   }}>
-                    {`①②③④⑤`[index] || `${index + 1}`} {option}개
+                    {`①②③④⑤⑥`[index] || `${index + 1}`} {option}개
               </div>
             ))}
           </div>
@@ -3960,7 +3960,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
               {(pageLayoutInfo.page1Content.includes('B') || pageLayoutInfo.page1Content === 'B') && (
                 <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
                   <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>
-                    {`①②③④⑤`[work10Data.answerIndex] || `${work10Data.answerIndex+1}.`} {work10Data.options[work10Data.answerIndex]}개
+                    {`①②③④⑤⑥`[work10Data.answerIndex] || `${work10Data.answerIndex+1}.`} {work10Data.options[work10Data.answerIndex]}개
                     <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span> 어법상 틀린 단어: {work10Data.wrongIndexes.map(index => 
                       `${'①②③④⑤⑥⑦⑧'[index]}${work10Data.transformedWords[index]} → ${work10Data.originalWords[index]}`
                     ).join(', ')}
@@ -4008,7 +4008,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                 {(pageLayoutInfo.page2Content.includes('B') || pageLayoutInfo.page2Content === 'B') && (
                   <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
                     <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>
-                      {`①②③④⑤`[work10Data.answerIndex] || `${work10Data.answerIndex+1}.`} {work10Data.options[work10Data.answerIndex]}개
+                      {`①②③④⑤⑥`[work10Data.answerIndex] || `${work10Data.answerIndex+1}.`} {work10Data.options[work10Data.answerIndex]}개
                       <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span> 어법상 틀린 단어: {work10Data.wrongIndexes.map(index => 
                         `${'①②③④⑤⑥⑦⑧'[index]}${work10Data.transformedWords[index]} → ${work10Data.originalWords[index]}`
                       ).join(', ')}
@@ -4057,7 +4057,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                 {(pageLayoutInfo.page3Content.includes('B') || pageLayoutInfo.page3Content === 'B') && (
                   <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
                     <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>
-                      {`①②③④⑤`[work10Data.answerIndex] || `${work10Data.answerIndex+1}.`} {work10Data.options[work10Data.answerIndex]}개
+                      {`①②③④⑤⑥`[work10Data.answerIndex] || `${work10Data.answerIndex+1}.`} {work10Data.options[work10Data.answerIndex]}개
                       <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span> 어법상 틀린 단어: {work10Data.wrongIndexes.map(index => 
                         `${'①②③④⑤⑥⑦⑧'[index]}${work10Data.transformedWords[index]} → ${work10Data.originalWords[index]}`
                       ).join(', ')}
