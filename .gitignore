@@ -89,3 +89,65 @@ production.env
 
 # dataconnect generated files
 .dataconnect
+
+# API Key 보안 - 문서 및 설정 파일 제외
+docs/빌드_및_배포_완료_보고서_*.md
+docs/API_KEY_확인_가이드.md
+docs/보안_가이드_API_키_보호.md
+docs/보안_설정_가이드.md
+docs/SECURITY.md
+docs/ENV_FILES_GUIDE.md
+docs/DEVELOPMENT_GUIDE.md
+docs/LOCAL_SETUP.md
+docs/DEPLOYMENT_GUIDE.md
+docs/DEPLOYMENT_INSTRUCTIONS.md
+docs/배포를_위한_빌드_가이드.md
+docs/배포_dothome_백엔드_서버_배포_가이드.md
+docs/토스페이먼츠_결제시스템_구현_가이드.md
+docs/관리자_권한_설정_가이드.md
+docs/모니터링_및_관리_가이드.md
+docs/문제_해결_가이드.md
+docs/사용자_데이터_마이그레이션_가이드.md
+docs/이메일_발송_문제_해결_가이드.md
+docs/인쇄레이아웃조절가이드.md
+docs/제목컨테이너와_본문컨테이너_사이_여백조정.md
+docs/유형#03_컨테이너_여백조정.md
+docs/유형#03_페이지분할_로직.md
+docs/패키지03_유형11_페이지분할_로직.md
+docs/htaccess_설정_변경_사항.md
+docs/PHP_API_PROXY_README.md
+docs/SERVER_DEPLOYMENT.md
+docs/DEPLOYMENT_CHECKLIST.md
+docs/ThingsToDo.md
+docs/README.md
+docs/SECURITY_GUIDE.md
+docs/WORK_COMPONENTS_UPDATE_GUIDE.md
+docs/backup/
+docs/AI모델_기술_분석.md
+docs/01._개인정보처리방침.html
+docs/02._이용약관_bookclub.html
+
+# 환경 변수 예시 파일 (API Key 포함)
+env.local.example
+env.example
+php_api_proxy/env-example.txt
+toss-payment-env-example.txt
+production.env
+
+# 프록시 서버 파일 (API Key 참조)
+proxy-server.js
+php_api_proxy/api-proxy.php
+php_api_proxy/secure-api-proxy.php
+php_api_proxy/test-api.php
+php_api_proxy/load-env.php
+php_api_proxy/config.php
+php_api_proxy/rate-limit-config.php
+php_api_proxy/rate-limiter.php
+php_api_proxy/add-else-blocks.js
+php_api_proxy/start-php-server.bat
+
+# API Key 검사 도구
+src/components/common/ApiKeyCheck.tsx
+src/utils/emailDiagnostics.ts
+src/services/openaiProxyService.ts
+src/services/aiParagraphService.ts
