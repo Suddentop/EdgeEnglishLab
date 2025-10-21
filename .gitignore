@@ -133,6 +133,7 @@ env.example
 php_api_proxy/env-example.txt
 toss-payment-env-example.txt
 production.env
+env-example.txt
 
 # 프록시 서버 파일 (API Key 참조)
 proxy-server.js
