@@ -542,6 +542,19 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                       );
                     })()}
                   
+                  {/* 정답 표시 */}
+                  {(() => {
+                    const correctOrder = quiz.choices[quiz.answerIndex];
+                    const answerText = correctOrder ? correctOrder.join('-') : '';
+                    return (
+                      <div style={{marginTop:'1rem', padding:'1rem', background:'#e3f2fd', borderRadius:'8px', border:'2px solid #1976d2'}}>
+                        <div style={{fontWeight:800, color:'#1976d2', fontSize:'1rem'}}>
+                          정답 : {answerText}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  
                   {/* 전체 본문 해석 추가 */}
                   {translatedText && (
                     <div style={{marginTop:'1rem', padding:'0.8rem', background:'#f8f9fa', borderRadius:'6px', border:'1px solid #dee2e6'}}>
@@ -574,6 +587,19 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                         <strong>{paragraph.label}:</strong> {paragraph.content}
                       </div>
                     ))}
+                  
+                  {/* 정답 표시 */}
+                  {(() => {
+                    const correctOrder = quiz.choices[quiz.answerIndex];
+                    const answerText = correctOrder ? correctOrder.join('-') : '';
+                    return (
+                      <div style={{marginTop:'1rem', padding:'1rem', background:'#e3f2fd', borderRadius:'8px', border:'2px solid #1976d2'}}>
+                        <div style={{fontWeight:800, color:'#1976d2', fontSize:'1rem'}}>
+                          정답 : {answerText}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   
                   {/* 전체 본문 해석 추가 */}
                   {translatedText && (

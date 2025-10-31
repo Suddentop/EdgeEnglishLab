@@ -916,7 +916,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
                                 backgroundColor: '#F1F8E9',
                                 marginTop: '0.5rem',
                                 padding: '0.6rem',
-                                fontSize: '1rem',
+                                fontSize: '0.8rem',
                                 lineHeight: '1.4',
                                 color: '#333'
                               }}>
@@ -981,7 +981,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
                               backgroundColor: '#F1F8E9',
                               marginTop: '0.5rem',
                               padding: '0.6rem',
-                              fontSize: '1rem',
+                              fontSize: '0.8rem',
                               lineHeight: '1.4',
                               color: '#333'
                             }}>

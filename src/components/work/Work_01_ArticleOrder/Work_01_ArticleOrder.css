@@ -489,4 +489,9 @@
   border: 1px solid #c3e6cb;
 }
 
+/* 문제생성 후 화면의 영어 단락 컨테이너 패딩 증가 */
+.quiz-display .problem-passage .shuffled-paragraph {
+  padding: 0.8rem 1.5rem !important;
+}
+
 

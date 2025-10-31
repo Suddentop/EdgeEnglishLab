@@ -1649,7 +1649,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
             <div style={{fontSize: '0.9rem', color: '#666', marginTop: '0.5rem'}}>
               💡 <b>팁:</b> 화면 캡처 후 Ctrl+V로 붙여넣기
             </div>
-          </div>
+              </div>
           {/* 캡처 모드에서도 텍스트가 추출되면 글자수 표시 */}
           {inputText && (
             <div className="text-info" style={{marginTop: '0.5rem'}}>

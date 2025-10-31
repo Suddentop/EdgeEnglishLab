@@ -9,7 +9,7 @@ if (file_exists(__DIR__ . '/load-env.php')) {
     require_once __DIR__ . '/load-env.php';
 }
 
-// CORS 헤더 설정 (개발 환경 지원)
+// CORS 헤더 설정 (중복 방지를 위해 먼저 설정)
 $allowedOrigins = [
     'https://edgeenglish.net',
     'https://www.edgeenglish.net',
@@ -18,15 +18,17 @@ $allowedOrigins = [
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowedOrigins)) {
+if ($origin && in_array($origin, $allowedOrigins)) {
+    // 요청한 origin이 허용 목록에 있으면 해당 origin 사용
     header('Access-Control-Allow-Origin: ' . $origin);
 } else {
-    // 기본값으로 메인 도메인 설정
+    // origin이 없거나 허용 목록에 없으면 기본 도메인 사용
     header('Access-Control-Allow-Origin: https://edgeenglish.net');
 }
 
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Credentials: false');
 header('Content-Type: application/json; charset=utf-8');
 
 // OPTIONS 요청 처리 (CORS preflight)

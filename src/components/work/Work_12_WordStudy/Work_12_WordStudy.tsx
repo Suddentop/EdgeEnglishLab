@@ -170,9 +170,9 @@ const Work_12_WordStudy: React.FC = () => {
           } catch (err) {
             alert('단어 추출 중 오류가 발생했습니다.');
           } finally {
-            setIsExtractingText(false);
+        setIsExtractingText(false);
             setIsLoading(false);
-          }
+      }
         }
         e.preventDefault();
         return;

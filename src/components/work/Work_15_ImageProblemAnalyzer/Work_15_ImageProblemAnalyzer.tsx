@@ -216,26 +216,17 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
       throw new Error('OpenAI API Key가 설정되어 있지 않습니다.');
     }
 
-    let prompt = `이 이미지는 영어 문제입니다. 다음을 수행해주세요:
-
-1. 이미지에서 모든 영어 텍스트를 정확히 추출하세요.
-2. 추출된 텍스트를 자연스러운 영어 본문으로 정리하세요.
-3. 문제의 유형을 파악하세요 (독해, 문법, 어휘 등).
-4. 정답을 찾아주세요 (있는 경우).
-5. 문제에 대한 간단한 분석을 제공하세요.`;
-
+    // 프롬프트 최적화 (간결하게)
+    let prompt: string;
     if (extractedText) {
-      prompt += `\n\n추가 정보: OCR로 추출된 텍스트가 있습니다:\n${extractedText}\n\n이 텍스트를 참고하여 더 정확한 분석을 해주세요.`;
+      // OCR 텍스트가 있으면 이미지 분석을 간소화
+      prompt = `이미지는 영어 문제입니다. OCR로 추출된 텍스트를 기반으로 분석하세요:\n\n추출된 텍스트: ${extractedText}\n\n1. 텍스트를 자연스러운 영어 본문으로 정리\n2. 문제 유형 파악 (독해/문법/어휘)\n3. 정답 추출 (있는 경우)\n4. 간단한 분석 제공`;
+    } else {
+      // OCR 텍스트가 없으면 이미지에서 직접 추출
+      prompt = `이미지에서 영어 문제를 분석하세요:\n1. 영어 텍스트 추출 및 정리\n2. 문제 유형 파악\n3. 정답 추출\n4. 간단한 분석`;
     }
 
-    prompt += `\n\n응답은 다음 JSON 형식으로 해주세요:
-{
-  "englishText": "추출된 영어 본문",
-  "koreanTranslation": "한글 번역",
-  "problemType": "문제 유형",
-  "answers": ["정답1", "정답2"],
-  "analysis": "문제 분석 설명"
-}`;
+    prompt += `\n\n응답은 JSON 형식으로:\n{"englishText":"본문","koreanTranslation":"번역","problemType":"유형","answers":["정답"],"analysis":"분석"}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -262,8 +253,8 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
             ]
           }
         ],
-        max_tokens: 2000,
-        temperature: 0.3
+        max_tokens: 1200,
+        temperature: 0.5
       })
     });
 
@@ -473,50 +464,50 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
   const analyzeImageWithAI = async (base64Image: string, extractedText?: string): Promise<ProblemAnalysisResult> => {
     const PHP_API_BASE_URL = getPhpApiBaseUrl();
     const useDirectFallback = canUseDirectOpenAI && window.location.hostname === 'localhost';
-
+    
     console.log('🖼️ 이미지 분석 요청 시작:', {
       url: `${PHP_API_BASE_URL}/analyze-problem-image.php`,
       imageSize: base64Image.length,
       extractedTextLength: extractedText?.length || 0,
       userId: currentUser?.uid
     });
-
+    
     try {
-      const response = await fetch(`${PHP_API_BASE_URL}/analyze-problem-image.php`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image: base64Image,
-          extractedText: extractedText || '',
-          userId: currentUser?.uid,
-        }),
-      });
+    const response = await fetch(`${PHP_API_BASE_URL}/analyze-problem-image.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image: base64Image,
+        extractedText: extractedText || '',
+        userId: currentUser?.uid,
+      }),
+    });
 
-      console.log('🖼️ 이미지 분석 응답 상태:', response.status);
+    console.log('🖼️ 이미지 분석 응답 상태:', response.status);
 
-      if (!response.ok) {
-        let errorMessage = 'AI 분석 요청 실패';
-        try {
-          const errorData = await response.json();
-          console.error('🖼️ 이미지 분석 에러 상세:', errorData);
-          errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-        } catch (parseError) {
-          console.error('🖼️ 에러 응답 파싱 실패:', parseError);
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+    if (!response.ok) {
+      let errorMessage = 'AI 분석 요청 실패';
+      try {
+        const errorData = await response.json();
+        console.error('🖼️ 이미지 분석 에러 상세:', errorData);
+        errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+      } catch (parseError) {
+        console.error('🖼️ 에러 응답 파싱 실패:', parseError);
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
+      throw new Error(errorMessage);
+    }
 
-      const result = await response.json();
-      console.log('🖼️ 이미지 분석 성공:', result);
-      
-      if (!result.success || !result.data) {
-        throw new Error('AI 분석 결과가 올바르지 않습니다.');
-      }
-      
-      return result.data;
+    const result = await response.json();
+    console.log('🖼️ 이미지 분석 성공:', result);
+    
+    if (!result.success || !result.data) {
+      throw new Error('AI 분석 결과가 올바르지 않습니다.');
+    }
+    
+    return result.data;
     } catch (error) {
       if (useDirectFallback) {
         console.warn('⚠️ 원격 이미지 분석 실패, 로컬 OpenAI 호출로 전환합니다.', error);
@@ -990,7 +981,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           </div>
         </div>
       )}
-
+      
       {/* 화면 캡처 도움말 모달 */}
       <ScreenshotHelpModal
         isOpen={showHelpModal}

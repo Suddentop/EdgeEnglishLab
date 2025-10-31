@@ -2,10 +2,25 @@
 // translate-english-text.php
 // 영어 본문 텍스트 번역 API
 
+// CORS 헤더 설정 (중복 방지)
+$allowedOrigins = [
+    'https://edgeenglish.net',
+    'https://www.edgeenglish.net',
+    'http://localhost:3000',
+    'http://localhost:3001'
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin && in_array($origin, $allowedOrigins)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+} else {
+    header('Access-Control-Allow-Origin: https://edgeenglish.net');
+}
+
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Credentials: false');
 
 // OPTIONS 요청 처리
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

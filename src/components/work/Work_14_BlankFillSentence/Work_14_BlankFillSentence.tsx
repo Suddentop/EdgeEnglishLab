@@ -272,7 +272,7 @@ const Work_14_FillSentence: React.FC = () => {
             console.error('❌ OCR 처리 오류:', err);
             alert('OCR 처리 중 오류가 발생했습니다.');
           } finally {
-            setIsExtractingText(false);
+        setIsExtractingText(false);
             setIsLoading(false);
       }
         } else {

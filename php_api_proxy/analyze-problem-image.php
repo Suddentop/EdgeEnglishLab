@@ -2,10 +2,25 @@
 // analyze-problem-image.php
 // 영어 문제 이미지 분석 API
 
+// CORS 헤더 설정 (중복 방지)
+$allowedOrigins = [
+    'https://edgeenglish.net',
+    'https://www.edgeenglish.net',
+    'http://localhost:3000',
+    'http://localhost:3001'
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin && in_array($origin, $allowedOrigins)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+} else {
+    header('Access-Control-Allow-Origin: https://edgeenglish.net');
+}
+
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Credentials: false');
 
 // OPTIONS 요청 처리
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -90,28 +105,25 @@ try {
 function analyzeImageWithOpenAI($base64Image, $extractedText, $apiKey) {
     $url = 'https://api.openai.com/v1/chat/completions';
     
-    // 이미지에서 텍스트 추출 및 문제 분석을 위한 프롬프트
-    $prompt = "이 이미지는 영어 문제입니다. 다음을 수행해주세요:
-
-1. 이미지에서 모든 영어 텍스트를 정확히 추출하세요.
-2. 추출된 텍스트를 자연스러운 영어 본문으로 정리하세요.
-3. 문제의 유형을 파악하세요 (독해, 문법, 어휘 등).
-4. 정답을 찾아주세요 (있는 경우).
-5. 문제에 대한 간단한 분석을 제공하세요.";
-
-    // OCR로 추출된 텍스트가 있으면 추가 정보로 활용
+    // 이미지 분석 프롬프트 최적화 (간결하게)
     if (!empty($extractedText)) {
-        $prompt .= "\n\n추가 정보: OCR로 추출된 텍스트가 있습니다:\n" . $extractedText . "\n\n이 텍스트를 참고하여 더 정확한 분석을 해주세요.";
+        // OCR 텍스트가 있으면 이미지 분석을 간소화
+        $prompt = "이미지는 영어 문제입니다. OCR로 추출된 텍스트를 기반으로 다음을 수행하세요:\n\n" . 
+                  "추출된 텍스트: " . $extractedText . "\n\n" .
+                  "1. 텍스트를 자연스러운 영어 본문으로 정리\n" .
+                  "2. 문제 유형 파악 (독해/문법/어휘)\n" .
+                  "3. 정답 추출 (있는 경우)\n" .
+                  "4. 간단한 분석 제공";
+    } else {
+        // OCR 텍스트가 없으면 이미지에서 직접 추출
+        $prompt = "이미지에서 영어 문제를 분석하세요:\n" .
+                  "1. 영어 텍스트 추출 및 정리\n" .
+                  "2. 문제 유형 파악\n" .
+                  "3. 정답 추출\n" .
+                  "4. 간단한 분석";
     }
 
-    $prompt .= "\n\n응답은 다음 JSON 형식으로 해주세요:
-{
-  \"englishText\": \"추출된 영어 본문\",
-  \"koreanTranslation\": \"한글 번역\",
-  \"problemType\": \"문제 유형\",
-  \"answers\": [\"정답1\", \"정답2\"],
-  \"analysis\": \"문제 분석 설명\"
-}";
+    $prompt .= "\n\n응답은 JSON 형식으로:\n{\"englishText\":\"본문\",\"koreanTranslation\":\"번역\",\"problemType\":\"유형\",\"answers\":[\"정답\"],\"analysis\":\"분석\"}";
 
     $data = [
         'model' => 'gpt-4o',
@@ -132,8 +144,8 @@ function analyzeImageWithOpenAI($base64Image, $extractedText, $apiKey) {
                 ]
             ]
         ],
-        'max_tokens' => 2000,
-        'temperature' => 0.3
+        'max_tokens' => 1200,
+        'temperature' => 0.5
     ];
     
     $ch = curl_init();
@@ -145,7 +157,7 @@ function analyzeImageWithOpenAI($base64Image, $extractedText, $apiKey) {
         'Content-Type: application/json',
         'Authorization: Bearer ' . $apiKey
     ]);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 45);
     
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
