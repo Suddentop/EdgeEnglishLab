@@ -3,23 +3,73 @@
 
 // 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
 async function callOpenAIAPI(requestBody: any): Promise<Response> {
-  const proxyUrl = process.env.REACT_APP_API_PROXY_URL || 'http://localhost:8000/api-proxy.php';
+  console.log('🌐 [callOpenAIAPI] 호출 시작');
+  
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
   const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
   
-  console.log('🔍 Work13 환경 변수 확인:', {
-    proxyUrl: proxyUrl ? '설정됨' : '없음',
-    directApiKey: directApiKey ? '설정됨' : '없음'
-  });
+  console.log('🔍 [환경변수 확인]');
+  console.log('  REACT_APP_API_PROXY_URL:', proxyUrl ? `설정됨 (${proxyUrl})` : '❌ 없음');
+  console.log('  REACT_APP_OPENAI_API_KEY:', directApiKey ? '설정됨 (sk-proj-****...)' : '❌ 없음');
   
-  // 프록시 서버를 우선적으로 사용
-  console.log('🤖 OpenAI 프록시 서버 호출 중...');
-  return await fetch(proxyUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
+  // 프록시 URL이 설정된 경우 프록시 사용 (프로덕션)
+  if (proxyUrl) {
+    console.log('✅ [프록시 모드] 프록시 서버 사용');
+    console.log('  프록시 URL:', proxyUrl);
+    console.log('  요청 본문 크기:', JSON.stringify(requestBody).length, 'bytes');
+    
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      console.log('  응답 상태:', response.status, response.statusText);
+      console.log('  응답 헤더:', Object.fromEntries(response.headers.entries()));
+      
+      return response;
+    } catch (fetchError: any) {
+      console.error('❌ [프록시 호출 실패]');
+      console.error('  에러 타입:', fetchError.constructor.name);
+      console.error('  에러 메시지:', fetchError.message);
+      console.error('  전체 에러:', fetchError);
+      throw fetchError;
+    }
+  }
+  
+  // 개발 환경: 직접 API 호출
+  console.log('🔧 [개발 모드] 직접 API 호출');
+  
+  if (!directApiKey) {
+    console.error('❌ [개발 모드] API 키가 없습니다!');
+    throw new Error('API Key가 설정되지 않았습니다. .env.local 파일에 REACT_APP_OPENAI_API_KEY를 설정해주세요.');
+  }
+  
+  console.log('  API 키 확인: OK');
+  console.log('  OpenAI API 직접 호출 시작...');
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${directApiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    console.log('  응답 상태:', response.status, response.statusText);
+    
+    return response;
+  } catch (fetchError: any) {
+    console.error('❌ [직접 호출 실패]');
+    console.error('  에러 타입:', fetchError.constructor.name);
+    console.error('  에러 메시지:', fetchError.message);
+    throw fetchError;
+  }
 }
 
 export interface BlankFillItem {
@@ -458,55 +508,79 @@ ${passage}`;
 
 // 이미지를 텍스트로 변환하는 함수 (OpenAI Vision API 사용)
 export const imageToTextWithOpenAIVision = async (imageFile: File): Promise<string> => {
-  const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  console.log('📸 [이미지→텍스트] 시작');
+  console.log('  파일명:', imageFile.name);
+  console.log('  파일크기:', Math.round(imageFile.size / 1024), 'KB');
+  console.log('  파일타입:', imageFile.type);
   
-  const base64 = await fileToBase64(imageFile);
-  
-  const prompt = `영어문제로 사용되는 본문이야.
+  try {
+    const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => {
+        console.error('❌ [이미지→텍스트] FileReader 에러:', error);
+        reject(error);
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    console.log('  1️⃣ Base64 인코딩 시작...');
+    const base64 = await fileToBase64(imageFile);
+    console.log('  ✅ Base64 인코딩 완료 (길이:', base64.length, ')');
+    
+    const prompt = `영어문제로 사용되는 본문이야.
 이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
 글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
 본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
 원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
 영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-  
-  const request = {
-    model: 'gpt-4o',
-    messages: [
-      { 
-        role: 'user' as const, 
-        content: [
-          { type: 'text' as const, text: prompt },
-          { type: 'image_url' as const, image_url: { url: base64 } }
-        ]
-      }
-    ],
-    max_tokens: 2048
-  };
-  
-  // 직접 OpenAI API 호출 (이미지 처리)
-  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-  if (!apiKey) {
-    throw new Error('OpenAI API 키가 설정되지 않았습니다.');
+    
+    const request = {
+      model: 'gpt-4o',
+      messages: [
+        { 
+          role: 'user' as const, 
+          content: [
+            { type: 'text' as const, text: prompt },
+            { type: 'image_url' as const, image_url: { url: base64 } }
+          ]
+        }
+      ],
+      max_tokens: 2048
+    };
+    
+    console.log('  2️⃣ API 요청 준비 완료');
+    console.log('  모델:', request.model);
+    console.log('  max_tokens:', request.max_tokens);
+    
+    // 프록시 서버 또는 직접 API 호출 사용
+    console.log('  3️⃣ callOpenAIAPI 호출 시작...');
+    const response = await callOpenAIAPI(request);
+    console.log('  ✅ API 응답 수신 (status:', response.status, ')');
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ [이미지→텍스트] API 호출 실패');
+      console.error('  Status:', response.status);
+      console.error('  에러 내용:', errorText);
+      throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
+    }
+
+    console.log('  4️⃣ 응답 JSON 파싱 중...');
+    const data = await response.json();
+    const extractedText = data.choices[0].message.content.trim();
+    
+    console.log('  ✅ 텍스트 추출 완료');
+    console.log('  추출된 텍스트 길이:', extractedText.length);
+    console.log('  추출된 텍스트 미리보기:', extractedText.substring(0, 100) + '...');
+    console.log('✅ [이미지→텍스트] 전체 프로세스 완료');
+    
+    return extractedText;
+  } catch (error: any) {
+    console.error('❌ [이미지→텍스트] 치명적 에러 발생');
+    console.error('  에러 타입:', error.constructor.name);
+    console.error('  에러 메시지:', error.message);
+    console.error('  전체 에러:', error);
+    throw error;
   }
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(request)
-  });
-
-  if (!response.ok) {
-    throw new Error(`API 호출 실패: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0].message.content.trim();
 };

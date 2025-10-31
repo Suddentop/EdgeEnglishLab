@@ -89,6 +89,14 @@
     border: none;
     background: none;
   }
+  .print-header-divider {
+    width: 100%;
+    height: 2px;
+    background: #333;
+    margin: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  
   .print-header + * {
     margin-top: 0;
   }
@@ -147,6 +155,7 @@
   /* 유형#01 전용 인쇄 헤더 스타일 */
   .print-header-work01 {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
@@ -162,6 +171,7 @@
     font-weight: 600;
     color: #000;
     font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
+    margin-bottom: 0.5rem;
   }
   
   /* 유형#01 인쇄 페이지 전용 스타일 - !important로 전역 스타일 오버라이드 */
@@ -211,7 +221,41 @@
   }
   
   .only-print .shuffled-paragraph {
-    font-size: 1rem !important;
+    font-size: 0.9rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.1rem !important;
+  }
+  
+  /* 강제 오버라이드 - 인라인 스타일보다 높은 우선순위 */
+  .only-print .shuffled-paragraph[style] {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.1rem !important;
+  }
+  
+  /* 최고 우선순위 오버라이드 - 모든 인라인 스타일 강제 덮어쓰기 */
+  .only-print .shuffled-paragraph[style*="padding"],
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .shuffled-paragraph[style*="font-size"] {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.1rem !important;
+  }
+  
+  /* 절대 최고 우선순위 - 모든 shuffled-paragraph 강제 적용 */
+  .only-print .shuffled-paragraph,
+  .only-print .shuffled-paragraph *,
+  .only-print .shuffled-paragraph[style],
+  .only-print .shuffled-paragraph[style*="padding"],
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .shuffled-paragraph[style*="font-size"] {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.1rem !important;
   }
   
   .only-print .option {
@@ -354,7 +398,43 @@
   .only-print .shuffled-paragraph {
     page-break-inside: avoid !important;
     page-break-after: auto !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* 강제 오버라이드 - 페이지 분할 설정 */
+  .only-print .shuffled-paragraph[style] {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* 최고 우선순위 오버라이드 - 페이지 분할 설정 */
+  .only-print .shuffled-paragraph[style*="padding"],
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .shuffled-paragraph[style*="font-size"] {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* 절대 최고 우선순위 - 페이지 분할 설정 */
+  .only-print .shuffled-paragraph,
+  .only-print .shuffled-paragraph *,
+  .only-print .shuffled-paragraph[style],
+  .only-print .shuffled-paragraph[style*="padding"],
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .shuffled-paragraph[style*="font-size"] {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
   }
   
   .only-print .option {
@@ -364,8 +444,8 @@
   
   /* 다중 페이지 구성을 위한 페이지 브레이크 */
   .only-print .a4-page-template:not(:last-child) {
-    page-break-after: always;
-    break-after: page;
+    page-break-after: auto; /* always에서 auto로 변경 */
+    break-after: auto;
   }
   
   .only-print .a4-page-template:last-child {
@@ -382,8 +462,8 @@
   }
   
   .only-print .work11-page-template:not(:last-child) {
-    page-break-after: always;
-    break-after: page;
+    page-break-after: auto; /* always에서 auto로 변경 */
+    break-after: auto;
   }
   
   .only-print .work11-page-template:last-child {

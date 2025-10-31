@@ -1721,7 +1721,7 @@ Korean translation:`;
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'block', width:'100%', marginTop:'1.5rem'}}>
                       본문 해석
                     </div>
-                    <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                    <div className="problem-passage translation korean-translation" style={{marginTop:'0.63rem', fontSize:'0.5rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                       {quiz.translation || '번역을 생성하는 중...'}
                     </div>
                   </div>

@@ -1,5 +1,59 @@
 /* 패키지#03 인쇄 전용 스타일 - 가로 A4 */
 
+/* 빈칸 스타일 */
+.print-blank {
+  background-color: #f0f0f0;
+  border-bottom: 2px solid #333;
+  padding: 2px 4px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Work_13, 14 빈칸 안 정답 표시 (정답 모드) */
+.print-blank-filled-answer {
+  font-size: 9pt;
+  color: #1565c0 !important; /* 진한 파란색 */
+  font-weight: 700 !important; /* 진하게 */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+/* 강제 적용을 위한 추가 선택자 */
+.print-answer-mode .print-blank-filled-answer {
+  font-size: 9pt !important;
+  color: #1565c0 !important; /* 진한 파란색 */
+  font-weight: 700 !important; /* 진하게 */
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+.print-container-answer .print-blank-filled-answer {
+  font-size: 9pt !important;
+  color: #1565c0 !important; /* 진한 파란색 */
+  font-weight: 700 !important; /* 진하게 */
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* 한글해석 스타일 */
+.print-translation-section {
+  margin-top: 0.3cm;
+  padding: 0.2cm;
+  border-top: 1px solid #ddd;
+}
+
+.print-translation-title {
+  font-size: 8pt;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.1cm;
+}
+
+.print-translation-content {
+  font-size: 8pt;
+  color: #1976d2;
+  line-height: 1.4;
+  text-align: left;
+}
+
 @media screen {
   .print-container {
     display: none !important;

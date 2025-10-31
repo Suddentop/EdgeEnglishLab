@@ -111,11 +111,12 @@ const PointManagement: React.FC = () => {
       const { getWorkTypePoints } = await import('../../services/pointService');
       const points = await getWorkTypePoints();
       
-      // 유형#11, 유형#12, 유형#13이 누락된 경우 추가
+      // 유형#11, 유형#12, 유형#13, 유형#15가 누락된 경우 추가
       let updatedPoints = [...points];
       const hasType11 = updatedPoints.some(wt => wt.id === '11');
       const hasType12 = updatedPoints.some(wt => wt.id === '12');
       const hasType13 = updatedPoints.some(wt => wt.id === '13');
+      const hasType15 = updatedPoints.some(wt => wt.id === '15');
       
       if (!hasType11) {
         console.log('유형#11이 누락되어 자동으로 추가합니다.');
@@ -152,9 +153,21 @@ const PointManagement: React.FC = () => {
       } else {
         console.log('유형#13이 이미 존재합니다:', updatedPoints.find(wt => wt.id === '13'));
       }
+
+      if (!hasType15) {
+        console.log('유형#15가 누락되어 자동으로 추가합니다.');
+        updatedPoints.push({
+          id: '15',
+          name: '유형#15',
+          points: 18,
+          description: '본문 해석 및 추출'
+        });
+      } else {
+        console.log('유형#15가 이미 존재합니다:', updatedPoints.find(wt => wt.id === '15'));
+      }
       
       // Firebase에 업데이트된 데이터 저장 (유형#11, 유형#12, 유형#13 추가 또는 유형#07 설명 업데이트)
-      const needsUpdate = !hasType11 || !hasType12 || !hasType13 || 
+      const needsUpdate = !hasType11 || !hasType12 || !hasType13 || !hasType15 || 
         updatedPoints.find(wt => wt.id === '7')?.description !== '주제 추론 문제 생성';
       
       if (needsUpdate) {

@@ -79,6 +79,7 @@ export interface Paragraph {
   label: string;
   content: string;
   originalOrder?: number; // 원본 순서 추적
+  translation?: string; // 단락별 한글 번역
 }
 
 // 퀴즈 관련 타입

@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Package_01_MultiQuizGenerater.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
@@ -496,6 +497,7 @@ type PrintMode = 'none' | 'no-answer' | 'with-answer';
 
 const Package_01_MultiQuizGenerater: React.FC = () => {
   const { userData, loading } = useAuth();
+  const navigate = useNavigate();
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [inputText, setInputText] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -522,9 +524,22 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
   
   // 선택된 문제 유형 관리
   const [selectedWorkTypes, setSelectedWorkTypes] = useState<{[key: string]: boolean}>(() => {
+    // localStorage에서 이전 선택 상태 복원
+    const savedSelections = localStorage.getItem('package01_selectedWorkTypes');
+    if (savedSelections) {
+      try {
+        const parsed = JSON.parse(savedSelections);
+        // 저장된 선택 상태가 있으면 사용, 없으면 기본값 사용
+        return parsed;
+      } catch (error) {
+        console.error('저장된 선택 상태 파싱 오류:', error);
+      }
+    }
+    
+    // 기본값: 모든 유형 선택
     const initial: {[key: string]: boolean} = {};
     WORK_TYPES.forEach(type => {
-      initial[type.id] = true; // 기본적으로 모든 유형 선택
+      initial[type.id] = true;
     });
     return initial;
   });
@@ -545,6 +560,11 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
       return total + workTypePoint;
     }, 0);
   };
+
+  // 선택 상태를 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('package01_selectedWorkTypes', JSON.stringify(selectedWorkTypes));
+  }, [selectedWorkTypes]);
 
   // 포인트 정보 로드
   useEffect(() => {
@@ -584,10 +604,37 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
   };
 
   // 이미지 파일 선택 핸들러
-  const handleImageFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
+      // OCR → textarea에 자동 입력
+      setIsExtractingText(true);
+      try {
+        const ocrText = await imageToTextWithOpenAIVision(file);
+        console.log('📝 추출된 텍스트 길이:', ocrText.length);
+        
+        if (ocrText && ocrText.trim().length > 0) {
+          setInputText(ocrText);
+          // 이미지 파일 업로드 후에도 텍스트 모드로 전환
+          setInputMode('text');
+          setTimeout(() => {
+            if (textAreaRef.current) {
+              textAreaRef.current.style.height = 'auto';
+              textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+              textAreaRef.current.focus();
+            }
+          }, 100);
+        } else {
+          console.warn('⚠️ 추출된 텍스트가 비어있음');
+          alert('이미지에서 텍스트를 추출할 수 없습니다. 다른 이미지를 시도해주세요.');
+        }
+      } catch (err) {
+        console.error('❌ 이미지 텍스트 추출 실패:', err);
+        alert(`OCR 처리 중 오류가 발생했습니다: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setIsExtractingText(false);
+      }
     }
   };
 
@@ -2804,19 +2851,23 @@ ${inputText}`;
 
 
 
-  // 새 문제 만들기 (화면 초기화)
+  // 새 문제 만들기 (화면 초기화, 선택 상태는 유지)
   const handleNewProblem = () => {
     setShowQuizDisplay(false);
     setPackageQuiz(null);
     setTranslatedText('');
     setInputText('');
-    // 모든 유형을 false로 설정하여 "전체 해제" 상태로 만들기
+    // 선택 상태는 유지하고 화면만 초기화
+    setPrintMode('none');
+  };
+
+  // 선택 상태 완전 초기화 (모든 유형 해제)
+  const handleResetSelections = () => {
     const allWorkTypesFalse = WORK_TYPES.reduce((acc, type) => {
       acc[type.id] = false;
       return acc;
     }, {} as Record<string, boolean>);
     setSelectedWorkTypes(allWorkTypesFalse);
-    setPrintMode('none');
   };
 
   // 본문에서 교체된 단어에 밑줄 표시 - Work_02와 동일한 함수
@@ -3072,77 +3123,104 @@ ${inputText}`;
       <React.Fragment>
         <div className="quiz-display no-print">
           <div className="quiz-header">
-            <h2 className="no-print">📦 패키지 퀴즈 #01 (여러 유형 생성)</h2>
-            <div className="quiz-header-buttons no-print">
-              <button 
-                type="button" 
-                className="new-problem-btn"
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', width: '100%' }}>
+              <div style={{ flex: '1' }}>
+                <h2 style={{
+                  fontFamily: "'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif",
+                  fontSize: '2rem',
+                  fontWeight: '800',
+                  color: '#000000',
+                  margin: '0',
+                  letterSpacing: '-1px'
+                }}>📦 패키지 퀴즈 #01 (여러 유형 생성)</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', flexShrink: 0 }}>
+              <button
+                type="button"
                 onClick={handleNewProblem}
                 style={{
-                  width: '160px',
+                  width: '120px',
                   height: '48px',
                   padding: '0.75rem 1rem',
-                  fontSize: '1rem',
+                  fontSize: '11pt',
                   fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   border: 'none',
                   borderRadius: '8px',
-                  transition: 'all 0.3s ease'
+                  background: '#e2e8f0',
+                  color: '#475569',
+                  cursor: 'pointer'
                 }}
               >
-                새 문제 만들기
+                새문제
               </button>
               
-              <button 
-                type="button" 
-                className="print-problem-btn"
+              <button
+                type="button"
+                onClick={() => navigate('/quiz-list')}
+                style={{
+                  width: '130px',
+                  height: '48px',
+                  padding: '0.75rem 1rem',
+                  fontSize: '11pt',
+                  fontWeight: '600',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: '#14b8a6',
+                  color: 'white',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px rgba(20, 184, 166, 0.25)'
+                }}
+              >
+                문제생성목록
+              </button>
+              
+              <button
+                type="button"
                 onClick={handlePrintProblem}
                 style={{
-                  width: '160px',
+                  width: '130px',
                   height: '48px',
                   padding: '0.75rem 1rem',
-                  fontSize: '1rem',
+                  fontSize: '11pt',
                   fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   border: 'none',
                   borderRadius: '8px',
-                  transition: 'all 0.3s ease',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: 'white',
-                  boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)'
-                }}
-              >
-                <span className="print-icon" aria-hidden>🖨️</span>
-                <span>인쇄 (문제)</span>
-              </button>
-              <button 
-                type="button" 
-                className="print-answer-btn"
-                onClick={handlePrintAnswer}
-                style={{
-                  width: '160px',
-                  height: '48px',
-                  padding: '0.75rem 1rem',
-                  fontSize: '1rem',
-                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: 'none',
-                  borderRadius: '8px',
-                  transition: 'all 0.3s ease',
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  color: 'white',
-                  boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
+                  gap: '0.5rem'
                 }}
               >
-                <span className="print-icon" aria-hidden>🖨️</span>
-                <span>인쇄 (정답)</span>
+                🖨️ 인쇄 (문제)
               </button>
+              <button
+                type="button"
+                onClick={handlePrintAnswer}
+                style={{
+                  width: '130px',
+                  height: '48px',
+                  padding: '0.75rem 1rem',
+                  fontSize: '11pt',
+                  fontWeight: '600',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                  color: 'white',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                🖨️ 인쇄 (정답)
+              </button>
+              </div>
             </div>
           </div>
 
@@ -4602,7 +4680,7 @@ ${inputText}`;
                   <PrintFormatPackage01
                     key={`print-work-01-${index}`}
                     quiz={quizItem.quiz}
-                    translatedText={quizItem.quiz.translation || translatedText || ''}
+                    translatedText={quizItem.translatedText || quizItem.quiz.translation || ''}
                     printMode={printMode}
                   />
                 );

@@ -625,12 +625,12 @@
 }
 
 .shuffled-paragraph {
-  margin-bottom: 0.5rem;
-  padding: 0.8rem;
+  margin-bottom: 0.3rem;
+  padding: 0 1rem;
   background: #ffffff;
   border-radius: 6px;
   border: 1px solid #e9ecef;
-  line-height: 1.5;
+  line-height: 1;
   color: #333;
 }
 

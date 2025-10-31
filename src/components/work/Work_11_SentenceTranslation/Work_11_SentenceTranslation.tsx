@@ -371,15 +371,28 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
   }, [quizData]);
 
   // 이미지 파일 선택 처리
-  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      setImagePreview(URL.createObjectURL(file));
+      // OCR → textarea에 자동 입력
+      setIsExtractingText(true);
+      try {
+        const extractedText = await extractTextFromImage(file);
+        setInputText(extractedText);
+        setTimeout(() => {
+          if (textAreaRef.current) {
+            textAreaRef.current.style.height = 'auto';
+            textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+          }
+        }, 0);
+      } catch (err) {
+        console.error('OCR 처리 중 오류가 발생했습니다:', err);
+        setError('OCR 처리 중 오류가 발생했습니다.');
+      } finally {
+        setIsExtractingText(false);
+      }
     }
   };
 

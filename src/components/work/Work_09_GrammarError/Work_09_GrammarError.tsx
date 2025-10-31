@@ -1085,7 +1085,7 @@ ${passage}`;
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="problem-passage translation" style={{fontSize:'0.8rem !important', lineHeight:1.7, margin:'0.1rem 0', background:'#f1f8e9', borderRadius:'8px', padding:'2rem 1rem', fontFamily:'inherit', color:'#222'}}>
+                      <div className="problem-passage translation korean-translation" style={{fontSize:'0.5rem !important', lineHeight:1.7, margin:'0.1rem 0', background:'#f1f8e9', borderRadius:'8px', padding:'2rem 1rem', fontFamily:'inherit', color:'#222'}}>
                         {quiz.translation || '본문 해석이 생성되지 않았습니다.'}
                       </div>
                     </>

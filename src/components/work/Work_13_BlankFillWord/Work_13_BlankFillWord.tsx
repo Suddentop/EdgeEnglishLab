@@ -678,7 +678,7 @@ const Work_13_BlankFillWord: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         본문 해석
                       </div>
-                      <div className="work13-print-translation" style={{fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', marginTop:'0'}}>
+                      <div className="work13-print-translation korean-translation" style={{fontSize:'0.5rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', marginTop:'0'}}>
                         {quiz.translation}
                       </div>
                     </div>

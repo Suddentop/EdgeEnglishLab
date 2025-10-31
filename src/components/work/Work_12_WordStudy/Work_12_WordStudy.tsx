@@ -3,6 +3,7 @@ import './Work_12_WordStudy.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import { 
   PrintHeaderWork12, 
@@ -120,6 +121,7 @@ const Work_12_WordStudy: React.FC = () => {
       setImagePreview(URL.createObjectURL(file));
       // 이미지에서 단어 추출
       setIsLoading(true);
+      setIsExtractingText(true);
       try {
         const words = await extractWordsFromImage(file);
         setExtractedWords(words);
@@ -136,6 +138,7 @@ const Work_12_WordStudy: React.FC = () => {
         alert('단어 추출 중 오류가 발생했습니다.');
       } finally {
         setIsExtractingText(false);
+        setIsLoading(false);
       }
     }
   };
@@ -151,6 +154,7 @@ const Work_12_WordStudy: React.FC = () => {
           setImageFile(file);
           setImagePreview(URL.createObjectURL(file));
           setIsLoading(true);
+          setIsExtractingText(true);
           try {
             const words = await extractWordsFromImage(file);
             setExtractedWords(words);
@@ -166,8 +170,9 @@ const Work_12_WordStudy: React.FC = () => {
           } catch (err) {
             alert('단어 추출 중 오류가 발생했습니다.');
           } finally {
-        setIsExtractingText(false);
-      }
+            setIsExtractingText(false);
+            setIsLoading(false);
+          }
         }
         e.preventDefault();
         return;
@@ -792,6 +797,27 @@ ${englishWords.join(', ')}
       const quizData = await generateWordQuiz(words, quizType);
       console.log('생성된 단어 퀴즈:', quizData);
       setQuiz(quizData);
+
+      // 문제 생성 내역 저장 (유형#12)
+      if (userData?.uid && workTypePoints.length > 0) {
+        try {
+          const workTypePoint = workTypePoints.find(wt => wt.id === '12');
+          await saveQuizWithPDF({
+            userId: userData.uid,
+            userName: userData.name || '사용자',
+            userNickname: userData.nickname || '사용자',
+            workTypeId: '12',
+            workTypeName: '단어 학습 문제',
+            points: workTypePoint?.points || 0,
+            inputText: inputText,
+            quizData: quizData,
+            status: 'success'
+          });
+          console.log('✅ Work_12 내역 저장 완료');
+        } catch (historyError) {
+          console.error('❌ Work_12 내역 저장 실패:', historyError);
+        }
+      }
       
     } catch (err: any) {
       console.error('단어 문제 생성 오류:', err);

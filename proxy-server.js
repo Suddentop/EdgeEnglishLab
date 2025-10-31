@@ -61,8 +61,8 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // api-proxy.php 경로 확인
-  if (!req.url.includes('api-proxy.php') && req.url !== '/') {
+  // api-proxy.php 또는 analyze-problem-image.php 경로 확인
+  if (!req.url.includes('api-proxy.php') && !req.url.includes('analyze-problem-image.php') && req.url !== '/') {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not found' }));
     return;
@@ -78,9 +78,121 @@ const server = http.createServer((req, res) => {
     try {
       const requestData = JSON.parse(body);
       
+      // analyze-problem-image.php 요청인 경우 특별 처리
+      if (req.url.includes('analyze-problem-image.php')) {
+        console.log(`🖼️ 이미지 분석 요청 처리 중...`);
+        console.log(`📋 요청 데이터:`, JSON.stringify(requestData, null, 2));
+        
+        // 요청 데이터 검증
+        if (!requestData.image) {
+          console.error('❌ 이미지 데이터가 없습니다.');
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            success: false,
+            error: 'Missing image data',
+            message: '이미지 데이터가 필요합니다.' 
+          }));
+          return;
+        }
+        
+        // OpenAI Vision API 호출
+        const options = {
+          hostname: 'api.openai.com',
+          port: 443,
+          path: '/v1/chat/completions',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_API_KEY}`
+          }
+        };
+        
+        // 이미지 분석을 위한 프롬프트 생성
+        const prompt = `이 이미지는 영어 문제가 포함된 이미지입니다. 다음을 수행해주세요:
+
+1. 이미지에서 모든 영어 텍스트를 정확히 추출하세요.
+2. 추출된 텍스트를 자연스럽고 완벽한 영어 본문으로 정리하세요.
+3. 그 본문의 정확한 한글 해석을 제공하세요.
+
+${requestData.extractedText ? `추가 정보: OCR로 추출된 텍스트가 있습니다:\n${requestData.extractedText}\n\n이 텍스트를 참고하여 더 정확한 본문으로 정리해주세요.` : ''}
+
+응답은 다음 JSON 형식으로 해주세요:
+{
+  "englishText": "정리된 완벽한 영어 본문",
+  "koreanTranslation": "정확한 한글 해석",
+  "problemType": "영어 문제",
+  "answers": [],
+  "analysis": "영어 본문 추출 및 한글 해석 제공"
+}`;
+
+        const visionRequestData = {
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt },
+                { type: 'image_url', image_url: { url: requestData.image } }
+              ]
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.2,
+          response_format: { type: 'json_object' }
+        };
+        
+        const proxyReq = https.request(options, (proxyRes) => {
+          let responseData = '';
+          
+          proxyRes.on('data', chunk => {
+            responseData += chunk;
+          });
+          
+          proxyRes.on('end', () => {
+            console.log(`✅ 이미지 분석 완료 (상태: ${proxyRes.statusCode})`);
+            
+            try {
+              const parsedResponse = JSON.parse(responseData);
+              const analysisResult = JSON.parse(parsedResponse.choices[0].message.content);
+              
+              res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+              });
+              res.end(JSON.stringify({
+                success: true,
+                data: analysisResult
+              }));
+            } catch (parseError) {
+              console.error('❌ 응답 파싱 오류:', parseError.message);
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                success: false,
+                error: 'Response parsing failed',
+                message: parseError.message 
+              }));
+            }
+          });
+        });
+        
+        proxyReq.on('error', (error) => {
+          console.error('❌ 이미지 분석 API 호출 오류:', error.message);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            success: false,
+            error: 'Image analysis API error',
+            message: error.message 
+          }));
+        });
+        
+        proxyReq.write(JSON.stringify(visionRequestData));
+        proxyReq.end();
+        return;
+      }
+      
       console.log(`🤖 OpenAI API 요청 전달 중... (모델: ${requestData.model || 'N/A'})`);
       
-      // OpenAI API 호출
+      // 일반 OpenAI API 호출
       const options = {
         hostname: 'api.openai.com',
         port: 443,

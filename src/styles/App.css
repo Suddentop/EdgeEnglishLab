@@ -1247,7 +1247,7 @@ textarea#text-input:focus {
   }
   .print-page-no-answer {
     display: block !important;
-    page-break-after: always;
+    page-break-after: auto; /* always에서 auto로 변경 */
   }
   .print-page-no-answer .print-answer-section {
     display: none !important;

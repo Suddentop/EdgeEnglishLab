@@ -1,4 +1,4 @@
-# Logs
+ 영어단락 + 한글해석# Logs
 logs
 *.log
 npm-debug.log*
@@ -68,12 +68,18 @@ node_modules/
 # dotenv environment variables file
 .env
 .env.local
+.envlocal
+.env.local.dev
 .env.development.local
 .env.test.local
 .env.production.local
 
 # PHP 환경 변수
 php_api_proxy/.env
+php_api_proxy/.env.local
+php_api_proxy/.envlocal
+php_api_proxy/.env.local.dev
+php_api_proxy/.env.production.local
 
 # API Keys and Secrets (추가 보안)
 *.key

@@ -1010,7 +1010,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                       <div className="problem-instruction-copy" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', border:'2px solid #333', marginTop:'1.2rem', marginBottom:'1.2rem', display:'flex', justifyContent:'flex-start', alignItems:'center', width:'100%', boxSizing:'border-box', marginLeft:'0', marginRight:'0'}}>
                         <span>본문 해석</span>
                       </div>
-                      <div className="work05-print-answer-translation" style={{fontSize:'1rem', lineHeight:'1.7', padding:'0.5rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'1.2rem'}}>
+                      <div className="work05-print-answer-translation korean-translation" style={{fontSize:'0.5rem !important', lineHeight:'1.7', padding:'0.5rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'1.2rem'}}>
                         {pageLayoutInfo.page1Content === 'C-part1' ? 
                           quiz.translation.substring(0, Math.floor(quiz.translation.length / 2)) : 
                           quiz.translation

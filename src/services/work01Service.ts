@@ -153,6 +153,42 @@ ${text}`;
   }
 }
 
+// 단락별 한글 번역 생성 함수
+async function translateParagraph(paragraphContent: string): Promise<string> {
+  try {
+    const prompt = `다음 영어 단락을 정확하고 자연스러운 한국어로 번역해주세요. 문맥과 의미를 정확히 전달하도록 번역해주세요.
+
+영어 단락:
+${paragraphContent}
+
+번역 시 주의사항:
+- 원문의 의미를 정확히 전달
+- 자연스러운 한국어 표현 사용
+- 전문 용어는 적절히 번역
+- 번역문만 출력 (추가 설명 없이)`;
+
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
+      temperature: 0.3
+    });
+
+    if (!response.ok) {
+      throw new Error(`API 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const translation = data.choices[0].message.content.trim();
+    
+    console.log('✅ 단락 번역 완료');
+    return translation;
+  } catch (error) {
+    console.error('❌ 단락 번역 오류:', error);
+    return '번역을 생성할 수 없습니다.';
+  }
+}
+
 /**
  * Work_01: 문단 순서 맞추기 문제 생성
  * @param text - 영어 본문
@@ -241,33 +277,57 @@ export async function generateWork01Quiz(text: string, useAI: boolean = false): 
     const labels = ['A', 'B', 'C', 'D'];
     const labeledShuffled = shuffledParagraphs.map((p, i) => ({ ...p, label: labels[i] }));
     
+    // 2-1. 각 단락별 한글 번역 생성
+    console.log('🌐 각 단락별 번역 생성 시작...');
+    const translatedParagraphs = await Promise.all(
+      labeledShuffled.map(async (paragraph) => {
+        const translation = await translateParagraph(paragraph.content);
+        return { ...paragraph, translation };
+      })
+    );
+    console.log('✅ 모든 단락 번역 완료');
+    
     // 3. 원본 순서대로 라벨링된 단락 (정답 확인용)
     // 섞인 순서에서 각 단락의 원본 순서를 찾아서 정답 순서 생성
     const correctOrder = [];
     for (let i = 0; i < 4; i++) {
       // 원본 순서 i에 해당하는 단락을 섞인 순서에서 찾기
-      const foundParagraph = labeledShuffled.find(p => p.originalOrder === i);
+      const foundParagraph = translatedParagraphs.find(p => p.originalOrder === i);
       if (foundParagraph) {
         correctOrder.push(foundParagraph.label);
       }
     }
     
     console.log('🎯 정답 순서 생성:');
-    console.log('- 섞인 순서 (라벨):', labeledShuffled.map(p => p.label));
+    console.log('- 섞인 순서 (라벨):', translatedParagraphs.map(p => p.label));
     console.log('- 원본 순서 (라벨):', correctOrder);
     
     // 4. 4지선다 선택지 생성 (그 중 하나는 원본문 순서와 동일)
     const allPerms = getAllPermutations(['A', 'B', 'C', 'D']);
     const { choices, answerIndex } = generateChoices(correctOrder, allPerms);
 
+    // 5. 전체 본문 번역 생성 (기존 호환성을 위해)
+    console.log('🌐 전체 본문 번역 생성 시작...');
+    const fullTranslation = await translateParagraph(text);
+    console.log('✅ 전체 본문 번역 완료');
+    
+    // 6. 정답 순서대로 번역을 \n\n으로 구분된 문자열로 생성 (Work_01과 동일한 방식)
+    const correctOrderTranslations = correctOrder.map(paragraphLabel => {
+      const paragraph = translatedParagraphs.find(p => p.label === paragraphLabel);
+      return paragraph?.translation || '';
+    });
+    const paragraphTranslations = correctOrderTranslations.join('\n\n');
+    console.log('✅ 정답 순서대로 단락별 번역 문자열 생성 완료');
+
     const result: Quiz = {
       id: `quiz-${Date.now()}`, // 고유 ID 생성
       originalText: text,
-      paragraphs: labeledShuffled, // 섞인 순서대로 라벨링된 단락들
-      shuffledParagraphs: labeledShuffled, // 섞인 순서대로 라벨링된 단락들
+      paragraphs: translatedParagraphs, // 섞인 순서대로 라벨링되고 번역된 단락들
+      shuffledParagraphs: translatedParagraphs, // 섞인 순서대로 라벨링되고 번역된 단락들
       correctOrder, // 원본 순서대로 라벨링된 순서 (정답)
       choices, // 4지선다 선택지들
       answerIndex, // 정답 인덱스
+      translation: paragraphTranslations, // 단락별 번역을 \n\n으로 구분된 문자열 (Work_01과 동일한 방식)
     };
 
     console.log('✅ Work_01 문제 생성 완료:', result);

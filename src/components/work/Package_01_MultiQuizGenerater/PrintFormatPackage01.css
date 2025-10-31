@@ -153,7 +153,9 @@
     background: #fff;
     padding: 0.3rem 0;
     margin: 0;
+    margin-bottom: 0;
     box-sizing: border-box;
+    border: none;
     border-bottom: none;
   }
   
@@ -167,7 +169,9 @@
       background: #fff;
       padding: 0.3rem 0;
       margin: 0;
+      margin-bottom: 0;
       box-sizing: border-box;
+      border: none;
       border-bottom: none;
     }
   }
@@ -238,6 +242,57 @@
   
   .only-print .shuffled-paragraph {
     font-size: 1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
+  }
+
+  .only-print .print-passage-container {
+    font-size: 1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
+  }
+  
+  /* 강제 오버라이드 - 인라인 스타일보다 높은 우선순위 */
+  .only-print .shuffled-paragraph[style],
+  .only-print .print-passage-container[style] {
+    font-size: 1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
+  }
+  
+  /* 최고 우선순위 오버라이드 - 모든 인라인 스타일 강제 덮어쓰기 */
+  .only-print .shuffled-paragraph[style*="padding"],
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .shuffled-paragraph[style*="font-size"],
+  .only-print .print-passage-container[style*="padding"],
+  .only-print .print-passage-container[style*="line-height"],
+  .only-print .print-passage-container[style*="font-size"] {
+    font-size: 1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
+  }
+  
+  /* 절대 최고 우선순위 - 모든 컨테이너 강제 적용 */
+  .only-print .shuffled-paragraph,
+  .only-print .shuffled-paragraph *,
+  .only-print .shuffled-paragraph[style],
+  .only-print .shuffled-paragraph[style*="padding"],
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .shuffled-paragraph[style*="font-size"],
+  .only-print .print-passage-container,
+  .only-print .print-passage-container *,
+  .only-print .print-passage-container[style],
+  .only-print .print-passage-container[style*="padding"],
+  .only-print .print-passage-container[style*="line-height"],
+  .only-print .print-passage-container[style*="font-size"] {
+    font-size: 1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
   }
   
   .only-print .option {
@@ -274,6 +329,100 @@
     font-size: 1rem !important;
   }
   
+  /* 한글 해석 부분은 작은 글씨로 설정 */
+  .only-print .korean-translation {
+    font-size: 0.5rem !important;
+  }
+
+  /* Work_11 유형#11 줄간격 최적화 */
+  .work-11-print .work11-print-answer-sentence,
+  .work-11-print .work11-print-problem-sentence {
+    line-height: 1.2 !important;
+    margin-bottom: 0.3rem !important;
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  .work-11-print .work11-print-answer-sentence div,
+  .work-11-print .work11-print-problem-sentence div {
+    line-height: 1.2 !important;
+    margin-bottom: 0.1rem !important;
+  }
+
+  .work-11-print .work11-print-answer-sentence div:last-child,
+  .work-11-print .work11-print-problem-sentence div:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  /* 모든 유형의 영어본문과 한글해석 줄간격 최적화 - 50% 증가 */
+  .only-print .problem-passage,
+  .only-print .shuffled-paragraph,
+  .only-print .print-passage-container,
+  .only-print .translation-container,
+  .only-print .korean-translation,
+  .only-print .english-passage,
+  .only-print .passage-text,
+  .only-print .blanked-text,
+  .only-print .modified-text,
+  .only-print .missing-sentence,
+  .only-print .numbered-passage,
+  .only-print .main-idea-passage,
+  .only-print .title-passage,
+  .only-print .grammar-passage,
+  .only-print .multi-grammar-passage {
+    line-height: 1.5 !important;
+  }
+
+  .only-print .problem-passage *,
+  .only-print .shuffled-paragraph *,
+  .only-print .print-passage-container *,
+  .only-print .translation-container *,
+  .only-print .korean-translation *,
+  .only-print .english-passage *,
+  .only-print .passage-text *,
+  .only-print .blanked-text *,
+  .only-print .modified-text *,
+  .only-print .missing-sentence *,
+  .only-print .numbered-passage *,
+  .only-print .main-idea-passage *,
+  .only-print .title-passage *,
+  .only-print .grammar-passage *,
+  .only-print .multi-grammar-passage * {
+    line-height: 1.5 !important;
+  }
+
+  /* 유형별 특정 스타일 최적화 */
+  .only-print .option-english,
+  .only-print .option-translation,
+  .only-print .print-option,
+  .only-print .print-option-label,
+  .only-print .print-answer-mark,
+  .only-print .print-blank,
+  .only-print .print-word-highlight {
+    line-height: 1 !important;
+  }
+
+  /* 한글해석 전용 스타일 */
+  .only-print .translation-section,
+  .only-print .translation-title,
+  .only-print .translation-content,
+  .only-print .print-translation-section,
+  .only-print .print-translation-title,
+  .only-print .print-translation-content {
+    line-height: 1 !important;
+  }
+
+  /* 인라인 스타일 오버라이드 - 모든 유형의 줄간격 통일 - 50% 증가 */
+  .only-print [style*="line-height"] {
+    line-height: 1.5 !important;
+  }
+
+  /* 특정 유형별 인라인 스타일 오버라이드 - 50% 증가 */
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .problem-passage[style*="line-height"],
+  .only-print .korean-translation[style*="line-height"] {
+    line-height: 1.5 !important;
+  }
+  
   .only-print .a4-page-template,
   .only-print .a4-page-template * {
     font-size: 1rem !important;
@@ -287,12 +436,13 @@
   /* 번역 내용 스타일 */
   .only-print .translation-content {
     font-size: 1rem !important;
+    line-height: 1.4 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 1rem !important;
     padding-right: 1rem !important;
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.3rem !important;
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.1rem !important;
   }
   
   /* A4 페이지 템플릿 스타일 */
@@ -326,6 +476,7 @@
     flex-shrink: 0;
     padding: 0.5cm var(--print-margin-horizontal, 0.3cm) 0 var(--print-margin-horizontal, 0.3cm);
     box-sizing: border-box;
+    border-bottom: none;
   }
   
   .a4-page-content {
@@ -356,7 +507,43 @@
   .only-print .shuffled-paragraph {
     page-break-inside: avoid !important;
     page-break-after: auto !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* 강제 오버라이드 - 페이지 분할 설정 */
+  .only-print .shuffled-paragraph[style] {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* 최고 우선순위 오버라이드 - 페이지 분할 설정 */
+  .only-print .shuffled-paragraph[style*="padding"],
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .shuffled-paragraph[style*="font-size"] {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* 절대 최고 우선순위 - 페이지 분할 설정 */
+  .only-print .shuffled-paragraph,
+  .only-print .shuffled-paragraph *,
+  .only-print .shuffled-paragraph[style],
+  .only-print .shuffled-paragraph[style*="padding"],
+  .only-print .shuffled-paragraph[style*="line-height"],
+  .only-print .shuffled-paragraph[style*="font-size"] {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    margin-bottom: 0.1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.4 !important;
   }
   
   .only-print .option {
@@ -557,10 +744,10 @@
      .replacements-table td {
        border: 1px solid #000;
        padding: 0.2rem 0.3rem;
-       text-align: left;
-       vertical-align: top;
-       line-height: 1.3 !important;
-       width: 25%;
+        text-align: left;
+        vertical-align: top;
+        line-height: 1.4 !important;
+        width: 25%;
      }
 
      .replacements-table th {
@@ -623,6 +810,338 @@
   
   .only-print.work-10-print .a4-page-header {
     display: block !important;
+  }
+
+  /* 모든 유형 통일: 영어본문 컨테이너 스타일 표준화 */
+  .only-print.work-02-print .shuffled-paragraph,
+  .only-print.work-03-print .shuffled-paragraph,
+  .only-print.work-04-print .shuffled-paragraph,
+  .only-print.work-05-print .shuffled-paragraph,
+  .only-print.work-06-print .shuffled-paragraph,
+  .only-print.work-07-print .shuffled-paragraph,
+  .only-print.work-08-print .shuffled-paragraph,
+  .only-print.work-09-print .shuffled-paragraph,
+  .only-print.work-10-print .shuffled-paragraph,
+  .only-print.work-13-print .shuffled-paragraph,
+  .only-print.work-14-print .shuffled-paragraph,
+  .only-print.work-02-print .print-passage-container,
+  .only-print.work-03-print .print-passage-container,
+  .only-print.work-04-print .print-passage-container,
+  .only-print.work-05-print .print-passage-container,
+  .only-print.work-06-print .print-passage-container,
+  .only-print.work-07-print .print-passage-container,
+  .only-print.work-08-print .print-passage-container,
+  .only-print.work-09-print .print-passage-container,
+  .only-print.work-10-print .print-passage-container,
+  .only-print.work-13-print .print-passage-container,
+  .only-print.work-14-print .print-passage-container {
+    font-size: 1rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
+  }
+
+  /* 유형#06 전용: 영어본문 글씨크기 강제 적용 */
+  .only-print.work-06-print div[style*="fontSize:'0.2rem'"],
+  .only-print.work-06-print div[style*="fontSize: '0.2rem'"],
+  .only-print.work-06-print div[style*="fontSize:0.2rem"],
+  .only-print.work-06-print div[style*="fontSize: '0.2rem'"],
+  .only-print.work-06-print div[style*="fontSize:0.2rem"],
+  .only-print.work-06-print div[style*="fontSize:'0.2rem'"] {
+    font-size: 0.9rem !important;
+  }
+  
+  /* 유형#06 전용: 모든 div 요소에 0.9rem 강제 적용 */
+  .only-print.work-06-print div {
+    font-size: 0.9rem !important;
+  }
+  
+  /* 유형#07 전용: 영어본문만 0.9rem 강제 적용 */
+  .only-print.work-07-print div[style*="background:'#fff3cd'"],
+  .only-print.work-07-print div[style*="background:#fff3cd"],
+  .only-print.work-07-print div[style*="background: #fff3cd"] {
+    font-size: 0.9rem !important;
+  }
+  
+  /* 유형#13 전용: 영어본문 0.9rem 강제 적용 */
+  .only-print.work-13-print .package01-work13-answer-text,
+  .only-print.work-13-print .package01-work13-problem-text {
+    font-size: 0.9rem !important;
+  }
+  
+  /* 유형#10 전용: 영어본문만 0.2rem 강제 적용 */
+  .only-print.work-10-print div[style*="background:'#FFF3CD'"],
+  .only-print.work-10-print div[style*="background:#FFF3CD"],
+  .only-print.work-10-print div[style*="background: #FFF3CD"],
+  .only-print.work-10-print div[style*="fontSize:'0.2rem'"],
+  .only-print.work-10-print div[style*="fontSize: '0.2rem'"],
+  .only-print.work-10-print div[style*="fontSize:0.2rem"] {
+    font-size: 0.2rem !important;
+  }
+  
+  /* 유형#10 전용: 정답 부분은 원래 크기로 복원 */
+  .only-print.work-10-print .problem-options,
+  .only-print.work-10-print .problem-options *,
+  .only-print.work-10-print .problem-passage.translation,
+  .only-print.work-10-print .problem-passage.translation * {
+    font-size: 0.9rem !important;
+  }
+  
+  
+  /* 유형#14 전용: 영어본문 0.9rem 강제 적용 */
+  .only-print.work-14-print .package01-work14-answer-text,
+  .only-print.work-14-print .package01-work14-problem-text {
+    font-size: 0.9rem !important;
+  }
+
+  /* 모든 유형 통일: 인라인 스타일 오버라이드 */
+  .only-print.work-02-print .shuffled-paragraph[style],
+  .only-print.work-03-print .shuffled-paragraph[style],
+  .only-print.work-04-print .shuffled-paragraph[style],
+  .only-print.work-05-print .shuffled-paragraph[style],
+  .only-print.work-06-print .shuffled-paragraph[style],
+  .only-print.work-07-print .shuffled-paragraph[style],
+  .only-print.work-08-print .shuffled-paragraph[style],
+  .only-print.work-09-print .shuffled-paragraph[style],
+  .only-print.work-10-print .shuffled-paragraph[style],
+  .only-print.work-13-print .shuffled-paragraph[style],
+  .only-print.work-14-print .shuffled-paragraph[style],
+  .only-print.work-02-print .print-passage-container[style],
+  .only-print.work-03-print .print-passage-container[style],
+  .only-print.work-04-print .print-passage-container[style],
+  .only-print.work-05-print .print-passage-container[style],
+  .only-print.work-06-print .print-passage-container[style],
+  .only-print.work-07-print .print-passage-container[style],
+  .only-print.work-08-print .print-passage-container[style],
+  .only-print.work-09-print .print-passage-container[style],
+  .only-print.work-10-print .print-passage-container[style],
+  .only-print.work-13-print .print-passage-container[style],
+  .only-print.work-14-print .print-passage-container[style] {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
+  }
+
+  /* 모든 유형 통일: 속성별 인라인 스타일 오버라이드 */
+  .only-print.work-02-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-03-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-04-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-05-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-06-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-07-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-08-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-09-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-10-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-13-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-14-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-02-print .print-passage-container[style*="font-size"],
+  .only-print.work-03-print .print-passage-container[style*="font-size"],
+  .only-print.work-04-print .print-passage-container[style*="font-size"],
+  .only-print.work-05-print .print-passage-container[style*="font-size"],
+  .only-print.work-06-print .print-passage-container[style*="font-size"],
+  .only-print.work-07-print .print-passage-container[style*="font-size"],
+  .only-print.work-08-print .print-passage-container[style*="font-size"],
+  .only-print.work-09-print .print-passage-container[style*="font-size"],
+  .only-print.work-10-print .print-passage-container[style*="font-size"],
+  .only-print.work-13-print .print-passage-container[style*="font-size"],
+  .only-print.work-14-print .print-passage-container[style*="font-size"] {
+    font-size: 0.2rem !important;
+  }
+
+  .only-print.work-02-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-03-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-04-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-05-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-06-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-07-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-08-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-09-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-10-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-13-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-14-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-02-print .print-passage-container[style*="padding"],
+  .only-print.work-03-print .print-passage-container[style*="padding"],
+  .only-print.work-04-print .print-passage-container[style*="padding"],
+  .only-print.work-05-print .print-passage-container[style*="padding"],
+  .only-print.work-06-print .print-passage-container[style*="padding"],
+  .only-print.work-07-print .print-passage-container[style*="padding"],
+  .only-print.work-08-print .print-passage-container[style*="padding"],
+  .only-print.work-09-print .print-passage-container[style*="padding"],
+  .only-print.work-10-print .print-passage-container[style*="padding"],
+  .only-print.work-13-print .print-passage-container[style*="padding"],
+  .only-print.work-14-print .print-passage-container[style*="padding"] {
+    padding: 0.5rem 1rem !important;
+  }
+
+  .only-print.work-02-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-03-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-04-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-05-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-06-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-07-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-08-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-09-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-10-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-13-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-14-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-02-print .print-passage-container[style*="line-height"],
+  .only-print.work-03-print .print-passage-container[style*="line-height"],
+  .only-print.work-04-print .print-passage-container[style*="line-height"],
+  .only-print.work-05-print .print-passage-container[style*="line-height"],
+  .only-print.work-06-print .print-passage-container[style*="line-height"],
+  .only-print.work-07-print .print-passage-container[style*="line-height"],
+  .only-print.work-08-print .print-passage-container[style*="line-height"],
+  .only-print.work-09-print .print-passage-container[style*="line-height"],
+  .only-print.work-10-print .print-passage-container[style*="line-height"],
+  .only-print.work-13-print .print-passage-container[style*="line-height"],
+  .only-print.work-14-print .print-passage-container[style*="line-height"] {
+    line-height: 1.5 !important;
+  }
+
+  /* 모든 유형 통일: 최고 우선순위 오버라이드 */
+  .only-print.work-02-print .shuffled-paragraph,
+  .only-print.work-02-print .shuffled-paragraph *,
+  .only-print.work-02-print .shuffled-paragraph[style],
+  .only-print.work-02-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-02-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-02-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-03-print .shuffled-paragraph,
+  .only-print.work-03-print .shuffled-paragraph *,
+  .only-print.work-03-print .shuffled-paragraph[style],
+  .only-print.work-03-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-03-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-03-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-04-print .shuffled-paragraph,
+  .only-print.work-04-print .shuffled-paragraph *,
+  .only-print.work-04-print .shuffled-paragraph[style],
+  .only-print.work-04-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-04-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-04-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-05-print .shuffled-paragraph,
+  .only-print.work-05-print .shuffled-paragraph *,
+  .only-print.work-05-print .shuffled-paragraph[style],
+  .only-print.work-05-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-05-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-05-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-06-print .shuffled-paragraph,
+  .only-print.work-06-print .shuffled-paragraph *,
+  .only-print.work-06-print .shuffled-paragraph[style],
+  .only-print.work-06-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-06-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-06-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-07-print .shuffled-paragraph,
+  .only-print.work-07-print .shuffled-paragraph *,
+  .only-print.work-07-print .shuffled-paragraph[style],
+  .only-print.work-07-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-07-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-07-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-08-print .shuffled-paragraph,
+  .only-print.work-08-print .shuffled-paragraph *,
+  .only-print.work-08-print .shuffled-paragraph[style],
+  .only-print.work-08-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-08-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-08-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-09-print .shuffled-paragraph,
+  .only-print.work-09-print .shuffled-paragraph *,
+  .only-print.work-09-print .shuffled-paragraph[style],
+  .only-print.work-09-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-09-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-09-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-10-print .shuffled-paragraph,
+  .only-print.work-10-print .shuffled-paragraph *,
+  .only-print.work-10-print .shuffled-paragraph[style],
+  .only-print.work-10-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-10-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-10-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-13-print .shuffled-paragraph,
+  .only-print.work-13-print .shuffled-paragraph *,
+  .only-print.work-13-print .shuffled-paragraph[style],
+  .only-print.work-13-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-13-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-13-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-14-print .shuffled-paragraph,
+  .only-print.work-14-print .shuffled-paragraph *,
+  .only-print.work-14-print .shuffled-paragraph[style],
+  .only-print.work-14-print .shuffled-paragraph[style*="font-size"],
+  .only-print.work-14-print .shuffled-paragraph[style*="padding"],
+  .only-print.work-14-print .shuffled-paragraph[style*="line-height"],
+  .only-print.work-02-print .print-passage-container,
+  .only-print.work-02-print .print-passage-container *,
+  .only-print.work-02-print .print-passage-container[style],
+  .only-print.work-02-print .print-passage-container[style*="font-size"],
+  .only-print.work-02-print .print-passage-container[style*="padding"],
+  .only-print.work-02-print .print-passage-container[style*="line-height"],
+  .only-print.work-03-print .print-passage-container,
+  .only-print.work-03-print .print-passage-container *,
+  .only-print.work-03-print .print-passage-container[style],
+  .only-print.work-03-print .print-passage-container[style*="font-size"],
+  .only-print.work-03-print .print-passage-container[style*="padding"],
+  .only-print.work-03-print .print-passage-container[style*="line-height"],
+  .only-print.work-04-print .print-passage-container,
+  .only-print.work-04-print .print-passage-container *,
+  .only-print.work-04-print .print-passage-container[style],
+  .only-print.work-04-print .print-passage-container[style*="font-size"],
+  .only-print.work-04-print .print-passage-container[style*="padding"],
+  .only-print.work-04-print .print-passage-container[style*="line-height"],
+  .only-print.work-05-print .print-passage-container,
+  .only-print.work-05-print .print-passage-container *,
+  .only-print.work-05-print .print-passage-container[style],
+  .only-print.work-05-print .print-passage-container[style*="font-size"],
+  .only-print.work-05-print .print-passage-container[style*="padding"],
+  .only-print.work-05-print .print-passage-container[style*="line-height"],
+  .only-print.work-06-print .print-passage-container,
+  .only-print.work-06-print .print-passage-container *,
+  .only-print.work-06-print .print-passage-container[style],
+  .only-print.work-06-print .print-passage-container[style*="font-size"],
+  .only-print.work-06-print .print-passage-container[style*="padding"],
+  .only-print.work-06-print .print-passage-container[style*="line-height"],
+  .only-print.work-07-print .print-passage-container,
+  .only-print.work-07-print .print-passage-container *,
+  .only-print.work-07-print .print-passage-container[style],
+  .only-print.work-07-print .print-passage-container[style*="font-size"],
+  .only-print.work-07-print .print-passage-container[style*="padding"],
+  .only-print.work-07-print .print-passage-container[style*="line-height"],
+  .only-print.work-08-print .print-passage-container,
+  .only-print.work-08-print .print-passage-container *,
+  .only-print.work-08-print .print-passage-container[style],
+  .only-print.work-08-print .print-passage-container[style*="font-size"],
+  .only-print.work-08-print .print-passage-container[style*="padding"],
+  .only-print.work-08-print .print-passage-container[style*="line-height"],
+  .only-print.work-09-print .print-passage-container,
+  .only-print.work-09-print .print-passage-container *,
+  .only-print.work-09-print .print-passage-container[style],
+  .only-print.work-09-print .print-passage-container[style*="font-size"],
+  .only-print.work-09-print .print-passage-container[style*="padding"],
+  .only-print.work-09-print .print-passage-container[style*="line-height"],
+  .only-print.work-10-print .print-passage-container,
+  .only-print.work-10-print .print-passage-container *,
+  .only-print.work-10-print .print-passage-container[style],
+  .only-print.work-10-print .print-passage-container[style*="font-size"],
+  .only-print.work-10-print .print-passage-container[style*="padding"],
+  .only-print.work-10-print .print-passage-container[style*="line-height"] {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
+  }
+  
+  .only-print.work-13-print .print-passage-container,
+  .only-print.work-13-print .print-passage-container *,
+  .only-print.work-13-print .print-passage-container[style],
+  .only-print.work-13-print .print-passage-container[style*="font-size"],
+  .only-print.work-13-print .print-passage-container[style*="padding"],
+  .only-print.work-13-print .print-passage-container[style*="line-height"],
+  .only-print.work-14-print .print-passage-container,
+  .only-print.work-14-print .print-passage-container *,
+  .only-print.work-14-print .print-passage-container[style],
+  .only-print.work-14-print .print-passage-container[style*="font-size"],
+  .only-print.work-14-print .print-passage-container[style*="padding"],
+  .only-print.work-14-print .print-passage-container[style*="line-height"] {
+    font-size: 0.9rem !important;
+    padding: 0.5rem 1rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.1rem !important;
   }
   
   .only-print .problem-passage:not(.translation) {

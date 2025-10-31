@@ -12,18 +12,11 @@ import { generateWork02Quiz, Work02QuizData } from '../../../services/work02Serv
 import PrintFormatPackage03 from './PrintFormatPackage03';
 import { generateWork07Quiz } from '../../../services/work07Service';
 import { generateWork08Quiz } from '../../../services/work08Service';
-import { generateWork11Quiz } from '../../../services/work11Service';
 import { generateBlankFillQuizWithAI, BlankFillItem as Work13BlankFillItem } from '../../../services/work13Service';
-import { generateBlankQuizWithAI, BlankQuizData } from '../../../services/work14Service';
+import { generateBlankQuizWithAI, BlankQuizData, imageToTextWithOpenAIVision } from '../../../services/work14Service';
 import { translateToKorean } from '../../../services/common';
 
 // 인터페이스 정의
-interface SentenceTranslationQuiz {
-  sentences: string[];
-  translations: string[];
-  quizText: string;
-}
-
 interface MainIdeaQuiz {
   passage: string;
   options: string[];
@@ -45,11 +38,11 @@ interface TitleQuiz {
 
 
 interface PackageQuizItem {
+  workTypeId?: string;
   work01Data?: Quiz;
   work02Data?: Work02QuizData;
   work07Data?: MainIdeaQuiz;
   work08Data?: TitleQuiz;
-  work11Data?: SentenceTranslationQuiz;
   work13Data?: Work13BlankFillItem;
   work14Data?: BlankQuizData;
   translatedText?: string;
@@ -76,7 +69,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
   const [selectedWorkTypes, setSelectedWorkTypes] = useState<{[key: string]: boolean}>({
     '01': true,
     '02': true,
-    '11': false,
     '13': false,
     '14': false
   });
@@ -99,7 +91,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
     '02': '2', 
     '07': '7',
     '08': '8',
-    '11': '11',
     '13': '13',
     '14': '14'
   };
@@ -187,6 +178,8 @@ const Package_03_ParagraphOrder: React.FC = () => {
   // 입력 모드 변경 핸들러
   const handleInputModeChange = (mode: 'capture' | 'image' | 'text') => {
     setInputMode(mode);
+    setInputText('');
+    setImageFile(null);
   };
 
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -194,11 +187,37 @@ const Package_03_ParagraphOrder: React.FC = () => {
   };
 
   // 이미지 파일 선택 핸들러
-  const handleImageFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      // TODO: 이미지에서 텍스트 추출 기능 구현
+      // OCR → textarea에 자동 입력
+      setIsExtractingText(true);
+      try {
+        const ocrText = await imageToTextWithOpenAIVision(file);
+        console.log('📝 추출된 텍스트 길이:', ocrText.length);
+        
+        if (ocrText && ocrText.trim().length > 0) {
+          setInputText(ocrText);
+          // 이미지 파일 업로드 후에도 텍스트 모드로 전환
+          setInputMode('text');
+          setTimeout(() => {
+            if (textAreaRef.current) {
+              textAreaRef.current.style.height = 'auto';
+              textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+              textAreaRef.current.focus();
+            }
+          }, 100);
+        } else {
+          console.warn('⚠️ 추출된 텍스트가 비어있음');
+          alert('이미지에서 텍스트를 추출할 수 없습니다. 다른 이미지를 시도해주세요.');
+        }
+      } catch (err) {
+        console.error('❌ 이미지 텍스트 추출 실패:', err);
+        alert(`OCR 처리 중 오류가 발생했습니다: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setIsExtractingText(false);
+      }
     }
   };
 
@@ -219,24 +238,59 @@ const Package_03_ParagraphOrder: React.FC = () => {
       console.log(`📋 아이템 ${i}:`, { type: item.type, kind: item.kind });
       
       if (item.type.indexOf('image') !== -1) {
-        console.log('📸 이미지 파일 발견, 처리 시작...');
+        console.log('✅ 이미지 발견!');
         const file = item.getAsFile();
         if (file) {
+          console.log('✅ 파일 생성 성공:', { name: file.name, size: file.size, type: file.type });
           setImageFile(file);
           setIsExtractingText(true);
           
           try {
-            // TODO: 이미지에서 텍스트 추출 기능 구현
-            console.log('📸 이미지 텍스트 추출 완료');
-          } catch (error) {
-            console.error('❌ 이미지 텍스트 추출 실패:', error);
+            console.log('🔄 OCR 처리 시작...');
+            console.log('📁 파일 정보:', { name: file.name, size: file.size, type: file.type });
+            
+            const ocrText = await imageToTextWithOpenAIVision(file);
+            console.log('✅ OCR 처리 완료:', ocrText.substring(0, 100) + '...');
+            console.log('📝 추출된 텍스트 길이:', ocrText.length);
+            
+            if (ocrText && ocrText.trim().length > 0) {
+              console.log('🔄 setInputText 호출 전 - 현재 inputText:', inputText);
+              console.log('🔄 setInputText 호출 전 - ocrText 길이:', ocrText.length);
+              setInputText(ocrText);
+              setInputMode('text'); // OCR 완료 후 텍스트 모드로 전환
+              console.log('✅ setInputText 호출 완료 및 inputMode를 text로 변경');
+              
+              // textarea 높이 자동 조정 및 포커스
+              setTimeout(() => {
+                if (textAreaRef.current) {
+                  textAreaRef.current.style.height = 'auto';
+                  textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+                  textAreaRef.current.focus();
+                }
+              }, 100);
+            } else {
+              console.warn('⚠️ 추출된 텍스트가 비어있음');
+              alert('이미지에서 텍스트를 추출할 수 없습니다. 다른 이미지를 시도해주세요.');
+            }
+          } catch (err) {
+            console.error('❌ OCR 처리 오류 상세:', err);
+            console.error('❌ 오류 타입:', typeof err);
+            console.error('❌ 오류 메시지:', err instanceof Error ? err.message : String(err));
+            console.error('❌ 오류 스택:', err instanceof Error ? err.stack : 'No stack trace');
+            alert(`OCR 처리 중 오류가 발생했습니다: ${err instanceof Error ? err.message : String(err)}`);
           } finally {
             setIsExtractingText(false);
           }
+        } else {
+          console.error('❌ 파일 생성 실패');
         }
-        break;
+        e.preventDefault();
+        return;
       }
     }
+    
+    console.log('❌ 이미지를 찾을 수 없음');
+    e.preventDefault();
   };
 
   // 체크박스 토글 핸들러
@@ -344,7 +398,9 @@ const Package_03_ParagraphOrder: React.FC = () => {
 
   // 문제 생성 함수
   const generateSingleWorkTypeQuiz = async (inputText: string, typeId: string, currentIndex: number, totalCount: number): Promise<PackageQuizItem> => {
-    const quizItem: PackageQuizItem = {};
+    const quizItem: PackageQuizItem = {
+      workTypeId: typeId
+    };
 
     try {
       console.log(`📝 유형#${typeId} 문제 생성 시작... (${currentIndex + 1}/${totalCount})`);
@@ -375,13 +431,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
           const quiz = await generateWork08Quiz(inputText);
           quizItem.work08Data = quiz;
           quizItem.translatedText = quiz.translation;
-          console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
-          break;
-        }
-        case '11': {
-          const quiz = await generateWork11Quiz(inputText);
-          quizItem.work11Data = quiz;
-          quizItem.translatedText = quiz.translations.join(' ');
           console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
@@ -514,7 +563,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
         if (item.work02Data) return '02';
         if (item.work07Data) return '07';
         if (item.work08Data) return '08';
-        if (item.work11Data) return '11';
         if (item.work13Data) return '13';
         if (item.work14Data) return '14';
         return selectedTypes[index];
@@ -544,15 +592,14 @@ const Package_03_ParagraphOrder: React.FC = () => {
         }
       }
       
-      // 문제 순서 정렬: 01 → 07/08 → 02 → 11 → 13 → 14
-      const typeOrder = ['01', '07', '08', '02', '11', '13', '14'];
+      // 문제 순서 정렬: 01 → 07/08 → 02 → 13 → 14
+      const typeOrder = ['01', '07', '08', '02', '13', '14'];
       const sortedQuizResults = quizResults.sort((a, b) => {
         const getTypeId = (item: PackageQuizItem): string => {
           if (item.work01Data) return '01';
           if (item.work02Data) return '02';
           if (item.work07Data) return '07';
           if (item.work08Data) return '08';
-          if (item.work11Data) return '11';
           if (item.work13Data) return '13';
           if (item.work14Data) return '14';
           return '99';
@@ -583,7 +630,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
             else if (quiz.work02Data) workTypeId = '02';
             else if (quiz.work07Data) workTypeId = '07';
             else if (quiz.work08Data) workTypeId = '08';
-            else if (quiz.work11Data) workTypeId = '11';
             else if (quiz.work13Data) workTypeId = '13';
             else if (quiz.work14Data) workTypeId = '14';
             
@@ -1315,144 +1361,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
                   </div>
                 )}
 
-                {/* Work_11 */}
-                {quizItem.work11Data && (
-                  <div key={`work-11-${index}`} className="work-section" style={{
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
-                    marginBottom: '2rem',
-                    backgroundColor: '#fff',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}>
-                    {/* 문제 유형 제목 */}
-                    <div className="work-11-header" style={{
-                      marginBottom: '0.8rem',
-                      fontSize: '1.3rem',
-                      fontWeight: '700',
-                      color: '#000'
-                    }}>
-                      #11. 본문 문장별 해석 문제
-                    </div>
-
-                    {/* 문제 지시사항 */}
-                    <div className="work-11-title" style={{
-                      background: '#000',
-                      color: '#fff',
-                      padding: '0.7rem 1.2rem',
-                      borderRadius: '8px',
-                      marginBottom: '0.6rem',
-                      fontSize: '1.13rem',
-                      fontWeight: '800',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      width: '100%'
-                    }}>
-                      <span>다음 본문의 각 문장을 한국어로 해석하세요.</span>
-                      <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#11</span>
-                    </div>
-
-                    {/* 문장별 해석 문제 */}
-                    <div className="work-11-content" style={{
-                      margin: '1.2rem 0'
-                    }}>
-                      {quizItem.work11Data?.sentences.map((sentence, sentenceIndex) => (
-                        <div key={sentenceIndex} className="sentence-item" style={{
-                          background: '#FFF3CD',
-                          borderRadius: '8px',
-                          padding: '0.3rem 1.2rem',
-                          border: '1.5px solid #e3e6f0',
-                          marginBottom: '1rem',
-                          fontFamily: 'inherit',
-                          transition: 'border-color 0.2s',
-                          boxShadow: '0 1px 4px rgba(44,62,80,0.04)'
-                        }}>
-                          <div className="sentence-header" style={{
-                            display: 'flex',
-                            alignItems: 'baseline',
-                            gap: '0.5rem',
-                            marginBottom: '0.5rem'
-                          }}>
-                            <span className="sentence-number" style={{
-                              fontWeight: '700',
-                              color: '#6a5acd',
-                              fontSize: '1.08rem',
-                              flexShrink: 0,
-                              verticalAlign: 'baseline',
-                              lineHeight: 1
-                            }}>{sentenceIndex + 1}.</span>
-                            <span className="sentence-content" style={{
-                              fontSize: '1.05rem',
-                              lineHeight: '1.2',
-                              color: '#232946',
-                              fontFamily: 'Noto Sans KR, Segoe UI, Apple SD Gothic Neo, Arial, sans-serif',
-                              flex: 1,
-                              verticalAlign: 'baseline'
-                            }}>{sentence}</span>
-                          </div>
-                          <div className="translation-container" style={{
-                            marginBottom: '0.3rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}>
-                            <span className="translation-label" style={{
-                              fontWeight: '600',
-                              color: '#4a5568',
-                              fontFamily: 'Noto Sans KR, Segoe UI, Apple SD Gothic Neo, Arial, sans-serif',
-                              whiteSpace: 'nowrap'
-                            }}>해석:</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* 정답 표시 */}
-                    <div className="work-11-answer" style={{
-                      marginTop: '1.5rem',
-                      padding: '1rem',
-                      backgroundColor: '#e8f5e8',
-                      borderRadius: '8px',
-                      border: '2px solid #4caf50'
-                    }}>
-                      <div style={{
-                        fontSize: '1rem',
-                        fontWeight: '700',
-                        color: '#1976d2',
-                        marginBottom: '1rem'
-                      }}>
-                        정답
-                      </div>
-                      {quizItem.work11Data?.sentences.map((sentence, sentenceIndex) => (
-                        <div key={sentenceIndex} style={{
-                          marginBottom: '1rem',
-                          padding: '0.8rem',
-                          backgroundColor: '#F1F8E9',
-                          borderRadius: '6px',
-                          border: '1px solid #c8e6c9'
-                        }}>
-                          <div style={{
-                            fontSize: '0.95rem',
-                            fontWeight: '600',
-                            color: '#1976d2',
-                            marginBottom: '0.3rem'
-                          }}>
-                            {sentenceIndex + 1}. {sentence}
-                          </div>
-                          <div style={{
-                            fontSize: '0.95rem',
-                            color: '#333',
-                            lineHeight: 1.5
-                          }}>
-                            {quizItem.work11Data?.translations[sentenceIndex]}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Work_13 */}
                 {quizItem.work13Data && (
                   <div key={`work-13-${index}`} className="work-section" style={{
@@ -1741,12 +1649,8 @@ const Package_03_ParagraphOrder: React.FC = () => {
             <div style={{fontSize: '0.9rem', color: '#666', marginTop: '0.5rem'}}>
               💡 <b>팁:</b> 화면 캡처 후 Ctrl+V로 붙여넣기
             </div>
-            {isExtractingText && (
-              <div style={{color:'#6a5acd', fontWeight:600, marginTop:'0.7rem'}}>
-                OpenAI Vision 처리 중...
-              </div>
-            )}
           </div>
+          {/* 캡처 모드에서도 텍스트가 추출되면 글자수 표시 */}
           {inputText && (
             <div className="text-info" style={{marginTop: '0.5rem'}}>
               <span>글자 수: {inputText.length}자</span>
@@ -1861,18 +1765,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
                   onChange={() => handleRadioTypeChange('08')}
                 />
               </div>
-            </div>
-          </div>
-          
-          <div className="table-row">
-            <div className="cell type-cell">11</div>
-            <div className="cell title-cell">본문 문장별 해석</div>
-            <div className="cell select-cell">
-              <input
-                type="checkbox"
-                checked={selectedWorkTypes['11']}
-                onChange={() => handleWorkTypeToggle('11')}
-              />
             </div>
           </div>
           

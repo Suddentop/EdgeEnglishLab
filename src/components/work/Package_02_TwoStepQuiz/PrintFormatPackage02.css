@@ -244,15 +244,16 @@
     text-align: center;
   }
 
-  /* 2단 레이아웃 컨테이너 */
+  /* 2단 레이아웃 컨테이너 - CSS Grid 사용 */
   .print-two-column-container {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
     gap: 0.6cm; /* 컬럼 간격 조정 */
     width: 100%;
-    justify-content: space-between;
     height: 100%; /* 높이 100%로 설정 */
     position: relative; /* 구분선을 위한 상대 위치 */
+    align-items: start;
   }
 
   /* 2단 구분선 */
@@ -268,17 +269,16 @@
     z-index: 1;
   }
 
-  /* 정답 모드용 2단 레이아웃 컨테이너 */
+  /* 정답 모드용 2단 레이아웃 컨테이너 - CSS Grid 사용 */
   .print-container-answer .print-two-column-container {
-    display: flex !important;
-    flex-wrap: wrap !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: auto !important;
     gap: 0.6cm !important;
     width: 100% !important;
-    justify-content: space-between !important;
     height: 100% !important;
-    flex-direction: row !important;
     position: relative !important; /* 구분선을 위한 상대 위치 */
-    align-items: flex-start !important;
+    align-items: start !important;
   }
 
   /* 정답 모드용 2단 구분선 */
@@ -294,9 +294,9 @@
     z-index: 1 !important;
   }
 
-  /* 각 문제 카드 (1단 = 50% 너비) */
+  /* 각 문제 카드 - 그리드 아이템 */
   .print-question-card {
-    width: calc(50% - 0.3cm); /* 각 문제 카드 너비 조정 */
+    width: 100%; /* 그리드 컨테이너 내에서 전체 너비 사용 */
     break-inside: avoid;
     page-break-inside: avoid;
     -webkit-column-break-inside: avoid;
@@ -304,13 +304,15 @@
     border: none; /* 테두리 제거 */
     padding: 0.5cm; /* 패딩 조정 */
     box-sizing: border-box;
+    display: block;
+    position: relative;
   }
 
-  /* 정답 모드용 문제 카드 */
+  /* 정답 모드용 문제 카드 - 그리드 아이템 */
   .print-container-answer .print-question-card {
-    width: calc(50% - 0.3cm) !important;
-    max-width: calc(50% - 0.3cm) !important;
-    min-width: calc(50% - 0.3cm) !important;
+    width: 100% !important; /* 그리드 컨테이너 내에서 전체 너비 사용 */
+    max-width: 100% !important;
+    min-width: 100% !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     -webkit-column-break-inside: avoid !important;
@@ -319,18 +321,16 @@
     padding: 0.5cm !important;
     box-sizing: border-box !important;
     display: block !important;
-    float: left !important;
+    position: relative !important;
   }
 
-  /* 정답 모드용 홀수 번째 문제 카드 (왼쪽 정렬) */
-  .print-container-answer .print-question-card:nth-child(odd) {
-    clear: left !important;
-  }
+  /* 인라인 스타일이 우선되도록 CSS 규칙 제거 */
+  /* .print-question-card:nth-child(odd) { grid-column: 1; } */
+  /* .print-question-card:nth-child(even) { grid-column: 2; } */
 
-  /* 정답 모드용 짝수 번째 문제 카드 (오른쪽 정렬) */
-  .print-container-answer .print-question-card:nth-child(even) {
-    clear: right !important;
-  }
+  /* 인라인 스타일이 우선되도록 CSS 규칙 제거 */
+  /* .print-container-answer .print-question-card:nth-child(odd) { grid-column: 1 !important; } */
+  /* .print-container-answer .print-question-card:nth-child(even) { grid-column: 2 !important; } */
 
   /* 문제 제목 + 유형번호 */
   .print-question-title {
@@ -349,6 +349,14 @@
     font-size: 8.5pt;
     color: #555;
     font-weight: 600;
+  }
+
+  /* 청크 정보 표시 */
+  .print-chunk-info {
+    font-size: 7.5pt;
+    color: #888;
+    font-weight: 500;
+    margin-left: 8px;
   }
 
   /* 문제 지시문 */
@@ -391,6 +399,16 @@
     margin-left: 0.2cm;
   }
 
+  /* 정답 항목 해석 스타일 */
+  .print-answer-translation {
+    font-size: 8pt;
+    color: #1976d2;
+    font-weight: 600;
+    margin-top: 0.1cm;
+    padding-left: 0.2cm;
+    font-style: italic;
+  }
+
   .print-option-label {
     font-weight: bold;
     color: #1976d2;
@@ -413,7 +431,7 @@
   }
 
   .print-translation-content {
-    font-size: 0.8rem; /* 요청: 0.8 */
+    font-size: 8pt; /* 한글해석 통일: 8pt */
     line-height: 1.35;
     color: #1976d2;
     white-space: pre-wrap;
@@ -647,7 +665,7 @@
   }
 
   .print-sentence-korean {
-    font-size: 7.5pt;
+    font-size: 8pt; /* 한글해석 통일: 8pt */
     line-height: 1.35;
     color: #1976d2;
     background: #f1f8e9;
@@ -658,7 +676,7 @@
   }
 
   .print-sentence-korean-inline {
-    font-size: 7.5pt;
+    font-size: 8pt; /* 한글해석 통일: 8pt */
     line-height: 1.35;
     color: #1976d2;
     font-weight: 600;
@@ -667,7 +685,7 @@
   }
 
   .print-sentence-korean-container {
-    font-size: 7.5pt;
+    font-size: 8pt; /* 한글해석 통일: 8pt */
     line-height: 1.35;
     color: #1976d2;
     background: transparent !important;
@@ -721,7 +739,7 @@
   }
 
   .print-word-korean {
-    font-size: 7.5pt;
+    font-size: 8pt; /* 한글해석 통일: 8pt */
     color: #1976d2;
     font-weight: 600;
   }
@@ -735,12 +753,21 @@
 
   /* Work_13, 14 전용 */
   .print-blank-answer {
-    font-size: 7.5pt;
+    font-size: 8pt; /* 한글해석 통일: 8pt */
     color: #1976d2;
     font-weight: 600;
     margin-top: 0.2cm;
     padding: 0.12cm;
     background: #e8f5e8;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Work_13, 14 빈칸 안 정답 표시 (정답 모드) */
+  .print-blank-filled-answer {
+    font-size: 9pt;
+    color: #1565c0 !important; /* 진한 파란색 */
+    font-weight: 700 !important; /* 진하게 */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -787,6 +814,14 @@
     border: none !important;
     padding: 0 !important;
     margin: 0 !important;
+  }
+
+  /* 청크 정보 - 정답 모드 */
+  .print-answer-mode .print-chunk-info {
+    font-size: 7.5pt !important;
+    color: #888 !important;
+    font-weight: 500 !important;
+    margin-left: 8px !important;
   }
 
   /* 지시문 */
@@ -964,6 +999,23 @@
     color: #1976d2 !important;
     font-size: 8.5pt !important;
     margin-bottom: 0 !important;
+  }
+
+  /* Work_13, 14 빈칸 안 정답 표시 강제 적용 */
+  .print-answer-mode .print-blank-filled-answer {
+    font-size: 9pt !important;
+    color: #1565c0 !important; /* 진한 파란색 */
+    font-weight: 700 !important; /* 진하게 */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-container-answer .print-blank-filled-answer {
+    font-size: 9pt !important;
+    color: #1565c0 !important; /* 진한 파란색 */
+    font-weight: 700 !important; /* 진하게 */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Work_11 전용 인쇄(정답) 스타일 */

@@ -58,6 +58,21 @@ const QuizListPage: React.FC = () => {
     setCurrentPage(page);
   };
 
+  // 페이지네이션 그룹 계산
+  const getPaginationGroup = () => {
+    const groupSize = 10; // 한 그룹에 표시할 페이지 수
+    const currentGroup = Math.ceil(currentPage / groupSize);
+    const startPage = (currentGroup - 1) * groupSize + 1;
+    const endPage = Math.min(startPage + groupSize - 1, totalPages);
+    
+    return {
+      startPage,
+      endPage,
+      hasPrevGroup: currentGroup > 1,
+      hasNextGroup: currentGroup < Math.ceil(totalPages / groupSize)
+    };
+  };
+
   // 문제 불러오기 (새 페이지로 이동)
   const handleLoadQuiz = (historyItem: QuizHistoryItem) => {
     try {
@@ -69,7 +84,115 @@ const QuizListPage: React.FC = () => {
             quizData: historyItem
           }
         });
+      } else if (historyItem.workTypeId === '15') {
+        // 유형#15 전용 표시 페이지로 이동 (원래 인쇄 페이지)
+        navigate('/work-15-display', {
+          state: {
+            quizData: historyItem
+          }
+        });
       } else {
+        // 단일 유형(01~14)도 패키지 표시 페이지를 재사용해 동일한 인쇄 버튼 동작 제공
+        const numId = historyItem.workTypeId?.toString()?.padStart(2, '0');
+        const isSingleWork = /^(01|02|03|04|05|06|07|08|09|10|11|12|13|14)$/.test(numId || '');
+
+        if (isSingleWork) {
+          // generatedData를 패키지 프린트 컴포넌트가 인식하는 구조로 변환
+          let parsed: any = historyItem.generatedData;
+          try {
+            parsed = typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
+          } catch (e) {}
+
+          const quizItem: any = {
+            workTypeId: numId,
+            workTypeName: historyItem.workTypeName,
+          };
+
+          // 선행 0을 보존해 work02Data, work03Data 형태로 맞춤
+          const nestedKey = `work${numId}Data`;
+          if (numId === '01') {
+            quizItem.quiz = parsed?.quiz || parsed;
+          } else {
+            // work02Data, work03Data ... work14Data 로 매핑
+            // 저장된 구조가 { work10Data: {...} } 형태인 경우 추출
+            if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
+              quizItem[nestedKey] = parsed[nestedKey];
+            } else {
+              quizItem[nestedKey] = parsed;
+            }
+
+            // 유형별 데이터 정규화 (특히 #02)
+            if (numId === '02') {
+              const d: any = quizItem[nestedKey] || {};
+              // 저장이 { quiz: {...} } 로 된 케이스 흡수
+              const quizInner = parsed?.quiz || parsed?.data?.quiz;
+              const merged = { ...d, ...(quizInner || {}) };
+              // modifiedText가 없으면 text/passage 중 존재하는 필드 사용
+              if (!merged.modifiedText) {
+                merged.modifiedText = merged.text || merged.passage || '';
+              }
+              if (!Array.isArray(merged.replacements)) {
+                merged.replacements = merged.replacements || [];
+              }
+              quizItem[nestedKey] = merged;
+            }
+          }
+          // 번역 필드 추정치 적용 (여러 필드 후보 지원)
+          const pdata = (quizItem[nestedKey] || quizItem.quiz || {}) as any;
+          quizItem.translatedText =
+            pdata.translation ||
+            pdata.koreanTranslation ||
+            pdata.korean ||
+            pdata.koreanText ||
+            pdata.korTranslation ||
+            pdata.koText ||
+            pdata.korean_text ||
+            pdata.passageTranslation ||
+            pdata.korean_passage ||
+            pdata.translatedText ||
+            parsed?.translation ||
+            parsed?.koreanTranslation ||
+            (parsed as any)?.korean ||
+            (parsed as any)?.koreanText ||
+            (parsed as any)?.korTranslation ||
+            (parsed as any)?.koText ||
+            (parsed as any)?.korean_text ||
+            (parsed as any)?.passageTranslation ||
+            (parsed as any)?.korean_passage ||
+            parsed?.translatedText ||
+            (historyItem as any)?.translation ||
+            (historyItem as any)?.koreanTranslation ||
+            (historyItem as any)?.korean ||
+            (historyItem as any)?.koreanText ||
+            (historyItem as any)?.korTranslation ||
+            (historyItem as any)?.koText ||
+            (historyItem as any)?.korean_text ||
+            (historyItem as any)?.passageTranslation ||
+            (historyItem as any)?.korean_passage ||
+            (historyItem as any)?.translatedText ||
+            (historyItem?.generatedData as any)?.translation ||
+            (historyItem?.generatedData as any)?.koreanTranslation ||
+            (historyItem?.generatedData as any)?.korean ||
+            (historyItem?.generatedData as any)?.koreanText ||
+            (historyItem?.generatedData as any)?.korTranslation ||
+            (historyItem?.generatedData as any)?.koText ||
+            (historyItem?.generatedData as any)?.korean_text ||
+            (historyItem?.generatedData as any)?.passageTranslation ||
+            (historyItem?.generatedData as any)?.korean_passage ||
+            (historyItem?.generatedData as any)?.translatedText ||
+            '';
+
+          const wrapped = {
+            ...historyItem,
+            generatedData: {
+              isPackage: true,
+              quizzes: [quizItem]
+            }
+          } as any;
+
+          navigate('/quiz-display', { state: { quizData: wrapped } });
+          return;
+        }
         alert('패키지 퀴즈만 불러올 수 있습니다.');
       }
     } catch (error) {
@@ -191,15 +314,46 @@ const QuizListPage: React.FC = () => {
               {/* 페이지네이션 */}
               {totalPages > 1 && (
                 <div className="pagination">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {(() => {
+                    const { startPage, endPage, hasPrevGroup, hasNextGroup } = getPaginationGroup();
+                    
+                    return (
+                      <>
+                        {/* 이전 그룹 버튼 */}
+                        {hasPrevGroup && (
+                          <button
+                            onClick={() => handlePageChange((Math.ceil(currentPage / 10) - 2) * 10 + 1)}
+                            className="pagination-btn pagination-nav"
+                            title="이전 10페이지"
+                          >
+                            &lt;&lt;
+                          </button>
+                        )}
+                        
+                        {/* 페이지 번호들 */}
+                        {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                        
+                        {/* 다음 그룹 버튼 */}
+                        {hasNextGroup && (
+                          <button
+                            onClick={() => handlePageChange(Math.ceil(currentPage / 10) * 10 + 1)}
+                            className="pagination-btn pagination-nav"
+                            title="다음 10페이지"
+                          >
+                            &gt;&gt;
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </>

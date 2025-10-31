@@ -649,11 +649,20 @@ ${englishText}`;
       }
       if (!passage.trim()) throw new Error('추출된 텍스트가 없습니다.');
       
+      // 1) 문제 생성
       const quizData = await generateBlankQuizWithAI(passage);
       console.log('생성된 퀴즈 데이터:', quizData);
-      setQuiz(quizData);
 
-      // 문제 생성 내역 저장
+      // 2) 번역 생성 (유형#04와 동일하게 저장 시 포함되도록 순서 조정)
+      const translation = await translateToKorean(passage);
+      console.log('번역된 텍스트:', translation);
+      setTranslatedText(translation);
+
+      // 3) 번역을 포함한 데이터로 상태/저장
+      const quizDataWithTranslation: any = { ...quizData, translation };
+      setQuiz(quizDataWithTranslation);
+
+      // 문제 생성 내역 저장 (번역 포함)
       if (userData?.uid && workTypePoints.length > 0) {
         try {
           const workTypePoint = workTypePoints.find(wt => wt.id === '3');
@@ -665,19 +674,14 @@ ${englishText}`;
             workTypeName: getWorkTypeName('03'),
             points: workTypePoint?.points || 0,
             inputText: passage,
-            quizData: quizData,
+            quizData: quizDataWithTranslation,
             status: 'success'
           });
-          console.log('✅ Work_03 내역 저장 완료');
+          console.log('✅ Work_03 내역 저장 완료 (번역 포함)');
         } catch (historyError) {
           console.error('❌ Work_03 내역 저장 실패:', historyError);
         }
       }
-      
-      // 영어본문을 한글로 번역
-      const translation = await translateToKorean(passage);
-      console.log('번역된 텍스트:', translation);
-      setTranslatedText(translation);
       
     } catch (err: any) {
       console.error('어휘 문제 생성 오류:', err);
@@ -991,7 +995,7 @@ ${englishText}`;
                       <div className="problem-instruction-copy" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', border:'2px solid #333', marginTop:'0.5rem', marginBottom:'0.5rem', display:'flex', justifyContent:'flex-start', alignItems:'center', width:'100%', boxSizing:'border-box', marginLeft:'0', marginRight:'0'}}>
                         <span>본문 해석</span>
                       </div>
-                      <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'0.5rem'}}>
+                      <div className="translation-container korean-translation" style={{fontSize:'0.5rem !important', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'0.5rem'}}>
                         {translatedText}
                       </div>
                     </>

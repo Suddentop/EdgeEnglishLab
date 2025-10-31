@@ -256,6 +256,7 @@ const Work_14_FillSentence: React.FC = () => {
           setImageFile(file);
           setImagePreview(URL.createObjectURL(file));
           setIsLoading(true);
+          setIsExtractingText(true);
           try {
             console.log('🔄 OCR 처리 시작...');
             const ocrText = await imageToTextWithOpenAIVision(file);
@@ -271,7 +272,8 @@ const Work_14_FillSentence: React.FC = () => {
             console.error('❌ OCR 처리 오류:', err);
             alert('OCR 처리 중 오류가 발생했습니다.');
           } finally {
-        setIsExtractingText(false);
+            setIsExtractingText(false);
+            setIsLoading(false);
       }
         } else {
           console.error('❌ 파일 생성 실패');

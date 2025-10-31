@@ -1,8 +1,14 @@
+/* 전체 페이지 배경색 */
+html, body { background: #F7F8FC; }
+#root, .App, .App-main { background: #F7F8FC; }
+
 /* 문제생성 결과 페이지 */
 .quiz-display-page {
   min-height: 100vh;
-  background: #f8fafc;
+  background: #F7F8FC;
   padding: 0;
+  /* 네비게이션 하단과의 간격 50% 축소 (상단을 위로 당김) */
+  margin-top: -0.5rem;
 }
 
 /* 로딩 컨테이너 */
@@ -20,13 +26,15 @@
 
 /* 헤더 */
 .quiz-display-header {
-  background: white;
+  background: #F7F8FC;
   border-bottom: 1px solid #e2e8f0;
-  padding: 2rem;
+  /* 상단 패딩 제거, 좌우/하단만 유지 */
+  padding: 0 2rem 2rem 2rem;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column; /* 중앙 정렬을 위해 수직 레이아웃 */
+  justify-content: center;
   align-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* 그림자 제거 */
 }
 
 .header-left h1 {
@@ -42,10 +50,20 @@
   font-size: 1rem;
 }
 
+/* 헤더 중앙 정렬 보정 */
+.header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .header-right {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  margin-top: 1rem; /* 중앙 정렬 후 버튼은 아래 배치 */
+  justify-content: center;
 }
 
 .back-btn {
@@ -72,10 +90,10 @@
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  background: white;
+  background: #F7F8FC;
   margin-top: 1rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: none; /* 그림자 제거 */
 }
 
 
@@ -119,6 +137,7 @@
 /* SimpleQuizDisplay 스타일 */
 .simple-quiz-display {
   padding: 1rem;
+  background: #F7F8FC;
 }
 
 .quiz-item {

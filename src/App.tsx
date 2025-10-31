@@ -29,12 +29,14 @@ import Work_06_SentencePosition from './components/work/Work_06_SentencePosition
 import Work_07_MainIdeaInference from './components/work/Work_07_MainIdeaInference/Work_07_MainIdeaInference';
 import Work_08_TitleInference from './components/work/Work_08_TitleInference/Work_08_TitleInference';
 import Navigation from './components/layout/Navigation';
+import Work_15_Display from './components/work/Work_15_ImageProblemAnalyzer/Work_15_Display';
 import Work_09_GrammarError from './components/work/Work_09_GrammarError/Work_09_GrammarError';
 import Work_10_MultiGrammarError from './components/work/Work_10_MultiGrammarError/Work_10_MultiGrammarError';
 import Work_11_SentenceTranslation from './components/work/Work_11_SentenceTranslation/Work_11_SentenceTranslation';
 import Work_12_WordStudy from './components/work/Work_12_WordStudy/Work_12_WordStudy';
 import Work_13_BlankFillWord from './components/work/Work_13_BlankFillWord/Work_13_BlankFillWord';
 import Work_14_BlankFillSentence from './components/work/Work_14_BlankFillSentence/Work_14_BlankFillSentence';
+import Work_15_ImageProblemAnalyzer from './components/work/Work_15_ImageProblemAnalyzer/Work_15_ImageProblemAnalyzer';
 import Package_01_MultiQuizGenerater from './components/work/Package_01_MultiQuizGenerater/Package_01_MultiQuizGenerater';
 import Package_02_TwoStepQuiz from './components/work/Package_02_TwoStepQuiz/Package_02_TwoStepQuiz';
 import Package_03_ParagraphOrder from './components/work/Package_03_ParagraphOrder/Package_03_ParagraphOrder';
@@ -89,6 +91,14 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <QuizDisplayPage />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/work-15-display" 
+            element={
+              <PrivateRoute>
+                <Work_15_Display />
               </PrivateRoute>
             } 
           />
@@ -201,6 +211,14 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <Work_14_BlankFillSentence />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/work_15_image-problem-analyzer" 
+            element={
+              <PrivateRoute>
+                <Work_15_ImageProblemAnalyzer />
               </PrivateRoute>
             } 
           />

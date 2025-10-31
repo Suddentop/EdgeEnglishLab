@@ -12,6 +12,9 @@ import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 // import A4PageTemplate from '../../common/A4PageTemplate';
 import './Work_01_ArticleOrder.css';
 import '../../../styles/PrintFormat.css';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../../firebase/config';
+import { callOpenAI } from '../../../services/common';
 
 interface Work_11_ArticleOrderProps {
   onQuizGenerated?: (quiz: Quiz) => void;
@@ -30,33 +33,94 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+// data URL -> { mimeType, base64 } 분리
+function parseDataUrl(dataUrl: string): { mimeType: string; base64: string } {
+  const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+  if (!match) {
+    return { mimeType: 'image/png', base64: dataUrl };
+  }
+  return { mimeType: match[1], base64: match[2] };
+}
+// UTF-8 safe base64 encoder
+function base64EncodeUtf8(obj: any): string {
+  const json = typeof obj === 'string' ? obj : JSON.stringify(obj);
+  // encodeURIComponent handles UTF-8, unescape converts percent-encoding back to raw bytes for btoa
+  return btoa(unescape(encodeURIComponent(json)));
+}
 // OpenAI Vision API 호출
-async function callOpenAIVisionAPI(imageBase64: string, prompt: string, apiKey: string): Promise<string> {
-  // console.log('OpenAI Vision API Key:', apiKey); // 보안상 제거됨
-  if (!apiKey) throw new Error('API Key가 비어 있습니다. .env 파일과 개발 서버 재시작을 확인하세요.');
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
+async function callOpenAIVisionAPI(imageBase64: string, prompt: string): Promise<string> {
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
+  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
+
+  const requestBody = {
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'user' as const,
+        content: [
+          { type: 'text' as const, text: prompt },
+          { type: 'image_url' as const, image_url: { url: imageBase64 } }
+        ]
+      }
+    ],
+    max_tokens: 2048
+  };
+
+  // 프로덕션: 프록시 사용
+  if (proxyUrl) {
+    // 웹방화벽 회피: data URL이면 Firebase Storage에 업로드 후 공개 URL로 교체
+    let imageUrl = imageBase64;
+    if (imageBase64.startsWith('data:')) {
+      const { mimeType, base64 } = parseDataUrl(imageBase64);
+      const binary = atob(base64);
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mimeType || 'image/png' });
+      const filePath = `vision-uploads/${Date.now()}.png`;
+      const ref = storageRef(storage, filePath);
+      await uploadBytes(ref, blob);
+      imageUrl = await getDownloadURL(ref);
+    }
+
+    const proxyRequest = {
       model: 'gpt-4o',
       messages: [
         {
-          role: 'user',
+          role: 'user' as const,
           content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: imageBase64 } }
+            { type: 'text' as const, text: prompt },
+            { type: 'image_url' as const, image_url: { url: imageUrl } }
           ]
         }
       ],
       max_tokens: 2048
-    })
+    };
+
+    // 공통 헬퍼로 프록시(JSON) 호출
+    const response = await callOpenAI(proxyRequest);
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error('OpenAI Vision API 호출 실패: ' + errText);
+    }
+    const data = await response.json();
+    return data.choices[0].message.content;
+  }
+
+  // 개발: 직접 호출
+  if (!directApiKey) {
+    throw new Error('API Key가 비어 있습니다. .env 파일과 개발 서버 재시작을 확인하세요.');
+  }
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${directApiKey}`,
+    },
+    body: JSON.stringify(requestBody)
   });
   if (!response.ok) {
     const errText = await response.text();
-    console.error('OpenAI Vision API 응답:', errText);
     throw new Error('OpenAI Vision API 호출 실패: ' + errText);
   }
   const data = await response.json();
@@ -288,8 +352,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
         setPastedImageUrl(URL.createObjectURL(image));
       }
       const imageBase64 = await fileToBase64(image as File);
-      const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-      const resultText = await callOpenAIVisionAPI(imageBase64, visionPrompt, apiKey);
+      const resultText = await callOpenAIVisionAPI(imageBase64, visionPrompt);
       setText(cleanOpenAIVisionResult(resultText));
       setPastedImageUrl(null);
       setTimeout(() => {

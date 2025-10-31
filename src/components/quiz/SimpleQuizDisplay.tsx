@@ -22,7 +22,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
         
         // Work_01: 문단 순서 맞추기
         if (quizItem.workTypeId === '01') {
-          const quizData = quizItem.data?.quiz || quizItem.data;
+          const quizData = quizItem.quiz || quizItem.data?.quiz || quizItem.data;
           return (
             <div key={`quiz-01-${index}`} className="quiz-item">
               <h3>#01. 문단 순서 맞추기</h3>
@@ -50,23 +50,68 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           );
         }
 
+        // Work_12: 단어 학습 문제
+        if (quizItem.workTypeId === '12') {
+          const work12Data = quizItem.work12Data || quizItem.data?.work12Data || quizItem.data;
+          const words: any[] = Array.isArray(work12Data?.words) ? work12Data.words : [];
+          const half = Math.ceil(words.length / 2);
+          const left = words.slice(0, half);
+          const right = words.slice(half);
+          return (
+            <div key={`quiz-12-${index}`} className="quiz-item">
+              <h3>#12. 단어 학습 문제</h3>
+              <div className="instruction">다음 영어 단어의 한글 뜻을 고르시오.</div>
+              <div style={{ border: '1px solid #e3e6f0', borderRadius: 8, padding: '0.8rem', background: '#fff' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  {[left, right].map((col, ci) => (
+                    <table key={ci} style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ width: 60, padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>No.</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>영어 단어</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>한글 뜻</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {col.map((w: any, wi: number) => (
+                          <tr key={wi}>
+                            <td style={{ textAlign: 'center', border: '1px solid #e3e6f0', padding: '6px 8px' }}>{ci === 0 ? wi + 1 : half + wi + 1}</td>
+                            <td style={{ border: '1px solid #e3e6f0', padding: '6px 8px' }}>{w.english}</td>
+                            <td style={{ border: '1px solid #e3e6f0', padding: '6px 8px' }}></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         // Work_02: 유사단어 독해
         if (quizItem.workTypeId === '02') {
-          const work02Data = quizItem.data?.work02Data || quizItem.data;
+          const work02Data = (quizItem.work02Data || quizItem.quiz || quizItem.data?.work02Data || quizItem.data?.quiz || quizItem.data) as any;
+          const baseText = work02Data?.modifiedText || work02Data?.modifiedHtml || work02Data?.html || work02Data?.text || work02Data?.passage || work02Data?.content || work02Data?.originalText || work02Data?.questionText || work02Data?.body || '';
+          const normalizedHtml = (typeof baseText === 'string' ? baseText : '')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br />');
           return (
             <div key={`quiz-02-${index}`} className="quiz-item">
               <h3>#02. 유사단어 독해</h3>
               <div className="instruction">다음 본문을 읽고 해석하세요</div>
               <div className="passage">
-                <div dangerouslySetInnerHTML={{ 
-                  __html: work02Data?.modifiedText?.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') || '' 
-                }} />
+                {normalizedHtml ? (
+                  <div dangerouslySetInnerHTML={{ __html: normalizedHtml }} />
+                ) : (
+                  <div>{String(baseText || '').trim() || '본문 데이터가 없습니다.'}</div>
+                )}
               </div>
               {isAnswerMode && (
                 <div className="answer">
                   <strong>정답:</strong>
                   <div className="replacements">
-                    {work02Data?.replacements?.map((rep: any, rIndex: number) => (
+                    {(work02Data?.replacements || [])?.map((rep: any, rIndex: number) => (
                       <div key={rIndex} className="replacement">
                         {rep.original} → {rep.replacement}
                       </div>
@@ -80,7 +125,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_03: 빈칸(단어) 찾기
         if (quizItem.workTypeId === '03') {
-          const work03Data = quizItem.data?.work03Data || quizItem.data;
+          const work03Data = quizItem.work03Data || quizItem.data?.work03Data || quizItem.data;
           return (
             <div key={`quiz-03-${index}`} className="quiz-item">
               <h3>#03. 빈칸(단어) 찾기</h3>
@@ -106,7 +151,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_04: 빈칸(구) 찾기
         if (quizItem.workTypeId === '04') {
-          const work04Data = quizItem.data?.work04Data || quizItem.data;
+          const work04Data = quizItem.work04Data || quizItem.data?.work04Data || quizItem.data;
           return (
             <div key={`quiz-04-${index}`} className="quiz-item">
               <h3>#04. 빈칸(구) 찾기</h3>
@@ -132,7 +177,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_05: 빈칸(문장) 찾기
         if (quizItem.workTypeId === '05') {
-          const work05Data = quizItem.data?.work05Data || quizItem.data;
+          const work05Data = quizItem.work05Data || quizItem.data?.work05Data || quizItem.data;
           return (
             <div key={`quiz-05-${index}`} className="quiz-item">
               <h3>#05. 빈칸(문장) 찾기</h3>
@@ -158,7 +203,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_06: 문장 위치 찾기
         if (quizItem.workTypeId === '06') {
-          const work06Data = quizItem.data?.work06Data || quizItem.data;
+          const work06Data = quizItem.work06Data || quizItem.data?.work06Data || quizItem.data;
           return (
             <div key={`quiz-06-${index}`} className="quiz-item">
               <h3>#06. 문장 위치 찾기</h3>
@@ -188,7 +233,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_07: 주제 추론
         if (quizItem.workTypeId === '07') {
-          const work07Data = quizItem.data?.work07Data || quizItem.data;
+          const work07Data = quizItem.work07Data || quizItem.data?.work07Data || quizItem.data;
           return (
             <div key={`quiz-07-${index}`} className="quiz-item">
               <h3>#07. 주제 추론</h3>
@@ -214,7 +259,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_08: 제목 추론
         if (quizItem.workTypeId === '08') {
-          const work08Data = quizItem.data?.work08Data || quizItem.data;
+          const work08Data = quizItem.work08Data || quizItem.data?.work08Data || quizItem.data;
           return (
             <div key={`quiz-08-${index}`} className="quiz-item">
               <h3>#08. 제목 추론</h3>
@@ -240,7 +285,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_09: 어법 오류 찾기
         if (quizItem.workTypeId === '09') {
-          const work09Data = quizItem.data?.work09Data || quizItem.data;
+          const work09Data = quizItem.work09Data || quizItem.data?.work09Data || quizItem.data;
           return (
             <div key={`quiz-09-${index}`} className="quiz-item">
               <h3>#09. 어법 오류 찾기</h3>
@@ -266,7 +311,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_10: 다중 어법 오류 찾기
         if (quizItem.workTypeId === '10') {
-          const work10Data = quizItem.data?.work10Data || quizItem.data;
+          const work10Data = quizItem.work10Data || quizItem.data?.work10Data || quizItem.data;
           return (
             <div key={`quiz-10-${index}`} className="quiz-item">
               <h3>#10. 다중 어법 오류 찾기</h3>
@@ -292,7 +337,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_11: 본문 문장별 해석
         if (quizItem.workTypeId === '11') {
-          const work11Data = quizItem.data?.work11Data || quizItem.data;
+          const work11Data = quizItem.work11Data || quizItem.data?.work11Data || quizItem.data;
           return (
             <div key={`quiz-11-${index}`} className="quiz-item">
               <h3>#11. 본문 문장별 해석</h3>
@@ -327,7 +372,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_13: 빈칸 채우기 (단어-주관식)
         if (quizItem.workTypeId === '13') {
-          const work13Data = quizItem.data?.work13Data || quizItem.data;
+          const work13Data = quizItem.work13Data || quizItem.data?.work13Data || quizItem.data;
           return (
             <div key={`quiz-13-${index}`} className="quiz-item">
               <h3>#13. 빈칸 채우기 (단어-주관식)</h3>
@@ -351,7 +396,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
         // Work_14: 빈칸 채우기 (문장-주관식)
         if (quizItem.workTypeId === '14') {
-          const work14Data = quizItem.data?.work14Data || quizItem.data;
+          const work14Data = quizItem.work14Data || quizItem.data?.work14Data || quizItem.data;
           
           // 기존 데이터 형식을 새로운 형식으로 변환
           const convertBlankedText = (text: string) => {
