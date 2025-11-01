@@ -12,7 +12,7 @@
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   padding: 40px;
-  max-width: 500px;
+  max-width: 900px;
   width: 100%;
   text-align: center;
 }
@@ -91,9 +91,10 @@
 .detail-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 8px 0;
   border-bottom: 1px solid #e9ecef;
+  gap: 15px;
 }
 
 .detail-item:last-child {
@@ -103,11 +104,16 @@
 .detail-item .label {
   font-weight: 500;
   color: #666;
+  flex-shrink: 0;
+  min-width: 100px;
 }
 
 .detail-item .value {
   font-weight: 600;
   color: #333;
+  word-break: break-all;
+  text-align: right;
+  flex: 1;
 }
 
 .action-buttons {
