@@ -69,6 +69,7 @@ export class TossPaymentService {
         orderId // orderId 전달
       );
       
+      // HashRouter 사용 시 URL 형식: #/payment/success
       const tossRequestData: TossPaymentRequest = {
         amount: amount,
         orderId: savedOrderId,
@@ -76,8 +77,8 @@ export class TossPaymentService {
         customerName: userName,
         customerEmail: userEmail,
         customerMobilePhone: userPhone,
-        successUrl: `${window.location.origin}/payment/success`,
-        failUrl: `${window.location.origin}/payment/fail`
+        successUrl: `${window.location.origin}/#/payment/success`,
+        failUrl: `${window.location.origin}/#/payment/fail`
       };
 
       // 토스페이먼츠 결제 요청 (실제로는 클라이언트에서 위젯을 통해 처리)

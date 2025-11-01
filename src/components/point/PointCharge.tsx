@@ -136,6 +136,7 @@ const PointCharge: React.FC = () => {
         const tossPayments = window.TossPayments(clientKey);
         
         // 결제 수단 선택 (가이드에 따라 카드, 가상계좌, 계좌이체 등 지원)
+        // HashRouter 사용 시 URL 형식: #/payment/success
         // 주의: successUrl에 paymentKey를 포함하지 않음 (토스페이먼츠가 자동으로 추가함)
         await tossPayments.requestPayment('카드', {
           amount: paymentAmount,
@@ -143,8 +144,8 @@ const PointCharge: React.FC = () => {
           orderName: `EngQuiz 포인트 충전 (${paymentAmount.toLocaleString()}원)`,
           customerName: user.displayName || '사용자',
           customerEmail: user.email || '',
-          successUrl: `${window.location.origin}/payment/success?orderId=${tossData.orderId}&amount=${paymentAmount}`,
-          failUrl: `${window.location.origin}/payment/fail`
+          successUrl: `${window.location.origin}/#/payment/success?orderId=${tossData.orderId}&amount=${paymentAmount}`,
+          failUrl: `${window.location.origin}/#/payment/fail`
         });
 
         // 결제 성공 시 포인트 정보 새로고침

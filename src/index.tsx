@@ -2,25 +2,17 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles/index.css';
 import App from './App';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 
-// React Router future flags 설정
-const router = {
-  // Firebase 호스팅에서는 루트 경로 사용
-  basename: '/',
-  future: {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true,
-    v7_prependBasename: true
-  }
-};
+// HashRouter 사용 - .htaccess 파일 없이도 클라이언트 사이드 라우팅 작동
+// URL 형식: http://edgeenglish.net/#/profile (서버 설정 불필요)
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   // React Strict Mode 비활성화 - 개발 모드에서의 이중 렌더링 문제 해결
-  <BrowserRouter {...router}>
+  <HashRouter>
     <App />
-  </BrowserRouter>
+  </HashRouter>
 ); 
