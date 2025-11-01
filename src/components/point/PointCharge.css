@@ -1,6 +1,6 @@
 /* 포인트 충전 메인 컨테이너 */
 .point-charge {
-  max-width: 600px;
+  max-width: 1200px; /* 600px에서 100% 증가 (600px * 2 = 1200px) */
   margin: 0 auto;
   padding: 2rem;
 }
@@ -60,7 +60,7 @@
 /* 미리 정의된 금액 버튼들 */
 .predefined-amounts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(6, 1fr); /* 1행에 6개씩 고정 배치 */
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -126,36 +126,23 @@
 .custom-amount-input {
   margin-top: 1rem;
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .custom-amount-input input {
   width: 100%;
-  padding: 0.75rem 3rem 0.75rem 1rem;
+  padding: 0.75rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
+  box-sizing: border-box;
 }
 
 .custom-amount-input input:focus {
   outline: none;
   border-color: #667eea;
-}
-
-.custom-amount-input .currency {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #718096;
-  font-weight: 500;
-}
-
-.custom-points {
-  margin-top: 0.5rem;
-  text-align: center;
-  color: #38a169;
-  font-weight: 600;
 }
 
 /* 선택된 금액 정보 */
@@ -317,7 +304,7 @@
   }
   
   .predefined-amounts {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
   
   .amount-button {

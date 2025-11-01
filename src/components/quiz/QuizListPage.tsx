@@ -19,18 +19,13 @@ const QuizListPage: React.FC = () => {
     
     setLoading(true);
     try {
-      // 최근 30일로 확장하여 더 많은 데이터 가져오기
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+      // 6개월 이내 데이터만 가져오기 (서비스에서 자동 필터링됨)
       const params = {
-        startDate: thirtyDaysAgo,
         limit: 200 // 더 많은 데이터 가져오기
       };
       
       console.log('📋 문제생성목록 로드 시작:', {
         userId: userData.uid,
-        startDate: thirtyDaysAgo,
         limit: 200
       });
       

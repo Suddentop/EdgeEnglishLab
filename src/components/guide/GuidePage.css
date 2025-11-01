@@ -1,0 +1,397 @@
+.guide-page {
+  min-height: calc(100vh - 200px);
+  padding: 2rem 1rem;
+  background-color: #f7fafc;
+}
+
+.guide-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.guide-title {
+  padding: 2rem;
+  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.guide-tabs {
+  display: flex;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f7fafc;
+  overflow-x: auto;
+}
+
+.guide-tab {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+
+.guide-tab:hover {
+  background: #edf2f7;
+  color: #667eea;
+}
+
+.guide-tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: white;
+  font-weight: 600;
+}
+
+.guide-content {
+  padding: 2rem;
+  min-height: 400px;
+}
+
+.guide-section h2 {
+  margin: 0 0 1.5rem 0;
+  color: #2d3748;
+  font-size: 1.8rem;
+  font-weight: 700;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.guide-section h3 {
+  margin: 2rem 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.guide-section h3:first-child {
+  margin-top: 0;
+}
+
+.guide-text {
+  color: #4a5568;
+  line-height: 1.8;
+}
+
+.guide-text p {
+  margin: 1rem 0;
+}
+
+.guide-text ul {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.guide-text li {
+  margin: 0.5rem 0;
+  line-height: 1.8;
+}
+
+/* 공지사항 스타일 */
+.notice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.notice-header h2 {
+  margin: 0;
+}
+
+.notice-add-btn {
+  padding: 0.5rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.notice-add-btn:hover {
+  background: #5568d3;
+}
+
+.notice-form {
+  background: #f7fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.notice-form h3 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #5568d3;
+}
+
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background: #cbd5e0;
+}
+
+.loading,
+.no-notice {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}
+
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.notice-item {
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  transition: box-shadow 0.3s ease;
+}
+
+.notice-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notice-item.important {
+  border-left-color: #f56565;
+  background: #fff5f5;
+}
+
+.notice-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.notice-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.notice-date {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.important-badge {
+  padding: 0.25rem 0.5rem;
+  background: #f56565;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.updated-badge {
+  padding: 0.25rem 0.5rem;
+  background: #48bb78;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.notice-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-edit {
+  padding: 0.4rem 0.8rem;
+  background: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-edit:hover {
+  background: #38a169;
+}
+
+.btn-delete {
+  padding: 0.4rem 0.8rem;
+  background: #f56565;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-delete:hover {
+  background: #e53e3e;
+}
+
+.notice-title {
+  color: #2d3748;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.notice-content {
+  color: #4a5568;
+  line-height: 1.8;
+}
+
+.notice-content p {
+  margin: 0.5rem 0;
+}
+
+.notice-updated {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  color: #718096;
+  font-size: 0.85rem;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .guide-page {
+    padding: 1rem 0.5rem;
+  }
+
+  .guide-title {
+    font-size: 1.5rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .guide-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .guide-tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    min-width: fit-content;
+  }
+
+  .guide-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .guide-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .guide-section h3 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .guide-title {
+    font-size: 1.3rem;
+    padding: 1rem;
+  }
+
+  .guide-tab {
+    padding: 0.75rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .guide-content {
+    padding: 1rem;
+  }
+
+  .notice-item {
+    padding: 1rem;
+  }
+}
+

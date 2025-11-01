@@ -663,3 +663,56 @@ function extractWordsManually(text) {
   
   return words;
 }
+
+/**
+ * 6개월 이상 된 문제 생성 내역 자동 삭제 스케줄러
+ * 매일 오전 3시(한국시간 기준)에 실행
+ */
+exports.cleanupOldQuizHistory = functions.pubsub.schedule('0 3 * * *')
+  .timeZone('Asia/Seoul')
+  .onRun(async (context) => {
+    try {
+      console.log('=== 6개월 이상 된 문제 생성 내역 정리 시작 ===');
+      
+      const now = admin.firestore.Timestamp.now();
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const sixMonthsAgoTimestamp = admin.firestore.Timestamp.fromDate(sixMonthsAgo);
+      
+      // createdAt이 6개월 이전인 데이터 조회
+      const quizHistoryRef = admin.firestore().collection('quizHistory');
+      const oldDocsQuery = quizHistoryRef
+        .where('createdAt', '<', sixMonthsAgoTimestamp);
+      
+      const snapshot = await oldDocsQuery.get();
+      
+      if (snapshot.empty) {
+        console.log('삭제할 6개월 이상 된 내역이 없습니다.');
+        return null;
+      }
+      
+      // 배치로 삭제 (Firestore 제한: 한 번에 최대 500개)
+      const batchSize = 500;
+      const docs = snapshot.docs;
+      let deletedCount = 0;
+      
+      for (let i = 0; i < docs.length; i += batchSize) {
+        const batch = admin.firestore().batch();
+        const batchDocs = docs.slice(i, i + batchSize);
+        
+        batchDocs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        
+        await batch.commit();
+        deletedCount += batchDocs.length;
+        console.log(`배치 ${Math.floor(i / batchSize) + 1}: ${batchDocs.length}개 삭제 완료`);
+      }
+      
+      console.log(`=== 총 ${deletedCount}개의 6개월 이상 된 내역 삭제 완료 ===`);
+      return null;
+    } catch (error) {
+      console.error('6개월 이상 된 내역 정리 오류:', error);
+      throw error;
+    }
+  });

@@ -46,8 +46,13 @@ export class TossPaymentService {
   ): Promise<{ paymentId: string; pointsEarned: number; tossData: any }> {
     try {
       // 결제 금액 검증
-      if (amount < 10000 || amount % 10000 !== 0) {
-        throw new Error('결제 금액은 만원 단위로 최소 1만원 이상이어야 합니다.');
+      if (amount < 1000) {
+        throw new Error(`결제 금액은 최소 1,000원 이상이어야 합니다.`);
+      }
+
+      // 최대 충전 금액 제한 (1회 10만원) - 토스페이먼츠 요구사항
+      if (amount > 100000) {
+        throw new Error('1회 최대 충전 금액은 10만원입니다.');
       }
 
       // 포인트 계산 (1:1 비율)

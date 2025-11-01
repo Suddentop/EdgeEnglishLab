@@ -19,7 +19,7 @@ export interface QuizHistoryItem {
   problemFileName?: string; // 문제 PDF 파일명
   answerFileUrl?: string; // 정답 PDF 파일 URL
   answerFileName?: string; // 정답 PDF 파일명
-  expiresAt: Date; // 파일 만료일 (7일 후)
+  expiresAt: Date; // 파일 만료일 (6개월 후)
   // 패키지 정보 (패키지인 경우)
   isPackage?: boolean; // 패키지 여부
   packageWorkTypes?: string[]; // 패키지에 포함된 유형들
@@ -47,7 +47,7 @@ export const saveQuizHistory = async (
 ): Promise<string> => {
   try {
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7일 후
+    const expiresAt = new Date(now.getTime() + 6 * 30 * 24 * 60 * 60 * 1000); // 6개월 후 (약 180일)
 
     const historyData = {
       userId,
@@ -78,9 +78,14 @@ export const getQuizHistory = async (
   searchParams?: QuizHistorySearchParams
 ): Promise<QuizHistoryItem[]> => {
   try {
+    // 6개월 이전 날짜 계산
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
     let q = query(
       collection(db, 'quizHistory'),
-      where('userId', '==', userId)
+      where('userId', '==', userId),
+      where('createdAt', '>=', Timestamp.fromDate(sixMonthsAgo))
     );
 
     const querySnapshot = await getDocs(q);
@@ -88,12 +93,22 @@ export const getQuizHistory = async (
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      const createdAt = data.createdAt.toDate();
+      
+      // 6개월 체크 (추가 안전장치)
+      const sixMonthsAgoCheck = new Date();
+      sixMonthsAgoCheck.setMonth(sixMonthsAgoCheck.getMonth() - 6);
+      
+      if (createdAt < sixMonthsAgoCheck) {
+        return; // 6개월 이전 데이터는 제외
+      }
+      
       history.push({
         id: doc.id,
         userId: data.userId,
         userName: data.userName,
         userNickname: data.userNickname,
-        createdAt: data.createdAt.toDate(),
+        createdAt: createdAt,
         workTypeId: data.workTypeId,
         workTypeName: data.workTypeName,
         pointsDeducted: data.pointsDeducted,
@@ -221,20 +236,42 @@ export const updateQuizHistoryFile = async (
   }
 };
 
-// 만료된 내역 정리 (7일 후 자동 삭제)
+// 만료된 내역 정리 (6개월 후 자동 삭제)
 export const cleanupExpiredHistory = async (): Promise<void> => {
   try {
     const now = new Date();
-    const q = query(
+    // expiresAt이 지났거나, createdAt이 6개월 이전인 데이터 삭제
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    // 두 가지 조건으로 삭제: expiresAt이 지났거나, createdAt이 6개월 이전
+    const q1 = query(
       collection(db, 'quizHistory'),
       where('expiresAt', '<=', Timestamp.fromDate(now))
     );
+    
+    const q2 = query(
+      collection(db, 'quizHistory'),
+      where('createdAt', '<', Timestamp.fromDate(sixMonthsAgo))
+    );
 
-    const querySnapshot = await getDocs(q);
-    const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+    const [snapshot1, snapshot2] = await Promise.all([
+      getDocs(q1),
+      getDocs(q2)
+    ]);
+
+    // 중복 제거를 위한 Set 사용
+    const docIdsToDelete = new Set<string>();
+    snapshot1.docs.forEach(doc => docIdsToDelete.add(doc.id));
+    snapshot2.docs.forEach(doc => docIdsToDelete.add(doc.id));
+
+    const deletePromises = Array.from(docIdsToDelete).map(id => {
+      const docRef = doc(db, 'quizHistory', id);
+      return deleteDoc(docRef);
+    });
 
     await Promise.all(deletePromises);
-    console.log(`만료된 내역 ${deletePromises.length}개 정리 완료`);
+    console.log(`만료된 내역 ${deletePromises.length}개 정리 완료 (6개월 제한)`);
   } catch (error) {
     console.error('만료된 내역 정리 실패:', error);
     throw error;

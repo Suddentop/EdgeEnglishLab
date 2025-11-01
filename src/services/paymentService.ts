@@ -253,17 +253,10 @@ export class PaymentService {
       };
     }
 
-    if (amount > 1000000) { // 100만원 제한
+    if (amount > 100000) { // 1회 최대 10만원 제한 (토스페이먼츠 요구사항)
       return {
         isValid: false,
-        message: '최대 결제 금액은 100만원입니다.'
-      };
-    }
-
-    if (amount % 10000 !== 0) { // 10000원 단위 검증
-      return {
-        isValid: false,
-        message: '결제 금액은 만원 단위로 입력해주세요.'
+        message: '1회 최대 충전 금액은 10만원입니다.'
       };
     }
 

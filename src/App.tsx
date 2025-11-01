@@ -47,6 +47,7 @@ import ProfilePage from './components/profile/ProfilePage';
 import PointCharge from './components/point/PointCharge';
 import PaymentSuccess from './components/payment/PaymentSuccess';
 import PaymentFail from './components/payment/PaymentFail';
+import GuidePage from './components/guide/GuidePage';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 
 // 🔍 앱 초기화 진단 로그
@@ -272,12 +273,16 @@ const AppContent: React.FC = () => {
             } 
           />
           <Route 
-            path="/point-charge" 
+            path="/point-charge"
             element={
               <PrivateRoute>
                 <PointCharge />
               </PrivateRoute>
             } 
+          />
+          <Route 
+            path="/guide" 
+            element={<GuidePage />} 
           />
           <Route 
             path="/payment/success" 

@@ -153,6 +153,14 @@ const Navigation: React.FC = () => {
                 </button>
               )}
               
+              {/* 이용안내 */}
+              <button
+                className="mobile-menu-item mobile-single-item"
+                onClick={() => { setShowMobileMenu(false); navigate('/guide'); }}
+              >
+                이용안내
+              </button>
+              
               {/* 포인트구매 */}
               {currentUser && (
                 <button
@@ -267,6 +275,17 @@ const Navigation: React.FC = () => {
             }}
           >
             내정보
+          </button>
+        )}
+        {/* 이용안내 메뉴: PC 화면에서만 보임 */}
+        {!isMobile && (
+          <button
+            className="nav-text-link guide-link"
+            onClick={() => {
+              navigate('/guide');
+            }}
+          >
+            이용안내
           </button>
         )}
         {/* 관리자 메뉴: PC 화면에서 관리자 권한 사용자에게만 표시 */}
