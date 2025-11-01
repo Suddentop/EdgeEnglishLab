@@ -47,6 +47,7 @@ import ProfilePage from './components/profile/ProfilePage';
 import PointCharge from './components/point/PointCharge';
 import PaymentSuccess from './components/payment/PaymentSuccess';
 import PaymentFail from './components/payment/PaymentFail';
+import PaymentHistoryPage from './components/payment/PaymentHistoryPage';
 import GuidePage from './components/guide/GuidePage';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 
@@ -277,6 +278,14 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <PointCharge />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/payment-history"
+            element={
+              <PrivateRoute>
+                <PaymentHistoryPage />
               </PrivateRoute>
             } 
           />

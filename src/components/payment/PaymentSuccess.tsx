@@ -14,33 +14,51 @@ const PaymentSuccess: React.FC = () => {
     const processPayment = async () => {
       try {
         const searchParams = new URLSearchParams(location.search);
+        // 토스페이먼츠가 리다이렉트할 때 전달하는 파라미터
         const paymentKey = searchParams.get('paymentKey');
-        const orderId = searchParams.get('orderId');
+        // orderId가 중복될 수 있으므로 마지막 값 사용
+        const orderIdValues = searchParams.getAll('orderId');
+        const orderId = orderIdValues.length > 0 ? orderIdValues[orderIdValues.length - 1] : null;
         const amount = searchParams.get('amount');
 
-        if (!paymentKey || !orderId || !amount) {
-          throw new Error('결제 정보가 올바르지 않습니다.');
+        if (!paymentKey || !orderId) {
+          throw new Error('결제 정보가 올바르지 않습니다. paymentKey와 orderId가 필요합니다.');
+        }
+
+        // amount가 없으면 토스페이먼츠 API에서 결제 정보 조회
+        let finalAmount = amount ? parseInt(amount) : 0;
+        if (!finalAmount || finalAmount === 0) {
+          try {
+            const paymentInfo = await TossPaymentService.getPaymentInfo(paymentKey);
+            finalAmount = paymentInfo.totalAmount || 0;
+          } catch (error) {
+            console.warn('결제 정보 조회 실패:', error);
+            throw new Error('결제 금액을 확인할 수 없습니다.');
+          }
         }
 
         // 토스페이먼츠 결제 승인
         const success = await TossPaymentService.confirmPayment(
           paymentKey,
           orderId,
-          parseInt(amount)
+          finalAmount
         );
 
         if (success) {
           setMessage({
             type: 'success',
-            text: `${parseInt(amount).toLocaleString()}원 결제가 완료되어 ${parseInt(amount).toLocaleString()}포인트가 충전되었습니다.`
+            text: `${finalAmount.toLocaleString()}원 결제가 완료되어 ${finalAmount.toLocaleString()}포인트가 충전되었습니다.`
           });
           
           // 결제 정보 설정
           setPaymentInfo({
             paymentKey,
             orderId,
-            amount: parseInt(amount)
+            amount: finalAmount
           });
+
+          // 결제 성공 후 프로필 페이지로 이동할 때 내역 새로고침을 위한 딜레이
+          console.log('✅ 결제 처리 완료, 프로필 페이지 새로고침 대기 중...');
         } else {
           throw new Error('결제 승인에 실패했습니다.');
         }
@@ -61,7 +79,8 @@ const PaymentSuccess: React.FC = () => {
   };
 
   const handleGoToPoints = () => {
-    navigate('/profile');
+    // 결제 성공 파라미터와 함께 프로필 페이지로 이동
+    navigate('/profile?payment=success');
   };
 
   if (isProcessing) {

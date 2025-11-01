@@ -19,17 +19,19 @@ const QuizListPage: React.FC = () => {
     
     setLoading(true);
     try {
-      // 6개월 이내 데이터만 가져오기 (서비스에서 자동 필터링됨)
-      const params = {
-        limit: 200 // 더 많은 데이터 가져오기
-      };
-      
       console.log('📋 문제생성목록 로드 시작:', {
-        userId: userData.uid,
-        limit: 200
+        userId: userData.uid
       });
       
-      const history = await getQuizHistory(userData.uid, params);
+      // 먼저 모든 데이터 조회 시도 (6개월 제한 없이)
+      // 인덱스 문제를 피하기 위해 includeAll을 먼저 시도
+      let params: any = {
+        limit: 1000,
+        includeAll: true
+      };
+      
+      let history = await getQuizHistory(userData.uid, params);
+      
       console.log('📋 문제생성목록 로드 완료:', {
         totalCount: history.length,
         recentItems: history.slice(0, 5).map(item => ({
@@ -39,10 +41,37 @@ const QuizListPage: React.FC = () => {
         }))
       });
       
+      if (history.length === 0) {
+        console.warn('⚠️ 문제생성목록이 비어있습니다. Firestore에서 데이터를 확인해주세요.');
+      }
+      
       setQuizHistory(history);
       setTotalPages(Math.ceil(history.length / itemsPerPage));
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ 문제 생성 내역 로드 실패:', error);
+      console.error('에러 상세:', {
+        code: error?.code,
+        message: error?.message,
+        stack: error?.stack
+      });
+      
+      // 모든 경우에 대해 단순 쿼리 재시도
+      try {
+        console.log('📋 단순 쿼리로 재시도');
+        // orderBy 없이 최소한의 쿼리만 사용
+        const params = {
+          limit: 1000,
+          includeAll: true
+        };
+        const history = await getQuizHistory(userData.uid, params);
+        console.log('📋 재시도 성공:', history.length, '개 항목');
+        setQuizHistory(history);
+        setTotalPages(Math.ceil(history.length / itemsPerPage));
+      } catch (retryError: any) {
+        console.error('❌ 재시도 실패:', retryError);
+        setQuizHistory([]);
+        setTotalPages(1);
+      }
     } finally {
       setLoading(false);
     }
@@ -234,6 +263,9 @@ const QuizListPage: React.FC = () => {
       <div className="quiz-list-container">
         <div className="table-header">
           <h2>나의 문제 생성 목록</h2>
+          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
+            생성된 모든 문제의 내역을 확인하고 다운로드할 수 있습니다.
+          </p>
         </div>
 
         <div className="quiz-list-header">

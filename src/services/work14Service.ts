@@ -6,9 +6,22 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
   const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
   
   console.log('🔍 Work14 환경 변수 확인:', {
-    proxyUrl: proxyUrl ? '설정됨' : '없음',
-    directApiKey: directApiKey ? '설정됨' : '없음'
+    proxyUrl: proxyUrl ? `설정됨 (${proxyUrl})` : '없음',
+    directApiKey: directApiKey ? '설정됨 (sk-***...)' : '없음'
   });
+  
+  // 프록시 URL이 없고 API 키도 없으면 명확한 에러 메시지
+  if (!proxyUrl && !directApiKey) {
+    const errorMsg = 'API Key가 설정되지 않았습니다.\n\n' +
+      '해결 방법:\n' +
+      '1. .env.local 파일에 REACT_APP_OPENAI_API_KEY를 설정하거나\n' +
+      '2. .env.local 파일에 REACT_APP_API_PROXY_URL을 설정하세요.\n\n' +
+      '예시:\n' +
+      'REACT_APP_OPENAI_API_KEY=your-api-key-here\n' +
+      '또는\n' +
+      'REACT_APP_API_PROXY_URL=https://edgeenglish.net/php_api_proxy/api-proxy.php';
+    throw new Error(errorMsg);
+  }
   
   // 프록시 URL이 설정된 경우 프록시 사용 (프로덕션)
   if (proxyUrl) {

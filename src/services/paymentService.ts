@@ -4,7 +4,12 @@ import {
   doc, 
   updateDoc, 
   serverTimestamp,
-  getDoc
+  getDoc,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Payment } from '../types/types';
@@ -18,8 +23,9 @@ export class PaymentService {
   static async createPaymentRequest(
     userId: string,
     amount: number,
-    paymentMethod: 'card' | 'bank_transfer' = 'card'
-  ): Promise<{ paymentId: string; pointsEarned: number }> {
+    paymentMethod: 'card' | 'bank_transfer' = 'card',
+    orderId?: string // 토스페이먼츠 orderId (선택사항)
+  ): Promise<{ paymentId: string; pointsEarned: number; orderId: string }> {
     try {
       // 최소 결제 금액 검증
       if (amount < POINT_POLICY.MINIMUM_PURCHASE_AMOUNT) {
@@ -30,11 +36,15 @@ export class PaymentService {
       const pointsEarned = amount * POINT_POLICY.POINTS_PER_WON;
 
       // 결제 정보 생성
+      // orderId가 제공되지 않으면 생성
+      const finalOrderId = orderId || `engquiz_${userId}_${Date.now()}`;
+      
       const paymentData = {
         userId,
         amount,
         pointsEarned,
         paymentMethod,
+        orderId: finalOrderId, // orderId를 필드로 저장 (나중에 조회하기 위해)
         status: PAYMENT_STATUS.PENDING,
         createdAt: serverTimestamp(),
         cardInfo: paymentMethod === 'card' ? {
@@ -47,7 +57,8 @@ export class PaymentService {
       
       return {
         paymentId: paymentRef.id,
-        pointsEarned
+        pointsEarned,
+        orderId: finalOrderId
       };
     } catch (error) {
       console.error('결제 요청 생성 오류:', error);
@@ -61,20 +72,27 @@ export class PaymentService {
       // 실제 환경에서는 여기에 실제 결제 게이트웨이 연동 코드가 들어갑니다
       // 현재는 시뮬레이션으로 성공 처리
       
-      // 결제 상태를 완료로 업데이트
-      const paymentRef = doc(db, 'payments', paymentId);
-      await updateDoc(paymentRef, {
-        status: PAYMENT_STATUS.COMPLETED,
-        completedAt: serverTimestamp()
-      });
-
       // 결제 정보 조회
+      const paymentRef = doc(db, 'payments', paymentId);
       const paymentDoc = await getDoc(paymentRef);
+      
       if (!paymentDoc.exists()) {
         throw new Error('결제 정보를 찾을 수 없습니다.');
       }
 
       const paymentData = paymentDoc.data();
+      
+      // 이미 완료된 결제인지 확인 (중복 충전 방지)
+      if (paymentData.status === PAYMENT_STATUS.COMPLETED) {
+        console.log('이미 완료된 결제입니다. 포인트 충전을 건너뜁니다.');
+        return true; // 이미 처리된 결제이므로 성공으로 반환
+      }
+
+      // 결제 상태를 완료로 업데이트
+      await updateDoc(paymentRef, {
+        status: PAYMENT_STATUS.COMPLETED,
+        completedAt: serverTimestamp()
+      });
       
       // 사용자 정보 조회
       const userRef = doc(db, 'users', paymentData.userId);
@@ -175,6 +193,111 @@ export class PaymentService {
     } catch (error) {
       console.error('결제 정보 조회 오류:', error);
       throw new Error('결제 정보 조회에 실패했습니다.');
+    }
+  }
+
+  // 사용자별 결제 내역 조회
+  static async getUserPayments(
+    userId: string,
+    limitCount?: number
+  ): Promise<Payment[]> {
+    try {
+      console.log('🔍 결제 내역 조회 시작:', { userId, limitCount });
+      
+      const constraints: any[] = [
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      ];
+
+      // limit이 지정된 경우 쿼리에 적용
+      if (limitCount) {
+        // Firestore의 limit은 최대 1000개까지 가능
+        const maxLimit = Math.min(limitCount, 1000);
+        constraints.push(limit(maxLimit));
+      }
+
+      const q = query(collection(db, 'payments'), ...constraints);
+      const querySnapshot = await getDocs(q);
+      
+      console.log('📊 쿼리 결과:', { 
+        size: querySnapshot.size, 
+        empty: querySnapshot.empty,
+        userId 
+      });
+      
+      const payments: Payment[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log('💳 결제 데이터:', { 
+          id: doc.id, 
+          orderId: data.orderId,
+          status: data.status,
+          amount: data.amount,
+          createdAt: data.createdAt 
+        });
+        
+        payments.push({
+          id: doc.id,
+          userId: data.userId,
+          amount: data.amount,
+          pointsEarned: data.pointsEarned,
+          paymentMethod: data.paymentMethod,
+          status: data.status,
+          cardInfo: data.cardInfo,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          completedAt: data.completedAt?.toDate()
+        });
+      });
+
+      console.log('✅ 결제 내역 조회 완료:', { count: payments.length });
+      return payments;
+    } catch (error: any) {
+      console.error('❌ 결제 내역 조회 오류:', error);
+      console.error('에러 상세:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      // 인덱스 오류인 경우 createdAt 없이 조회 시도
+      if (error.code === 'failed-precondition') {
+        console.warn('⚠️ 인덱스 오류 감지, createdAt 없이 재시도...');
+        try {
+          const q = query(
+            collection(db, 'payments'),
+            where('userId', '==', userId),
+            limit(limitCount || 50)
+          );
+          const querySnapshot = await getDocs(q);
+          const payments: Payment[] = [];
+          
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            payments.push({
+              id: doc.id,
+              userId: data.userId,
+              amount: data.amount,
+              pointsEarned: data.pointsEarned,
+              paymentMethod: data.paymentMethod,
+              status: data.status,
+              cardInfo: data.cardInfo,
+              createdAt: data.createdAt?.toDate() || new Date(),
+              completedAt: data.completedAt?.toDate()
+            });
+          });
+          
+          // 클라이언트에서 정렬
+          payments.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          
+          console.log('✅ 인덱스 없이 조회 성공:', { count: payments.length });
+          return payments;
+        } catch (retryError) {
+          console.error('❌ 재시도 실패:', retryError);
+        }
+      }
+      
+      throw new Error('결제 내역 조회에 실패했습니다.');
     }
   }
 

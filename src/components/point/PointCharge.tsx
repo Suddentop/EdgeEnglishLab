@@ -122,15 +122,28 @@ const PointCharge: React.FC = () => {
 
       // 토스페이먼츠 결제 위젯 실행
       if (window.TossPayments) {
-        const tossPayments = window.TossPayments('test_ck_your_client_key'); // 실제 클라이언트 키로 교체 필요
+        const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY || 'test_ck_your_client_key';
         
+        if (!clientKey || clientKey === 'test_ck_your_client_key') {
+          setMessage({ 
+            type: 'error', 
+            text: '토스페이먼츠 클라이언트 키가 설정되지 않았습니다. 환경 변수를 확인해주세요.' 
+          });
+          setIsProcessing(false);
+          return;
+        }
+        
+        const tossPayments = window.TossPayments(clientKey);
+        
+        // 결제 수단 선택 (가이드에 따라 카드, 가상계좌, 계좌이체 등 지원)
+        // 주의: successUrl에 paymentKey를 포함하지 않음 (토스페이먼츠가 자동으로 추가함)
         await tossPayments.requestPayment('카드', {
           amount: paymentAmount,
           orderId: tossData.orderId,
           orderName: `EngQuiz 포인트 충전 (${paymentAmount.toLocaleString()}원)`,
           customerName: user.displayName || '사용자',
           customerEmail: user.email || '',
-          successUrl: `${window.location.origin}/payment/success?paymentKey=${tossData.paymentKey}&orderId=${tossData.orderId}&amount=${paymentAmount}`,
+          successUrl: `${window.location.origin}/payment/success?orderId=${tossData.orderId}&amount=${paymentAmount}`,
           failUrl: `${window.location.origin}/payment/fail`
         });
 

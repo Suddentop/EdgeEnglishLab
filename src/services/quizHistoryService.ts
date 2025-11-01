@@ -78,53 +78,140 @@ export const getQuizHistory = async (
   searchParams?: QuizHistorySearchParams
 ): Promise<QuizHistoryItem[]> => {
   try {
-    // 6개월 이전 날짜 계산
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // searchParams에 includeAll이 있으면 6개월 제한 없이 모든 데이터 조회
+    const includeAll = (searchParams as any)?.includeAll === true;
     
-    let q = query(
-      collection(db, 'quizHistory'),
-      where('userId', '==', userId),
-      where('createdAt', '>=', Timestamp.fromDate(sixMonthsAgo))
-    );
-
-    const querySnapshot = await getDocs(q);
+    let q;
+    let querySnapshot;
+    
+    // orderBy를 사용한 쿼리 시도 (인덱스 오류 시 orderBy 없이 재시도)
+    try {
+      if (includeAll) {
+        // 모든 데이터 조회 (6개월 제한 없음)
+        q = query(
+          collection(db, 'quizHistory'),
+          where('userId', '==', userId),
+          orderBy('createdAt', 'desc')
+        );
+      } else {
+        // 6개월 이전 날짜 계산
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        
+        q = query(
+          collection(db, 'quizHistory'),
+          where('userId', '==', userId),
+          where('createdAt', '>=', Timestamp.fromDate(sixMonthsAgo)),
+          orderBy('createdAt', 'desc')
+        );
+      }
+      querySnapshot = await getDocs(q);
+    } catch (queryError: any) {
+      // 인덱스 오류 또는 기타 쿼리 오류 시 orderBy 없이 재시도
+      console.warn('orderBy 쿼리 실패, orderBy 없이 재시도:', queryError?.code, queryError?.message);
+      
+      if (includeAll) {
+        q = query(
+          collection(db, 'quizHistory'),
+          where('userId', '==', userId)
+        );
+      } else {
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        
+        q = query(
+          collection(db, 'quizHistory'),
+          where('userId', '==', userId),
+          where('createdAt', '>=', Timestamp.fromDate(sixMonthsAgo))
+        );
+      }
+      querySnapshot = await getDocs(q);
+    }
     const history: QuizHistoryItem[] = [];
 
+    console.log(`📊 Firestore 쿼리 결과: ${querySnapshot.size}개 문서 발견`);
+    
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      const createdAt = data.createdAt.toDate();
-      
-      // 6개월 체크 (추가 안전장치)
-      const sixMonthsAgoCheck = new Date();
-      sixMonthsAgoCheck.setMonth(sixMonthsAgoCheck.getMonth() - 6);
-      
-      if (createdAt < sixMonthsAgoCheck) {
-        return; // 6개월 이전 데이터는 제외
+      try {
+        const data = doc.data();
+        const createdAt = data.createdAt?.toDate();
+        
+        if (!createdAt) {
+          console.warn('⚠️ createdAt이 없는 문서 발견:', doc.id, data);
+          // createdAt이 없어도 다른 필드로 처리 시도
+          if (data.createdAt) {
+            // Timestamp 객체인 경우
+            const ts = data.createdAt as any;
+            if (ts.toDate) {
+              const date = ts.toDate();
+              if (date && !isNaN(date.getTime())) {
+                // createdAt이 유효한 경우 계속 처리
+                const historyItem = {
+                  id: doc.id,
+                  userId: data.userId,
+                  userName: data.userName || '',
+                  userNickname: data.userNickname || '',
+                  createdAt: date,
+                  workTypeId: data.workTypeId || '',
+                  workTypeName: data.workTypeName || '',
+                  pointsDeducted: data.pointsDeducted || 0,
+                  pointsRefunded: data.pointsRefunded || 0,
+                  status: data.status || 'success',
+                  inputText: data.inputText || '',
+                  generatedData: typeof data.generatedData === 'string' ? JSON.parse(data.generatedData) : data.generatedData,
+                  problemFileUrl: data.problemFileUrl,
+                  problemFileName: data.problemFileName,
+                  answerFileUrl: data.answerFileUrl,
+                  answerFileName: data.answerFileName,
+                  expiresAt: data.expiresAt?.toDate() || date,
+                  isPackage: data.isPackage || false,
+                  packageWorkTypes: data.packageWorkTypes || []
+                };
+                history.push(historyItem);
+                return;
+              }
+            }
+          }
+          return; // createdAt을 복구할 수 없으면 스킵
+        }
+        
+        // includeAll이 아닌 경우에만 6개월 체크 (추가 안전장치)
+        if (!includeAll) {
+          const sixMonthsAgoCheck = new Date();
+          sixMonthsAgoCheck.setMonth(sixMonthsAgoCheck.getMonth() - 6);
+          
+          if (createdAt < sixMonthsAgoCheck) {
+            return; // 6개월 이전 데이터는 제외
+          }
+        }
+        
+        history.push({
+          id: doc.id,
+          userId: data.userId,
+          userName: data.userName || '',
+          userNickname: data.userNickname || '',
+          createdAt: createdAt,
+          workTypeId: data.workTypeId || '',
+          workTypeName: data.workTypeName || '',
+          pointsDeducted: data.pointsDeducted || 0,
+          pointsRefunded: data.pointsRefunded || 0,
+          status: data.status || 'success',
+          inputText: data.inputText || '',
+          generatedData: typeof data.generatedData === 'string' ? JSON.parse(data.generatedData) : data.generatedData,
+          problemFileUrl: data.problemFileUrl,
+          problemFileName: data.problemFileName,
+          answerFileUrl: data.answerFileUrl,
+          answerFileName: data.answerFileName,
+          expiresAt: data.expiresAt?.toDate() || createdAt,
+          isPackage: data.isPackage || false,
+          packageWorkTypes: data.packageWorkTypes || []
+        });
+      } catch (parseError) {
+        console.error('❌ 문서 파싱 오류:', doc.id, parseError);
       }
-      
-      history.push({
-        id: doc.id,
-        userId: data.userId,
-        userName: data.userName,
-        userNickname: data.userNickname,
-        createdAt: createdAt,
-        workTypeId: data.workTypeId,
-        workTypeName: data.workTypeName,
-        pointsDeducted: data.pointsDeducted,
-        pointsRefunded: data.pointsRefunded,
-        status: data.status,
-        inputText: data.inputText,
-        generatedData: typeof data.generatedData === 'string' ? JSON.parse(data.generatedData) : data.generatedData,
-        problemFileUrl: data.problemFileUrl,
-        problemFileName: data.problemFileName,
-        answerFileUrl: data.answerFileUrl,
-        answerFileName: data.answerFileName,
-        expiresAt: data.expiresAt.toDate(),
-        isPackage: data.isPackage || false,
-        packageWorkTypes: data.packageWorkTypes || []
-      });
     });
+    
+    console.log(`✅ 처리 완료: ${history.length}개 항목 로드됨`);
 
     // 클라이언트 사이드에서 정렬 및 필터링
     let filteredHistory = history;

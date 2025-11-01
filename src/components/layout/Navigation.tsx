@@ -260,6 +260,7 @@ const Navigation: React.FC = () => {
             포인트구매
           </button>
         )}
+        
         {/* Feedback 메뉴 */}
         {!isMobile && (
           <Link to="/feedback" className="nav-text-link feedback-link">

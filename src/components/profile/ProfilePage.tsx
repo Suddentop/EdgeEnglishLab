@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { updatePassword } from 'firebase/auth';
+import { PaymentService } from '../../services/paymentService';
+import { Payment } from '../../types/types';
+import { PAYMENT_STATUS } from '../../utils/pointConstants';
 import './ProfilePage.css';
 
 const ProfilePage: React.FC = () => {
@@ -20,9 +23,13 @@ const ProfilePage: React.FC = () => {
   });
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [message, setMessage] = useState('');
-
+  
+  // 결제 내역 관련 상태
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentCurrentPage, setPaymentCurrentPage] = useState(1);
+  const paymentItemsPerPage = 5;
 
   useEffect(() => {
     if (userData) {
@@ -33,6 +40,56 @@ const ProfilePage: React.FC = () => {
       });
     }
   }, [userData]);
+
+  // 결제 내역 로드 함수
+  const loadPaymentHistory = async () => {
+    if (!userData?.uid) return;
+    
+    setPaymentLoading(true);
+    try {
+      console.log('📋 결제 내역 로드 시작:', { userId: userData.uid });
+      const paymentList = await PaymentService.getUserPayments(userData.uid, 50);
+      console.log('📋 로드된 결제 내역:', { count: paymentList.length, payments: paymentList });
+      setPayments(paymentList);
+    } catch (error: any) {
+      console.error('❌ 결제 내역 로드 실패:', error);
+      console.error('에러 상세:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // 결제 내역 자동 로드
+  useEffect(() => {
+    loadPaymentHistory();
+  }, [userData?.uid]);
+
+  // 결제 성공 페이지에서 돌아올 때 내역 새로고침
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('🔄 페이지 포커스 - 결제 내역 새로고침');
+      loadPaymentHistory();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    // 결제 성공 URL 파라미터 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+      console.log('✅ 결제 성공 감지 - 내역 새로고침');
+      setTimeout(() => {
+        loadPaymentHistory();
+      }, 1000);
+    }
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [userData?.uid]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -158,6 +215,44 @@ const ProfilePage: React.FC = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  // 결제 관련 유틸리티 함수
+  const formatPaymentDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  };
+
+  const getPaymentStatusText = (status: string) => {
+    switch (status) {
+      case PAYMENT_STATUS.COMPLETED: return '완료';
+      case PAYMENT_STATUS.PENDING: return '대기중';
+      case PAYMENT_STATUS.FAILED: return '실패';
+      case PAYMENT_STATUS.REFUNDED: return '환불됨';
+      default: return '알수없음';
+    }
+  };
+
+  const getPaymentStatusClass = (status: string) => {
+    switch (status) {
+      case PAYMENT_STATUS.COMPLETED: return 'status-success';
+      case PAYMENT_STATUS.PENDING: return 'status-partial';
+      case PAYMENT_STATUS.FAILED: return 'status-failed';
+      case PAYMENT_STATUS.REFUNDED: return 'status-refunded';
+      default: return 'status-unknown';
+    }
+  };
+
+  const getPaymentMethodText = (method: string) => {
+    switch (method) {
+      case 'card': return '카드결제';
+      case 'bank_transfer': return '계좌이체';
+      default: return method;
+    }
   };
 
   if (!currentUser || !userData) {
@@ -312,7 +407,6 @@ const ProfilePage: React.FC = () => {
             </div>
           )}
 
-
           <div className="profile-actions">
             {isEditing ? (
               <>
@@ -334,6 +428,117 @@ const ProfilePage: React.FC = () => {
             )}
           </div>
 
+        </div>
+      </div>
+
+      {/* 결제 내역 컨테이너 - 별도 컨테이너 */}
+      <div className="payment-history-container">
+        <div className="payment-history-header">
+          <h1>결제 내역</h1>
+        </div>
+
+        <div className={`payment-history-content ${payments.length === 0 && !paymentLoading ? 'empty-state' : ''}`}>
+          {paymentLoading ? (
+            <div className="loading">결제 내역을 불러오는 중...</div>
+          ) : payments.length === 0 ? (
+            <div className="no-data">결제 내역이 없습니다.</div>
+          ) : (
+            <>
+              {/* 통계 정보 */}
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <span className="stat-label">총 결제 금액</span>
+                  <span className="stat-value">
+                    {payments
+                      .filter(p => p.status === PAYMENT_STATUS.COMPLETED)
+                      .reduce((sum, p) => sum + p.amount, 0)
+                      .toLocaleString()}원
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">총 충전 포인트</span>
+                  <span className="stat-value">
+                    {payments
+                      .filter(p => p.status === PAYMENT_STATUS.COMPLETED)
+                      .reduce((sum, p) => sum + p.pointsEarned, 0)
+                      .toLocaleString()}P
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">총 결제 건수</span>
+                  <span className="stat-value">
+                    {payments.filter(p => p.status === PAYMENT_STATUS.COMPLETED).length}건
+                  </span>
+                </div>
+              </div>
+
+              {/* 결제 내역 테이블 */}
+              <div className="payment-history-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>결제일시</th>
+                      <th>결제금액</th>
+                      <th>충전포인트</th>
+                      <th>결제수단</th>
+                      <th>상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments
+                      .slice(
+                        (paymentCurrentPage - 1) * paymentItemsPerPage,
+                        paymentCurrentPage * paymentItemsPerPage
+                      )
+                      .map((payment) => (
+                        <tr key={payment.id}>
+                          <td>{formatPaymentDate(payment.createdAt)}</td>
+                          <td>{payment.amount.toLocaleString()}원</td>
+                          <td>{payment.pointsEarned.toLocaleString()}P</td>
+                          <td>
+                            {payment.paymentMethod === 'card' && payment.cardInfo ? (
+                              <span className="card-info">
+                                {payment.cardInfo.brand} •••• {payment.cardInfo.last4}
+                              </span>
+                            ) : (
+                              getPaymentMethodText(payment.paymentMethod)
+                            )}
+                          </td>
+                          <td>
+                            <span className={`status-badge ${getPaymentStatusClass(payment.status)}`}>
+                              {getPaymentStatusText(payment.status)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 페이지네이션 */}
+              {Math.ceil(payments.length / paymentItemsPerPage) > 1 && (
+                <div className="payment-pagination">
+                  <button
+                    onClick={() => setPaymentCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={paymentCurrentPage === 1}
+                    className="pagination-btn"
+                  >
+                    이전
+                  </button>
+                  <span className="pagination-info">
+                    {paymentCurrentPage} / {Math.ceil(payments.length / paymentItemsPerPage)}
+                  </span>
+                  <button
+                    onClick={() => setPaymentCurrentPage(p => Math.min(Math.ceil(payments.length / paymentItemsPerPage), p + 1))}
+                    disabled={paymentCurrentPage >= Math.ceil(payments.length / paymentItemsPerPage)}
+                    className="pagination-btn"
+                  >
+                    다음
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

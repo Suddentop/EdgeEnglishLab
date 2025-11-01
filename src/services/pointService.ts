@@ -225,16 +225,16 @@ export const chargePoints = async (
     });
     
     // 포인트 거래 내역 기록 (충전)
-    const transaction: Omit<PointTransaction, 'id'> = {
+    // workTypeId와 workTypeName은 포인트 충전 시에는 필요 없으므로 제외
+    const transaction: any = {
       userId,
       userName,
       userNickname,
       type: 'charge',
       amount: points,
       reason: `포인트 충전 (결제ID: ${paymentId})`,
-      timestamp: new Date(),
-      workTypeId: undefined,
-      workTypeName: undefined
+      timestamp: new Date()
+      // workTypeId와 workTypeName은 문제 생성 시에만 필요하므로 제외
     };
     
     await addDoc(collection(db, 'pointTransactions'), transaction);
