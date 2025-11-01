@@ -6,10 +6,10 @@ import './Navigation.css';
 import { isAdmin } from '../../utils/adminUtils';
 
 const WORK_MENUS = [
+  { label: '📦 본문 해석 및 본문 추출', path: '/work_15_image-problem-analyzer' },
   { label: '📦 패키지 퀴즈 #01 (여러 유형 생성)', path: '/package-quiz' },
   { label: '📦 패키지 퀴즈 #02 (2단 출력)', path: '/package-quiz-2step' },
   { label: '📦 패키지 퀴즈 #03 (본문 집중 문제)', path: '/package-quiz-3order' },
-  { label: '📦 본문 해석 및 추출', path: '/work_15_image-problem-analyzer' },
   { label: '01. 문단 순서 맞추기', path: '/work_01_article-order' },
   { label: '02. 유사단어 독해', path: '/work_02_reading-comprehension' },
   { label: '03. 빈칸(단어) 찾기', path: '/work_03_vocabulary-word' },

@@ -21,7 +21,7 @@ import { generateWork09Quiz } from '../../../services/work09Service';
 import { generateWork10Quiz } from '../../../services/work10Service';
 import { generateWork11Quiz } from '../../../services/work11Service';
 import { generateBlankFillQuizWithAI } from '../../../services/work13Service';
-import { generateBlankQuizWithAI } from '../../../services/work14Service';
+import { generateBlankQuizWithAI, imageToTextWithOpenAIVision } from '../../../services/work14Service';
 import { translateToKorean } from '../../../services/common';
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 import PrintHeaderPackage02 from './PrintHeaderPackage02';
@@ -535,11 +535,39 @@ const Package_02_TwoStepQuiz: React.FC = () => {
   };
 
   // 이미지 파일 선택 핸들러
-  const handleImageFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      // TODO: 이미지에서 텍스트 추출 기능 구현
+      // OCR → textarea에 자동 입력
+      setIsExtractingText(true);
+      setIsLoading(true);
+      try {
+        const ocrText = await imageToTextWithOpenAIVision(file);
+        console.log('📝 추출된 텍스트 길이:', ocrText.length);
+        
+        if (ocrText && ocrText.trim().length > 0) {
+          setInputText(ocrText);
+          // 이미지 파일 업로드 후에도 텍스트 모드로 전환
+          setInputMode('text');
+          setTimeout(() => {
+            if (textAreaRef.current) {
+              textAreaRef.current.style.height = 'auto';
+              textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+              textAreaRef.current.focus();
+            }
+          }, 100);
+        } else {
+          console.warn('⚠️ 추출된 텍스트가 비어있음');
+          alert('이미지에서 텍스트를 추출할 수 없습니다. 다른 이미지를 시도해주세요.');
+        }
+      } catch (err) {
+        console.error('❌ 이미지 텍스트 추출 실패:', err);
+        alert(`OCR 처리 중 오류가 발생했습니다: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setIsExtractingText(false);
+        setIsLoading(false);
+      }
     }
   };
 
@@ -560,21 +588,52 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       console.log(`📋 아이템 ${i}:`, { type: item.type, kind: item.kind });
       
       if (item.type.indexOf('image') !== -1) {
-        const blob = item.getAsFile();
-        if (blob) {
-          console.log('📸 이미지 파일 발견:', { size: blob.size, type: blob.type });
+        console.log('✅ 이미지 발견!');
+        const file = item.getAsFile();
+        if (file) {
+          console.log('✅ 파일 생성 성공:', { name: file.name, size: file.size, type: file.type });
+          setImageFile(file);
           setIsExtractingText(true);
-          
+          setIsLoading(true);
           try {
-            // TODO: OpenAI Vision API를 사용한 텍스트 추출 구현
-            // const extractedText = await extractTextFromImage(blob);
-            // setInputText(extractedText);
-            console.log('✅ 텍스트 추출 완료 (구현 예정)');
-          } catch (error) {
-            console.error('❌ 텍스트 추출 실패:', error);
-            alert('이미지에서 텍스트를 추출하는데 실패했습니다.');
+            console.log('🔄 OCR 처리 시작...');
+            console.log('📁 파일 정보:', { name: file.name, size: file.size, type: file.type });
+            
+            const ocrText = await imageToTextWithOpenAIVision(file);
+            console.log('✅ OCR 처리 완료:', ocrText.substring(0, 100) + '...');
+            console.log('📝 추출된 텍스트 길이:', ocrText.length);
+            
+            if (ocrText && ocrText.trim().length > 0) {
+              console.log('🔄 setInputText 호출 전 - 현재 inputText:', inputText);
+              console.log('🔄 setInputText 호출 전 - ocrText 길이:', ocrText.length);
+              setInputText(ocrText);
+              setInputMode('text'); // OCR 완료 후 텍스트 모드로 전환
+              console.log('✅ setInputText 호출 완료 및 inputMode를 text로 변경');
+              
+              // 상태 업데이트 확인을 위한 setTimeout
+              setTimeout(() => {
+                console.log('🔄 setInputText 호출 후 - inputText 상태:', inputText);
+                console.log('🔄 setInputText 호출 후 - inputText 길이:', inputText?.length || 0);
+                console.log('🔄 현재 inputMode:', inputMode);
+                if (textAreaRef.current) {
+                  textAreaRef.current.style.height = 'auto';
+                  textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+                  textAreaRef.current.focus();
+                }
+              }, 100);
+            } else {
+              console.warn('⚠️ 추출된 텍스트가 비어있음');
+              alert('이미지에서 텍스트를 추출할 수 없습니다. 다른 이미지를 시도해주세요.');
+            }
+          } catch (err) {
+            console.error('❌ OCR 처리 오류 상세:', err);
+            console.error('❌ 오류 타입:', typeof err);
+            console.error('❌ 오류 메시지:', err instanceof Error ? err.message : String(err));
+            console.error('❌ 오류 스택:', err instanceof Error ? err.stack : 'No stack trace');
+            alert(`OCR 처리 중 오류가 발생했습니다: ${err instanceof Error ? err.message : String(err)}`);
           } finally {
             setIsExtractingText(false);
+            setIsLoading(false);
           }
         }
         break;
@@ -2354,7 +2413,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       </div>
 
       {/* 로딩 상태 표시 */}
-      {isLoading && (
+      {(isLoading || isExtractingText) && (
         <div className="centered-hourglass-overlay">
           <div className="centered-hourglass-content">
             <div className="centered-hourglass-spinner">⏳</div>
