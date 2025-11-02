@@ -65,6 +65,10 @@ node_modules/
 # Yarn Integrity file
 .yarn-integrity
 
+# Backup files
+*.backup
+*~.backup
+
 # dotenv environment variables file
 .env
 .env.local
