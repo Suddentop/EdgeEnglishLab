@@ -22,18 +22,45 @@ admin.initializeApp();
 const cors = require('cors')({ origin: true });
 
 // OpenAI 설정 (API 키가 있는 경우에만)
-let openai = null;
-try {
-  const apiKey = functions.config().openai?.api_key || process.env.OPENAI_API_KEY;
-  console.log('API Key loaded:', apiKey ? `YES (length: ${apiKey.length})` : 'NO');
-  if (apiKey) {
-    openai = new OpenAI({ apiKey });
-    console.log('OpenAI client initialized successfully');
-  } else {
-    console.log('⚠️ OpenAI API 키가 설정되지 않았습니다.');
+// v2 환경에서는 함수 호출 시점에 config를 읽어야 함
+function getOpenAIClient() {
+  if (openai) {
+    return openai;
   }
-} catch (error) {
-  console.log('OpenAI API 키 설정 오류:', error.message);
+  
+  try {
+    let apiKey;
+    
+    // 먼저 환경 변수 확인 (v2에서 우선)
+    if (process.env.OPENAI_API_KEY) {
+      apiKey = process.env.OPENAI_API_KEY;
+      console.log('API Key from environment variable');
+    } else {
+      // v1 config 방식 (하위 호환성)
+      try {
+        const config = functions.config();
+        apiKey = config.openai?.api_key;
+        if (apiKey) {
+          console.log('API Key from functions.config()');
+        }
+      } catch (configError) {
+        console.log('functions.config() 접근 실패:', configError.message);
+      }
+    }
+    
+    if (apiKey) {
+      console.log('API Key loaded: YES (length:', apiKey.length + ')');
+      openai = new OpenAI({ apiKey });
+      console.log('OpenAI client initialized successfully');
+      return openai;
+    } else {
+      console.log('⚠️ OpenAI API 키가 설정되지 않았습니다.');
+      return null;
+    }
+  } catch (error) {
+    console.error('OpenAI API 키 설정 오류:', error.message);
+    return null;
+  }
 }
 
 /**
@@ -176,13 +203,14 @@ exports.extractWords = functions.https.onRequest(async (req, res) => {
       return;
     }
 
-    if (!openai) {
+    const openaiClient = getOpenAIClient();
+    if (!openaiClient) {
       res.status(503).json({ error: 'OpenAI API가 설정되지 않았습니다.' });
       return;
     }
 
     // OpenAI API를 사용하여 영어 단어와 한글 뜻 추출
-    const completion = await openai.chat.completions.create({
+    const completion = await openaiClient.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -244,7 +272,8 @@ exports.ocr = functions.https.onRequest(async (req, res) => {
   }
 
   try {
-    if (!openai) {
+    const openaiClient = getOpenAIClient();
+    if (!openaiClient) {
       res.status(503).json({ error: 'OpenAI API가 설정되지 않았습니다.' });
       return;
     }
@@ -266,7 +295,7 @@ exports.ocr = functions.https.onRequest(async (req, res) => {
 
       try {
         // OpenAI Vision API를 사용하여 이미지에서 텍스트 추출
-        const response = await openai.chat.completions.create({
+        const response = await openaiClient.chat.completions.create({
           model: "gpt-4-vision-preview",
           messages: [
             {
@@ -322,7 +351,9 @@ exports.openaiProxy = functions.https.onRequest(async (req, res) => {
   }
 
   try {
-    if (!openai) {
+    // 함수 호출 시점에 OpenAI 클라이언트 가져오기
+    const openaiClient = getOpenAIClient();
+    if (!openaiClient) {
       console.error('OpenAI API가 설정되지 않았습니다.');
       res.status(503).json({ error: 'OpenAI API가 설정되지 않았습니다.' });
       return;
@@ -335,7 +366,7 @@ exports.openaiProxy = functions.https.onRequest(async (req, res) => {
     });
 
     // OpenAI API 직접 호출
-    const completion = await openai.chat.completions.create(requestBody);
+    const completion = await openaiClient.chat.completions.create(requestBody);
     
     console.log('OpenAI API 성공');
     res.json(completion);
