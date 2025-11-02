@@ -11,54 +11,75 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const OpenAI = require('openai');
 
-// .env 파일 로드 (로컬 개발 환경용)
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+// .env 파일 로드 (로컬 개발 및 프로덕션 환경 모두)
+// Firebase Functions 배포 시 .env 파일도 함께 배포되며, dotenv로 로드해야 함
+require('dotenv').config();
 
 admin.initializeApp();
 
 // CORS 설정
 const cors = require('cors')({ origin: true });
 
+// OpenAI 클라이언트 캐시 변수
+let openai = null;
+
 // OpenAI 설정 (API 키가 있는 경우에만)
 // v2 환경에서는 함수 호출 시점에 config를 읽어야 함
 function getOpenAIClient() {
   if (openai) {
-    return openai;
+    return openai;      
   }
   
   try {
     let apiKey;
+    let apiKeySource = 'none';
     
-    // 먼저 환경 변수 확인 (v2에서 우선)
+    // 먼저 환경 변수 확인 (v2 방식, 우선순위 1)
     if (process.env.OPENAI_API_KEY) {
       apiKey = process.env.OPENAI_API_KEY;
-      console.log('API Key from environment variable');
-    } else {
-      // v1 config 방식 (하위 호환성)
+      apiKeySource = 'environment variable (process.env.OPENAI_API_KEY)';
+      console.log('✅ API Key from environment variable');
+    }
+    
+    // 환경 변수가 없으면 functions.config() 확인 (v1 방식, 우선순위 2)
+    if (!apiKey) {
       try {
         const config = functions.config();
         apiKey = config.openai?.api_key;
         if (apiKey) {
-          console.log('API Key from functions.config()');
+          apiKeySource = 'functions.config()';
+          console.log('✅ API Key from functions.config()');
         }
       } catch (configError) {
-        console.log('functions.config() 접근 실패:', configError.message);
+        console.log('⚠️ functions.config() 접근 실패:', configError.message);
       }
     }
     
     if (apiKey) {
-      console.log('API Key loaded: YES (length:', apiKey.length + ')');
+      // API 키 일부만 로그에 표시 (보안)
+      const maskedKey = apiKey.length > 12 
+        ? `${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`
+        : '****';
+      console.log(`✅ API Key loaded from ${apiKeySource}`);
+      console.log(`   Key preview: ${maskedKey} (length: ${apiKey.length})`);
+      
       openai = new OpenAI({ apiKey });
-      console.log('OpenAI client initialized successfully');
+      console.log('✅ OpenAI client initialized successfully');
       return openai;
     } else {
-      console.log('⚠️ OpenAI API 키가 설정되지 않았습니다.');
+      console.error('❌ OpenAI API 키가 설정되지 않았습니다.');
+      console.error('   확인 사항:');
+      console.error('   - process.env.OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? '설정됨' : '없음');
+      try {
+        const config = functions.config();
+        console.error('   - functions.config().openai?.api_key:', config.openai?.api_key ? '설정됨' : '없음');
+      } catch (e) {
+        console.error('   - functions.config() 접근 실패');
+      }
       return null;
     }
   } catch (error) {
-    console.error('OpenAI API 키 설정 오류:', error.message);
+    console.error('❌ OpenAI API 키 설정 오류:', error.message);
     return null;
   }
 }
@@ -354,28 +375,88 @@ exports.openaiProxy = functions.https.onRequest(async (req, res) => {
     // 함수 호출 시점에 OpenAI 클라이언트 가져오기
     const openaiClient = getOpenAIClient();
     if (!openaiClient) {
-      console.error('OpenAI API가 설정되지 않았습니다.');
-      res.status(503).json({ error: 'OpenAI API가 설정되지 않았습니다.' });
+      console.error('❌ OpenAI API가 설정되지 않았습니다.');
+      console.error('환경 변수 확인:');
+      console.error('  OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? '설정됨' : '없음');
+      
+      // v1 config도 확인
+      try {
+        const config = functions.config();
+        console.error('  functions.config().openai?.api_key:', config.openai?.api_key ? '설정됨' : '없음');
+      } catch (configError) {
+        console.error('  functions.config() 접근 실패');
+      }
+      
+      res.status(503).json({ 
+        error: 'OpenAI API가 설정되지 않았습니다.',
+        message: 'Firebase Functions에 OPENAI_API_KEY 환경 변수를 설정해주세요.'
+      });
       return;
     }
 
     const requestBody = req.body;
-    console.log('OpenAI API 요청:', {
+    console.log('✅ OpenAI API 요청 수신:', {
       model: requestBody.model,
-      message_count: requestBody.messages?.length || 0
+      message_count: requestBody.messages?.length || 0,
+      has_image: requestBody.messages?.some((msg) => 
+        Array.isArray(msg.content) && msg.content.some((item) => item.type === 'image_url')
+      ) || false
     });
 
     // OpenAI API 직접 호출
     const completion = await openaiClient.chat.completions.create(requestBody);
     
-    console.log('OpenAI API 성공');
+    console.log('✅ OpenAI API 호출 성공:', {
+      model: completion.model,
+      usage: completion.usage
+    });
     res.json(completion);
   } catch (error) {
-    console.error('OpenAI API 오류:', error);
-    res.status(500).json({ 
-      error: 'API 호출 중 오류가 발생했습니다.',
-      details: error.message 
-    });
+    console.error('❌ OpenAI API 오류 발생:');
+    console.error('  에러 타입:', error?.constructor?.name || typeof error);
+    console.error('  에러 메시지:', error?.message || String(error));
+    console.error('  에러 코드:', error?.code);
+    console.error('  에러 상태:', error?.status);
+    
+    // 401 에러인 경우 API 키 정보 추가 출력
+    if (error?.status === 401 || error?.code === 'invalid_api_key') {
+      const openaiClient = getOpenAIClient();
+      if (openaiClient) {
+        // 클라이언트가 초기화되었지만 401 에러가 발생했다는 것은 키가 잘못되었다는 의미
+        console.error('  ⚠️ API 키 인증 실패 - 설정된 키를 확인해주세요.');
+        console.error('  현재 사용 중인 키 소스:', process.env.OPENAI_API_KEY ? 'environment variable' : 'functions.config()');
+      }
+    }
+    
+    console.error('  전체 에러:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    
+    // OpenAI API 특정 에러 처리
+    if (error?.status === 401) {
+      res.status(401).json({ 
+        error: 'OpenAI API 인증 실패',
+        details: 'API 키가 유효하지 않습니다. OPENAI_API_KEY를 확인해주세요.',
+        message: error.message
+      });
+    } else if (error?.status === 429) {
+      res.status(429).json({ 
+        error: 'OpenAI API 요청 한도 초과',
+        details: '요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.',
+        message: error.message
+      });
+    } else if (error?.status === 400) {
+      res.status(400).json({ 
+        error: 'OpenAI API 요청 형식 오류',
+        details: '요청 데이터 형식이 올바르지 않습니다.',
+        message: error.message
+      });
+    } else {
+      res.status(500).json({ 
+        error: 'API 호출 중 오류가 발생했습니다.',
+        details: error?.message || '알 수 없는 오류',
+        code: error?.code,
+        status: error?.status
+      });
+    }
   }
 });
 
