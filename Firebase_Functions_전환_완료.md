@@ -69,17 +69,22 @@ build/
 
 ### Firebase Functions
 ```
-URL: https://us-central1-edgeenglishlab.cloudfunctions.net/openaiProxy
+URL (v2): https://openaiproxy-va64jagvqq-uc.a.run.app
 상태: ✅ 배포 완료
 CORS: ✅ 자동 처리
-API 키: ✅ 환경 변수에서 로드
+API 키: ✅ 함수 호출 시점에 동적 로드
+버전: v2 (Node.js 22, Gen 2)
 ```
 
 ### 환경 변수
 ```bash
 # .env.production.local
-REACT_APP_API_PROXY_URL=https://us-central1-edgeenglishlab.cloudfunctions.net/openaiProxy
+REACT_APP_API_PROXY_URL=https://openaiproxy-va64jagvqq-uc.a.run.app
 ```
+
+**중요**: Firebase Functions v2로 배포되어 URL 형식이 변경되었습니다.
+- v1 형식은 더 이상 사용할 수 없습니다.
+- v2 URL을 사용해야 합니다.
 
 ---
 
