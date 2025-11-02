@@ -8,6 +8,7 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
+import { extractTextFromImage, callOpenAI } from '../../../services/common';
 
 type InputMode = 'capture' | 'image' | 'text';
 type PrintMode = 'none' | 'no-answer' | 'with-answer';
@@ -273,51 +274,27 @@ const Work_10_MultiGrammarError: React.FC = () => {
       reader.readAsDataURL(file);
     });
     const base64 = await fileToBase64(imageFile);
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    const prompt = `영어문제로 사용되는 본문이야.
-이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
-글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
-본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
-원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
-영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: base64 } }
-            ]
-          }
-        ],
-        max_tokens: 2048
-      })
-    });
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
+    
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    return await extractTextFromImage(base64);
   }
 
   async function generateMultiGrammarQuizWithAI(passage: string): Promise<MultiGrammarQuiz> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 8개를 선정하세요.\n이 중 3~8개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.\n\n아래 JSON 형식으로만 응답하세요:\n{\n  \"originalWords\": [\"...\", ...], // 8개 원본 단어\n  \"transformedWords\": [\"...\", ...], // 8개 변형(틀린/정상) 단어\n  \"wrongIndexes\": [0,1,2,5,6,7], // 틀린 단어의 인덱스(0~7), 개수는 3~8개\n  \"translation\": \"...\" // 본문 번역\n}\n본문:\n${passage}`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2000,
-        temperature: 0.7
-      })
+    
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 2000,
+      temperature: 0.7
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
+    }
+    
     const data = await response.json();
     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');

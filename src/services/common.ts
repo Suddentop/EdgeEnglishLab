@@ -75,3 +75,47 @@ ${englishText}`;
     throw error;
   }
 }
+
+/**
+ * Vision API를 사용하여 이미지에서 텍스트 추출
+ * 프록시 또는 직접 호출을 자동으로 처리
+ */
+export async function extractTextFromImage(imageBase64: string, prompt?: string): Promise<string> {
+  const defaultPrompt = `영어문제로 사용되는 본문이야.
+이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
+글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
+본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
+원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
+영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
+  
+  const visionPrompt = prompt || defaultPrompt;
+  
+  const requestBody = {
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'user' as const,
+        content: [
+          { type: 'text' as const, text: visionPrompt },
+          { type: 'image_url' as const, image_url: { url: imageBase64 } }
+        ]
+      }
+    ],
+    max_tokens: 2048
+  };
+
+  const response = await callOpenAI(requestBody);
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Vision API 호출 실패: ${response.status} - ${errorText}`);
+  }
+  
+  const data = await response.json();
+  
+  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    throw new Error('Vision API 응답 형식 오류');
+  }
+  
+  return data.choices[0].message.content.trim();
+}

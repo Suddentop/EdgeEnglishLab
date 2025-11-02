@@ -7,6 +7,7 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
+import { extractTextFromImage, callOpenAI } from '../../../services/common';
 import '../../../styles/PrintFormat.css';
 
 interface WordReplacement {
@@ -559,33 +560,9 @@ const Work_02_ReadingComprehension: React.FC = () => {
       reader.readAsDataURL(file);
     });
     const base64 = await fileToBase64(imageFile);
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    const prompt = `영어문제로 사용되는 본문이야.
-이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
-글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
-본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
-원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
-영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: base64 } }
-            ]
-          }
-        ],
-        max_tokens: 2048
-      })
-    });
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
+    
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    return await extractTextFromImage(base64);
   }
 
   // AI 응답 검증 함수 (강화된 버전)
@@ -687,15 +664,9 @@ const Work_02_ReadingComprehension: React.FC = () => {
 
   // AI로 단어 교체 및 독해 문제 생성 (재시도 메커니즘 포함)
   async function generateReadingComprehensionWithAI(passage: string): Promise<Work_02_ReadingComprehensionData> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API 키가 설정되지 않았습니다. 환경변수를 확인해주세요.');
-    }
-
     // Step-by-Step 방식은 재시도가 필요 없음 (각 단계가 단순함)
     try {
-      const response = await callOpenAI(passage, apiKey);
+      const response = await generateReadingComprehensionStepByStep(passage);
       return response;
     } catch (error) {
       console.error('Step-by-Step 처리 실패:', error);
@@ -704,7 +675,7 @@ const Work_02_ReadingComprehension: React.FC = () => {
   }
 
     // Step 1: 문장 분리
-  async function splitSentences(passage: string, apiKey: string): Promise<string[]> {
+  async function splitSentences(passage: string): Promise<string[]> {
     const prompt = `You will receive an English passage. Split it into individual sentences.
 Use the following rules:
 - End of sentence is marked by '.', '?', or '!' followed by a space or newline.
@@ -721,22 +692,17 @@ Required JSON format:
   "sentences": ["Sentence 1.", "Sentence 2?", "Sentence 3!"]
 }`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1000,
-        temperature: 0
-      })
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
+      temperature: 0
     });
 
     if (!response.ok) {
-      throw new Error(`API 요청 실패: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`API 요청 실패: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -772,7 +738,7 @@ Required JSON format:
   }
 
   // Step 2: 문장별 단어 선택
-  async function selectWordFromSentence(sentence: string, index: number, apiKey: string, usedWords: string[] = []): Promise<{index: number, original: string}> {
+  async function selectWordFromSentence(sentence: string, index: number, usedWords: string[] = []): Promise<{index: number, original: string}> {
     const usedWordsText = usedWords.length > 0 ? `\n\nALREADY USED WORDS (do not select these): ${usedWords.join(', ')}` : '';
     
     const prompt = `You are selecting one important word from sentence #${index + 1} below.
@@ -792,22 +758,17 @@ Required JSON format:
   "original": "selectedWord"
 }`;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'user', content: prompt }],
+      // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+      const response = await callOpenAI({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
         max_tokens: 100,
         temperature: 0
-        })
       });
 
       if (!response.ok) {
-      throw new Error(`API 요청 실패: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`API 요청 실패: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
@@ -843,7 +804,7 @@ Required JSON format:
   }
 
   // Step 3: 단어 유의어 추천
-  async function getSynonym(word: string, apiKey: string): Promise<{original: string, replacement: string, originalMeaning: string, replacementMeaning: string}> {
+  async function getSynonym(word: string): Promise<{original: string, replacement: string, originalMeaning: string, replacementMeaning: string}> {
     const prompt = `Provide one appropriate synonym for the word "${word}" used in a reading comprehension context.
 
 IMPORTANT: Return ONLY valid JSON. No explanations, no markdown, no code blocks.
@@ -856,22 +817,17 @@ Required JSON format:
   "replacementMeaning": "한국어 뜻"
 }`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 200,
-        temperature: 0
-      })
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 200,
+      temperature: 0
     });
 
     if (!response.ok) {
-      throw new Error(`API 요청 실패: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`API 요청 실패: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -976,7 +932,7 @@ Required JSON format:
   }
 
   // Step 6: 본문 번역
-  async function translateText(text: string, apiKey: string): Promise<string> {
+  async function translateText(text: string): Promise<string> {
     const prompt = `Translate the following English text to Korean. 
 Provide a natural, accurate Korean translation that maintains the original meaning and context.
 
@@ -986,22 +942,17 @@ English text: "${text}"
 
 Korean translation:`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1000,
-        temperature: 0.3
-      })
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
+      temperature: 0.3
     });
 
     if (!response.ok) {
-      throw new Error(`API 요청 실패: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`API 요청 실패: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -1020,11 +971,11 @@ Korean translation:`;
   }
 
   // 메인 함수: Step-by-Step Multi-call
-  async function callOpenAI(passage: string, apiKey: string): Promise<Work_02_ReadingComprehensionData> {
+  async function generateReadingComprehensionStepByStep(passage: string): Promise<Work_02_ReadingComprehensionData> {
     try {
       // Step 1: 문장 분리
       console.log('Step 1: 문장 분리 중...');
-      const sentences = await splitSentences(passage, apiKey);
+      const sentences = await splitSentences(passage);
       console.log(`분리된 문장 수: ${sentences.length}`);
 
       // Step 2: 각 문장에서 단어 선택
@@ -1034,13 +985,13 @@ Korean translation:`;
       
       for (let i = 0; i < sentences.length; i++) {
         const usedWordsArray = Array.from(usedWords);
-        const wordSelection = await selectWordFromSentence(sentences[i], i, apiKey, usedWordsArray);
+        const wordSelection = await selectWordFromSentence(sentences[i], i, usedWordsArray);
         
         // 중복 단어 검증
         if (usedWords.has(wordSelection.original.toLowerCase())) {
           console.warn(`중복 단어 감지: "${wordSelection.original}" (문장 ${i + 1})`);
           // 중복된 경우 다른 단어 선택을 위해 재시도
-          const retrySelection = await selectWordFromSentence(sentences[i], i, apiKey, usedWordsArray);
+          const retrySelection = await selectWordFromSentence(sentences[i], i, usedWordsArray);
           if (usedWords.has(retrySelection.original.toLowerCase())) {
             console.warn(`재시도 후에도 중복: "${retrySelection.original}" (문장 ${i + 1})`);
           }
@@ -1058,7 +1009,7 @@ Korean translation:`;
       console.log('Step 3: 유의어 추천 중...');
       const replacements = [];
       for (const wordSelection of selectedWords) {
-        const synonym = await getSynonym(wordSelection.original, apiKey);
+        const synonym = await getSynonym(wordSelection.original);
         replacements.push(synonym);
         console.log(`"${synonym.original}" → "${synonym.replacement}"`);
       }
@@ -1075,7 +1026,7 @@ Korean translation:`;
 
         // Step 6: 본문 번역
         console.log('Step 6: 본문 번역 중...');
-        const translation = await translateText(passage, apiKey);
+        const translation = await translateText(passage);
         console.log('번역 완료:', translation.substring(0, 50) + '...');
 
         // 결과 조립

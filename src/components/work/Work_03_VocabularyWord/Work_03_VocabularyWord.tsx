@@ -7,6 +7,7 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
+import { extractTextFromImage, callOpenAI } from '../../../services/common';
 import '../../../styles/PrintFormat.css';
 
 // A4 페이지 설정 상수 (실제 A4 크기 기준, px 단위)
@@ -375,33 +376,9 @@ const Work_03_VocabularyWord: React.FC = () => {
       reader.readAsDataURL(file);
     });
     const base64 = await fileToBase64(imageFile);
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    const prompt = `영어문제로 사용되는 본문이야.
-이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
-글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
-본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
-원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
-영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: base64 } }
-            ]
-          }
-        ],
-        max_tokens: 2048
-      })
-    });
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
+    
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    return await extractTextFromImage(base64);
   }
 
   // 본문에서 이미 ()로 묶인 단어나 구 추출
@@ -415,7 +392,6 @@ const Work_03_VocabularyWord: React.FC = () => {
 
   // 본문 → 빈칸 문제/객관식 생성 (AI) - 번역은 별도 함수로 처리
   async function generateBlankQuizWithAI(passage: string): Promise<BlankQuiz> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문에서 글의 주제와 가장 밀접한, 의미 있는 단어(명사, 키워드 등) 1개를 선정해.
 
 1. 반드시 본문에 실제로 등장한 단어(철자, 형태, 대소문자까지 동일)를 정답으로 선정해야 해. 변형, 대체, 동의어, 어형 변화 없이 본문에 있던 그대로 사용해야 해.
@@ -439,19 +415,19 @@ const Work_03_VocabularyWord: React.FC = () => {
 
 입력된 영어 본문:
 ${passage}`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1200,
-        temperature: 0.7
-      })
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1200,
+      temperature: 0.7
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
+    }
+    
     const data = await response.json();
     console.log('AI 응답 전체:', data);
     console.log('AI 응답 내용:', data.choices[0].message.content);
@@ -540,25 +516,24 @@ ${passage}`;
 
   // 영어본문 한글 번역 함수
   async function translateToKorean(englishText: string): Promise<string> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `다음 영어 본문을 자연스러운 한국어로 번역해주세요. 번역만 출력하고 다른 설명은 하지 마세요.
 
 영어 본문:
 ${englishText}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1000,
-        temperature: 0.3
-      })
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
+      temperature: 0.3
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
+    }
+    
     const data = await response.json();
     return data.choices[0].message.content.trim();
   }

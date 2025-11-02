@@ -11,6 +11,11 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const OpenAI = require('openai');
 
+// .env 파일 로드 (로컬 개발 환경용)
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 admin.initializeApp();
 
 // CORS 설정
@@ -20,11 +25,15 @@ const cors = require('cors')({ origin: true });
 let openai = null;
 try {
   const apiKey = functions.config().openai?.api_key || process.env.OPENAI_API_KEY;
+  console.log('API Key loaded:', apiKey ? `YES (length: ${apiKey.length})` : 'NO');
   if (apiKey) {
     openai = new OpenAI({ apiKey });
+    console.log('OpenAI client initialized successfully');
+  } else {
+    console.log('⚠️ OpenAI API 키가 설정되지 않았습니다.');
   }
 } catch (error) {
-  console.log('OpenAI API 키가 설정되지 않았습니다.');
+  console.log('OpenAI API 키 설정 오류:', error.message);
 }
 
 /**
@@ -289,6 +298,53 @@ exports.ocr = functions.https.onRequest(async (req, res) => {
   } catch (error) {
     console.error('OCR 오류:', error);
     res.status(500).json({ error: 'OCR 처리 중 오류가 발생했습니다.' });
+  }
+});
+
+/**
+ * OpenAI API 범용 프록시
+ * 모든 OpenAI API 호출을 여기서 처리
+ */
+exports.openaiProxy = functions.https.onRequest(async (req, res) => {
+  // CORS 설정
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    if (!openai) {
+      console.error('OpenAI API가 설정되지 않았습니다.');
+      res.status(503).json({ error: 'OpenAI API가 설정되지 않았습니다.' });
+      return;
+    }
+
+    const requestBody = req.body;
+    console.log('OpenAI API 요청:', {
+      model: requestBody.model,
+      message_count: requestBody.messages?.length || 0
+    });
+
+    // OpenAI API 직접 호출
+    const completion = await openai.chat.completions.create(requestBody);
+    
+    console.log('OpenAI API 성공');
+    res.json(completion);
+  } catch (error) {
+    console.error('OpenAI API 오류:', error);
+    res.status(500).json({ 
+      error: 'API 호출 중 오류가 발생했습니다.',
+      details: error.message 
+    });
   }
 });
 
@@ -667,52 +723,53 @@ function extractWordsManually(text) {
 /**
  * 6개월 이상 된 문제 생성 내역 자동 삭제 스케줄러
  * 매일 오전 3시(한국시간 기준)에 실행
+ * TODO: Node.js 22 환경에서 pubsub API 이슈로 임시 비활성화
  */
-exports.cleanupOldQuizHistory = functions.pubsub.schedule('0 3 * * *')
-  .timeZone('Asia/Seoul')
-  .onRun(async (context) => {
-    try {
-      console.log('=== 6개월 이상 된 문제 생성 내역 정리 시작 ===');
-      
-      const now = admin.firestore.Timestamp.now();
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      const sixMonthsAgoTimestamp = admin.firestore.Timestamp.fromDate(sixMonthsAgo);
-      
-      // createdAt이 6개월 이전인 데이터 조회
-      const quizHistoryRef = admin.firestore().collection('quizHistory');
-      const oldDocsQuery = quizHistoryRef
-        .where('createdAt', '<', sixMonthsAgoTimestamp);
-      
-      const snapshot = await oldDocsQuery.get();
-      
-      if (snapshot.empty) {
-        console.log('삭제할 6개월 이상 된 내역이 없습니다.');
-        return null;
-      }
-      
-      // 배치로 삭제 (Firestore 제한: 한 번에 최대 500개)
-      const batchSize = 500;
-      const docs = snapshot.docs;
-      let deletedCount = 0;
-      
-      for (let i = 0; i < docs.length; i += batchSize) {
-        const batch = admin.firestore().batch();
-        const batchDocs = docs.slice(i, i + batchSize);
-        
-        batchDocs.forEach(doc => {
-          batch.delete(doc.ref);
-        });
-        
-        await batch.commit();
-        deletedCount += batchDocs.length;
-        console.log(`배치 ${Math.floor(i / batchSize) + 1}: ${batchDocs.length}개 삭제 완료`);
-      }
-      
-      console.log(`=== 총 ${deletedCount}개의 6개월 이상 된 내역 삭제 완료 ===`);
-      return null;
-    } catch (error) {
-      console.error('6개월 이상 된 내역 정리 오류:', error);
-      throw error;
-    }
-  });
+// exports.cleanupOldQuizHistory = functions.pubsub.schedule('0 3 * * *')
+//   .timeZone('Asia/Seoul')
+//   .onRun(async (context) => {
+//     try {
+//       console.log('=== 6개월 이상 된 문제 생성 내역 정리 시작 ===');
+//       
+//       const now = admin.firestore.Timestamp.now();
+//       const sixMonthsAgo = new Date();
+//       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+//       const sixMonthsAgoTimestamp = admin.firestore.Timestamp.fromDate(sixMonthsAgo);
+//       
+//       // createdAt이 6개월 이전인 데이터 조회
+//       const quizHistoryRef = admin.firestore().collection('quizHistory');
+//       const oldDocsQuery = quizHistoryRef
+//         .where('createdAt', '<', sixMonthsAgoTimestamp);
+//       
+//       const snapshot = await oldDocsQuery.get();
+//       
+//       if (snapshot.empty) {
+//         console.log('삭제할 6개월 이상 된 내역이 없습니다.');
+//         return null;
+//       }
+//       
+//       // 배치로 삭제 (Firestore 제한: 한 번에 최대 500개)
+//       const batchSize = 500;
+//       const docs = snapshot.docs;
+//       let deletedCount = 0;
+//       
+//       for (let i = 0; i < docs.length; i += batchSize) {
+//         const batch = admin.firestore().batch();
+//         const batchDocs = docs.slice(i, i + batchSize);
+//         
+//         batchDocs.forEach(doc => {
+//           batch.delete(doc.ref);
+//         });
+//         
+//         await batch.commit();
+//         deletedCount += batchDocs.length;
+//         console.log(`배치 ${Math.floor(i / batchSize) + 1}: ${batchDocs.length}개 삭제 완료`);
+//       }
+//       
+//       console.log(`=== 총 ${deletedCount}개의 6개월 이상 된 내역 삭제 완료 ===`);
+//       return null;
+//     } catch (error) {
+//       console.error('6개월 이상 된 내역 정리 오류:', error);
+//       throw error;
+//     }
+//   });

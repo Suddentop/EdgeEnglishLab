@@ -7,6 +7,7 @@ import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PrintHeader from '../../common/PrintHeader';
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 import Work11DynamicPrintPages from './Work11DynamicPrintPages';
+import { extractTextFromImage, translateToKorean as translateToKoreanCommon } from '../../../services/common';
 import './Work_11_SentenceTranslation.css';
 import '../../../styles/PrintFormat.css';
 
@@ -27,37 +28,10 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-// OpenAI Vision API 호출
+// OpenAI Vision API 호출 (공통 함수 래퍼)
 async function callOpenAIVisionAPI(imageBase64: string, prompt: string, apiKey: string): Promise<string> {
-  // console.log('OpenAI Vision API Key:', apiKey); // 보안상 제거됨
-  if (!apiKey) throw new Error('API Key가 비어 있습니다. .env 파일과 개발 서버 재시작을 확인하세요.');
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: imageBase64 } }
-          ]
-        }
-      ],
-      max_tokens: 2048
-    })
-  });
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error('OpenAI Vision API 응답:', errText);
-    throw new Error('OpenAI Vision API 호출 실패: ' + errText);
-  }
-  const data = await response.json();
-  return data.choices[0].message.content;
+  // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+  return await extractTextFromImage(imageBase64, prompt);
 }
 
 const visionPrompt = `영어문제로 사용되는 본문이야.\n이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.\n\n중요한 지침:\n1. 글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해.\n2. 본문중에 원문자 ①, ②, ③... 등으로 표시된건 제거해줘.\n3. 구두점(마침표, 쉼표, 세미콜론, 콜론)을 매우 정확하게 인식해줘. 특히 마침표(.)와 쉼표(,)를 구분해서 정확히 추출해줘.\n4. 인용문의 시작과 끝을 정확히 인식하고, 인용부호("")를 올바르게 표시해줘.\n5. 문장의 끝은 마침표(.)로, 나열이나 연결은 쉼표(,)로 정확히 구분해줘.\n6. 원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘.\n7. 영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
@@ -86,58 +60,14 @@ function cleanOpenAIVisionResult(text: string): string {
   return cleaned;
 }
 
-// OpenAI API를 사용하여 영어를 한글로 번역
+// OpenAI API를 사용하여 영어를 한글로 번역 (공통 함수 사용)
 async function translateToKorean(englishText: string, apiKey: string): Promise<string> {
-  try {
-    console.log('🌐 번역 시작:', englishText.substring(0, 50) + '...');
-    
-    if (!apiKey) {
-      throw new Error('API 키가 설정되지 않았습니다.');
-    }
-
-    const prompt = `다음 영어 본문을 자연스러운 한국어로 번역하세요.
-
-번역 요구사항:
-- 자연스럽고 매끄러운 한국어
-- 원문의 의미를 정확히 전달
-- 문학적이고 읽기 쉬운 문체
-
-번역만 반환하세요 (다른 텍스트 없이):
-
-${englishText}`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 2048
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`번역 API 호출 실패: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const translation = data.choices[0].message.content.trim();
-    console.log('🌐 번역 완료:', translation.substring(0, 50) + '...');
-    return translation;
-  } catch (error) {
-    console.error('번역 오류:', error);
-    throw error;
-  }
+  // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+  return await translateToKoreanCommon(englishText);
 }
 
 // 문장별 해석 문제 생성
-async function generateSentenceTranslationQuiz(englishText: string, apiKey: string): Promise<{
+async function generateSentenceTranslationQuiz(englishText: string): Promise<{
   sentences: string[];
   translations: string[];
   quizText: string;
@@ -233,7 +163,7 @@ async function generateSentenceTranslationQuiz(englishText: string, apiKey: stri
       const sentence = finalSentences[i];
       if (sentence.trim().length > 0) {
         try {
-          const translation = await translateToKorean(sentence, apiKey);
+          const translation = await translateToKorean(sentence, '');
           translations.push(translation);
           console.log(`📝 문장 ${i + 1} 번역 완료:`, translation.substring(0, 30) + '...');
         } catch (error) {
@@ -399,13 +329,8 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
   // 이미지에서 텍스트 추출
   const extractTextFromImage = async (file: File): Promise<string> => {
     try {
-      const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-      }
-      
       const base64 = await fileToBase64(file);
-      const extractedText = await callOpenAIVisionAPI(base64, visionPrompt, apiKey);
+      const extractedText = await callOpenAIVisionAPI(base64, visionPrompt, '');
       const cleanedText = cleanOpenAIVisionResult(extractedText);
       
       return cleanedText;
@@ -495,11 +420,6 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
     setError('');
     
     try {
-      const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-      }
-      
       console.log('💳 포인트 차감 시작:', requiredPoints);
       
       // 포인트 차감
@@ -520,7 +440,7 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
       }
       
       // 문장별 해석 문제 생성
-      const quizData = await generateSentenceTranslationQuiz(inputText, apiKey);
+      const quizData = await generateSentenceTranslationQuiz(inputText);
       setQuizData(quizData);
 
       // 문제 생성 내역 저장

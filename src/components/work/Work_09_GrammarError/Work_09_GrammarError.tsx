@@ -8,6 +8,7 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
+import { extractTextFromImage, callOpenAI } from '../../../services/common';
 
 const INPUT_MODES = [
   { key: 'capture', label: '캡처 이미지 붙여넣기' },
@@ -279,40 +280,15 @@ const Work_09_GrammarError: React.FC = () => {
       reader.readAsDataURL(file);
     });
     const base64 = await fileToBase64(imageFile);
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    const prompt = `영어문제로 사용되는 본문이야.
-이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
-글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
-본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
-원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
-영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: base64 } }
-            ]
-          }
-        ],
-        max_tokens: 2048
-      })
-    });
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
+    
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    return await extractTextFromImage(base64);
   }
 
   // ===== 새로운 단계별 MCP 방식 =====
   
   // MCP 1: 단어 선정 서비스
   async function selectWords(passage: string): Promise<string[]> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 5개만 선정하세요.
 
 중요한 규칙:
@@ -327,22 +303,21 @@ const Work_09_GrammarError: React.FC = () => {
 본문:
 ${passage}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that only returns valid JSON arrays.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 1000,
-      }),
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant that only returns valid JSON arrays.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 1000,
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
+    }
     
     const data = await response.json();
     const content = data.choices[0].message.content.trim();
@@ -455,7 +430,6 @@ ${passage}`;
     original: string;
     grammarType: string;
   }> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const grammarTypes = [
       '시제', '조동사', '수동태', '준동사', '가정법', 
       '관계사', '형/부', '수일치/관사', '비교', '도치/강조'
@@ -495,22 +469,21 @@ Return ONLY this JSON format:
 Make sure the transformed word is actually DIFFERENT and WRONG compared to the original!`;
 
       try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              { role: 'system', content: 'You are a helpful assistant that only returns valid JSON objects.' },
-              { role: 'user', content: prompt }
-            ],
-            temperature: 0.7, // 재시도할 때마다 조금 더 창의적으로
-            max_tokens: 1000,
-          }),
+        // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+        const response = await callOpenAI({
+          model: 'gpt-4o',
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant that only returns valid JSON objects.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7, // 재시도할 때마다 조금 더 창의적으로
+          max_tokens: 1000,
         });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
+        }
         
         const data = await response.json();
         const content = data.choices[0].message.content.trim();
@@ -585,7 +558,6 @@ Make sure the transformed word is actually DIFFERENT and WRONG compared to the o
 
   // MCP 5: 번역 서비스
   async function translatePassage(passage: string): Promise<string> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `다음 영어 본문을 자연스러운 한국어로 번역하세요.
 
 번역 요구사항:
@@ -597,22 +569,21 @@ Make sure the transformed word is actually DIFFERENT and WRONG compared to the o
 
 ${passage}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 2000,
-      }),
+    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
+    const response = await callOpenAI({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000,
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
+    }
     
     const data = await response.json();
     return data.choices[0].message.content.trim();

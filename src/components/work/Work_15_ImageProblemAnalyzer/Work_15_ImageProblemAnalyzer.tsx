@@ -5,7 +5,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import { imageToTextWithOpenAIVision } from '../../../services/work14Service';
-import { translateToKorean as translateToKoreanCommon } from '../../../services/common';
+import { translateToKorean as translateToKoreanCommon, callOpenAI } from '../../../services/common';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { getUserCurrentPoints, getWorkTypePoints, deductUserPoints, refundUserPoints } from '../../../services/pointService';
 import { saveQuizHistory } from '../../../services/quizHistoryService';
@@ -211,11 +211,6 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
   const canUseDirectOpenAI = Boolean(process.env.REACT_APP_OPENAI_API_KEY);
 
   const analyzeImageWithOpenAILocally = async (base64Image: string, extractedText: string): Promise<ProblemAnalysisResult> => {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error('OpenAI API Key가 설정되어 있지 않습니다.');
-    }
-
     // 프롬프트 최적화 (간결하게)
     let prompt: string;
     if (extractedText) {
@@ -228,35 +223,30 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
     prompt += `\n\n응답은 JSON 형식으로:\n{"englishText":"본문","koreanTranslation":"번역","problemType":"유형","answers":["정답"],"analysis":"분석"}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: prompt
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: base64Image
-                }
+    const requestBody = {
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'user' as const,
+          content: [
+            {
+              type: 'text' as const,
+              text: prompt
+            },
+            {
+              type: 'image_url' as const,
+              image_url: {
+                url: base64Image
               }
-            ]
-          }
-        ],
-        max_tokens: 1200,
-        temperature: 0.5
-      })
-    });
+            }
+          ]
+        }
+      ],
+      max_tokens: 1200,
+      temperature: 0.5
+    };
+
+    const response = await callOpenAI(requestBody);
 
     if (!response.ok) {
       const errorPayload = await response.text();
@@ -462,57 +452,17 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
   // AI를 사용한 이미지 분석
   const analyzeImageWithAI = async (base64Image: string, extractedText?: string): Promise<ProblemAnalysisResult> => {
-    const PHP_API_BASE_URL = getPhpApiBaseUrl();
-    const useDirectFallback = canUseDirectOpenAI && window.location.hostname === 'localhost';
-    
+    // Firebase Functions 프록시를 통해 직접 호출
     console.log('🖼️ 이미지 분석 요청 시작:', {
-      url: `${PHP_API_BASE_URL}/analyze-problem-image.php`,
       imageSize: base64Image.length,
       extractedTextLength: extractedText?.length || 0,
       userId: currentUser?.uid
     });
     
     try {
-    const response = await fetch(`${PHP_API_BASE_URL}/analyze-problem-image.php`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        image: base64Image,
-        extractedText: extractedText || '',
-        userId: currentUser?.uid,
-      }),
-    });
-
-    console.log('🖼️ 이미지 분석 응답 상태:', response.status);
-
-    if (!response.ok) {
-      let errorMessage = 'AI 분석 요청 실패';
-      try {
-        const errorData = await response.json();
-        console.error('🖼️ 이미지 분석 에러 상세:', errorData);
-        errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-      } catch (parseError) {
-        console.error('🖼️ 에러 응답 파싱 실패:', parseError);
-        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      }
-      throw new Error(errorMessage);
-    }
-
-    const result = await response.json();
-    console.log('🖼️ 이미지 분석 성공:', result);
-    
-    if (!result.success || !result.data) {
-      throw new Error('AI 분석 결과가 올바르지 않습니다.');
-    }
-    
-    return result.data;
+      return await analyzeImageWithOpenAILocally(base64Image, extractedText || '');
     } catch (error) {
-      if (useDirectFallback) {
-        console.warn('⚠️ 원격 이미지 분석 실패, 로컬 OpenAI 호출로 전환합니다.', error);
-        return await analyzeImageWithOpenAILocally(base64Image, extractedText || '');
-      }
+      console.error('이미지 분석 실패:', error);
       throw error;
     }
   };
