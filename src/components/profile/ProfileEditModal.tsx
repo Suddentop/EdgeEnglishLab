@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
-import { updatePassword } from 'firebase/auth';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import './ProfileEditModal.css';
 
 interface ProfileEditModalProps {
@@ -105,6 +105,25 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
         if (hasPasswordFields && values.newPassword) {
           if (!currentUser) {
             throw new Error('로그인이 필요합니다');
+          }
+          
+          // 현재 비밀번호로 재인증
+          try {
+            const credential = EmailAuthProvider.credential(
+              currentUser.email || '',
+              values.currentPassword
+            );
+            await reauthenticateWithCredential(currentUser, credential);
+          } catch (reauthError: any) {
+            console.error('재인증 오류:', reauthError);
+            if (reauthError.code === 'auth/wrong-password') {
+              throw new Error('현재 비밀번호가 올바르지 않습니다.');
+            } else if (reauthError.code === 'auth/user-mismatch') {
+              throw new Error('사용자 정보가 일치하지 않습니다. 다시 로그인해주세요.');
+            } else if (reauthError.code === 'auth/invalid-credential') {
+              throw new Error('인증 정보가 올바르지 않습니다. 현재 비밀번호를 확인해주세요.');
+            }
+            throw reauthError;
           }
           
           // Firebase Auth의 updatePassword 사용

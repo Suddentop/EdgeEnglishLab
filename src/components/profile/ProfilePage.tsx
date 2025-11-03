@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { updatePassword } from 'firebase/auth';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { PaymentService } from '../../services/paymentService';
 import { Payment } from '../../types/types';
 import { PAYMENT_STATUS } from '../../utils/pointConstants';
@@ -168,6 +168,31 @@ const ProfilePage: React.FC = () => {
           setMessage('비밀번호는 특수문자를 포함해야 합니다.');
           setLoading(false);
           return;
+        }
+
+        // 현재 비밀번호로 재인증
+        try {
+          const credential = EmailAuthProvider.credential(
+            currentUser.email || '',
+            passwordForm.currentPassword
+          );
+          await reauthenticateWithCredential(currentUser, credential);
+        } catch (reauthError: any) {
+          console.error('재인증 오류:', reauthError);
+          if (reauthError.code === 'auth/wrong-password') {
+            setMessage('현재 비밀번호가 올바르지 않습니다.');
+            setLoading(false);
+            return;
+          } else if (reauthError.code === 'auth/user-mismatch') {
+            setMessage('사용자 정보가 일치하지 않습니다. 다시 로그인해주세요.');
+            setLoading(false);
+            return;
+          } else if (reauthError.code === 'auth/invalid-credential') {
+            setMessage('인증 정보가 올바르지 않습니다. 현재 비밀번호를 확인해주세요.');
+            setLoading(false);
+            return;
+          }
+          throw reauthError;
         }
 
         // Firebase Auth의 updatePassword 사용

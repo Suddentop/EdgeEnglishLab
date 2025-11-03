@@ -290,6 +290,9 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
   // 원본 전체 문장 배열 저장 (validSentences와 sentences 인덱스 매핑용)
   const originalSentences = splitSentences(passage);
   
+  // 정렬된 문장 순서 저장용 변수
+  let sortedSelectedSentences = selectedSentences;
+  
   if (selectedSentences.length > 0) {
     // validSentences의 인덱스를 originalSentences(sentences)의 인덱스로 변환
     // validSentences는 sentences에서 필터링된 것이므로, 매핑이 필요함
@@ -303,12 +306,30 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
       }
     }
     
+    // selectedIndices와 selectedSentences를 원본 텍스트에서의 순서대로 정렬
+    // 인덱스 기준으로 정렬하여 텍스트 앞쪽부터 A, B, C, D, E... 순서로 할당
+    const sortedPairs = selectedIndices.map((idx, i) => ({
+      validIndex: idx,
+      originalIndex: validToOriginalIndexMap[idx],
+      sentence: selectedSentences[i]
+    })).sort((a, b) => a.originalIndex - b.originalIndex);
+    
+    console.log('정렬된 문장 순서:', sortedPairs.map((p, i) => ({
+      알파벳: String.fromCharCode(65 + i),
+      원본인덱스: p.originalIndex,
+      문장일부: p.sentence.substring(0, 30) + '...'
+    })));
+    
+    // 정렬된 순서로 문장과 인덱스를 재구성
+    const sortedSelectedIndices = sortedPairs.map(p => p.validIndex);
+    sortedSelectedSentences = sortedPairs.map(p => p.sentence);
+    
     // 역순으로 처리하여 이전 교체가 이후 교체에 영향을 주지 않도록 함
-    const reversedSentences = [...selectedSentences].reverse();
-    const reversedIndices = [...selectedIndices].reverse();
+    const reversedSentences = [...sortedSelectedSentences].reverse();
+    const reversedIndices = [...sortedSelectedIndices].reverse();
     
     reversedSentences.forEach((sentence, reversedIndex) => {
-      const originalIndex = selectedSentences.length - 1 - reversedIndex;
+      const originalIndex = sortedSelectedSentences.length - 1 - reversedIndex;
       const alphabetLabel = String.fromCharCode(65 + originalIndex); // A=65, B=66, C=67...
       
       if (sentence && sentence.trim().length > 0) {
@@ -382,8 +403,8 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
   console.log('빈칸 생성 결과:', {
     원본텍스트: passage.substring(0, 200) + '...',
     빈칸텍스트: blankedText.substring(0, 200) + '...',
-    선택된문장수: selectedSentences.length,
-    선택된문장들: selectedSentences
+    선택된문장수: sortedSelectedSentences.length,
+    선택된문장들: sortedSelectedSentences
   });
   
   // 번역은 별도 함수로 처리
@@ -392,11 +413,11 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
   
   const result: BlankQuizData = {
     blankedText,
-    correctAnswers: selectedSentences,
+    correctAnswers: sortedSelectedSentences,
     translation,
     userAnswers: [],
     isCorrect: null,
-    selectedSentences: selectedSentences
+    selectedSentences: sortedSelectedSentences
   };
   
   console.log('최종 결과:', result);
