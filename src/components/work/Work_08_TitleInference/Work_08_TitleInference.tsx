@@ -431,11 +431,11 @@ const Work_08_TitleInference: React.FC = () => {
                       {quiz.answerIndex === i && (
                         <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                       )}
-                    </div>
-                    <div style={{fontSize:'0.8rem', marginTop:'0.2rem', marginLeft:'1rem', color:'#333', fontWeight:500}}>
-                      {quiz.optionTranslations && quiz.optionTranslations[i] && quiz.optionTranslations[i].trim() !== '' 
-                        ? quiz.optionTranslations[i] 
-                        : '해석 생성 중...'}
+                      <span style={{fontSize:'0.8rem', marginLeft:'0.5rem', color:'#333', fontWeight:500}}>
+                        {quiz.optionTranslations && quiz.optionTranslations[i] && quiz.optionTranslations[i].trim() !== '' 
+                          ? ` ${quiz.optionTranslations[i]}` 
+                          : ' 해석 생성 중...'}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -476,11 +476,11 @@ const Work_08_TitleInference: React.FC = () => {
                       {quiz.answerIndex === i && (
                         <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                       )}
-                    </div>
-                    <div style={{fontSize:'0.8rem', marginTop:'0.2rem', marginLeft:'1rem', color:'#333', fontWeight:500}}>
-                      {quiz.optionTranslations && quiz.optionTranslations[i] && quiz.optionTranslations[i].trim() !== '' 
-                        ? quiz.optionTranslations[i] 
-                        : '해석 생성 중...'}
+                      <span style={{fontSize:'0.8rem', marginLeft:'0.5rem', color:'#333', fontWeight:500}}>
+                        {quiz.optionTranslations && quiz.optionTranslations[i] && quiz.optionTranslations[i].trim() !== '' 
+                          ? ` ${quiz.optionTranslations[i]}` 
+                          : ' 해석 생성 중...'}
+                      </span>
                     </div>
                   </div>
                 ))}

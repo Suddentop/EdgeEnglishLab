@@ -125,8 +125,6 @@ const PointCharge: React.FC = () => {
           
           // 입력 필드 초기화
           setSelectedAmount(1000);
-          setCustomAmount('');
-          setShowCustomInput(false);
           setIsProcessing(false);
         }, 2000);
       }
