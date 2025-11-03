@@ -4201,6 +4201,29 @@ const PrintFormatPackage01Work14: React.FC<{
   const needsAnswerSecondPage = printMode === 'with-answer' && needsSecondPage;
 
   // 정답을 포함한 텍스트 생성 함수 (HTML 스타일 적용)
+  // 정답 문장에서 빈칸 패턴 제거하는 헬퍼 함수
+  const cleanAnswer = (answer: string): string => {
+    if (!answer) return answer;
+    let clean = answer;
+    // 패턴 1: (____________________A____________________) 형식 (긴 언더스코어, 알파벳 앞뒤)
+    clean = clean.replace(/\(_{5,}[A-Z]_{5,}\)/g, '').trim();
+    // 패턴 2: (_+A_+) - 언더스코어 앞뒤 (짧은 경우)
+    clean = clean.replace(/\(_+[A-Z]_+\)/g, '').trim();
+    // 패턴 3: ( A _+ ) 또는 ( A_+ )
+    clean = clean.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
+    clean = clean.replace(/\(\s*[A-Z]_+\s*\)/g, '').trim();
+    // 패턴 4: (A_+) - 공백 없는 경우
+    clean = clean.replace(/\([A-Z]_+\)/g, '').trim();
+    // 패턴 5: ( _+ ) 일반 빈칸
+    clean = clean.replace(/\(_+\)/g, '').trim();
+    // 패턴 6: 공백 포함 모든 패턴
+    clean = clean.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
+    // 패턴 7: 언더스코어가 3개 이상이고 알파벳이 포함된 모든 패턴
+    clean = clean.replace(/\([^)]*_{3,}[^)]*[A-Z][^)]*\)/g, '').trim();
+    clean = clean.replace(/\([^)]*[A-Z][^)]*_{3,}[^)]*\)/g, '').trim();
+    return clean;
+  };
+
   const createTextWithAnswers = (blankedText: string, correctAnswers: string[]): string => {
     console.log('🔍 Work14 createTextWithAnswers:', {
       blankedText: blankedText?.substring(0, 200) + '...',
@@ -4209,32 +4232,105 @@ const PrintFormatPackage01Work14: React.FC<{
     });
     
     let result = blankedText;
+    
+    if (correctAnswers.length === 0) {
+      return result;
+    }
+    
     let answerIndex = 0;
     
-    // 다양한 빈칸 패턴을 찾아서 정답으로 교체 (파란색, 진하게 스타일 적용)
-    // 패턴 1: (_{20,}[A-Z]_{20,}) - A, B, C 형태
-    result = result.replace(/\(_{20,}[A-Z]_{20,}\)/g, () => {
+    // 패턴 1: ( 공백 + 알파벳 + 공백 + 언더스코어들 + ) - 공백 있는 경우
+    const blankPattern1 = /\( [A-Z] _+\)/g;
+    result = result.replace(blankPattern1, (match: string) => {
       if (answerIndex < correctAnswers.length) {
-        const answer = correctAnswers[answerIndex++];
-        return `(<span style="color: #1976d2; font-size: 0.9rem;">${answer}</span>)`;
+        const answer = cleanAnswer(correctAnswers[answerIndex]);
+        answerIndex++;
+        return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
       }
-      return '(____________________A____________________)';
+      return match;
     });
     
-    // 패턴 2: (__________) - 일반적인 밑줄 패턴
-    result = result.replace(/\(_{10,}\)/g, () => {
-      if (answerIndex < correctAnswers.length) {
-        const answer = correctAnswers[answerIndex++];
-        return `(<span style="color: #1976d2; font-size: 0.9rem;">${answer}</span>)`;
-      }
-      return '(__________)';
-    });
+    // 패턴 2: ( 공백 + 알파벳 + 언더스코어들 + ) - 알파벳과 언더스코어 사이 공백 없는 경우
+    if (answerIndex < correctAnswers.length) {
+      const blankPattern2 = /\( [A-Z]_+\)/g;
+      result = result.replace(blankPattern2, (match: string) => {
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
+    
+    // 패턴 3: ( 알파벳 + 언더스코어들 + ) - (A_______) 형식 (공백 없음)
+    if (answerIndex < correctAnswers.length) {
+      const blankPattern3 = /\(([A-Z])([_]+)\)/g;
+      result = result.replace(blankPattern3, (match: string) => {
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
+    
+    // 패턴 4: ( 언더스코어들 + 알파벳 + 언더스코어들 + ) - (___A___) 또는 (____________________A____________________) 형식
+    if (answerIndex < correctAnswers.length) {
+      const blankPattern4 = /\(_+[A-Z]_+\)/g;
+      result = result.replace(blankPattern4, (match: string) => {
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
+    
+    // 패턴 5: ( 언더스코어들 + 알파벳 + 언더스코어들 + ) - (____________________A____________________) 형식 (긴 언더스코어)
+    if (answerIndex < correctAnswers.length) {
+      const blankPattern5 = /\(_{10,}[A-Z]_{10,}\)/g;
+      result = result.replace(blankPattern5, (match: string) => {
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
+    
+    // 패턴 6: 모든 언더스코어 포함 빈칸 패턴 (어떤 형식이든 매칭) - 최종 fallback
+    if (answerIndex < correctAnswers.length) {
+      // 이미 정답으로 치환된 부분을 제외한 모든 언더스코어 포함 괄호 패턴 매칭
+      const generalPattern = /\([^)]*_[^)]*\)/g;
+      result = result.replace(generalPattern, (match: string) => {
+        // 이미 정답으로 치환된 부분은 건너뛰기
+        if (match.includes('<span') || match.includes('</span>')) {
+          return match;
+        }
+        // 일반 텍스트만 포함한 경우는 건너뛰기 (예: "(example)")
+        if (!match.includes('_')) {
+          return match;
+        }
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
     
     return result;
   };
 
   if (printMode === 'no-answer') {
     // 문제만 인쇄
+    const selectedSentences = work14Data.selectedSentences || work14Data.correctAnswers || [];
+    
     return (
       <div className="only-print work-14-print">
         <div className="a4-page-template">
@@ -4267,10 +4363,51 @@ const PrintFormatPackage01Work14: React.FC<{
                 fontFamily: 'inherit', 
                 color: '#222', 
                 lineHeight: '1.5', 
-                border: '2px solid #e3e6f0'
+                border: '2px solid #e3e6f0',
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+                overflow: 'hidden'
               }}>
-                {work14Data.blankedText}
+                {(() => {
+                  // 빈칸 패턴을 찾아서 ( A 부분은 줄바꿈 방지, 언더스코어 부분은 줄바꿈 가능
+                  // 패턴: ( A_______) 
+                  const blankPattern = /\( ([A-Z])([_]+)\)/g;
+                  const processedText = (work14Data.blankedText || '').replace(blankPattern, (match: string, alphabet: string, underscores: string) => {
+                    return `<span style="white-space: nowrap;">( ${alphabet}</span>${underscores})`;
+                  });
+                  return <div dangerouslySetInnerHTML={{ __html: processedText }} />;
+                })()}
               </div>
+              
+              {/* 답안 입력 필드 */}
+              {selectedSentences.length > 0 && (
+                <div className="problem-answers" style={{margin:'1rem 0'}}>
+                  <div style={{height:'1.5rem'}}></div>
+                  <div style={{height:'1.5rem'}}></div>
+                  {selectedSentences.map((sentence: string, i: number) => {
+                    const alphabetLabel = String.fromCharCode(65 + i); // A=65, B=66, C=67...
+                    return (
+                      <div key={i}>
+                        <div style={{
+                          fontSize:'1rem',
+                          fontFamily:'monospace',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden'
+                        }}>
+                          {alphabetLabel} : {'_'.repeat(100)}
+                        </div>
+                        {selectedSentences && i < selectedSentences.length - 1 && (
+                          <>
+                            <div style={{height:'1.5rem'}}></div>
+                            <div style={{height:'1.5rem'}}></div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -4325,7 +4462,11 @@ const PrintFormatPackage01Work14: React.FC<{
                     fontFamily: 'inherit', 
                     color: '#222', 
                     lineHeight: '1.5', 
-                    border: '2px solid #e3e6f0'
+                    border: '2px solid #e3e6f0',
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word',
+                    overflow: 'hidden'
                   }}
                   dangerouslySetInnerHTML={{
                     __html: work14Data.correctAnswers ? 

@@ -342,8 +342,12 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
 
   // 클립보드에서 이미지 붙여넣기
   const handlePaste = async (event: React.ClipboardEvent) => {
-    if (inputMode !== 'capture') return;
+    // 텍스트 모드나 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
+    if (inputMode !== 'capture') {
+      return;
+    }
     
+    // 캡처 모드일 때만 이미지 처리
     const items = event.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
@@ -362,12 +366,14 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
           } finally {
             setIsExtractingText(false);
           }
+          // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
+          event.preventDefault();
+          return;
         }
-        event.preventDefault();
-        return;
       }
     }
-    event.preventDefault();
+    
+    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
   };
 
   // 문장별 해석 문제 생성

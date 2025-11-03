@@ -11,3 +11,4 @@ echo "   1. Firebase Console에서 환경 변수 OPENAI_API_KEY 확인"
 echo "   2. 웹사이트에서 이미지 업로드 테스트"
 echo "   3. Firebase Functions 로그 확인"
 
+

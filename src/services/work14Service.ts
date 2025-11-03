@@ -7,25 +7,12 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
   
   console.log('🔍 Work14 환경 변수 확인:', {
     proxyUrl: proxyUrl ? `설정됨 (${proxyUrl})` : '없음',
-    directApiKey: directApiKey ? '설정됨 (sk-***...)' : '없음'
+    directApiKey: directApiKey ? '설정됨' : '없음'
   });
-  
-  // 프록시 URL이 없고 API 키도 없으면 명확한 에러 메시지
-  if (!proxyUrl && !directApiKey) {
-    const errorMsg = 'API Key가 설정되지 않았습니다.\n\n' +
-      '해결 방법:\n' +
-      '1. .env.local 파일에 REACT_APP_OPENAI_API_KEY를 설정하거나\n' +
-      '2. .env.local 파일에 REACT_APP_API_PROXY_URL을 설정하세요.\n\n' +
-      '예시:\n' +
-      'REACT_APP_OPENAI_API_KEY=your-api-key-here\n' +
-      '또는\n' +
-      'REACT_APP_API_PROXY_URL=https://edgeenglish.net/php_api_proxy/api-proxy.php';
-    throw new Error(errorMsg);
-  }
   
   // 프록시 URL이 설정된 경우 프록시 사용 (프로덕션)
   if (proxyUrl) {
-    console.log('🤖 OpenAI 프록시 서버 호출 중...');
+    console.log('🤖 OpenAI 프록시 서버 호출 중...', proxyUrl);
     return await fetch(proxyUrl, {
       method: 'POST',
       headers: {
@@ -40,7 +27,7 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
     throw new Error('API Key가 설정되지 않았습니다. .env.local 파일에 REACT_APP_OPENAI_API_KEY를 설정해주세요.');
   }
   
-  console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
+  console.log('🤖 OpenAI 직접 API 호출 중...');
   return await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -300,28 +287,92 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
   
   // 빈칸이 포함된 텍스트 생성
   let blankedText = passage;
+  // 원본 전체 문장 배열 저장 (validSentences와 sentences 인덱스 매핑용)
+  const originalSentences = splitSentences(passage);
+  
   if (selectedSentences.length > 0) {
-    selectedSentences.forEach((sentence, index) => {
-      console.log(`빈칸 ${index + 1} 생성 시도:`, sentence);
+    // validSentences의 인덱스를 originalSentences(sentences)의 인덱스로 변환
+    // validSentences는 sentences에서 필터링된 것이므로, 매핑이 필요함
+    const validToOriginalIndexMap: number[] = [];
+    let validIndex = 0;
+    for (let i = 0; i < originalSentences.length; i++) {
+      const wordCount = countWordsInSentence(originalSentences[i]);
+      if (wordCount >= 5) {
+        validToOriginalIndexMap[validIndex] = i;
+        validIndex++;
+      }
+    }
+    
+    // 역순으로 처리하여 이전 교체가 이후 교체에 영향을 주지 않도록 함
+    const reversedSentences = [...selectedSentences].reverse();
+    const reversedIndices = [...selectedIndices].reverse();
+    
+    reversedSentences.forEach((sentence, reversedIndex) => {
+      const originalIndex = selectedSentences.length - 1 - reversedIndex;
+      const alphabetLabel = String.fromCharCode(65 + originalIndex); // A=65, B=66, C=67...
       
       if (sentence && sentence.trim().length > 0) {
-        // 문장을 빈칸으로 교체 (정확한 매칭을 위해 정규식 사용)
+        const sentenceLength = sentence.trim().length;
+        const underscoreCount = Math.min(50, Math.max(1, Math.round(sentenceLength * 0.5))); // 선택된 문장의 글자수 * 0.5만큼 언더스코어 생성 (최대 50개)
+        const blankText = `(${alphabetLabel}${'_'.repeat(underscoreCount)})`; // 공백 제거
+        
+        let replaced = false;
+        
+        // Method 1: Exact sentence matching
         const escapedSentence = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedSentence, 'g');
-        const beforeReplace = blankedText;
-        // 패키지#01과 동일한 형식의 빈칸 생성 (언더스코어 30개)
-        const blankText = `(______________________________)`;
+        const exactRegex = new RegExp(escapedSentence, 'g');
+        if (exactRegex.test(blankedText)) {
+          blankedText = blankedText.replace(exactRegex, blankText);
+          replaced = true;
+        }
         
-        blankedText = blankedText.replace(regex, blankText);
+        // Method 2: Index-based replacement
+        if (!replaced && reversedIndices[reversedIndex] !== undefined) {
+          const validIndex = reversedIndices[reversedIndex];
+          const originalSentenceIndex = validToOriginalIndexMap[validIndex];
+          
+          if (originalSentenceIndex !== undefined && originalSentenceIndex < originalSentences.length) {
+            const originalSentence = originalSentences[originalSentenceIndex];
+            if (originalSentence && blankedText.includes(originalSentence)) {
+              const escapedOriginal = originalSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const originalRegex = new RegExp(escapedOriginal, 'g');
+              if (originalRegex.test(blankedText)) {
+                blankedText = blankedText.replace(originalRegex, blankText);
+                replaced = true;
+              }
+            }
+          }
+        }
         
-        console.log(`빈칸 ${index + 1} 생성 결과:`, {
-          원본문장: sentence,
-          교체전: beforeReplace.substring(0, 100) + '...',
-          교체후: blankedText.substring(0, 100) + '...',
-          교체됨: beforeReplace !== blankedText
-        });
-      } else {
-        console.warn(`빈칸 ${index + 1} 생성 실패: 빈 문장`);
+        // Method 3: Normalized matching
+        if (!replaced) {
+          const normalizedPassage = blankedText.replace(/\s+/g, ' ');
+          const normalizedSentence = sentence.trim().replace(/\s+/g, ' ');
+          if (normalizedPassage.includes(normalizedSentence)) {
+            const normalizedIndex = normalizedPassage.indexOf(normalizedSentence);
+            if (normalizedIndex !== -1) {
+              const trimmedSentence = sentence.trim();
+              const actualIndex = blankedText.indexOf(trimmedSentence);
+              if (actualIndex !== -1) {
+                const actualSentence = blankedText.substring(actualIndex, actualIndex + trimmedSentence.length);
+                if (actualSentence) {
+                  const escapedActual = actualSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  const actualRegex = new RegExp(escapedActual, 'g');
+                  if (actualRegex.test(blankedText)) {
+                    blankedText = blankedText.replace(actualRegex, blankText);
+                    replaced = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        if (!replaced) {
+          console.error(`선택된 문장 "${sentence.substring(0, 30)}..."을 원본 본문에서 찾을 수 없습니다.`);
+        } else {
+          console.log(`✅ 빈칸 ${originalIndex + 1} 생성 성공: (${alphabetLabel}${'_'.repeat(underscoreCount)})`);
+        }
       }
     });
   } else {

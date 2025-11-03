@@ -170,22 +170,36 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     currentTypeId: ''
   });
 
-  const [selectedWorkTypes, setSelectedWorkTypes] = useState<Record<string, boolean>>({
-    '01': true,
-    '02': true,
-    '03': true,
-    '04': true,
-    '05': true,
-    '06': true,
-    '07': true,
-    '08': true,
-    '09': true,
-    '10': true,
-    '11': true,
-    '12': true,
-    '13': true,
-    '14': true
-  });
+  // 선택된 유형 상태 초기화 (sessionStorage에서 복원)
+  const getInitialSelectedWorkTypes = (): Record<string, boolean> => {
+    const saved = sessionStorage.getItem('package02_selectedWorkTypes');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('저장된 선택 상태 복원 실패:', e);
+      }
+    }
+    // 기본값
+    return {
+      '01': true,
+      '02': true,
+      '03': true,
+      '04': true,
+      '05': true,
+      '06': true,
+      '07': true,
+      '08': true,
+      '09': true,
+      '10': true,
+      '11': true,
+      '12': true,
+      '13': true,
+      '14': true
+    };
+  };
+
+  const [selectedWorkTypes, setSelectedWorkTypes] = useState<Record<string, boolean>>(getInitialSelectedWorkTypes);
 
   // 포인트 관련 상태
   const [showPointModal, setShowPointModal] = useState(false);
@@ -236,10 +250,15 @@ const Package_02_TwoStepQuiz: React.FC = () => {
   };
 
   const handleWorkTypeToggle = (typeId: string) => {
-    setSelectedWorkTypes(prev => ({
-      ...prev,
-      [typeId]: !prev[typeId]
-    }));
+    setSelectedWorkTypes(prev => {
+      const newState = {
+        ...prev,
+        [typeId]: !prev[typeId]
+      };
+      // sessionStorage에 저장
+      sessionStorage.setItem('package02_selectedWorkTypes', JSON.stringify(newState));
+      return newState;
+    });
   };
 
   const handleSelectAll = () => {
@@ -248,6 +267,8 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     Object.keys(selectedWorkTypes).forEach(key => {
       newState[key] = !allSelected;
     });
+    // sessionStorage에 저장
+    sessionStorage.setItem('package02_selectedWorkTypes', JSON.stringify(newState));
     setSelectedWorkTypes(newState);
   };
 
@@ -764,6 +785,13 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
         case '14': {
           const quiz = await generateBlankQuizWithAI(inputText);
+          console.log('✅ 패키지#02-유형#14 데이터 생성 완료:', {
+            blankedText_길이: quiz.blankedText?.length,
+            blankedText_일부: quiz.blankedText?.substring(0, 200),
+            hasBlanks: quiz.blankedText?.includes('( A '),
+            correctAnswers_개수: quiz.correctAnswers?.length,
+            translation_길이: quiz.translation?.length
+          });
           quizItem.work14Data = {
             blankedText: quiz.blankedText,
             options: [],
@@ -2205,43 +2233,59 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   padding: '1.2rem',
                   marginBottom: '1.5rem',
                   fontSize: '1.08rem',
-                  lineHeight: '1.7'
+                  lineHeight: '1.7',
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                  overflow: 'hidden'
                 }}>
-                  {quizItem.work14Data.blankedText}
+                  {(() => {
+                    const blankedText = quizItem.work14Data.blankedText || '';
+                    console.log('📝 패키지#02-유형#14 화면 표시:', {
+                      blankedText_길이: blankedText.length,
+                      blankedText_일부: blankedText.substring(0, 200),
+                      hasBlanks: blankedText.includes('( A '),
+                      hasUnderscores: blankedText.includes('_')
+                    });
+                    return blankedText;
+                  })()}
                 </div>
 
+                {/* 정답 표시 */}
                 <div style={{
-                  background: '#e8f5e8',
-                  border: '2px solid #4caf50',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  marginBottom: '1rem'
+                  marginTop: '1.2rem',
+                  color: '#1976d2',
+                  fontWeight: 700
                 }}>
-                  <div style={{
-                    fontSize: '11pt',
-                    fontWeight: '700',
-                    color: '#1976d2',
-                    marginBottom: '0.5rem'
-                  }}>
-                    정답 문장:
+                  <div style={{color: '#1976d2', marginBottom: '0.5rem'}}>
+                    정답 문장들:
                   </div>
-                  <div style={{
-                    fontSize: '0.95rem',
-                    color: '#2d3748',
-                    lineHeight: 1.6
-                  }}>
-                    {quizItem.work14Data.correctAnswers?.map((answer, answerIndex) => (
+                  {quizItem.work14Data.correctAnswers?.map((answer, answerIndex) => {
+                    const alphabetLabel = String.fromCharCode(65 + answerIndex); // A=65, B=66, C=67...
+                    // 정답 문장에서 빈칸 형식 제거 ( ( A ___ ) 또는 (___A___) 형식)
+                    let cleanAnswer = answer || '';
+                    // 다양한 빈칸 패턴 제거: ( A ___________ ), (____________________A____________________), (______) 등
+                    // 패턴 1: ( A _+ ) 또는 ( _+ A _+ )
+                    cleanAnswer = cleanAnswer.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
+                    cleanAnswer = cleanAnswer.replace(/\(_+[A-Z]_+\)/g, '').trim();
+                    // 패턴 2: ( _+ ) 일반 빈칸
+                    cleanAnswer = cleanAnswer.replace(/\(_+\)/g, '').trim();
+                    // 패턴 3: 공백 포함 패턴 ( A _ ) 등
+                    cleanAnswer = cleanAnswer.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
+                    
+                    return (
                       <div key={answerIndex} style={{
-                        marginBottom: '0.8rem',
+                        marginBottom: '0.3rem',
                         padding: '0.5rem',
-                        background: '#fff',
+                        backgroundColor: '#E3F2FD',
                         borderRadius: '4px',
-                        border: '1px solid #c8e6c9'
+                        fontSize: '0.95rem',
+                        lineHeight: 1.4
                       }}>
-                        {answerIndex + 1}. {answer}
+                        {alphabetLabel}. {cleanAnswer || answer}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
 
                 <div style={{ marginTop: '1.5rem' }}>

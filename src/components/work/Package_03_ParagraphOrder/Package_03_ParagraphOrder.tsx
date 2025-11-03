@@ -65,16 +65,34 @@ const Package_03_ParagraphOrder: React.FC = () => {
   const [packageQuiz, setPackageQuiz] = useState<PackageQuizItem[]>([]);
   const [translatedText, setTranslatedText] = useState('');
 
-  // 선택된 문제 유형 상태 (체크박스) - 기본값: 01, 02 선택
-  const [selectedWorkTypes, setSelectedWorkTypes] = useState<{[key: string]: boolean}>({
-    '01': true,
-    '02': true,
-    '13': false,
-    '14': false
-  });
+  // 선택된 문제 유형 상태 초기화 (체크박스) - sessionStorage에서 복원
+  const getInitialSelectedWorkTypes = (): {[key: string]: boolean} => {
+    const saved = sessionStorage.getItem('package03_selectedWorkTypes');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('저장된 선택 상태 복원 실패:', e);
+      }
+    }
+    // 기본값
+    return {
+      '01': true,
+      '02': true,
+      '13': false,
+      '14': false
+    };
+  };
 
-  // 선택된 문제 유형 상태 (라디오 버튼) - 기본값: 07 선택
-  const [selectedRadioType, setSelectedRadioType] = useState<string>('07');
+  const [selectedWorkTypes, setSelectedWorkTypes] = useState<{[key: string]: boolean}>(getInitialSelectedWorkTypes);
+
+  // 선택된 문제 유형 상태 초기화 (라디오 버튼) - sessionStorage에서 복원
+  const getInitialSelectedRadioType = (): string => {
+    const saved = sessionStorage.getItem('package03_selectedRadioType');
+    return saved || '07';
+  };
+
+  const [selectedRadioType, setSelectedRadioType] = useState<string>(getInitialSelectedRadioType);
 
   // 포인트 관련 상태
   const [showPointModal, setShowPointModal] = useState(false);
@@ -284,26 +302,33 @@ const Package_03_ParagraphOrder: React.FC = () => {
         } else {
           console.error('❌ 파일 생성 실패');
         }
+        // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
         e.preventDefault();
         return;
       }
     }
     
-    console.log('❌ 이미지를 찾을 수 없음');
-    e.preventDefault();
+    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
   };
 
   // 체크박스 토글 핸들러
   const handleWorkTypeToggle = (typeId: string) => {
-    setSelectedWorkTypes(prev => ({
-      ...prev,
-      [typeId]: !prev[typeId]
-    }));
+    setSelectedWorkTypes(prev => {
+      const newState = {
+        ...prev,
+        [typeId]: !prev[typeId]
+      };
+      // sessionStorage에 저장
+      sessionStorage.setItem('package03_selectedWorkTypes', JSON.stringify(newState));
+      return newState;
+    });
   };
 
   // 라디오 버튼 변경 핸들러 (07과 08 중 하나만 선택)
   const handleRadioTypeChange = (typeId: string) => {
     setSelectedRadioType(typeId);
+    // sessionStorage에 저장
+    sessionStorage.setItem('package03_selectedRadioType', typeId);
   };
 
   // 포인트 관련 함수들
@@ -443,6 +468,14 @@ const Package_03_ParagraphOrder: React.FC = () => {
         }
         case '14': {
           const quiz = await generateBlankQuizWithAI(inputText);
+          console.log('✅ 패키지#03-유형#14 데이터 생성 완료:', {
+            blankedText_길이: quiz.blankedText?.length,
+            blankedText_일부: quiz.blankedText?.substring(0, 200),
+            hasBlanks: quiz.blankedText?.includes('( A '),
+            hasUnderscores: quiz.blankedText?.includes('_'),
+            correctAnswers_개수: quiz.correctAnswers?.length,
+            translation_길이: quiz.translation?.length
+          });
           quizItem.work14Data = quiz;
           quizItem.translatedText = quiz.translation;
           console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
@@ -1508,9 +1541,23 @@ const Package_03_ParagraphOrder: React.FC = () => {
                       borderRadius: '8px',
                       padding: '1.2rem',
                       fontFamily: 'inherit',
-                      border: '2px solid #e3e6f0'
+                      border: '2px solid #e3e6f0',
+                      whiteSpace: 'pre-wrap',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                      overflow: 'hidden'
                     }}>
-                      {quizItem.work14Data.blankedText}
+                      {(() => {
+                        const blankedText = quizItem.work14Data.blankedText || '';
+                        console.log('📝 패키지#03-유형#14 화면 표시:', {
+                          blankedText_길이: blankedText.length,
+                          blankedText_일부: blankedText.substring(0, 200),
+                          hasBlanks: blankedText.includes('( A '),
+                          hasUnderscores: blankedText.includes('_'),
+                          work14Data: quizItem.work14Data
+                        });
+                        return blankedText;
+                      })()}
                     </div>
 
                     {/* 정답 표시 */}
@@ -1522,18 +1569,32 @@ const Package_03_ParagraphOrder: React.FC = () => {
                       <div style={{color: '#1976d2', marginBottom: '0.5rem'}}>
                         정답 문장들:
                       </div>
-                      {quizItem.work14Data.selectedSentences?.map((sentence, idx) => (
-                        <div key={idx} style={{
-                          marginBottom: '0.3rem',
-                          padding: '0.5rem',
-                          backgroundColor: '#E3F2FD',
-                          borderRadius: '4px',
-                          fontSize: '0.95rem',
-                          lineHeight: 1.4
-                        }}>
-                          {idx + 1}. {sentence}
-                        </div>
-                      ))}
+                      {quizItem.work14Data.selectedSentences?.map((sentence, idx) => {
+                        const alphabetLabel = String.fromCharCode(65 + idx); // A=65, B=66, C=67...
+                        // 정답 문장에서 빈칸 형식 제거 ( ( A ___ ) 또는 (___A___) 형식)
+                        let cleanSentence = sentence || '';
+                        // 다양한 빈칸 패턴 제거: ( A ___________ ), (____________________A____________________), (______) 등
+                        // 패턴 1: ( A _+ ) 또는 ( _+ A _+ )
+                        cleanSentence = cleanSentence.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
+                        cleanSentence = cleanSentence.replace(/\(_+[A-Z]_+\)/g, '').trim();
+                        // 패턴 2: ( _+ ) 일반 빈칸
+                        cleanSentence = cleanSentence.replace(/\(_+\)/g, '').trim();
+                        // 패턴 3: 공백 포함 패턴 ( A _ ) 등
+                        cleanSentence = cleanSentence.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
+                        
+                        return (
+                          <div key={idx} style={{
+                            marginBottom: '0.3rem',
+                            padding: '0.5rem',
+                            backgroundColor: '#E3F2FD',
+                            borderRadius: '4px',
+                            fontSize: '0.95rem',
+                            lineHeight: 1.4
+                          }}>
+                            {alphabetLabel}. {cleanSentence || sentence}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {/* 한국어 번역 */}

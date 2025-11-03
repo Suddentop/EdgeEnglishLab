@@ -707,13 +707,13 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
         } else {
           console.error('❌ 파일 생성 실패');
         }
+        // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
         e.preventDefault();
         return;
       }
     }
     
-    console.log('❌ 이미지를 찾을 수 없음');
-    e.preventDefault();
+    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
   };
 
   // 모든 유형 선택/해제
@@ -4485,7 +4485,11 @@ ${inputText}`;
                     borderRadius: '8px',
                     padding: '1.2rem',
                     fontFamily: 'inherit',
-                    border: '2px solid #e3e6f0'
+                    border: '2px solid #e3e6f0',
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word',
+                    overflow: 'hidden'
                   }}>
                     {quizItem.work14Data.blankedText}
                   </div>
@@ -4499,18 +4503,42 @@ ${inputText}`;
                     <div style={{color: '#1976d2', marginBottom: '0.5rem'}}>
                       정답 문장들:
                     </div>
-                    {quizItem.work14Data.selectedSentences?.map((sentence, idx) => (
-                      <div key={idx} style={{
-                        marginBottom: '0.3rem',
-                        padding: '0.5rem',
-                        backgroundColor: '#E3F2FD',
-                        borderRadius: '4px',
-                        fontSize: '0.95rem',
-                        lineHeight: 1.4
-                      }}>
-                        {idx + 1}. {sentence}
-                      </div>
-                    ))}
+                    {quizItem.work14Data.selectedSentences?.map((sentence, idx) => {
+                      const alphabetLabel = String.fromCharCode(65 + idx); // A=65, B=66, C=67...
+                      // 정답 문장에서 빈칸 형식 제거
+                      let cleanSentence = sentence || '';
+                      if (cleanSentence) {
+                        // 패턴 1: (____________________A____________________) 형식 (긴 언더스코어, 알파벳 앞뒤)
+                        cleanSentence = cleanSentence.replace(/\(_{5,}[A-Z]_{5,}\)/g, '').trim();
+                        // 패턴 2: (_+A_+) - 언더스코어 앞뒤 (짧은 경우)
+                        cleanSentence = cleanSentence.replace(/\(_+[A-Z]_+\)/g, '').trim();
+                        // 패턴 3: ( A _+ ) 또는 ( A_+ )
+                        cleanSentence = cleanSentence.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
+                        cleanSentence = cleanSentence.replace(/\(\s*[A-Z]_+\s*\)/g, '').trim();
+                        // 패턴 4: (A_+) - 공백 없는 경우
+                        cleanSentence = cleanSentence.replace(/\([A-Z]_+\)/g, '').trim();
+                        // 패턴 5: ( _+ ) 일반 빈칸
+                        cleanSentence = cleanSentence.replace(/\(_+\)/g, '').trim();
+                        // 패턴 6: 공백 포함 모든 패턴
+                        cleanSentence = cleanSentence.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
+                        // 패턴 7: 언더스코어가 3개 이상이고 알파벳이 포함된 모든 패턴
+                        cleanSentence = cleanSentence.replace(/\([^)]*_{3,}[^)]*[A-Z][^)]*\)/g, '').trim();
+                        cleanSentence = cleanSentence.replace(/\([^)]*[A-Z][^)]*_{3,}[^)]*\)/g, '').trim();
+                      }
+                      
+                      return (
+                        <div key={idx} style={{
+                          marginBottom: '0.3rem',
+                          padding: '0.5rem',
+                          backgroundColor: '#E3F2FD',
+                          borderRadius: '4px',
+                          fontSize: '0.95rem',
+                          lineHeight: 1.4
+                        }}>
+                          {alphabetLabel}. {cleanSentence || sentence}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* 한국어 번역 */}

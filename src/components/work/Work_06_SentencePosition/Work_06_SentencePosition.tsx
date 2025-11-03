@@ -243,7 +243,12 @@ const Work_06_SentencePosition: React.FC = () => {
   };
 
   const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    if (inputMode !== 'capture') return;
+    // 텍스트 모드나 이미지 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
+    if (inputMode !== 'capture') {
+      return;
+    }
+    
+    // 캡처 모드일 때만 이미지 처리
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
@@ -271,7 +276,7 @@ const Work_06_SentencePosition: React.FC = () => {
         return;
       }
     }
-    e.preventDefault();
+    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

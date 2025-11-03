@@ -112,25 +112,20 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
   // 캡처화면 붙여넣기 처리
   const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    console.log('📋 붙여넣기 이벤트 발생:', { inputMode, clipboardItems: e.clipboardData.items.length });
-    
+    // 텍스트 모드나 이미지 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
     if (inputMode !== 'capture') {
-      console.log('❌ 캡처 모드가 아님:', inputMode);
       return;
     }
     
+    // 캡처 모드일 때만 이미지 처리
     const items = e.clipboardData.items;
-    console.log('📋 클립보드 아이템 수:', items.length);
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      console.log(`📋 아이템 ${i}:`, { type: item.type, kind: item.kind });
       
       if (item.type.indexOf('image') !== -1) {
-        console.log('✅ 이미지 발견!');
         const file = item.getAsFile();
         if (file) {
-          console.log('✅ 파일 생성 성공:', { name: file.name, size: file.size, type: file.type });
           setSelectedFile(file);
           setError('');
           
@@ -145,10 +140,14 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           setTimeout(() => {
             analyzeProblem();
           }, 500);
+          // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
+          e.preventDefault();
+          return;
         }
-        break;
       }
     }
+    
+    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
   };
 
   // 파일 선택 처리

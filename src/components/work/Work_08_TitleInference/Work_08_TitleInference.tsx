@@ -597,7 +597,12 @@ const Work_08_TitleInference: React.FC = () => {
   };
 
   const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    if (inputMode !== 'capture') return;
+    // 텍스트 모드나 이미지 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
+    if (inputMode !== 'capture') {
+      return;
+    }
+    
+    // 캡처 모드일 때만 이미지 처리
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
@@ -606,8 +611,8 @@ const Work_08_TitleInference: React.FC = () => {
           setImageFile(file);
           setImagePreview(URL.createObjectURL(file));
           setIsExtractingText(true);
-      try {
-        const ocrText = await imageToTextWithOpenAIVision(file);
+          try {
+            const ocrText = await imageToTextWithOpenAIVision(file);
             setInputText(ocrText);
             setTimeout(() => {
               if (textAreaRef.current) {
@@ -618,14 +623,16 @@ const Work_08_TitleInference: React.FC = () => {
           } catch (err) {
             alert('OCR 처리 중 오류가 발생했습니다.');
           } finally {
-        setIsExtractingText(false);
-      }
+            setIsExtractingText(false);
+          }
+          // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
+          e.preventDefault();
+          return;
         }
-        e.preventDefault();
-        return;
       }
     }
-    e.preventDefault();
+    
+    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

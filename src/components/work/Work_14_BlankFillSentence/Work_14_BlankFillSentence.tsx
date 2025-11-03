@@ -133,19 +133,112 @@ const Work_14_FillSentence: React.FC = () => {
   const [isPasteFocused, setIsPasteFocused] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
+  // 정답 문장에서 빈칸 패턴 제거하는 헬퍼 함수
+  const cleanAnswer = (answer: string): string => {
+    if (!answer) return answer;
+    let clean = answer;
+    // 다양한 빈칸 패턴 제거
+    clean = clean.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
+    clean = clean.replace(/\(_+[A-Z]_+\)/g, '').trim();
+    clean = clean.replace(/\(_+\)/g, '').trim();
+    clean = clean.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
+    return clean;
+  };
+
   // 정답을 포함한 텍스트 생성 함수 (HTML 스타일 적용)
   const createTextWithAnswers = (blankedText: string, correctAnswers: string[]): string => {
     let result = blankedText;
+    
+    if (correctAnswers.length === 0) {
+      return result;
+    }
+    
     let answerIndex = 0;
     
-    // A, B, C 형태의 빈칸 패턴을 찾아서 정답으로 교체 (파란색, 진하게 스타일 적용)
-    result = result.replace(/\(_{20,}[A-Z]_{20,}\)/g, () => {
+    // 패턴 1: ( 공백 + 알파벳 + 공백 + 언더스코어들 + ) - 공백 있는 경우
+    const blankPattern1 = /\( [A-Z] _+\)/g;
+    result = result.replace(blankPattern1, (match: string) => {
       if (answerIndex < correctAnswers.length) {
-        const answer = correctAnswers[answerIndex++];
+        const answer = cleanAnswer(correctAnswers[answerIndex]);
+        answerIndex++;
         return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
       }
-      return '(____________________A____________________)';
+      return match;
     });
+    
+    // 패턴 2: ( 공백 + 알파벳 + 언더스코어들 + ) - 알파벳과 언더스코어 사이 공백 없는 경우
+    if (answerIndex < correctAnswers.length) {
+      const blankPattern2 = /\( [A-Z]_+\)/g;
+      result = result.replace(blankPattern2, (match: string) => {
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
+    
+    // 패턴 3: ( 알파벳 + 언더스코어들 + ) - (A_______) 형식 (공백 없음)
+    if (answerIndex < correctAnswers.length) {
+      const blankPattern3 = /\(([A-Z])([_]+)\)/g;
+      result = result.replace(blankPattern3, (match: string) => {
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
+    
+    // 패턴 4: ( 언더스코어들 + 알파벳 + 언더스코어들 + ) - (___A___) 또는 (____________________A____________________) 형식
+    if (answerIndex < correctAnswers.length) {
+      const blankPattern4 = /\(_+[A-Z]_+\)/g;
+      result = result.replace(blankPattern4, (match: string) => {
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
+    
+    // 패턴 5: ( 언더스코어들 + 알파벳 + 언더스코어들 + ) - (____________________A____________________) 형식 (긴 언더스코어)
+    if (answerIndex < correctAnswers.length) {
+      const blankPattern5 = /\(_{10,}[A-Z]_{10,}\)/g;
+      result = result.replace(blankPattern5, (match: string) => {
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
+    
+    // 패턴 6: 모든 언더스코어 포함 빈칸 패턴 (어떤 형식이든 매칭) - 최종 fallback
+    if (answerIndex < correctAnswers.length) {
+      // 이미 정답으로 치환된 부분을 제외한 모든 언더스코어 포함 괄호 패턴 매칭
+      const generalPattern = /\([^)]*_[^)]*\)/g;
+      result = result.replace(generalPattern, (match: string) => {
+        // 이미 정답으로 치환된 부분은 건너뛰기
+        if (match.includes('<span') || match.includes('</span>')) {
+          return match;
+        }
+        // 일반 텍스트만 포함한 경우는 건너뛰기 (예: "(example)")
+        if (!match.includes('_')) {
+          return match;
+        }
+        if (answerIndex < correctAnswers.length) {
+          const answer = cleanAnswer(correctAnswers[answerIndex]);
+          answerIndex++;
+          return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+        }
+        return match;
+      });
+    }
     
     return result;
   };
@@ -234,33 +327,26 @@ const Work_14_FillSentence: React.FC = () => {
 
   // 붙여넣기(클립보드) 이미지 처리
   const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    console.log('📋 붙여넣기 이벤트 발생:', { inputMode, clipboardItems: e.clipboardData.items.length });
-    
+    // 텍스트 모드나 이미지 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
     if (inputMode !== 'capture') {
-      console.log('❌ 캡처 모드가 아님:', inputMode);
       return;
     }
     
+    // 캡처 모드일 때만 이미지 처리
     const items = e.clipboardData.items;
-    console.log('📋 클립보드 아이템 수:', items.length);
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      console.log(`📋 아이템 ${i}:`, { type: item.type, kind: item.kind });
       
       if (item.type.indexOf('image') !== -1) {
-        console.log('✅ 이미지 발견!');
         const file = item.getAsFile();
         if (file) {
-          console.log('✅ 파일 생성 성공:', { name: file.name, size: file.size, type: file.type });
           setImageFile(file);
           setImagePreview(URL.createObjectURL(file));
           setIsLoading(true);
           setIsExtractingText(true);
           try {
-            console.log('🔄 OCR 처리 시작...');
             const ocrText = await imageToTextWithOpenAIVision(file);
-            console.log('✅ OCR 처리 완료:', ocrText.substring(0, 100) + '...');
             setInputText(ocrText);
             setTimeout(() => {
               if (textAreaRef.current) {
@@ -272,19 +358,17 @@ const Work_14_FillSentence: React.FC = () => {
             console.error('❌ OCR 처리 오류:', err);
             alert('OCR 처리 중 오류가 발생했습니다.');
           } finally {
-        setIsExtractingText(false);
+            setIsExtractingText(false);
             setIsLoading(false);
-      }
-        } else {
-          console.error('❌ 파일 생성 실패');
+          }
+          // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
+          e.preventDefault();
+          return;
         }
-        e.preventDefault();
-        return;
       }
     }
     
-    console.log('❌ 이미지를 찾을 수 없음');
-    e.preventDefault();
+    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
   };
 
   // 본문 입력 핸들러
@@ -549,60 +633,40 @@ const Work_14_FillSentence: React.FC = () => {
     setIsExtractingText(false);
   };
 
-  // 빈칸을 그대로 표시 (HTML 변환 없이)
+  // 빈칸을 그대로 표시 (HTML 변환 포함)
   const displayBlankedText = useMemo(() => {
     if (!quiz?.blankedText) return '';
     
-    // HTML 변환 없이 원본 텍스트 그대로 반환
-    return quiz.blankedText;
+    // 빈칸 패턴을 찾아서 ( A 부분은 줄바꿈 방지, 언더스코어 부분은 줄바꿈 가능
+    // 패턴: (A_______) - 공백 없는 경우
+    let problemText = quiz.blankedText;
+    
+    const blankPattern = /\(([A-Z])([_]+)\)/g;
+    problemText = problemText.replace(blankPattern, (match, alphabet, underscores) => {
+      // ( A 부분은 줄바꿈 방지, 언더스코어는 줄바꿈 가능
+      return `<span style="white-space: nowrap;">( ${alphabet}</span>${underscores})`;
+    });
+    
+    return problemText;
   }, [quiz?.blankedText]);
 
-  // 인쇄(문제) 페이지용 빈칸 텍스트 (정답을 빈칸으로 변환)
+  // 인쇄(문제) 페이지용 빈칸 텍스트 (원본 blankedText를 그대로 사용, 빈칸 패턴만 처리)
   const displayProblemText = useMemo(() => {
     if (!quiz?.blankedText) return '';
     
-    console.log('=== displayProblemText 디버깅 ===');
-    console.log('quiz.blankedText:', quiz.blankedText);
-    console.log('quiz.correctAnswers:', quiz.correctAnswers);
-    
-    // 정답 문장을 빈칸 형식으로 변환
+    // 원본 blankedText를 그대로 사용 (work14Service.ts에서 생성된 빈칸 형식 유지)
     let problemText = quiz.blankedText;
     
-    // 정답 문장이 괄호 안에 있는 경우를 빈칸으로 변환
-    if (quiz.correctAnswers && quiz.correctAnswers.length > 0) {
-      const blankLabels = ['A', 'B', 'C', 'D', 'E'];
-      quiz.correctAnswers.forEach((answer, index) => {
-        const blankLabel = blankLabels[index] || String.fromCharCode(65 + index);
-        const blankText = `(____________________${blankLabel}____________________)`;
-        
-        console.log(`빈칸 ${index + 1} 변환 시도:`, {
-          원본답안: answer,
-          빈칸라벨: blankLabel,
-          빈칸텍스트: blankText
-        });
-        
-        // 정답 문장을 빈칸으로 교체 (여러 방법 시도)
-        const escapedAnswer = answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        
-        // 방법 1: 괄호로 감싸진 정답 문장 교체
-        const regex1 = new RegExp(`\\(${escapedAnswer}\\)`, 'g');
-        const beforeReplace1 = problemText;
-        problemText = problemText.replace(regex1, blankText);
-        console.log(`방법 1 결과:`, { 교체전: beforeReplace1 !== problemText, 교체후: problemText });
-        
-        // 방법 2: 괄호 없이 정답 문장만 교체
-        if (beforeReplace1 === problemText) {
-          const regex2 = new RegExp(escapedAnswer, 'g');
-          const beforeReplace2 = problemText;
-          problemText = problemText.replace(regex2, blankText);
-          console.log(`방법 2 결과:`, { 교체전: beforeReplace2 !== problemText, 교체후: problemText });
-        }
-      });
-    }
+    // 빈칸 패턴을 찾아서 ( A 부분은 줄바꿈 방지, 언더스코어 부분은 줄바꿈 가능
+    // 패턴: ( A_______) 
+    const blankPattern = /\( ([A-Z])([_]+)\)/g;
+    problemText = problemText.replace(blankPattern, (match, alphabet, underscores) => {
+      // ( A 부분은 줄바꿈 방지, 언더스코어는 줄바꿈 가능
+      return `<span style="white-space: nowrap;">( ${alphabet}</span>${underscores})`;
+    });
     
-    console.log('최종 problemText:', problemText);
     return problemText;
-  }, [quiz?.blankedText, quiz?.correctAnswers]);
+  }, [quiz?.blankedText]);
 
   // 문제 풀이/출력 화면
   if (quiz) {
@@ -673,8 +737,8 @@ const Work_14_FillSentence: React.FC = () => {
             <span>다음 빈칸에 들어갈 문장을 직접 입력하시오.</span>
             <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#14</span>
           </div>
-          <div  style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit', whiteSpace:'pre-wrap'}}>
-            {displayBlankedText}
+          <div  style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit', whiteSpace:'pre-wrap', wordWrap:'break-word', overflowWrap:'break-word', overflow:'hidden'}}>
+            <div dangerouslySetInnerHTML={{ __html: displayBlankedText }} />
           </div>
             <div className="problem-answers" style={{margin:'1.2rem 0'}}>
               {(() => {
@@ -707,6 +771,71 @@ const Work_14_FillSentence: React.FC = () => {
                 ));
               })()}
             </div>
+            
+            {/* 정답 문장들 표시 */}
+            {quiz.selectedSentences && quiz.selectedSentences.length > 0 && (
+              <div style={{
+                marginTop: '1.2rem',
+                color: '#1976d2',
+                fontWeight: 700
+              }}>
+                <div style={{color: '#1976d2', marginBottom: '0.5rem'}}>
+                  정답 문장들:
+                </div>
+                {quiz.selectedSentences.map((sentence, idx) => {
+                  const alphabetLabel = String.fromCharCode(65 + idx); // A=65, B=66, C=67...
+                  // 정답 문장에서 빈칸 형식 제거 ( ( A ___ ) 또는 (___A___) 형식)
+                  let cleanSentence = sentence || '';
+                  // 다양한 빈칸 패턴 제거: ( A ___________ ), (____________________A____________________), (______) 등
+                  // 패턴 1: ( A _+ ) 또는 ( _+ A _+ )
+                  cleanSentence = cleanSentence.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
+                  cleanSentence = cleanSentence.replace(/\(_+[A-Z]_+\)/g, '').trim();
+                  // 패턴 2: ( _+ ) 일반 빈칸
+                  cleanSentence = cleanSentence.replace(/\(_+\)/g, '').trim();
+                  // 패턴 3: 공백 포함 패턴 ( A _ ) 등
+                  cleanSentence = cleanSentence.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
+                  
+                  return (
+                    <div key={idx} style={{
+                      marginBottom: '0.3rem',
+                      padding: '0.5rem',
+                      backgroundColor: '#E3F2FD',
+                      borderRadius: '4px',
+                      fontSize: '0.95rem',
+                      lineHeight: 1.4
+                    }}>
+                      {alphabetLabel}. {cleanSentence || sentence}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 본문 해석 */}
+            {quiz.translation && (
+              <div style={{
+                marginTop: '1.2rem',
+                padding: '1rem',
+                backgroundColor: '#F1F8E9',
+                borderRadius: '8px',
+                border: '2px solid #e3e6f0'
+              }}>
+                <div style={{
+                  fontWeight: '700',
+                  marginBottom: '0.5rem',
+                  color: '#000'
+                }}>
+                  본문 해석:
+                </div>
+                <div style={{
+                  fontSize: '1rem',
+                  lineHeight: 1.6,
+                  color: '#333'
+                }}>
+                  {quiz.translation}
+                </div>
+              </div>
+            )}
         </div>
         {/* 인쇄용: 문제만 */}
         {printMode === 'no-answer' && (
@@ -725,8 +854,8 @@ const Work_14_FillSentence: React.FC = () => {
                         <span>다음 빈칸에 들어갈 문장을 직접 입력하시오.</span>
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#14</span>
                       </div>
-                      <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap'}}>
-                        {displayProblemText}
+                      <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap', wordWrap:'break-word', overflowWrap:'break-word', overflow:'hidden'}}>
+                        <div dangerouslySetInnerHTML={{ __html: displayProblemText }} />
                       </div>
                     </div>
                   </div>
@@ -743,14 +872,29 @@ const Work_14_FillSentence: React.FC = () => {
                         다음 빈칸에 들어갈 문장을 직접 입력하시오.
                       </div>
                       <div className="problem-answers" style={{margin:'1rem 0'}}>
-                        {quiz.selectedSentences?.map((sentence, i) => (
-                          <div key={i} style={{margin:'0.8rem 0', padding:'0.8rem', background:'#f8f9fa', borderRadius:'6px', border:'1px solid #e9ecef'}}>
-                            <div style={{fontSize:'0.9rem', fontWeight:'600', marginBottom:'0.4rem', color:'#495057'}}>
-                              빈칸 {String.fromCharCode(65 + i)}번 답안 (문장):
+                        <div style={{height:'1.5rem'}}></div>
+                        <div style={{height:'1.5rem'}}></div>
+                        {quiz.selectedSentences?.map((sentence, i) => {
+                          const alphabetLabel = String.fromCharCode(65 + i); // A=65, B=66, C=67...
+                          return (
+                            <div key={i}>
+                              <div style={{
+                                fontSize:'1rem',
+                                fontFamily:'monospace',
+                                wordBreak: 'break-all',
+                                overflowWrap: 'anywhere'
+                              }}>
+                                {alphabetLabel} : {'_'.repeat(100)}
+                              </div>
+                              {quiz.selectedSentences && i < quiz.selectedSentences.length - 1 && (
+                                <>
+                                  <div style={{height:'1.5rem'}}></div>
+                                  <div style={{height:'1.5rem'}}></div>
+                                </>
+                              )}
                             </div>
-                            <div style={{height:'60px', border:'1px solid #ced4da', borderRadius:'4px', background:'#fff'}}></div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -767,18 +911,33 @@ const Work_14_FillSentence: React.FC = () => {
                     <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                       다음 빈칸에 들어갈 문장을 직접 입력하시오.
                     </div>
-                      <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap'}}>
-                        {displayProblemText}
+                      <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap', wordWrap:'break-word', overflowWrap:'break-word', overflow:'hidden'}}>
+                        <div dangerouslySetInnerHTML={{ __html: displayProblemText }} />
                       </div>
                     <div className="problem-answers" style={{margin:'1rem 0'}}>
-                      {quiz.selectedSentences?.map((sentence, i) => (
-                        <div key={i} style={{margin:'0.8rem 0', padding:'0.8rem', background:'#f8f9fa', borderRadius:'6px', border:'1px solid #e9ecef'}}>
-                          <div style={{fontSize:'0.9rem', fontWeight:'600', marginBottom:'0.4rem', color:'#495057'}}>
-                            빈칸 {i + 1}번 답안 (단어):
+                      <div style={{height:'1.5rem'}}></div>
+                      <div style={{height:'1.5rem'}}></div>
+                      {quiz.selectedSentences?.map((sentence, i) => {
+                        const alphabetLabel = String.fromCharCode(65 + i); // A=65, B=66, C=67...
+                        return (
+                          <div key={i}>
+                            <div style={{
+                              fontSize:'1rem',
+                              fontFamily:'monospace',
+                              whiteSpace:'nowrap',
+                              overflow:'hidden'
+                            }}>
+                              {alphabetLabel} : {'_'.repeat(100)}
+                            </div>
+                            {quiz.selectedSentences && i < quiz.selectedSentences.length - 1 && (
+                              <>
+                                <div style={{height:'1.5rem'}}></div>
+                                <div style={{height:'1.5rem'}}></div>
+                              </>
+                            )}
                           </div>
-                          <div style={{height:'60px', border:'1px solid #ced4da', borderRadius:'4px', background:'#fff'}}></div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -803,8 +962,8 @@ const Work_14_FillSentence: React.FC = () => {
                         <span>다음 빈칸에 들어갈 문장을 직접 입력하시오.</span>
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#14</span>
                       </div>
-                      <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap'}}>
-                        {displayProblemText}
+                      <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap', wordWrap:'break-word', overflowWrap:'break-word', overflow:'hidden'}}>
+                        <div dangerouslySetInnerHTML={{ __html: createTextWithAnswers(quiz.blankedText, quiz.correctAnswers) }} />
                       </div>
                     </div>
                   </div>

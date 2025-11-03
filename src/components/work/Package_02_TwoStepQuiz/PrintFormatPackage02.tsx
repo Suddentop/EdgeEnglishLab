@@ -40,7 +40,14 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
     // 번역 텍스트 공통 추출 (히스토리 불러오기 시 누락 보정)
     const getTranslatedText = (quizItem: any, quizData: any): string => {
       const d = quizData || {};
+      // work14Data의 translation도 확인
+      const work14Translation = 
+        quizItem?.work14Data?.translation || 
+        d?.work14Data?.translation ||
+        quizData?.work14Data?.translation;
+      
       return (
+        work14Translation ||
         quizItem?.translatedText ||
         d?.translatedText ||
         d?.translation ||
@@ -1458,37 +1465,190 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                 <div className="print-instruction">
                   다음 빈칸에 들어갈 적절한 문장을 쓰시오
                 </div>
-                <div className="print-passage">
+                <div className="print-passage" style={{
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                  overflow: 'hidden'
+                }}>
                   {isAnswerMode ? (
                     // 정답 모드: 괄호 안에 정답 표시 (파란색 진하게)
                     <span dangerouslySetInnerHTML={{
                       __html: (() => {
+                        // 정답 문장에서 빈칸 패턴 제거하는 헬퍼 함수
+                        const cleanAnswer = (answer: string): string => {
+                          if (!answer) return answer;
+                          let clean = answer;
+                          // 패턴 1: (____________________A____________________) 형식 (긴 언더스코어, 알파벳 앞뒤)
+                          clean = clean.replace(/\(_{5,}[A-Z]_{5,}\)/g, '').trim();
+                          // 패턴 2: (_+A_+) - 언더스코어 앞뒤 (짧은 경우)
+                          clean = clean.replace(/\(_+[A-Z]_+\)/g, '').trim();
+                          // 패턴 3: ( A _+ ) 또는 ( A_+ )
+                          clean = clean.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
+                          clean = clean.replace(/\(\s*[A-Z]_+\s*\)/g, '').trim();
+                          // 패턴 4: (A_+) - 공백 없는 경우
+                          clean = clean.replace(/\([A-Z]_+\)/g, '').trim();
+                          // 패턴 5: ( _+ ) 일반 빈칸
+                          clean = clean.replace(/\(_+\)/g, '').trim();
+                          // 패턴 6: 공백 포함 모든 패턴
+                          clean = clean.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
+                          // 패턴 7: 언더스코어가 3개 이상이고 알파벳이 포함된 모든 패턴
+                          clean = clean.replace(/\([^)]*_{3,}[^)]*[A-Z][^)]*\)/g, '').trim();
+                          clean = clean.replace(/\([^)]*[A-Z][^)]*_{3,}[^)]*\)/g, '').trim();
+                          return clean;
+                        };
+
                         const blankedText = work14Data?.blankedText || '';
-                        const correctAnswers = work14Data?.correctAnswers || [];
+                        const correctAnswers = work14Data?.correctAnswers || work14Data?.selectedSentences || [];
                         let result = blankedText;
                         
-                        // 각 빈칸을 정답으로 교체 (파란색 진하게 표시)
-                        correctAnswers.forEach((answer: string, index: number) => {
-                          const blankPattern = /\([^)]*\)/g;
-                          let matchCount = 0;
-                          result = result.replace(blankPattern, (match: string) => {
-                            if (matchCount === index) {
-                              matchCount++;
+                        if (correctAnswers.length === 0) {
+                          return result;
+                        }
+                        
+                        let answerIndex = 0;
+                        
+                        // 패턴 1: ( 공백 + 알파벳 + 공백 + 언더스코어들 + ) - 공백 있는 경우
+                        const blankPattern1 = /\( [A-Z] _+\)/g;
+                        result = result.replace(blankPattern1, (match: string) => {
+                          if (answerIndex < correctAnswers.length) {
+                            const answer = cleanAnswer(correctAnswers[answerIndex]);
+                            answerIndex++;
+                            return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                          }
+                          return match;
+                        });
+                        
+                        // 패턴 2: ( 공백 + 알파벳 + 언더스코어들 + ) - 알파벳과 언더스코어 사이 공백 없는 경우
+                        if (answerIndex < correctAnswers.length) {
+                          const blankPattern2 = /\( [A-Z]_+\)/g;
+                          result = result.replace(blankPattern2, (match: string) => {
+                            if (answerIndex < correctAnswers.length) {
+                              const answer = cleanAnswer(correctAnswers[answerIndex]);
+                              answerIndex++;
                               return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
                             }
-                            matchCount++;
                             return match;
                           });
-                        });
+                        }
+                        
+                        // 패턴 3: ( 알파벳 + 언더스코어들 + ) - (A_______) 형식 (공백 없음)
+                        if (answerIndex < correctAnswers.length) {
+                          const blankPattern3 = /\(([A-Z])([_]+)\)/g;
+                          result = result.replace(blankPattern3, (match: string) => {
+                            if (answerIndex < correctAnswers.length) {
+                              const answer = cleanAnswer(correctAnswers[answerIndex]);
+                              answerIndex++;
+                              return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                            }
+                            return match;
+                          });
+                        }
+                        
+                        // 패턴 4: ( 언더스코어들 + 알파벳 + 언더스코어들 + ) - (___A___) 또는 (____________________A____________________) 형식
+                        if (answerIndex < correctAnswers.length) {
+                          const blankPattern4 = /\(_+[A-Z]_+\)/g;
+                          result = result.replace(blankPattern4, (match: string) => {
+                            if (answerIndex < correctAnswers.length) {
+                              const answer = cleanAnswer(correctAnswers[answerIndex]);
+                              answerIndex++;
+                              return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                            }
+                            return match;
+                          });
+                        }
+                        
+                        // 패턴 5: ( 언더스코어들 + 알파벳 + 언더스코어들 + ) - (____________________A____________________) 형식 (긴 언더스코어)
+                        if (answerIndex < correctAnswers.length) {
+                          const blankPattern5 = /\(_{10,}[A-Z]_{10,}\)/g;
+                          result = result.replace(blankPattern5, (match: string) => {
+                            if (answerIndex < correctAnswers.length) {
+                              const answer = cleanAnswer(correctAnswers[answerIndex]);
+                              answerIndex++;
+                              return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                            }
+                            return match;
+                          });
+                        }
+                        
+                        // 패턴 6: 모든 언더스코어 포함 빈칸 패턴 (어떤 형식이든 매칭) - 최종 fallback
+                        if (answerIndex < correctAnswers.length) {
+                          // 이미 정답으로 치환된 부분을 제외한 모든 언더스코어 포함 괄호 패턴 매칭
+                          const generalPattern = /\([^)]*_[^)]*\)/g;
+                          result = result.replace(generalPattern, (match: string) => {
+                            // 이미 정답으로 치환된 부분은 건너뛰기
+                            if (match.includes('<span') || match.includes('</span>')) {
+                              return match;
+                            }
+                            // 일반 텍스트만 포함한 경우는 건너뛰기 (예: "(example)")
+                            if (!match.includes('_')) {
+                              return match;
+                            }
+                            if (answerIndex < correctAnswers.length) {
+                              const answer = cleanAnswer(correctAnswers[answerIndex]);
+                              answerIndex++;
+                              return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                            }
+                            return match;
+                          });
+                        }
                         
                         return result;
                       })()
                     }} />
                   ) : (
-                    // 문제 모드: 빈칸 그대로 표시
-                    work14Data?.blankedText || ''
+                    // 문제 모드: 빈칸 그대로 표시 (빈칸 패턴에 nowrap 적용)
+                    (() => {
+                      const blankedText = work14Data?.blankedText || '';
+                      // 빈칸 패턴을 찾아서 ( A 부분은 줄바꿈 방지, 언더스코어 부분은 줄바꿈 가능
+                      // 패턴: ( A_______) 
+                      const blankPattern = /\( ([A-Z])([_]+)\)/g;
+                      const processedText = blankedText.replace(blankPattern, (match: string, alphabet: string, underscores: string) => {
+                        return `<span style="white-space: nowrap;">( ${alphabet}</span>${underscores})`;
+                      });
+                      return <span dangerouslySetInnerHTML={{ __html: processedText }} />;
+                    })()
                   )}
                 </div>
+                {!isAnswerMode && (
+                  // 답안 입력 필드
+                  (() => {
+                    const selectedSentences = work14Data?.selectedSentences || work14Data?.correctAnswers || [];
+                    if (selectedSentences.length > 0) {
+                      return (
+                        <div className="problem-answers" style={{margin:'1rem 0'}}>
+                          <div style={{height:'1.5rem'}}></div>
+                          <div style={{height:'1.5rem'}}></div>
+                          {selectedSentences.map((sentence: string, i: number) => {
+                            const alphabetLabel = String.fromCharCode(65 + i); // A=65, B=66, C=67...
+                            return (
+                              <div key={i}>
+                                <div style={{
+                                  fontSize:'1rem',
+                                  fontFamily:'monospace',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden'
+                                }}>
+                                  {alphabetLabel} : {'_'.repeat(100)}
+                                </div>
+                                {selectedSentences && i < selectedSentences.length - 1 && (
+                                  <div style={{height:'1.5rem'}}></div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()
+                )}
+                {isAnswerMode && getTranslatedText(quizItem, quizData) && (
+                  <div className="print-translation-section">
+                    <div className="print-translation-title">본문해석 :</div>
+                    <div className="print-translation-content">{getTranslatedText(quizItem, quizData)}</div>
+                  </div>
+                )}
               </div>
             );
           }

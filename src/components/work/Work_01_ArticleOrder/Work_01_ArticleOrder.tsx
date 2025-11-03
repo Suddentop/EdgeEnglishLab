@@ -372,20 +372,27 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
 
   // 붙여넣기(클립보드) 이미지 처리
   const handlePaste = (e: React.ClipboardEvent) => {
-    if (inputType !== 'clipboard') return;
+    // 텍스트 모드나 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
+    if (inputType !== 'clipboard') {
+      return;
+    }
+    
+    // 클립보드 모드일 때만 이미지 처리
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
         const file = items[i].getAsFile();
         if (file) {
           handleImageToText(file);
+          // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
+          e.preventDefault();
+          return;
         }
-        e.preventDefault();
-        return;
       }
     }
-    setTooltip('캡처 이미지가 감지되지 않았습니다. 이미지를 붙여넣어 주세요.');
-    e.preventDefault();
+    
+    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
+    // setTooltip은 유지하지 않음 (사용자가 텍스트를 붙여넣으려는 것일 수 있음)
   };
 
   // 파일 업로드 이미지 처리
