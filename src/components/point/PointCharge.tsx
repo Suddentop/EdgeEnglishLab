@@ -9,10 +9,8 @@ const PointCharge: React.FC = () => {
   const { user } = useAuth();
   const [currentPoints, setCurrentPoints] = useState<number>(0);
   const [selectedAmount, setSelectedAmount] = useState<number>(1000);
-  const [customAmount, setCustomAmount] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
 
   // 미리 정의된 충전 금액들 (1회 최대 10만원)
   const predefinedAmounts = [1000, 5000, 10000, 20000, 50000, 100000];
@@ -35,48 +33,6 @@ const PointCharge: React.FC = () => {
 
   const handleAmountSelect = (amount: number) => {
     setSelectedAmount(amount);
-    setShowCustomInput(false);
-    setCustomAmount('');
-  };
-
-  const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    
-    // 최대값 제한 (10만원)
-    if (value) {
-      const amount = parseInt(value);
-      if (amount > 100000) {
-        setMessage({ type: 'error', text: '1회 최대 충전 금액은 10만원입니다.' });
-        setCustomAmount('100000');
-        setSelectedAmount(100000);
-        return;
-      }
-    }
-    
-    setCustomAmount(value);
-    
-    if (value) {
-      const amount = parseInt(value);
-      // 최소 금액 이상, 최대 금액 이하이면 selectedAmount도 업데이트
-      if (amount >= POINT_POLICY.MINIMUM_PURCHASE_AMOUNT && amount <= 100000) {
-        setSelectedAmount(amount);
-        setMessage(null); // 유효한 입력이면 에러 메시지 제거
-      } else if (amount < POINT_POLICY.MINIMUM_PURCHASE_AMOUNT) {
-        // 최소 금액 미만이면 selectedAmount는 0으로 유지
-        setSelectedAmount(0);
-      } else if (amount > 100000) {
-        // 최대 금액 초과는 이미 위에서 처리됨
-        setSelectedAmount(0);
-      }
-    } else {
-      setSelectedAmount(0);
-      setMessage(null);
-    }
-  };
-
-  const handleCustomAmountFocus = () => {
-    setShowCustomInput(true);
-    setSelectedAmount(0);
   };
 
   const handlePayment = async () => {
@@ -85,10 +41,7 @@ const PointCharge: React.FC = () => {
       return;
     }
 
-    // 직접 입력 중이면 customAmount를, 아니면 selectedAmount를 사용
-    const paymentAmount = showCustomInput && customAmount 
-      ? parseInt(customAmount) || 0 
-      : selectedAmount;
+    const paymentAmount = selectedAmount;
 
     if (paymentAmount === 0) {
       setMessage({ type: 'error', text: '충전할 금액을 선택해주세요.' });
@@ -158,8 +111,6 @@ const PointCharge: React.FC = () => {
         
         // 입력 필드 초기화
         setSelectedAmount(1000);
-        setCustomAmount('');
-        setShowCustomInput(false);
       } else {
         // 토스페이먼츠 스크립트가 로드되지 않은 경우 시뮬레이션
         console.log('토스페이먼츠 스크립트가 로드되지 않았습니다. 시뮬레이션 모드로 진행합니다.');
@@ -221,47 +172,18 @@ const PointCharge: React.FC = () => {
             ))}
           </div>
 
-          <div className="custom-amount-section">
-            <button
-              className={`custom-amount-button ${showCustomInput ? 'active' : ''}`}
-              onClick={handleCustomAmountFocus}
-              disabled={isProcessing}
-            >
-              직접 입력
-            </button>
-            
-            {showCustomInput && (
-              <div className="custom-amount-input">
-                <input
-                  type="text"
-                  value={customAmount}
-                  onChange={handleCustomAmountChange}
-                  placeholder="충전할 금액을 입력하세요 (최소 1,000원, 최대 100,000원)"
-                  disabled={isProcessing}
-                />
+          {selectedAmount > 0 ? (
+            <div className="selected-amount-info">
+              <div className="amount-detail">
+                <span>충전 금액:</span>
+                <span className="amount-value">{formatCurrency(selectedAmount)}</span>
               </div>
-            )}
-          </div>
-
-          {(() => {
-            // 직접 입력 중이면 customAmount를, 아니면 selectedAmount를 사용
-            const displayAmount = showCustomInput && customAmount 
-              ? parseInt(customAmount) || 0 
-              : selectedAmount;
-            
-            return displayAmount > 0 ? (
-              <div className="selected-amount-info">
-                <div className="amount-detail">
-                  <span>충전 금액:</span>
-                  <span className="amount-value">{formatCurrency(displayAmount)}</span>
-                </div>
-                <div className="points-detail">
-                  <span>획득 포인트:</span>
-                  <span className="points-value">+{formatPoints(displayAmount)}</span>
-                </div>
+              <div className="points-detail">
+                <span>획득 포인트:</span>
+                <span className="points-value">+{formatPoints(selectedAmount)}</span>
               </div>
-            ) : null;
-          })()}
+            </div>
+          ) : null}
         </div>
 
         <div className="payment-info">
@@ -293,14 +215,9 @@ const PointCharge: React.FC = () => {
         <button
           className="charge-button"
           onClick={handlePayment}
-          disabled={isProcessing || (showCustomInput && customAmount ? (parseInt(customAmount) || 0) === 0 : selectedAmount === 0)}
+          disabled={isProcessing || selectedAmount === 0}
         >
-          {isProcessing ? '결제 처리 중...' : (() => {
-            const displayAmount = showCustomInput && customAmount 
-              ? parseInt(customAmount) || 0 
-              : selectedAmount;
-            return `${formatCurrency(displayAmount)} 결제하기`;
-          })()}
+          {isProcessing ? '결제 처리 중...' : `${formatCurrency(selectedAmount)} 결제하기`}
         </button>
 
         <div className="charge-notice">
