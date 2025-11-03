@@ -1425,7 +1425,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
                     <span>다음 빈칸에 들어갈 단어로 가장 적절한 것을 고르시오.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
                   </div>
-                  <div className="problem-passage" style={{marginTop:'0.1rem', marginBottom:'0.8rem', fontSize:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage package01-work03-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {work03Data.blankedText}
                   </div>
                 </>
@@ -1433,8 +1433,8 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
               
               {/* B. 정답만 표시 */}
               {(pageLayoutInfo.page1Content.includes('B') || pageLayoutInfo.page1Content === 'B') && (
-                <div className="problem-options" style={{marginTop:'0', marginBottom:'0.5rem'}}>
-                  <div style={{fontSize:'1rem !important', margin:'0.2rem 0', fontFamily:'inherit', color:'#222'}}>
+                <div className="problem-options package01-work03-options" style={{marginTop:'0', marginBottom:'0.5rem'}}>
+                  <div style={{fontSize:'1rem !important', margin:'0.1rem 0', fontFamily:'inherit', color:'#222'}}>
                     {`①②③④⑤`[work03Data.answerIndex] || `${work03Data.answerIndex+1}.`} {work03Data.options[work03Data.answerIndex]}
                     <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                   </div>
@@ -1463,8 +1463,8 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
               <div className="quiz-content">
                 {/* B. 정답만 표시 */}
                 {(pageLayoutInfo.page2Content.includes('B') || pageLayoutInfo.page2Content === 'B') && (
-                  <div className="problem-options" style={{marginTop:'0', marginBottom:'0.5rem'}}>
-                    <div style={{fontSize:'1rem !important', margin:'0.2rem 0', fontFamily:'inherit', color:'#222'}}>
+                  <div className="problem-options" style={{marginTop:'0.05rem', marginBottom:'0.5rem'}}>
+                    <div style={{fontSize:'1rem !important', margin:'0.1rem 0', fontFamily:'inherit', color:'#222'}}>
                       {`①②③④⑤`[work03Data.answerIndex] || `${work03Data.answerIndex+1}.`} {work03Data.options[work03Data.answerIndex]}
                       <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                     </div>
@@ -1705,10 +1705,10 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
                   <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage package01-work04-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work04Data.blankedText}
                 </div>
-                <div className="option option-print" style={{fontSize:'1rem !important', marginTop:'0', marginBottom:'3.5rem !important', paddingLeft:'0.6rem', paddingRight:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                <div className="option option-print package01-work04-options" style={{fontSize:'1rem !important', marginTop:'0', marginBottom:'3.5rem !important', paddingLeft:'0.6rem', paddingRight:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                   <span>{['①', '②', '③', '④', '⑤'][work04Data.answerIndex]} {work04Data.options[work04Data.answerIndex]}</span>
                   <span style={{color:'#1976d2', fontWeight:800, marginLeft:'8px'}}>(정답)</span>
                 </div>
@@ -1745,10 +1745,10 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
                   <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage package01-work04-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work04Data.blankedText}
                 </div>
-                <div className="problem-options" style={{margin:'1rem 0'}}>
+                <div className="problem-options package01-work04-options" style={{margin:'0 0 1rem'}}>
                   <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
                     {`①②③④⑤`[work04Data.answerIndex] || `${work04Data.answerIndex+1}.`} {work04Data.options[work04Data.answerIndex]}
                     <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
@@ -1934,7 +1934,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
     });
 
     return (
-      <div className="only-print work-05-print">
+      <div className="only-print print-answer-mode work-05-print">
         {canFitInOnePage ? (
           // 1페이지: 모든 내용 (문제+정답+본문해석)
           <div className="a4-page-template">
@@ -1947,10 +1947,10 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                   <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work05Data.blankedText}
                 </div>
-                <div className="problem-options" style={{margin:'1rem 0'}}>
+                <div className="problem-options package01-work05-options" style={{margin:'0 0 1rem'}}>
                   {work05Data.options.map((option, index) => (
                     <div key={index} style={{margin:'0.8rem 0', fontFamily:'inherit'}}>
                       <div className="option-english" style={{fontSize:'0.9rem', color:'#222', lineHeight:'1.3', margin:'0', padding:'0'}}>
@@ -1987,10 +1987,10 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                     <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
                   </div>
-                  <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {work05Data.blankedText}
                   </div>
-                  <div className="problem-options" style={{margin:'1rem 0'}}>
+                  <div className="problem-options package01-work05-options" style={{margin:'0 0 1rem'}}>
                     {work05Data.options.map((option, index) => (
                       <div key={index} style={{margin:'0.8rem 0', fontFamily:'inherit'}}>
                         <div className="option-english" style={{fontSize:'0.9rem', color:'#222', lineHeight:'1.3', margin:'0', padding:'0'}}>
@@ -2039,10 +2039,10 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                     <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
                   </div>
-                  <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {work05Data.blankedText}
                   </div>
-                  <div className="problem-options" style={{margin:'1rem 0'}}>
+                  <div className="problem-options package01-work05-options" style={{margin:'0 0 1rem'}}>
                     {work05Data.options.map((option, index) => (
                       <div key={index} style={{margin:'0.8rem 0', fontFamily:'inherit'}}>
                         <div className="option-english" style={{fontSize:'0.9rem', color:'#222', lineHeight:'1.3', margin:'0', padding:'0'}}>
@@ -3999,7 +3999,7 @@ const PrintFormatPackage01Work13: React.FC<{
       return (
         <>
           {/* 1페이지: 정답 + 본문해석 (문제 페이지 제거) */}
-          <div className="only-print work-13-print">
+          <div className="only-print print-answer-mode work-13-print">
             <div className="a4-page-template">
               <div className="a4-page-header">
                 <PrintHeaderPackage01 />
@@ -4022,9 +4022,9 @@ const PrintFormatPackage01Work13: React.FC<{
                     <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
                     <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#13</span>
                   </div>
-                  <div className="package01-work13-answer-text" style={{
+                  <div className="package01-work13-answer-text package01-work13-passage" style={{
                     marginTop: '0.9rem', 
-                    marginBottom: '1.5rem',
+                    marginBottom: '0.75rem',
                     fontSize: '0.9rem !important', 
                     padding: '0.5rem 1rem', 
                     borderRadius: '8px', 
@@ -4034,7 +4034,7 @@ const PrintFormatPackage01Work13: React.FC<{
                     border: '2px solid #e3e6f0'
                   }} dangerouslySetInnerHTML={{__html: createTextWithAnswers(work13Data.blankedText || '', work13Data.correctAnswers || [])}}>
                   </div>
-                  <div className="package01-work13-translation" style={{
+                  <div className="package01-work13-translation package01-work13-translation-container" style={{
                     fontSize: '0.8rem !important', 
                     padding: '0.5rem 1rem', 
                     borderRadius: '8px', 
@@ -4042,7 +4042,7 @@ const PrintFormatPackage01Work13: React.FC<{
                     color: '#222', 
                     lineHeight: '1.5', 
                     border: '2px solid #e3e6f0', 
-                    marginTop: '1rem'
+                    marginTop: '0.5rem'
                   }}>
                     {work13Data.translation}
                   </div>
@@ -4078,9 +4078,9 @@ const PrintFormatPackage01Work13: React.FC<{
                   <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
                   <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#13</span>
                 </div>
-                <div className="package01-work13-answer-text" style={{
+                <div className="package01-work13-answer-text package01-work13-passage" style={{
                   marginTop: '0.9rem', 
-                  marginBottom: '1.5rem',
+                  marginBottom: '0.75rem',
                   fontSize: '0.9rem !important', 
                   padding: '0.5rem 1rem', 
                   borderRadius: '8px', 
@@ -4107,7 +4107,7 @@ const PrintFormatPackage01Work13: React.FC<{
                     });
                   })()}
                 </div>
-                <div className="package01-work13-translation" style={{
+                <div className="package01-work13-translation package01-work13-translation-container" style={{
                   fontSize: '0.8rem !important', 
                   padding: '0.5rem 1rem', 
                   borderRadius: '8px', 
@@ -4115,7 +4115,7 @@ const PrintFormatPackage01Work13: React.FC<{
                   color: '#222', 
                   lineHeight: '1.5', 
                   border: '2px solid #e3e6f0', 
-                  marginTop: '1rem'
+                  marginTop: '0.5rem'
                 }}>
                   {work13Data.translation}
                 </div>
@@ -4430,7 +4430,7 @@ const PrintFormatPackage01Work14: React.FC<{
       return (
         <>
           {/* 1페이지: 문제 + 정답 포함 본문 */}
-          <div className="only-print work-14-print">
+          <div className="only-print print-answer-mode work-14-print">
             <div className="a4-page-template">
               <div className="a4-page-header">
                 <PrintHeaderPackage01 />
@@ -4453,9 +4453,9 @@ const PrintFormatPackage01Work14: React.FC<{
                     <span>다음 빈칸에 들어갈 문장을 직접 입력하시오.</span>
                     <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#14</span>
                   </div>
-                  <div className="package01-work14-answer-text" style={{
+                  <div className="package01-work14-answer-text package01-work14-passage" style={{
                     marginTop: '0.9rem', 
-                    marginBottom: '1.5rem',
+                    marginBottom: '0.75rem',
                     fontSize: '0.8rem !important', 
                     padding: '0.5rem 1rem', 
                     borderRadius: '8px', 
@@ -4482,14 +4482,14 @@ const PrintFormatPackage01Work14: React.FC<{
           </div>
 
           {/* 2페이지: 본문해석 */}
-          <div className="only-print work-14-print">
+          <div className="only-print print-answer-mode work-14-print">
             <div className="a4-page-template">
               <div className="a4-page-header">
                 <PrintHeaderPackage01 />
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="package01-work14-translation" style={{
+                  <div className="package01-work14-translation package01-work14-translation-container" style={{
                     fontSize: '0.8rem !important', 
                     padding: '0.5rem 1rem', 
                     borderRadius: '8px', 
@@ -4497,7 +4497,7 @@ const PrintFormatPackage01Work14: React.FC<{
                     color: '#222', 
                     lineHeight: '1.5', 
                     border: '2px solid #e3e6f0', 
-                    marginTop: '1rem'
+                    marginTop: '0.5rem'
                   }}>
                     {work14Data.translation}
                   </div>
@@ -4510,7 +4510,7 @@ const PrintFormatPackage01Work14: React.FC<{
     } else {
       // 1페이지에 모든 내용 포함
       return (
-        <div className="only-print work-14-print">
+        <div className="only-print print-answer-mode work-14-print">
           <div className="a4-page-template">
             <div className="a4-page-header">
               <PrintHeaderPackage01 />
@@ -4533,9 +4533,9 @@ const PrintFormatPackage01Work14: React.FC<{
                   <span>다음 빈칸에 들어갈 문장을 직접 입력하시오.</span>
                   <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#14</span>
                 </div>
-                <div className="package01-work14-answer-text" style={{
+                <div className="package01-work14-answer-text package01-work14-passage" style={{
                   marginTop: '0.9rem', 
-                  marginBottom: '1.5rem',
+                  marginBottom: '0.75rem',
                   fontSize: '0.8rem !important', 
                   padding: '0.5rem 1rem', 
                   borderRadius: '8px', 
@@ -4552,7 +4552,7 @@ const PrintFormatPackage01Work14: React.FC<{
                       work14Data.blankedText
                 }}
                 />
-                <div className="package01-work14-translation" style={{
+                <div className="package01-work14-translation package01-work14-translation-container" style={{
                   fontSize: '0.8rem !important', 
                   padding: '0.5rem 1rem', 
                   borderRadius: '8px', 
@@ -4560,7 +4560,7 @@ const PrintFormatPackage01Work14: React.FC<{
                   color: '#222', 
                   lineHeight: '1.5', 
                   border: '2px solid #e3e6f0', 
-                  marginTop: '1rem'
+                  marginTop: '0.5rem'
                 }}>
                   {work14Data.translation}
                 </div>
