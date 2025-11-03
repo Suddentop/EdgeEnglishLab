@@ -208,10 +208,22 @@
     margin-bottom: 0.5rem !important;
   }
 
+  /* 패키지#01-유형#04 전용: 문제-passage의 margin-bottom 오버라이드 (기본 규칙도 오버라이드) */
+  .only-print .package01-work04-passage,
+  .only-print.print-answer-mode .a4-page-template .quiz-content .package01-work04-passage {
+    margin-bottom: 0.5rem !important;
+  }
+
   /* 패키지#01-유형#05 전용: 문제-passage의 margin-bottom 오버라이드 (기본 규칙도 오버라이드) */
   .only-print .package01-work05-passage,
   .only-print.print-answer-mode .a4-page-template .quiz-content .package01-work05-passage {
     margin-bottom: 0.5rem !important;
+  }
+
+  /* 패키지#01-유형#06 전용: 문제-passage의 margin-bottom 오버라이드 (기본 규칙도 오버라이드) */
+  .only-print .package01-work06-passage,
+  .only-print.print-answer-mode .a4-page-template .quiz-content .package01-work06-passage {
+    margin-bottom: 0.3rem !important;
   }
 
   /* 패키지#01-유형#13 전용: 문제-passage의 margin-bottom 오버라이드 (기본 규칙도 오버라이드) */
@@ -226,8 +238,8 @@
     margin-bottom: 0.75rem !important;
   }
 
-  /* 패키지#01-유형#02 전용: 영어본문과 교체된 단어들 제목 사이 여백 증가 (패키지#01-유형#03, #05, #13, #14 제외) */
-  .only-print.print-answer-mode .problem-passage:not(.package01-work03-passage):not(.package01-work05-passage):not(.package01-work13-passage):not(.package01-work14-passage) {
+  /* 패키지#01-유형#02 전용: 영어본문과 교체된 단어들 제목 사이 여백 증가 (패키지#01-유형#03, #04, #05, #06, #13, #14 제외) */
+  .only-print.print-answer-mode .problem-passage:not(.package01-work03-passage):not(.package01-work04-passage):not(.package01-work05-passage):not(.package01-work06-passage):not(.package01-work13-passage):not(.package01-work14-passage) {
     margin-bottom: 1.6rem !important;
   }
 
@@ -246,6 +258,11 @@
   
   /* 패키지#01-유형#03 전용: problem-options의 margin-top 오버라이드 */
   .only-print.print-answer-mode .package01-work03-options {
+    margin-top: 0 !important;
+  }
+
+  /* 패키지#01-유형#04 전용: problem-options의 margin-top 오버라이드 */
+  .only-print.print-answer-mode .package01-work04-options {
     margin-top: 0 !important;
   }
 

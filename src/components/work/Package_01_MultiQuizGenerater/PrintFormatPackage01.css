@@ -227,17 +227,23 @@
   }
 
   /* 패키지#01-유형#04 전용: 영어본문과 4지선다 정답 사이 간격 조정 */
-  .only-print.print-answer-mode .work-04-problem-passage {
-    margin-bottom: 0.5rem !important;
-  }
   .only-print.print-answer-mode .a4-page-template .quiz-content .problem-passage.package01-work04-passage {
     margin-bottom: 0.5rem !important;
+    margin-top: 0.1rem !important;
   }
-  .only-print.print-answer-mode .a4-page-template .quiz-content .problem-options.package01-work04-options {
+  
+  .only-print.print-answer-mode .a4-page-template .quiz-content .problem-options.package01-work04-options,
+  .only-print.print-answer-mode .a4-page-template .quiz-content .option.option-print.package01-work04-options {
     margin-top: 0 !important;
   }
-  .only-print.print-answer-mode .a4-page-template .a4-page-content .quiz-content .option.option-print.package01-work04-options[style],
-  .only-print.print-answer-mode .a4-page-template .a4-page-content .quiz-content .problem-options.package01-work04-options[style] {
+  
+  /* 최고 우선순위 오버라이드 - 모든 다른 규칙보다 우선 */
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .quiz-content .problem-passage.package01-work04-passage[style] {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .quiz-content .problem-options.package01-work04-options[style],
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .quiz-content .option.option-print.package01-work04-options[style] {
     margin-top: 0 !important;
   }
 
@@ -327,6 +333,34 @@
   .only-print.print-answer-mode.work-14-print .a4-page-template .a4-page-content .quiz-content .package01-work14-translation-container[style],
   .only-print.print-answer-mode .a4-page-template .a4-page-content .quiz-content .package01-work14-translation-container[style] {
     margin-top: 0.5rem !important;
+  }
+
+  /* 패키지#01-유형#06 전용: 영어본문, 정답, 한글해석 컨테이너 사이 간격 0.3rem */
+  .only-print.print-answer-mode.work-06-print .a4-page-template .quiz-content .package01-work06-passage {
+    margin-bottom: 0.3rem !important;
+  }
+  
+  .only-print.print-answer-mode.work-06-print .a4-page-template .quiz-content .package01-work06-answer {
+    margin-top: 0.3rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  
+  .only-print.print-answer-mode.work-06-print .a4-page-template .quiz-content .package01-work06-translation {
+    margin-top: 0.3rem !important;
+  }
+  
+  /* 최고 우선순위 오버라이드 - 모든 다른 규칙보다 우선 */
+  .only-print.print-answer-mode.work-06-print .a4-page-template .a4-page-content .quiz-content .package01-work06-passage[style] {
+    margin-bottom: 0.3rem !important;
+  }
+  
+  .only-print.print-answer-mode.work-06-print .a4-page-template .a4-page-content .quiz-content .package01-work06-answer[style] {
+    margin-top: 0.3rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  
+  .only-print.print-answer-mode.work-06-print .a4-page-template .a4-page-content .quiz-content .package01-work06-translation[style] {
+    margin-top: 0.3rem !important;
   }
   
   .only-print .problem-options {

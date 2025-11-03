@@ -2232,7 +2232,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
     if (pageLayoutInfo.needsSecondPage) {
       // 2페이지 분할: 1페이지에 A, 2페이지에 B
       return (
-        <div className="only-print work-06-print">
+        <div className="only-print print-answer-mode work-06-print">
           {/* 1페이지: 문제 + 정답 */}
           <div className="a4-page-template">
             <div className="a4-page-header">
@@ -2247,10 +2247,10 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
                 <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
                   <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
                 </div>
-                <div style={{fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0 0 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
+                <div className="package01-work06-passage" style={{fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0 0.3rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
                   {work06Data.numberedPassage}
                 </div>
-                <div className="problem-answer" style={{marginTop:'0', marginBottom:'0', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
+                <div className="problem-answer package01-work06-answer" style={{marginTop:'0.3rem', marginBottom:'0.3rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
                   정답: {`①②③④⑤`[work06Data.answerIndex] || work06Data.answerIndex + 1}
                 </div>
               </div>
@@ -2264,7 +2264,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="quiz-content">
-                <div className="problem-passage translation" style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage translation package01-work06-translation" style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work06Data.translation || translatedText || '번역을 생성하는 중...'}
                 </div>
               </div>
@@ -2275,7 +2275,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
     } else {
       // 1페이지: 모든 내용 (A+B)
       return (
-        <div className="only-print work-06-print">
+        <div className="only-print print-answer-mode work-06-print">
           <div className="a4-page-template">
             <div className="a4-page-header">
               <PrintHeaderPackage01 />
@@ -2289,13 +2289,13 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
                 <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
                   <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{work06Data.missingSentence}</span>
                 </div>
-                <div style={{fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0 0 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
+                <div className="package01-work06-passage" style={{fontSize:'1rem !important', lineHeight:'1.7', margin:'0.3rem 0 0.3rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1rem', fontFamily:'inherit', color:'#222', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
                   {work06Data.numberedPassage}
                 </div>
-                <div className="problem-answer" style={{marginTop:'0', marginBottom:'0', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
+                <div className="problem-answer package01-work06-answer" style={{marginTop:'0.3rem', marginBottom:'0.3rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
                   정답: {`①②③④⑤`[work06Data.answerIndex] || work06Data.answerIndex + 1}
                 </div>
-                <div className="problem-passage translation" style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                <div className="problem-passage translation package01-work06-translation" style={{marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                   {work06Data.translation || translatedText || '번역을 생성하는 중...'}
                 </div>
               </div>
