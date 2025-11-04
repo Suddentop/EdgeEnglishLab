@@ -571,30 +571,6 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                   }}
                   dangerouslySetInnerHTML={{ __html: displayText }}
                 />
-                {!isAnswerMode && selectedSentences.length > 0 && (
-                  <div className="problem-answers" style={{margin:'1rem 0'}}>
-                    <div style={{height:'1.5rem'}}></div>
-                    <div style={{height:'1.5rem'}}></div>
-                    {selectedSentences.map((sentence: string, i: number) => {
-                      const alphabetLabel = String.fromCharCode(65 + i); // A=65, B=66, C=67...
-                      return (
-                        <div key={i}>
-                          <div style={{
-                            fontSize:'1rem',
-                            fontFamily:'monospace',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden'
-                          }}>
-                            {alphabetLabel} : {'_'.repeat(100)}
-                          </div>
-                          {selectedSentences && i < selectedSentences.length - 1 && (
-                            <div style={{height:'1.5rem'}}></div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             );
           }
