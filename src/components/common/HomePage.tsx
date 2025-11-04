@@ -138,6 +138,9 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
               <div className="stat-label">문제지 생성</div>
             </div>
           </div>
+          <div className="pc-notice-box">
+            <p className="pc-notice-text">이 웹사이트는 PC환경에 최적화 되어있습니다. 원활한 이용을 위해서는 PC(노트북)을 이용해 주세요</p>
+          </div>
         </div>
       </section>
 
