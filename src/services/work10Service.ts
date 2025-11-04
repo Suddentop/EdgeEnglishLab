@@ -107,8 +107,16 @@ ${passage}`;
       throw new Error('틀린 단어 개수가 유효하지 않습니다.');
     }
 
+    // 본문에 원번호/진하게 적용
+    const numberedPassage = applyNumberAndUnderline(
+      passage,
+      result.originalWords,
+      result.transformedWords,
+      result.wrongIndexes
+    );
+
     const finalResult: MultiGrammarQuiz = {
-      passage, // 원본 본문을 그대로 저장
+      passage: numberedPassage, // 원번호/진하게가 적용된 본문
       options,
       answerIndex,
       translation: result.translation,
@@ -127,12 +135,12 @@ ${passage}`;
 }
 
 /**
- * 본문 내 8개 단어에 번호/밑줄을 정확히 한 번씩 적용하는 함수
+ * 본문 내 8개 단어에 원번호/진하게를 정확히 한 번씩 적용하는 함수
  * @param passage - 원본 본문
  * @param originalWords - 원본 단어들
  * @param transformedWords - 변형된 단어들
  * @param wrongIndexes - 틀린 단어의 인덱스들
- * @returns 번호가 매겨진 본문
+ * @returns 번호가 매겨진 본문 (HTML 형식)
  */
 export function applyNumberAndUnderline(
   passage: string,
@@ -141,15 +149,26 @@ export function applyNumberAndUnderline(
   wrongIndexes: number[]
 ): string {
   let result = passage;
+  const circleNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'];
+  const used: boolean[] = Array(originalWords.length).fill(false);
   
-  // 각 단어에 번호와 밑줄 적용
-  for (let i = 0; i < originalWords.length; i++) {
+  // 역순으로 처리하여 인덱스 충돌 방지
+  for (let i = originalWords.length - 1; i >= 0; i--) {
+    if (used[i]) continue;
     const originalWord = originalWords[i];
-    const number = i + 1;
+    const displayWord = wrongIndexes.includes(i) ? transformedWords[i] : originalWord;
+    const circleNumber = circleNumbers[i];
+    const numbered = `<strong>${circleNumber} ${displayWord}</strong>`;
     
-    // 단어를 찾아서 번호와 밑줄로 교체
+    // 첫 번째 등장만 치환
     const regex = new RegExp(`\\b${originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    result = result.replace(regex, `(${number}) ${originalWord}`);
+    const match = regex.exec(result);
+    if (match) {
+      const before = result.substring(0, match.index);
+      const after = result.substring(match.index + match[0].length);
+      result = before + numbered + after;
+      used[i] = true;
+    }
   }
   
   return result;

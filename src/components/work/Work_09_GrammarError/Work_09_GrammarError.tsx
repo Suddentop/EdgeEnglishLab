@@ -936,7 +936,7 @@ ${passage}`;
               <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
             </div>
             <div className="problem-passage" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#f7f8fc', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-              <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(quiz.passage).replace(/\n/g, '<br/>')}} />
+              <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
             </div>
             <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
               정답: {answerNumber} {quiz.options[quiz.answerIndex]}
@@ -969,7 +969,7 @@ ${passage}`;
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                       </div>
                       <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(quiz.passage).replace(/\n/g, '<br/>')}} />
+                        <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
                       </div>
                     </div>
                   </div>
@@ -1040,7 +1040,7 @@ ${passage}`;
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                       </div>
                       <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(quiz.passage).replace(/\n/g, '<br/>')}} />
+                        <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
                       </div>
                     </>
                   )}
@@ -1086,7 +1086,7 @@ ${passage}`;
                           <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                         </div>
                         <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                          <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(quiz.passage).replace(/\n/g, '<br/>')}} />
+                          <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
                         </div>
                       </>
                     )}
@@ -1133,7 +1133,7 @@ ${passage}`;
                           <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                         </div>
                         <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                          <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(quiz.passage).replace(/\n/g, '<br/>')}} />
+                          <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
                         </div>
                       </>
                     )}

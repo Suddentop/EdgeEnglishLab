@@ -236,20 +236,117 @@ Return ONLY this JSON format:
  * @param passage - 원본 본문
  * @param originalWords - 원본 단어들
  * @param transformedWords - 변형된 단어들
- * @returns 번호가 매겨진 본문
+ * @returns 번호가 매겨진 본문 (HTML 형식)
  */
 function applyNumberAndUnderline(passage: string, originalWords: string[], transformedWords: string[]): string {
   let result = passage;
   
-  // 각 단어에 번호와 밑줄 적용
-  for (let i = 0; i < originalWords.length; i++) {
+  // 원번호 배열
+  const circleNumbers = ['①', '②', '③', '④', '⑤'];
+  
+  // 각 단어에 번호와 밑줄 적용 (역순으로 처리하여 인덱스 충돌 방지)
+  for (let i = originalWords.length - 1; i >= 0; i--) {
     const originalWord = originalWords[i];
-    const number = i + 1;
+    const transformedWord = transformedWords[i];
+    const circleNumber = circleNumbers[i];
     
-    // 단어를 찾아서 번호와 밑줄로 교체
-    const regex = new RegExp(`\\b${originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    result = result.replace(regex, `(${number}) ${originalWord}`);
+    // 단어를 찾기 위한 여러 시도
+    let found = false;
+    let replaceIndex = -1;
+    let replaceLength = 0;
+    
+    // 원본 본문에서 HTML 태그 없는 부분만 검색
+    const textWithoutHtml = result.replace(/<[^>]+>/g, '');
+    const originalPassage = passage.replace(/<[^>]+>/g, '');
+    
+    // 방법 1: 정확한 단어 경계 매칭 (originalWord)
+    const escapedOriginal = originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const exactRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+    const exactMatch = exactRegex.exec(originalPassage);
+    if (exactMatch) {
+      // 원본 본문에서의 인덱스를 result에서의 인덱스로 변환
+      const htmlOffset = countHtmlTagsBeforeIndex(result, exactMatch.index);
+      replaceIndex = exactMatch.index + htmlOffset;
+      replaceLength = exactMatch[0].length;
+      found = true;
+      console.log(`✅ 단어 ${i + 1} (${originalWord}) 정확 매칭 성공`);
+    }
+    
+    // 방법 2: 정확한 단어 경계 매칭 (transformedWord)
+    if (!found && transformedWord) {
+      const escapedTransformed = transformedWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const transformedRegex = new RegExp(`\\b${escapedTransformed}\\b`, 'gi');
+      const transformedMatch = transformedRegex.exec(originalPassage);
+      if (transformedMatch) {
+        const htmlOffset = countHtmlTagsBeforeIndex(result, transformedMatch.index);
+        replaceIndex = transformedMatch.index + htmlOffset;
+        replaceLength = transformedMatch[0].length;
+        found = true;
+        console.log(`✅ 단어 ${i + 1} (${transformedWord} → ${originalWord}) 변형어 매칭 성공`);
+      }
+    }
+    
+    // 방법 3: 어간 기반 유사 단어 찾기
+    if (!found) {
+      // 어간 추출 (ing, ed, s, es 등 제거)
+      const originalStem = originalWord.toLowerCase().replace(/(ing|ed|s|es|er|est|ly|tion|sion)$/, '');
+      const transformedStem = transformedWord ? transformedWord.toLowerCase().replace(/(ing|ed|s|es|er|est|ly|tion|sion)$/, '') : '';
+      
+      // 어간이 같으면 어간으로 검색
+      const stemPattern = originalStem.length > 2 ? originalStem : originalWord.toLowerCase().substring(0, Math.max(2, originalWord.length - 2));
+      const stemRegex = new RegExp(`\\b${stemPattern}\\w*\\b`, 'gi');
+      
+      let stemMatch;
+      while ((stemMatch = stemRegex.exec(originalPassage)) !== null) {
+        const matchedWord = stemMatch[0];
+        // 이미 처리된 단어인지 확인
+        const htmlOffset = countHtmlTagsBeforeIndex(result, stemMatch.index);
+        const checkIndex = stemMatch.index + htmlOffset;
+        const beforeCheck = result.substring(0, checkIndex);
+        const afterCheck = result.substring(checkIndex);
+        
+        // HTML 태그가 없는 부분인지 확인
+        if (!beforeCheck.includes('<strong>') || !afterCheck.startsWith(matchedWord)) {
+          replaceIndex = checkIndex;
+          replaceLength = matchedWord.length;
+          found = true;
+          console.log(`✅ 단어 ${i + 1} (${originalWord}) 유사 매칭 성공: ${matchedWord} → ${originalWord}`);
+          break;
+        }
+      }
+    }
+    
+    // 교체 실행
+    if (found && replaceIndex !== -1) {
+      const before = result.substring(0, replaceIndex);
+      const after = result.substring(replaceIndex + replaceLength);
+      result = before + `<strong>${circleNumber} ${originalWord}</strong>` + after;
+    } else {
+      console.warn(`⚠️ 단어 ${i + 1} (${originalWord})를 본문에서 찾을 수 없습니다.`);
+    }
   }
   
   return result;
+}
+
+/**
+ * 특정 인덱스 이전의 HTML 태그 길이를 계산하는 헬퍼 함수
+ */
+function countHtmlTagsBeforeIndex(text: string, index: number): number {
+  let htmlLength = 0;
+  let currentIndex = 0;
+  
+  while (currentIndex < index && currentIndex < text.length) {
+    const htmlTagStart = text.indexOf('<', currentIndex);
+    if (htmlTagStart === -1 || htmlTagStart >= index) break;
+    
+    const htmlTagEnd = text.indexOf('>', htmlTagStart);
+    if (htmlTagEnd === -1) break;
+    
+    const tagLength = htmlTagEnd - htmlTagStart + 1;
+    htmlLength += tagLength;
+    currentIndex = htmlTagEnd + 1;
+  }
+  
+  return htmlLength;
 }

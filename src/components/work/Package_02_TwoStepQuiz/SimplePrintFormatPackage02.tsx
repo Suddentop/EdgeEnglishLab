@@ -196,7 +196,7 @@ const SimplePrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packa
               다음 빈칸에 들어갈 가장 적절한 구를 고르세요
             </div>
             <div className="print-passage">
-              {quizItem.work04Data.blankedText}
+              {quizItem.work04Data.blankedText || ''}
             </div>
             <div className="print-choices">
               {isAnswerMode ? (
@@ -256,7 +256,7 @@ const SimplePrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packa
               <span className="print-question-type-badge">유형#06</span>
             </div>
             <div className="print-instruction">
-              다음 문장이 들어갈 가장 적절한 위치를 고르세요
+              다음 영어본문에서 주요문장이 들어가야 할 가장 적합한 위치를 찾으세오.
             </div>
             <div className="print-missing-sentence">
               <strong>주요 문장:</strong> {quizItem.work06Data.missingSentence}
@@ -350,11 +350,14 @@ const SimplePrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packa
               <span className="print-question-type-badge">유형#09</span>
             </div>
             <div className="print-instruction">
-              다음 문장에서 어법상 어색한 부분을 찾아 고르세요
+              다음 영어 본문에 표시된 단어들 중에서 어법상 틀린 것을 고르시오.
             </div>
-            <div className="print-passage">
-              {quizItem.work09Data.passage}
-            </div>
+            <div 
+              className="print-passage"
+              dangerouslySetInnerHTML={{
+                __html: (quizItem.work09Data.passage || '').replace(/\n/g, '<br/>')
+              }}
+            />
             <div className="print-choices">
               {isAnswerMode ? (
                 <div className="print-choice">
@@ -384,11 +387,14 @@ const SimplePrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packa
               <span className="print-question-type-badge">유형#10</span>
             </div>
             <div className="print-instruction">
-              다음 문장에서 어법상 어색한 부분의 개수를 고르세요
+              다음 영어 본문에 표시된 단어들 중에서 어법상 틀린 단어의 개수를 고르시오.
             </div>
-            <div className="print-passage">
-              {quizItem.work10Data.passage}
-            </div>
+            <div 
+              className="print-passage"
+              dangerouslySetInnerHTML={{
+                __html: (quizItem.work10Data.passage || '').replace(/\n/g, '<br/>')
+              }}
+            />
             <div className="print-choices">
               {isAnswerMode ? (
                 <div className="print-choice">

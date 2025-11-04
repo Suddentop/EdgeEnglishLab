@@ -3392,7 +3392,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                 <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
               </div>
                   <div style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
-                <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work09Data.passage).replace(/\n/g, '<br/>')}} />
+                <span dangerouslySetInnerHTML={{__html: (work09Data.passage || '').replace(/\n/g, '<br/>')}} />
               </div>
                 </div>
               </div>
@@ -3433,7 +3433,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                 </div>
                   <div style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
-                <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work09Data.passage).replace(/\n/g, '<br/>')}} />
+                <span dangerouslySetInnerHTML={{__html: (work09Data.passage || '').replace(/\n/g, '<br/>')}} />
               </div>
                 <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
                   {work09Data.options.map((opt, i) => (
@@ -3468,7 +3468,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                   </div>
                   <div style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
-                    <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work09Data.passage).replace(/\n/g, '<br/>')}} />
+                    <span dangerouslySetInnerHTML={{__html: (work09Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
                   <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
                     <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>
@@ -3514,7 +3514,7 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                   <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
                 </div>
                 <div style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
-                  <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work09Data.passage).replace(/\n/g, '<br/>')}} />
+                  <span dangerouslySetInnerHTML={{__html: (work09Data.passage || '').replace(/\n/g, '<br/>')}} />
                 </div>
 
                 {/* B. 4지선다 선택항목 컨테이너 (정답 항목만) */}
@@ -3665,7 +3665,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                   </div>
                   <div style={{marginTop:'0.1rem', fontSize:'0.2rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
-                    <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work10Data.passage).replace(/\n/g, '<br/>')}} />
+                    <span dangerouslySetInnerHTML={{__html: (work10Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
                 </div>
               </div>
@@ -3683,7 +3683,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                   </div>
                   <div style={{marginTop:'0.1rem', fontSize:'0.2rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
-                    <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work10Data.passage).replace(/\n/g, '<br/>')}} />
+                    <span dangerouslySetInnerHTML={{__html: (work10Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
                   {work10Data.options.map((option, index) => (
                     <div key={index} className="option" style={{
@@ -3753,7 +3753,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                   </div>
                   <div style={{marginTop:'0.1rem', fontSize:'0.2rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
-                    <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work10Data.passage).replace(/\n/g, '<br/>')}} />
+                    <span dangerouslySetInnerHTML={{__html: (work10Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
                   <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
                     <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>

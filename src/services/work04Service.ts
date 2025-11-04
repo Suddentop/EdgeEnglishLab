@@ -103,7 +103,7 @@ ${passage}`;
         if (!inBracket && !replaced) {
           const regex = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
           if (regex.test(tokens[i])) {
-            tokens[i] = tokens[i].replace(regex, '(__________)');
+            tokens[i] = tokens[i].replace(regex, '(____________________)');
             replaced = true;
           }
         }
@@ -123,7 +123,7 @@ ${passage}`;
     result.blankedText = blankedText;
 
     // 복원 검증
-    const blankRestore = result.blankedText.replace(/\( *_{6,}\)/, answer);
+    const blankRestore = result.blankedText.replace(/\( *_{10,}\)/, answer);
     if (blankRestore.trim() !== passage.trim()) {
       throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
     }

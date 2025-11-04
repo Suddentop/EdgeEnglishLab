@@ -12,6 +12,7 @@ import { Quiz, SentenceTranslationQuiz } from '../../../types/types';
 import { generateWork02Quiz, Work02QuizData } from '../../../services/work02Service';
 import { imageToTextWithOpenAIVision, splitSentences, countWordsInSentence, filterValidSentences, generateBlankQuizWithAI, translateToKorean as work14TranslateToKorean } from '../../../services/work14Service';
 import { generateWork05Quiz } from '../../../services/work05Service';
+import { generateWork09Quiz } from '../../../services/work09Service';
 import PrintFormatPackage01, { PrintFormatPackage01Work02, PrintFormatPackage01Work03, PrintFormatPackage01Work04, PrintFormatPackage01Work05, PrintFormatPackage01Work06, PrintFormatPackage01Work07, PrintFormatPackage01Work08, PrintFormatPackage01Work09, PrintFormatPackage01Work10, PrintFormatPackage01Work11, PrintFormatPackage01Work13, PrintFormatPackage01Work14 } from './PrintFormatPackage01';
 import './PrintFormatPackage01.css';
 import { callOpenAI } from '../../../services/common';
@@ -1514,45 +1515,8 @@ ${passage}`;
     return data.choices[0].message.content.trim();
   };
 
-  // Work_09 (어법 변형 문제) 문제 생성 함수
-  const generateWork09Quiz = async (inputText: string): Promise<GrammarQuiz> => {
-    console.log('🔍 Work_09 문제 생성 시작...');
-    
-    try {
-      // Step 1: 단어 선정
-      const words = await selectWords(inputText);
-      // Step 2: 어법 변형
-      const transformation = await transformWord(words);
-      // Step 3: 원본 단어를 변형된 단어로 교체하면서 번호/밑줄 적용
-      const numberedPassage = applyNumberAndUnderline(inputText, words, transformation.transformedWords);
-      
-      // Step 4: 번역
-      const translation = await translatePassage(inputText);
-      
-      // 객관식은 본문에 번호가 매겨진 순서 그대로 (섞지 않음)
-      const optionsInOrder = transformation.transformedWords;
-      
-      console.log('🎯 최종 결과 조합:');
-      console.log('원본 단어들:', words);
-      console.log('변형된 단어들:', transformation.transformedWords);
-      console.log('객관식 옵션 (순서 그대로):', optionsInOrder);
-      console.log('원본 정답 인덱스:', transformation.answerIndex);
-      console.log('정답 인덱스 (변경 없음):', transformation.answerIndex);
-      
-      const result: GrammarQuiz = {
-        passage: numberedPassage,
-        options: optionsInOrder,
-        answerIndex: transformation.answerIndex,
-        original: transformation.original,
-        translation
-      };
-      
-      console.log('✅ Work_09 문제 생성 완료:', result);
-      return result;
-    } catch (error) {
-      throw new Error(`Work_09 문제 생성에 실패했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
-    }
-  };
+  // Work_09 (어법 변형 문제) 문제 생성 함수 - work09Service 사용
+  // generateWork09Quiz는 work09Service.ts의 개선된 함수를 사용
 
   // Work_10 (다중 어법 오류 문제) 문제 생성 함수
   const generateWork10Quiz = async (inputText: string): Promise<MultiGrammarQuiz> => {
@@ -1634,7 +1598,7 @@ ${inputText}`;
     }
   };
 
-  // Work_10용 본문 내 8개 단어에 번호/밑줄을 정확히 한 번씩 적용하는 함수
+  // Work_10용 본문 내 8개 단어에 번호/진하게를 정확히 한 번씩 적용하는 함수
   const applyNumberAndUnderlineWork10 = (
     passage: string,
     originalWords: string[],
@@ -1643,16 +1607,26 @@ ${inputText}`;
   ): string => {
     let result = passage;
     const used: boolean[] = Array(originalWords.length).fill(false);
+    const circleNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'];
     
-    originalWords.forEach((word, i) => {
-      if (used[i]) return;
-      const displayWord = wrongIndexes.includes(i) ? transformedWords[i] : word;
-      const numbered = `${'①②③④⑤⑥⑦⑧'[i]}<u>${displayWord}</u>`;
+    // 역순으로 처리하여 인덱스 충돌 방지
+    for (let i = originalWords.length - 1; i >= 0; i--) {
+      if (used[i]) continue;
+      const originalWord = originalWords[i];
+      const displayWord = wrongIndexes.includes(i) ? transformedWords[i] : originalWord;
+      const circleNumber = circleNumbers[i];
+      const numbered = `<strong>${circleNumber} ${displayWord}</strong>`;
+      
       // 첫 번째 등장만 치환
-      const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
-      result = result.replace(regex, numbered);
-      used[i] = true;
-    });
+      const regex = new RegExp(`\\b${originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+      const match = regex.exec(result);
+      if (match) {
+        const before = result.substring(0, match.index);
+        const after = result.substring(match.index + match[0].length);
+        result = before + numbered + after;
+        used[i] = true;
+      }
+    }
     
     return result;
   };
@@ -3779,7 +3753,7 @@ ${inputText}`;
                     padding: '1.2rem',
                     fontFamily: 'inherit'
                   }}>
-                    <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(quizItem.work10Data.passage).replace(/\n/g, '<br/>')}} />
+                    <span dangerouslySetInnerHTML={{__html: (quizItem.work10Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
 
                   {/* 객관식 옵션 */}
@@ -4296,7 +4270,7 @@ ${inputText}`;
                     padding: '1.2rem',
                     fontFamily: 'inherit'
                   }}>
-                    <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(quizItem.work09Data.passage).replace(/\n/g, '<br/>')}} />
+                    <span dangerouslySetInnerHTML={{__html: (quizItem.work09Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
 
                   {/* 선택지 */}

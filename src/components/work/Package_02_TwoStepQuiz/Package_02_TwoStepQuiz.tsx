@@ -1276,7 +1276,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   borderRadius: '8px',
                   marginBottom: '1.2rem'
                 }}>
-                  문제: 다음 본문을 읽고 해석하세요
+                  다음 본문을 읽고 해석하세요
                 </div>
 
                 <div 
@@ -1607,7 +1607,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   borderRadius: '8px',
                   marginBottom: '1.2rem'
                 }}>
-                  아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                  다음 영어본문에서 주요문장이 들어가야 할 가장 적합한 위치를 찾으세오.
                 </div>
 
                 <div style={{
@@ -1870,17 +1870,20 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   borderRadius: '8px',
                   marginBottom: '1.2rem'
                 }}>
-                  다음 글의 밑줄 친 부분 중, 어법상 틀린 것을 고르시오.
+                  다음 영어 본문에 표시된 단어들 중에서 어법상 틀린 것을 고르시오.
                 </div>
 
-                <div style={{
-                  background: '#FFF3CD',
-                  borderRadius: '8px',
-                  padding: '1.2rem',
-                  marginBottom: '1.5rem'
-                }}>
-                  {quizItem.work09Data.passage}
-                </div>
+                <div 
+                  style={{
+                    background: '#FFF3CD',
+                    borderRadius: '8px',
+                    padding: '1.2rem',
+                    marginBottom: '1.5rem'
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: (quizItem.work09Data.passage || '').replace(/\n/g, '<br/>')
+                  }}
+                />
 
                 <div style={{
                   background: '#f8f9fa',
@@ -1959,7 +1962,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   fontSize: '1.18rem',
                   fontWeight: '800'
                 }}>
-                  다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?
+                  다음 영어 본문에 표시된 단어들 중에서 어법상 틀린 단어의 개수를 고르시오.
                 </div>
 
                 <div style={{

@@ -922,7 +922,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   <span className="print-question-type-badge">유형#06</span>
                 </div>
                 <div className="print-instruction">
-                  아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오
+                  다음 영어본문에서 주요문장이 들어가야 할 가장 적합한 위치를 찾으세오.
                 </div>
                 <div className="print-missing-sentence">
                   주요 문장: {work06Data?.missingSentence || ''}
@@ -1090,11 +1090,14 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   <span className="print-question-type-badge">유형#09</span>
                 </div>
                 <div className="print-instruction">
-                  다음 글의 밑줄 친 부분 중, 어법상 틀린 것을 고르시오
+                  다음 영어 본문에 표시된 단어들 중에서 어법상 틀린 것을 고르시오.
                 </div>
-                <div className="print-passage">
-                  {work09Data?.passage || ''}
-                </div>
+                <div 
+                  className="print-passage"
+                  dangerouslySetInnerHTML={{
+                    __html: (work09Data?.passage || '').replace(/\n/g, '<br/>')
+                  }}
+                />
                 <div className="print-options">
                   {isAnswerMode ? (
                     <div className="print-option">
@@ -1148,7 +1151,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   <span className="print-question-type-badge">유형#10</span>
                 </div>
                 <div className="print-instruction">
-                  다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?
+                  다음 영어 본문에 표시된 단어들 중에서 어법상 틀린 단어의 개수를 고르시오.
                 </div>
                 <div 
                   className="print-passage"
@@ -1610,39 +1613,6 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                     })()
                   )}
                 </div>
-                {!isAnswerMode && (
-                  // 답안 입력 필드
-                  (() => {
-                    const selectedSentences = work14Data?.selectedSentences || work14Data?.correctAnswers || [];
-                    if (selectedSentences.length > 0) {
-                      return (
-                        <div className="problem-answers" style={{margin:'1rem 0'}}>
-                          <div style={{height:'1.5rem'}}></div>
-                          <div style={{height:'1.5rem'}}></div>
-                          {selectedSentences.map((sentence: string, i: number) => {
-                            const alphabetLabel = String.fromCharCode(65 + i); // A=65, B=66, C=67...
-                            return (
-                              <div key={i}>
-                                <div style={{
-                                  fontSize:'1rem',
-                                  fontFamily:'monospace',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden'
-                                }}>
-                                  {alphabetLabel} : {'_'.repeat(100)}
-                                </div>
-                                {selectedSentences && i < selectedSentences.length - 1 && (
-                                  <div style={{height:'1.5rem'}}></div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()
-                )}
                 {isAnswerMode && getTranslatedText(quizItem, quizData) && (
                   <div className="print-translation-section">
                     <div className="print-translation-title">본문해석 :</div>
