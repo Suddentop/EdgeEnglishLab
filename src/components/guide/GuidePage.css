@@ -299,11 +299,21 @@
   border-radius: 4px;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .btn-edit:hover {
   background: #38a169;
+  transform: translateY(-1px);
+}
+
+.btn-edit svg {
+  width: 14px;
+  height: 14px;
 }
 
 .btn-delete {
@@ -314,11 +324,21 @@
   border-radius: 4px;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .btn-delete:hover {
   background: #e53e3e;
+  transform: translateY(-1px);
+}
+
+.btn-delete svg {
+  width: 14px;
+  height: 14px;
 }
 
 .notice-title {
@@ -493,13 +513,18 @@
 
 .btn-edit-small,
 .btn-delete-small {
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem;
   border: none;
   border-radius: 4px;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
 }
 
 .btn-edit-small {
@@ -509,6 +534,7 @@
 
 .btn-edit-small:hover {
   background: #38a169;
+  transform: translateY(-1px);
 }
 
 .btn-delete-small {
@@ -518,6 +544,13 @@
 
 .btn-delete-small:hover {
   background: #e53e3e;
+  transform: translateY(-1px);
+}
+
+.btn-edit-small svg,
+.btn-delete-small svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* 페이지네이션 */
@@ -577,7 +610,7 @@
 .notice-detail-content {
   background: white;
   border-radius: 12px;
-  max-width: 800px;
+  max-width: 1040px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;

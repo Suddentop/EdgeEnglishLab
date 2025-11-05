@@ -4,7 +4,19 @@ import { isAdmin } from '../../utils/adminUtils';
 import { getNotices, createNotice, updateNotice, deleteNotice, Notice } from '../../services/noticeService';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 import './GuidePage.css';
+
+// 타입 안전성을 위한 아이콘 컴포넌트 래퍼
+const EditIcon: React.FC<{ size?: number }> = ({ size = 16 }) => {
+  // @ts-ignore - react-icons 타입 호환성 문제 우회
+  return React.createElement(FaEdit as any, { size });
+};
+
+const TrashIcon: React.FC<{ size?: number }> = ({ size = 16 }) => {
+  // @ts-ignore - react-icons 타입 호환성 문제 우회
+  return React.createElement(FaTrash as any, { size });
+};
 
 const GuidePage: React.FC = () => {
   const { userData } = useAuth();
@@ -46,6 +58,23 @@ const GuidePage: React.FC = () => {
   useEffect(() => {
     loadNotices();
   }, []);
+
+  // Esc 키로 모달 닫기
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && editingNotice && !showForm) {
+        setEditingNotice(null);
+      }
+    };
+
+    if (editingNotice && !showForm) {
+      window.addEventListener('keydown', handleEscKey);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleEscKey);
+    };
+  }, [editingNotice, showForm]);
 
   const loadNotices = async () => {
     setLoading(true);
@@ -398,14 +427,16 @@ const GuidePage: React.FC = () => {
                                       <button
                                         className="btn-edit-small"
                                         onClick={() => handleEditNotice(notice)}
+                                        title="수정"
                                       >
-                                        수정
+                                        <EditIcon size={16} />
                                       </button>
                                       <button
                                         className="btn-delete-small"
                                         onClick={() => handleDeleteNotice(notice.id)}
+                                        title="삭제"
                                       >
-                                        삭제
+                                        <TrashIcon size={16} />
                                       </button>
                                     </div>
                                   </td>
@@ -470,14 +501,16 @@ const GuidePage: React.FC = () => {
                                     handleEditNotice(editingNotice);
                                     setShowForm(true);
                                   }}
+                                  title="수정"
                                 >
-                                  수정
+                                  <EditIcon size={14} /> 수정
                                 </button>
                                 <button
                                   className="btn-delete"
                                   onClick={() => handleDeleteNotice(editingNotice.id)}
+                                  title="삭제"
                                 >
-                                  삭제
+                                  <TrashIcon size={14} /> 삭제
                                 </button>
                               </div>
                             )}
