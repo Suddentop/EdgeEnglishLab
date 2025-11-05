@@ -414,7 +414,6 @@ const SampleProblemsBoard: React.FC = () => {
                   <th>번호</th>
                   <th>구분</th>
                   <th>제목</th>
-                  <th>작성자</th>
                   <th>등록일</th>
                   <th>파일</th>
                   {userData?.role === 'admin' && <th>작업</th>}
@@ -450,7 +449,6 @@ const SampleProblemsBoard: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td>{problem.authorName || '관리자'}</td>
                         <td>{formatDate(problem.createdAt)}</td>
                         <td>
                           <div className="file-icons-container">
