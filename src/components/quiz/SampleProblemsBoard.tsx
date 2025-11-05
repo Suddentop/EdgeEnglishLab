@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, orderBy, query, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../../firebase/config';
+import { FaDownload } from 'react-icons/fa';
 
 import './SampleProblemsBoard.css';
 
@@ -22,6 +23,12 @@ interface SampleProblem {
   authorId: string;
   authorName: string;
 }
+
+// 타입 안전성을 위한 아이콘 컴포넌트 래퍼
+const DownloadIcon: React.FC<{ size?: number }> = ({ size = 16 }) => {
+  // @ts-ignore - react-icons 타입 호환성 문제 우회
+  return React.createElement(FaDownload as any, { size });
+};
 
 const SampleProblemsBoard: React.FC = () => {
   const { currentUser, userData, loading: authLoading } = useAuth();
@@ -400,22 +407,22 @@ const SampleProblemsBoard: React.FC = () => {
                         <td>{problem.authorName || '관리자'}</td>
                         <td>{formatDate(problem.createdAt)}</td>
                         <td>
-                          <div className="file-count">
-                            {problem.files.length}개
-                            {problem.files.length > 0 && (
-                              <div className="file-download-list">
-                                {problem.files.map((file, fileIndex) => (
-                                  <a
-                                    key={fileIndex}
-                                    href={file.url}
-                                    download={file.name}
-                                    className="file-download-link"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {file.name}
-                                  </a>
-                                ))}
-                              </div>
+                          <div className="file-icons-container">
+                            {problem.files.length > 0 ? (
+                              problem.files.map((file, fileIndex) => (
+                                <a
+                                  key={fileIndex}
+                                  href={file.url}
+                                  download={file.name}
+                                  className="file-download-icon"
+                                  onClick={(e) => e.stopPropagation()}
+                                  title={file.name}
+                                >
+                                  <DownloadIcon size={16} />
+                                </a>
+                              ))
+                            ) : (
+                              <span className="no-files">-</span>
                             )}
                           </div>
                         </td>

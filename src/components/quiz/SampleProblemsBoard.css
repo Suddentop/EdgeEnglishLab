@@ -362,45 +362,46 @@
   margin-top: 0.25rem;
 }
 
-/* 파일 다운로드 */
-.file-count {
-  position: relative;
-  color: #4a5568;
-  font-weight: 500;
+/* 파일 아이콘 컨테이너 */
+.file-icons-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.file-download-list {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  border: 1px solid #e2e8f0;
+.file-download-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #667eea;
+  color: white;
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
-  z-index: 10;
-  min-width: 200px;
-  margin-top: 0.25rem;
-}
-
-.file-count:hover .file-download-list {
-  display: block;
-}
-
-.file-download-link {
-  display: block;
-  padding: 0.5rem;
-  color: #2d3748;
   text-decoration: none;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.file-download-link:hover {
-  background-color: #f7fafc;
-  color: #667eea;
+.file-download-icon:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.file-download-icon:active {
+  transform: translateY(0);
+}
+
+.file-download-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.no-files {
+  color: #a0aec0;
+  font-size: 0.9rem;
 }
 
 /* 테이블 액션 버튼 */
