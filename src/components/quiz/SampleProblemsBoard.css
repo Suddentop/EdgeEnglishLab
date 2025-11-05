@@ -300,6 +300,13 @@
   border-bottom: 1px solid #e2e8f0;
   color: #4a5568;
   vertical-align: middle;
+  background: transparent;
+}
+
+/* 제목 셀 특별 처리 */
+.sample-problems-table td:has(.problem-title-cell) {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 .sample-problems-table tbody tr {
@@ -337,10 +344,34 @@
 }
 
 /* 제목 셀 */
-.problem-title-cell {
+.sample-problems-table .problem-title-cell {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.sample-problems-table .problem-title {
+  color: #2d3748 !important;
+  font-weight: 400;
+  background: transparent !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 1.0rem !important;
+  line-height: 1.5;
+  display: inline-block;
+}
+
+.sample-problems-table .problem-title.clickable {
+  color: #667eea !important;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.sample-problems-table .problem-title.clickable:hover {
+  color: #5568d3 !important;
+  text-decoration: underline;
 }
 
 .problem-title-link {
@@ -770,7 +801,68 @@
 }
 
 .close-button {
-  display: none;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  line-height: 1;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+/* 본문 표시 모달 */
+.content-modal {
+  max-width: 900px;
+  width: 85%;
+}
+
+.modal-body {
+  padding: 1.5rem 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.content-display {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #2d3748;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e3f2fd;
+  margin-top: 1.5rem;
+}
+
+.close-button-footer {
+  padding: 0.75rem 2rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
+}
+
+.close-button-footer:hover {
+  background: #5568d3;
 }
 
 /* 폼 스타일 */

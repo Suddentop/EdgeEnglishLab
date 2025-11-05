@@ -36,6 +36,9 @@ const SampleProblemsBoard: React.FC = () => {
   const [problems, setProblems] = useState<SampleProblem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProblem, setEditingProblem] = useState<SampleProblem | null>(null);
+  const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<string>('');
+  const [selectedTitle, setSelectedTitle] = useState<string>('');
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -217,6 +220,57 @@ const SampleProblemsBoard: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  // 제목 클릭 시 본문 모달 열기
+  const handleTitleClick = (problem: SampleProblem) => {
+    if (problem.content) {
+      setSelectedTitle(problem.title);
+      setSelectedContent(problem.content);
+      setIsContentModalOpen(true);
+    }
+  };
+
+  // 문제 유형을 간단한 형식으로 변환 (유형#01, 패키지#01)
+  const formatProblemType = (problemType: string): string => {
+    // "본문해석 및 본문추출" 특수 처리
+    if (problemType.includes('본문해석') || problemType.includes('본문추출')) {
+      return '유형#15';
+    }
+
+    // 패키지 형식 처리 (패키지01, 패키지02, 패키지03 등)
+    const packageMatch = problemType.match(/패키지(\d+)/);
+    if (packageMatch) {
+      return `패키지#${packageMatch[1].padStart(2, '0')}`;
+    }
+
+    // 유형# 형식이 이미 있는 경우
+    if (problemType.includes('유형#')) {
+      return problemType.match(/유형#\d+/)?.[0] || problemType;
+    }
+
+    // 숫자로 시작하는 형식 (01. 문단 순서 맞추기 등)
+    const typeMatch = problemType.match(/^(\d+)\./);
+    if (typeMatch) {
+      return `유형#${typeMatch[1].padStart(2, '0')}`;
+    }
+
+    // 그 외의 경우 원본 반환
+    return problemType;
+  };
+
+  // Esc 키로 모달 닫기
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isContentModalOpen) {
+        setIsContentModalOpen(false);
+      }
+    };
+
+    if (isContentModalOpen) {
+      window.addEventListener('keydown', handleEscape);
+      return () => window.removeEventListener('keydown', handleEscape);
+    }
+  }, [isContentModalOpen]);
+
   // 파일 선택
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -381,27 +435,19 @@ const SampleProblemsBoard: React.FC = () => {
                             onClick={() => handleProblemTypeClick(problem.problemType)}
                             title="클릭하여 해당 문제 유형 화면으로 이동"
                           >
-                            {problem.problemType}
+                            {formatProblemType(problem.problemType)}
                           </span>
                         </td>
                         <td>
                           <div className="problem-title-cell">
                             <span 
-                              className="problem-title-link"
-                              onClick={() => {
-                                // 제목 클릭 시 파일 다운로드 모달 또는 상세 보기
-                                if (problem.files.length > 0) {
-                                  window.open(problem.files[0].url, '_blank');
-                                }
-                              }}
+                              className={`problem-title ${problem.content ? 'clickable' : ''}`}
+                              onClick={() => problem.content && handleTitleClick(problem)}
+                              style={{ cursor: problem.content ? 'pointer' : 'default' }}
+                              title={problem.content ? '클릭하여 본문 보기' : ''}
                             >
                               {problem.title}
                             </span>
-                            {problem.content && (
-                              <span className="problem-content-preview" title={problem.content}>
-                                {problem.content.length > 30 ? problem.content.substring(0, 30) + '...' : problem.content}
-                              </span>
-                            )}
                           </div>
                         </td>
                         <td>{problem.authorName || '관리자'}</td>
@@ -413,7 +459,8 @@ const SampleProblemsBoard: React.FC = () => {
                                 <a
                                   key={fileIndex}
                                   href={file.url}
-                                  download={file.name}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   className="file-download-icon"
                                   onClick={(e) => e.stopPropagation()}
                                   title={file.name}
@@ -602,6 +649,40 @@ const SampleProblemsBoard: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 본문 표시 모달 */}
+      {isContentModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsContentModalOpen(false)}>
+          <div className="modal-content content-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{selectedTitle}</h2>
+              <button 
+                className="close-button"
+                onClick={() => setIsContentModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="content-display">
+                {selectedContent.split('\n').map((line, index) => (
+                  <p key={index} style={{ marginBottom: '0.5rem', lineHeight: '1.6' }}>
+                    {line || '\u00A0'}
+                  </p>
+                ))}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="close-button-footer"
+                onClick={() => setIsContentModalOpen(false)}
+              >
+                닫기
+              </button>
+            </div>
           </div>
         </div>
       )}
