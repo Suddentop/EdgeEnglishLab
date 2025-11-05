@@ -415,9 +415,6 @@ const GuidePage: React.FC = () => {
                                   >
                                     {notice.title}
                                   </span>
-                                  {notice.updatedAt && notice.updatedAt.getTime() !== notice.createdAt.getTime() && (
-                                    <span className="updated-indicator">수정됨</span>
-                                  )}
                                 </td>
                                 <td>{formatDate(notice.createdAt)}</td>
                                 <td>{notice.authorName || '관리자'}</td>

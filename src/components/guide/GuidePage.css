@@ -14,7 +14,7 @@
 }
 
 .guide-title {
-  padding: 2rem;
+  padding: 1rem 2rem;
   margin: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -907,7 +907,7 @@
 
   .guide-title {
     font-size: 1.5rem;
-    padding: 1.5rem 1rem;
+    padding: 0.75rem 1rem;
   }
 
   .guide-tabs {
@@ -938,7 +938,7 @@
 @media (max-width: 480px) {
   .guide-title {
     font-size: 1.3rem;
-    padding: 1rem;
+    padding: 0.5rem 1rem;
   }
 
   .guide-tab {
