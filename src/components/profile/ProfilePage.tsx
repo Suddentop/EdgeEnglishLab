@@ -5,6 +5,7 @@ import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 
 import { PaymentService } from '../../services/paymentService';
 import { Payment } from '../../types/types';
 import { PAYMENT_STATUS } from '../../utils/pointConstants';
+import { formatPhoneNumber } from '../../utils/textProcessor';
 import './ProfilePage.css';
 
 const ProfilePage: React.FC = () => {
@@ -306,7 +307,7 @@ const ProfilePage: React.FC = () => {
             <h2>기본 정보</h2>
             <div className="profile-info">
               <div className="info-row">
-                <label>이름:</label>
+                <label>이름 :</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -321,7 +322,7 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <div className="info-row">
-                <label>닉네임:</label>
+                <label>닉네임 :</label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -336,12 +337,12 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <div className="info-row">
-                <label>이메일 (로그인 ID):</label>
+                <label>이메일 (로그인 ID) :</label>
                 <span className="info-value">{userData.email || '미설정'}</span>
               </div>
 
               <div className="info-row">
-                <label>전화번호:</label>
+                <label>전화번호 :</label>
                 {isEditing ? (
                   <input
                     type="tel"
@@ -352,12 +353,12 @@ const ProfilePage: React.FC = () => {
                     placeholder="'-' 없이 입력해주세요"
                   />
                 ) : (
-                  <span className="info-value">{userData.phoneNumber || '미설정'}</span>
+                  <span className="info-value">{userData.phoneNumber ? formatPhoneNumber(userData.phoneNumber) : '미설정'}</span>
                 )}
               </div>
 
               <div className="info-row">
-                <label>가입일:</label>
+                <label>가입일 :</label>
                 <span className="info-value">
                   {userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : '미설정'}
                 </span>
