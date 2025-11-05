@@ -38,6 +38,8 @@ const SampleProblemsBoard: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userDataLoading, setUserDataLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // 사용자 데이터 로딩 상태 업데이트
   useEffect(() => {
@@ -317,27 +319,26 @@ const SampleProblemsBoard: React.FC = () => {
         )}
       </div>
 
-      {/* 관리자 콘텐츠 - 주황색 컨테이너 없이 직접 배치 */}
+      {/* 관리자 콘텐츠 */}
       {!userDataLoading && !authLoading && userData?.role === 'admin' && (
-        <>
+        <div className="admin-actions-header">
           <p className="admin-description">관리자가 업로드한 다양한 유형의 영어 문제를 다운로드하세요</p>
-          <div className="admin-actions">
-            <button 
-              className="upload-button"
-              onClick={() => {
-                setEditingProblem(null);
-                setFormData({ title: '', content: '', problemType: '', files: [] });
-                setIsModalOpen(true);
-              }}
-            >
-              <span className="button-icon">📤</span>
-              새 문제 업로드
-            </button>
-          </div>
-        </>
+          <button 
+            className="upload-button"
+            onClick={() => {
+              setEditingProblem(null);
+              setFormData({ title: '', content: '', problemType: '', files: [] });
+              setIsModalOpen(true);
+            }}
+          >
+            <span className="button-icon">📤</span>
+            새 문제 업로드
+          </button>
+        </div>
       )}
 
-      <div className="problems-grid">
+      {/* 테이블 형식 목록 */}
+      <div className="sample-problems-table-container">
         {problems.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📚</div>
@@ -345,65 +346,150 @@ const SampleProblemsBoard: React.FC = () => {
             <p>관리자가 샘플 문제를 업로드하면 여기에 표시됩니다.</p>
           </div>
         ) : (
-          problems.map((problem) => (
-          <div key={problem.id} className="problem-card">
-            <div className="problem-header">
-              <div 
-                className="problem-type-badge clickable"
-                onClick={() => handleProblemTypeClick(problem.problemType)}
-                title="클릭하여 해당 문제 유형 화면으로 이동"
-              >
-                {problem.problemType}
-              </div>
-              <div className="problem-date">{formatDate(problem.createdAt)}</div>
-            </div>
-            
-            <h3 className="problem-title">{problem.title}</h3>
-            <p className="problem-content">{problem.content}</p>
-            
-            <div className="problem-files">
-              <h4>첨부 파일 ({problem.files.length}개)</h4>
-              {problem.files.map((file, index) => (
-                <div key={index} className="file-item">
-                  <span className="file-name">{file.name}</span>
-                  <span className="file-size">({formatFileSize(file.size)})</span>
-                  <a 
-                    href={file.url} 
-                    download={file.name}
-                    className="download-button"
-                  >
-                    다운로드
-                  </a>
-                </div>
-              ))}
-            </div>
+          <>
+            <table className="sample-problems-table">
+              <thead>
+                <tr>
+                  <th>번호</th>
+                  <th>구분</th>
+                  <th>제목</th>
+                  <th>작성자</th>
+                  <th>등록일</th>
+                  <th>파일</th>
+                  {userData?.role === 'admin' && <th>작업</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {problems
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((problem, index) => {
+                    const totalCount = problems.length;
+                    const number = totalCount - (currentPage - 1) * itemsPerPage - index;
+                    return (
+                      <tr key={problem.id}>
+                        <td>{number}</td>
+                        <td>
+                          <span 
+                            className="problem-type-badge clickable"
+                            onClick={() => handleProblemTypeClick(problem.problemType)}
+                            title="클릭하여 해당 문제 유형 화면으로 이동"
+                          >
+                            {problem.problemType}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="problem-title-cell">
+                            <span 
+                              className="problem-title-link"
+                              onClick={() => {
+                                // 제목 클릭 시 파일 다운로드 모달 또는 상세 보기
+                                if (problem.files.length > 0) {
+                                  window.open(problem.files[0].url, '_blank');
+                                }
+                              }}
+                            >
+                              {problem.title}
+                            </span>
+                            {problem.content && (
+                              <span className="problem-content-preview" title={problem.content}>
+                                {problem.content.length > 30 ? problem.content.substring(0, 30) + '...' : problem.content}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td>{problem.authorName || '관리자'}</td>
+                        <td>{formatDate(problem.createdAt)}</td>
+                        <td>
+                          <div className="file-count">
+                            {problem.files.length}개
+                            {problem.files.length > 0 && (
+                              <div className="file-download-list">
+                                {problem.files.map((file, fileIndex) => (
+                                  <a
+                                    key={fileIndex}
+                                    href={file.url}
+                                    download={file.name}
+                                    className="file-download-link"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {file.name}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        {userData?.role === 'admin' && (
+                          <td>
+                            <div className="table-actions">
+                              <button 
+                                className="edit-button-small"
+                                onClick={() => handleEdit(problem)}
+                                disabled={uploading}
+                                title="수정"
+                              >
+                                수정
+                              </button>
+                              <button 
+                                className="delete-button-small"
+                                onClick={() => handleDelete(problem.id, problem.files)}
+                                disabled={uploading}
+                                title="삭제"
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
 
-            {userData?.role === 'admin' && (
-              <div className="problem-actions">
-                <button 
-                  className="edit-button"
-                  onClick={() => {
-                    console.log('Edit button clicked for problem:', problem.id);
-                    handleEdit(problem);
-                  }}
-                  disabled={uploading}
+            {/* 페이지네이션 */}
+            {problems.length > itemsPerPage && (
+              <div className="pagination">
+                <button
+                  className="pagination-btn"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
                 >
-                  수정
+                  ‹
                 </button>
-                <button 
-                  className="delete-button"
-                  onClick={() => {
-                    console.log('Delete button clicked for problem:', problem.id);
-                    handleDelete(problem.id, problem.files);
-                  }}
-                  disabled={uploading}
+                {Array.from({ length: Math.ceil(problems.length / itemsPerPage) }, (_, i) => i + 1)
+                  .filter(page => {
+                    const totalPages = Math.ceil(problems.length / itemsPerPage);
+                    if (totalPages <= 10) return true;
+                    if (page === 1 || page === totalPages) return true;
+                    if (Math.abs(page - currentPage) <= 1) return true;
+                    return false;
+                  })
+                  .map((page, index, array) => {
+                    const prevPage = array[index - 1];
+                    const showEllipsis = prevPage && page - prevPage > 1;
+                    return (
+                      <React.Fragment key={page}>
+                        {showEllipsis && <span className="pagination-ellipsis">...</span>}
+                        <button
+                          className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
+                <button
+                  className="pagination-btn"
+                  onClick={() => setCurrentPage(prev => Math.min(Math.ceil(problems.length / itemsPerPage), prev + 1))}
+                  disabled={currentPage === Math.ceil(problems.length / itemsPerPage)}
                 >
-                  삭제
+                  ›
                 </button>
               </div>
             )}
-          </div>
-        ))
+          </>
         )}
       </div>
 
