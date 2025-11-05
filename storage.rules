@@ -1,6 +1,12 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // sample-problems 폴더: 모든 사용자가 읽기 가능 (공개 다운로드), 관리자만 쓰기 가능
+    match /sample-problems/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
     // feedback-images 폴더: 로그인한 사용자만 읽기/쓰기 가능
     match /feedback-images/{allPaths=**} {
       allow read, write: if request.auth != null;
