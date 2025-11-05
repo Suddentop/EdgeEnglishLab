@@ -7,6 +7,7 @@ import {
   User
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { POINT_POLICY } from '../utils/pointConstants';
 
 // 사용자 데이터 타입 정의
 interface UserData {
@@ -85,7 +86,7 @@ export const signUpWithEmail = async (
       phoneNumber: userData.phoneNumber || '',
       role: userData.role || 'user',
       isActive: true,
-      points: 10000, // 이벤트 기간: 가입시 자동으로 10,000P 부여
+      points: POINT_POLICY.DEFAULT_SIGNUP_POINTS, // 신규 회원가입 시 기본 포인트 자동 부여
       totalPaidPoints: 0,
       usedPoints: 0,
       createdAt: new Date().toISOString()

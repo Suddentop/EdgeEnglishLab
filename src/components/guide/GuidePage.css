@@ -25,35 +25,41 @@
 
 .guide-tabs {
   display: flex;
-  border-bottom: 2px solid #e2e8f0;
-  background: #f7fafc;
+  border-bottom: none;
+  background: transparent;
   overflow-x: auto;
+  gap: 0.5rem;
+  padding: 0 2rem;
+  margin-top: 1rem;
 }
 
 .guide-tab {
-  flex: 1;
-  padding: 1rem 1.5rem;
-  border: none;
-  background: transparent;
-  color: #4a5568;
+  flex: 0 0 auto;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px 6px 0 0;
+  background: white;
+  color: #718096;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  border-bottom: 3px solid transparent;
+  border-bottom: none;
+  position: relative;
 }
 
 .guide-tab:hover {
-  background: #edf2f7;
-  color: #667eea;
+  background: #f7fafc;
+  color: #4a5568;
 }
 
 .guide-tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
-  background: white;
+  color: white;
+  background: #667eea;
+  border-color: #667eea;
   font-weight: 600;
+  z-index: 1;
 }
 
 .guide-content {
@@ -339,6 +345,527 @@
   font-size: 0.85rem;
 }
 
+/* 공지사항 테이블 스타일 */
+.notice-count {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.notice-count strong {
+  color: #667eea;
+}
+
+.notice-search-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.notice-search-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.notice-search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.notice-search-btn {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.notice-search-btn:hover {
+  background: #5568d3;
+}
+
+.notice-table-container {
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.notice-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.notice-table thead {
+  background: #f7fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.notice-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.95rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.notice-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s ease;
+}
+
+.notice-table tbody tr:hover {
+  background: #f7fafc;
+}
+
+.notice-table tbody tr.important-row {
+  background: #fff5f5;
+}
+
+.notice-table tbody tr.important-row:hover {
+  background: #ffe5e5;
+}
+
+.notice-table td {
+  padding: 1rem;
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.status-badge.important-badge {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.notice-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notice-title-link {
+  color: #2d3748;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.notice-title-link:hover {
+  color: #667eea;
+  text-decoration: underline;
+}
+
+.updated-indicator {
+  font-size: 0.8rem;
+  color: #48bb78;
+  background: #c6f6d5;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-edit-small,
+.btn-delete-small {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-edit-small {
+  background: #48bb78;
+  color: white;
+}
+
+.btn-edit-small:hover {
+  background: #38a169;
+}
+
+.btn-delete-small {
+  background: #f56565;
+  color: white;
+}
+
+.btn-delete-small:hover {
+  background: #e53e3e;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.pagination-btn {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #4a5568;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 40px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f7fafc;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.pagination-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 공지사항 상세 모달 */
+.notice-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.notice-detail-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.notice-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.notice-detail-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #718096;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f7fafc;
+  color: #2d3748;
+}
+
+.notice-detail-info {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  color: #718096;
+  flex-wrap: wrap;
+}
+
+.notice-detail-body {
+  padding: 1.5rem;
+  color: #4a5568;
+  line-height: 1.8;
+}
+
+.notice-detail-body p {
+  margin: 1rem 0;
+}
+
+.notice-detail-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.notice-detail-body ul,
+.notice-detail-body ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.notice-detail-body h1,
+.notice-detail-body h2,
+.notice-detail-body h3 {
+  margin: 1.5rem 0 1rem 0;
+  color: #2d3748;
+}
+
+.notice-detail-body a {
+  color: #667eea;
+  text-decoration: underline;
+}
+
+.notice-detail-body a:hover {
+  color: #5568d3;
+}
+
+/* ReactQuill 스타일 커스터마이징 */
+
+.form-group .ql-editor {
+  min-height: 300px;
+}
+
+.form-group .ql-toolbar {
+  border-radius: 6px 6px 0 0;
+  background: #f7fafc;
+}
+
+.form-group .ql-container {
+  border-bottom: 1px solid #cbd5e0;
+  border-left: 1px solid #cbd5e0;
+  border-right: 1px solid #cbd5e0;
+  border-radius: 0 0 6px 6px;
+  background: white;
+  margin-bottom: 0;
+}
+
+/* ReactQuill 래퍼 요소의 하단 여백 제거 */
+.form-group > div[class*="quill"] {
+  margin-bottom: 0;
+}
+
+/* ReactQuill이 있는 form-group의 하단 여백 제거 (주요공지 컨테이너와의 간격 제거) */
+.form-group:has(.ql-container) {
+  margin-bottom: 0;
+}
+
+.form-group .ql-container.ql-snow,
+.form-group .ql-toolbar.ql-snow {
+  border-color: #cbd5e0;
+}
+
+.form-group .ql-container.ql-snow:focus-within,
+.form-group .ql-toolbar.ql-snow:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.notice-detail-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  justify-content: flex-end;
+}
+
+/* 공지사항 폼 스타일 */
+.notice-form {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.notice-form h3 {
+  margin: 0 0 1.5rem 0;
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 0;
+  padding: 0.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.form-group label.checkbox-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #2d3748;
+}
+
+.form-group:has(label.checkbox-container) {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 200px;
+}
+
+.form-group input[type="checkbox"] {
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.form-group label input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+}
+
+.checkbox-container input[type="checkbox"]:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 0;
+  padding: 0.5rem;
+}
+
+.btn-submit,
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-submit:hover,
+.btn-primary:hover {
+  background: #5568d3;
+}
+
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background: #cbd5e0;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .guide-page {
@@ -392,6 +919,43 @@
 
   .notice-item {
     padding: 1rem;
+  }
+
+  .notice-table-container {
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+
+  .notice-table th,
+  .notice-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .notice-search-form {
+    flex-direction: column;
+  }
+
+  .notice-search-btn {
+    width: 100%;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+
+  .pagination-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+    min-width: 35px;
+  }
+
+  .notice-detail-modal {
+    padding: 1rem;
+  }
+
+  .notice-detail-content {
+    max-height: 95vh;
   }
 }
 

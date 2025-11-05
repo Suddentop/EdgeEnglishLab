@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { isAdmin } from '../../utils/adminUtils';
 import { getNotices, createNotice, updateNotice, deleteNotice, Notice } from '../../services/noticeService';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import './GuidePage.css';
 
 const GuidePage: React.FC = () => {
   const { userData } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('notice');
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [filteredNotices, setFilteredNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -28,6 +34,14 @@ const GuidePage: React.FC = () => {
 
   const isAdminUser = isAdmin(userData);
 
+  // HTML 콘텐츠에서 실제 텍스트만 추출하여 검증
+  const isContentEmpty = (htmlContent: string): boolean => {
+    if (!htmlContent) return true;
+    // HTML 태그 제거 후 공백만 남는지 확인
+    const textContent = htmlContent.replace(/<[^>]*>/g, '').trim();
+    return textContent === '' || textContent === '\n';
+  };
+
   // 공지사항 불러오기
   useEffect(() => {
     loadNotices();
@@ -38,12 +52,39 @@ const GuidePage: React.FC = () => {
     try {
       const noticeList = await getNotices();
       setNotices(noticeList);
+      setFilteredNotices(noticeList);
     } catch (error) {
       console.error('공지사항 로드 실패:', error);
       alert('공지사항을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // 검색 처리
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredNotices(notices);
+      setCurrentPage(1);
+    } else {
+      const filtered = notices.filter(notice =>
+        notice.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredNotices(filtered);
+      setCurrentPage(1);
+    }
+  }, [searchTerm, notices]);
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredNotices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentNotices = filteredNotices.slice(startIndex, endIndex);
+
+  // 검색 핸들러
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // 검색은 useEffect에서 자동 처리됨
   };
 
   // 폼 초기화
@@ -66,7 +107,7 @@ const GuidePage: React.FC = () => {
       return;
     }
 
-    if (!formData.title.trim() || !formData.content.trim()) {
+    if (!formData.title.trim() || isContentEmpty(formData.content)) {
       alert('제목과 내용을 입력해주세요.');
       return;
     }
@@ -91,26 +132,54 @@ const GuidePage: React.FC = () => {
   // 공지사항 수정
   const handleUpdateNotice = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingNotice) return;
+    
+    console.log('공지사항 수정 시도:', {
+      editingNotice,
+      formData,
+      isAdminUser,
+      userData
+    });
 
-    if (!formData.title.trim() || !formData.content.trim()) {
+    if (!editingNotice) {
+      console.error('수정할 공지사항이 선택되지 않았습니다.');
+      alert('수정할 공지사항을 선택해주세요.');
+      return;
+    }
+
+    if (!userData || !isAdminUser) {
+      console.error('관리자 권한이 없습니다.');
+      alert('관리자 권한이 필요합니다.');
+      return;
+    }
+
+    if (!formData.title.trim() || isContentEmpty(formData.content)) {
       alert('제목과 내용을 입력해주세요.');
       return;
     }
 
     try {
+      console.log('공지사항 수정 API 호출:', {
+        noticeId: editingNotice.id,
+        title: formData.title,
+        content: formData.content,
+        isImportant: formData.isImportant
+      });
+
       await updateNotice(
         editingNotice.id,
         formData.title,
         formData.content,
         formData.isImportant
       );
+      
+      console.log('공지사항 수정 성공');
       alert('공지사항이 수정되었습니다.');
       resetForm();
       loadNotices();
     } catch (error) {
       console.error('공지사항 수정 실패:', error);
-      alert('공지사항 수정에 실패했습니다.');
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+      alert(`공지사항 수정에 실패했습니다: ${errorMessage}`);
     }
   };
 
@@ -130,6 +199,7 @@ const GuidePage: React.FC = () => {
 
   // 수정 폼 열기
   const handleEditNotice = (notice: Notice) => {
+    console.log('공지사항 수정 모드 진입:', notice);
     setEditingNotice(notice);
     setFormData({
       title: notice.title,
@@ -138,6 +208,15 @@ const GuidePage: React.FC = () => {
     });
     setIsEditing(true);
     setShowForm(true);
+    console.log('수정 폼 상태:', {
+      isEditing: true,
+      showForm: true,
+      formData: {
+        title: notice.title,
+        content: notice.content,
+        isImportant: notice.isImportant || false
+      }
+    });
   };
 
   // 날짜 포맷팅
@@ -200,29 +279,52 @@ const GuidePage: React.FC = () => {
                     </div>
                     <div className="form-group">
                       <label>내용</label>
-                      <textarea
+                      <ReactQuill
+                        theme="snow"
                         value={formData.content}
-                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                        onChange={(value) => setFormData({ ...formData, content: value })}
                         placeholder="공지사항 내용을 입력하세요"
-                        rows={10}
-                        required
+                        modules={{
+                          toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }],
+                            ['link', 'image'],
+                            ['clean']
+                          ]
+                        }}
+                        formats={[
+                          'header',
+                          'bold', 'italic', 'underline', 'strike',
+                          'list', 'bullet',
+                          'color', 'background',
+                          'align',
+                          'link', 'image'
+                        ]}
+                        style={{ minHeight: '300px', marginBottom: '0' }}
                       />
                     </div>
                     <div className="form-group">
-                      <label>
+                      <label className="checkbox-container">
                         <input
                           type="checkbox"
                           checked={formData.isImportant}
                           onChange={(e) => setFormData({ ...formData, isImportant: e.target.checked })}
                         />
-                        중요 공지로 표시
+                        중요 공지
                       </label>
                     </div>
                     <div className="form-actions">
-                      <button type="submit" className="btn-primary">
+                      <button type="submit" className="btn-submit">
                         {isEditing ? '수정' : '등록'}
                       </button>
-                      <button type="button" className="btn-cancel" onClick={resetForm}>
+                      <button
+                        type="button"
+                        className="btn-cancel"
+                        onClick={resetForm}
+                      >
                         취소
                       </button>
                     </div>
@@ -232,54 +334,159 @@ const GuidePage: React.FC = () => {
 
               {loading ? (
                 <div className="loading">로딩 중...</div>
-              ) : notices.length === 0 ? (
-                <div className="no-notice">등록된 공지사항이 없습니다.</div>
               ) : (
-                <div className="notice-list">
-                  {notices.map((notice) => (
-                    <div
-                      key={notice.id}
-                      className={`notice-item ${notice.isImportant ? 'important' : ''}`}
-                    >
-                      <div className="notice-item-header">
-                        <div className="notice-item-info">
-                          <div className="notice-date">{formatDate(notice.createdAt)}</div>
-                          {notice.isImportant && <span className="important-badge">중요</span>}
-                          {notice.updatedAt && notice.updatedAt.getTime() !== notice.createdAt.getTime() && (
-                            <span className="updated-badge">수정됨</span>
-                          )}
-                        </div>
-                        {isAdminUser && (
-                          <div className="notice-actions">
-                            <button
-                              className="btn-edit"
-                              onClick={() => handleEditNotice(notice)}
-                            >
-                              수정
-                            </button>
-                            <button
-                              className="btn-delete"
-                              onClick={() => handleDeleteNotice(notice.id)}
-                            >
-                              삭제
-                            </button>
-                          </div>
-                        )}
+                <>
+                  <div className="notice-count">
+                    총 <strong>{filteredNotices.length}개</strong>의 글이 등록되어 있습니다.
+                  </div>
+                  
+                  <form onSubmit={handleSearch} className="notice-search-form">
+                    <input
+                      type="text"
+                      className="notice-search-input"
+                      placeholder="제목을 입력하세요"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <button type="submit" className="notice-search-btn">검색</button>
+                  </form>
+
+                  {filteredNotices.length === 0 ? (
+                    <div className="no-notice">등록된 공지사항이 없습니다.</div>
+                  ) : (
+                    <>
+                      <div className="notice-table-container">
+                        <table className="notice-table">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '60px' }}>번호</th>
+                              <th style={{ width: '120px' }}>상태</th>
+                              <th>제목</th>
+                              <th style={{ width: '150px' }}>작성일</th>
+                              <th style={{ width: '120px' }}>작성자</th>
+                              {isAdminUser && <th style={{ width: '120px' }}>관리</th>}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentNotices.map((notice, index) => (
+                              <tr key={notice.id} className={notice.isImportant ? 'important-row' : ''}>
+                                <td>{filteredNotices.length - startIndex - index}</td>
+                                <td>
+                                  {notice.isImportant && <span className="status-badge important-badge">중요</span>}
+                                  {!notice.isImportant && <span className="status-badge">일반</span>}
+                                </td>
+                                <td className="notice-title-cell">
+                                  <span 
+                                    className="notice-title-link"
+                                    onClick={() => {
+                                      setEditingNotice(notice);
+                                      setShowForm(false);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    {notice.title}
+                                  </span>
+                                  {notice.updatedAt && notice.updatedAt.getTime() !== notice.createdAt.getTime() && (
+                                    <span className="updated-indicator">수정됨</span>
+                                  )}
+                                </td>
+                                <td>{formatDate(notice.createdAt)}</td>
+                                <td>{notice.authorName || '관리자'}</td>
+                                {isAdminUser && (
+                                  <td>
+                                    <div className="table-actions">
+                                      <button
+                                        className="btn-edit-small"
+                                        onClick={() => handleEditNotice(notice)}
+                                      >
+                                        수정
+                                      </button>
+                                      <button
+                                        className="btn-delete-small"
+                                        onClick={() => handleDeleteNotice(notice.id)}
+                                      >
+                                        삭제
+                                      </button>
+                                    </div>
+                                  </td>
+                                )}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                      <div className="notice-title">{notice.title}</div>
-                      <div className="notice-content">
-                        {notice.content.split('\n').map((line, index) => (
-                          <p key={index}>{line}</p>
-                        ))}
-                      </div>
-                      {notice.updatedAt && notice.updatedAt.getTime() !== notice.createdAt.getTime() && (
-                        <div className="notice-updated">
-                          최종 수정: {formatDate(notice.updatedAt)}
+
+                      {totalPages > 1 && (
+                        <div className="pagination">
+                          <button
+                            className="pagination-btn"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            &lt;
+                          </button>
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                              key={page}
+                              className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                              onClick={() => setCurrentPage(page)}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                          <button
+                            className="pagination-btn"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            &gt;
+                          </button>
                         </div>
                       )}
-                    </div>
-                  ))}
-                </div>
+
+                      {editingNotice && !showForm && (
+                        <div className="notice-detail-modal">
+                          <div className="notice-detail-content">
+                            <div className="notice-detail-header">
+                              <h3>{editingNotice.title}</h3>
+                              <button className="close-btn" onClick={() => setEditingNotice(null)}>×</button>
+                            </div>
+                            <div className="notice-detail-info">
+                              <span>작성일: {formatDate(editingNotice.createdAt)}</span>
+                              {editingNotice.updatedAt && editingNotice.updatedAt.getTime() !== editingNotice.createdAt.getTime() && (
+                                <span>수정일: {formatDate(editingNotice.updatedAt)}</span>
+                              )}
+                              <span>작성자: {editingNotice.authorName || '관리자'}</span>
+                            </div>
+                            <div 
+                              className="notice-detail-body"
+                              dangerouslySetInnerHTML={{ __html: editingNotice.content }}
+                            />
+                            {isAdminUser && (
+                              <div className="notice-detail-actions">
+                                <button
+                                  className="btn-edit"
+                                  onClick={() => {
+                                    handleEditNotice(editingNotice);
+                                    setShowForm(true);
+                                  }}
+                                >
+                                  수정
+                                </button>
+                                <button
+                                  className="btn-delete"
+                                  onClick={() => handleDeleteNotice(editingNotice.id)}
+                                >
+                                  삭제
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
               )}
             </div>
           )}
