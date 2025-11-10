@@ -15,7 +15,10 @@ import { generateWork05Quiz } from '../../../services/work05Service';
 import { generateWork09Quiz } from '../../../services/work09Service';
 import PrintFormatPackage01, { PrintFormatPackage01Work02, PrintFormatPackage01Work03, PrintFormatPackage01Work04, PrintFormatPackage01Work05, PrintFormatPackage01Work06, PrintFormatPackage01Work07, PrintFormatPackage01Work08, PrintFormatPackage01Work09, PrintFormatPackage01Work10, PrintFormatPackage01Work11, PrintFormatPackage01Work13, PrintFormatPackage01Work14 } from './PrintFormatPackage01';
 import './PrintFormatPackage01.css';
+import '../shared/PrintControls.css';
+import FileFormatSelector from '../shared/FileFormatSelector';
 import { callOpenAI } from '../../../services/common';
+import { FileFormat, generateAndUploadFile } from '../../../services/pdfService';
 
 interface WordReplacement {
   original: string;           // 원본 단어/숙어
@@ -507,6 +510,7 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isExtractingText, setIsExtractingText] = useState(false);
   const [printMode, setPrintMode] = useState<PrintMode>('none');
+  const [fileFormat, setFileFormat] = useState<FileFormat>('pdf');
   const [useAI] = useState(false);
   
   // 진행 상황 추적을 위한 상태
@@ -2629,19 +2633,18 @@ ${inputText}`;
     setTimeout(async () => {
       console.log('🖨️ 인쇄 실행 - printMode:', 'no-answer');
       
-      // PDF 생성 및 Firebase Storage 업로드
+      // 파일 생성 및 Firebase Storage 업로드
       try {
-        const { generateAndUploadPDF } = await import('../../../services/pdfService');
         const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
         
         const element = document.getElementById('print-root');
         if (element) {
-          const result = await generateAndUploadPDF(
+          const result = await generateAndUploadFile(
             element as HTMLElement,
             userData?.uid || '',
             `package01_problem_${Date.now()}`,
             '패키지#01_문제',
-            { isAnswerMode: false, orientation: 'portrait' }
+            { isAnswerMode: false, orientation: 'portrait', fileFormat }
           );
           
           // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
@@ -2652,15 +2655,19 @@ ${inputText}`;
             
             if (packageHistory) {
               await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
-              console.log('📁 패키지#01 문제 PDF 저장 완료:', result.fileName);
+               const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              console.log(`📁 패키지#01 문제 ${formatName} 저장 완료:`, result.fileName);
             }
           }
         }
       } catch (error) {
-        console.error('❌ PDF 저장 실패:', error);
+        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
       
-      window.print();
+      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
+       if (fileFormat === 'pdf') {
+         window.print();
+      }
       setTimeout(() => {
         const printStyle = document.getElementById('print-style');
         if (printStyle) {
@@ -2712,19 +2719,18 @@ ${inputText}`;
     setTimeout(async () => {
       console.log('🖨️ 인쇄 실행 - printMode:', 'with-answer');
       
-      // PDF 생성 및 Firebase Storage 업로드
+      // 파일 생성 및 Firebase Storage 업로드
       try {
-        const { generateAndUploadPDF } = await import('../../../services/pdfService');
         const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
         
         const element = document.getElementById('print-root');
         if (element) {
-          const result = await generateAndUploadPDF(
+          const result = await generateAndUploadFile(
             element as HTMLElement,
             userData?.uid || '',
             `package01_answer_${Date.now()}`,
             '패키지#01_정답',
-            { isAnswerMode: true, orientation: 'portrait' }
+            { isAnswerMode: true, orientation: 'portrait', fileFormat }
           );
           
           // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
@@ -2735,15 +2741,19 @@ ${inputText}`;
             
             if (packageHistory) {
               await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-              console.log('📁 패키지#01 정답 PDF 저장 완료:', result.fileName);
+               const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              console.log(`📁 패키지#01 정답 ${formatName} 저장 완료:`, result.fileName);
             }
           }
         }
       } catch (error) {
-        console.error('❌ PDF 저장 실패:', error);
+        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
       
-      window.print();
+      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
+       if (fileFormat === 'pdf') {
+         window.print();
+      }
       setTimeout(() => {
         const printStyle = document.getElementById('print-style');
         if (printStyle) {
@@ -2801,72 +2811,111 @@ ${inputText}`;
                 새문제
               </button>
               
-              <button
-                type="button"
-                onClick={() => navigate('/quiz-list')}
-                style={{
-                  width: '130px',
-                  height: '48px',
-                  padding: '0.75rem 1rem',
-                  fontSize: '11pt',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: '#14b8a6',
-                  color: 'white',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 6px rgba(20, 184, 166, 0.25)'
-                }}
-              >
-                문제생성목록
-              </button>
+              {/* 파일 형식 선택 */}
+              <FileFormatSelector
+                value={fileFormat}
+                onChange={setFileFormat}
+              />
               
-              <button
-                type="button"
-                onClick={handlePrintProblem}
-                style={{
-                  width: '130px',
-                  height: '48px',
-                  padding: '0.75rem 1rem',
-                  fontSize: '11pt',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem'
-                }}
-              >
-                🖨️ 인쇄 (문제)
-              </button>
-              <button
-                type="button"
-                onClick={handlePrintAnswer}
-                style={{
-                  width: '130px',
-                  height: '48px',
-                  padding: '0.75rem 1rem',
-                  fontSize: '11pt',
-                  fontWeight: '600',
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  color: 'white',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem'
-                }}
-              >
-                🖨️ 인쇄 (정답)
-              </button>
+               {fileFormat === 'pdf' ? (
+                 <>
+                   <button
+                     type="button"
+                     onClick={handlePrintProblem}
+                     style={{
+                       width: '130px',
+                       height: '48px',
+                       padding: '0.75rem 1rem',
+                       fontSize: '11pt',
+                       fontWeight: '600',
+                       border: 'none',
+                       borderRadius: '8px',
+                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                       color: 'white',
+                       cursor: 'pointer',
+                       boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)',
+                       display: 'flex',
+                       alignItems: 'center',
+                       justifyContent: 'center',
+                       gap: '0.5rem'
+                     }}
+                   >
+                     🖨️ 인쇄 (문제)
+                   </button>
+                   <button
+                     type="button"
+                     onClick={handlePrintAnswer}
+                     style={{
+                       width: '130px',
+                       height: '48px',
+                       padding: '0.75rem 1rem',
+                       fontSize: '11pt',
+                       fontWeight: '600',
+                       border: 'none',
+                       borderRadius: '8px',
+                       background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                       color: 'white',
+                       cursor: 'pointer',
+                       boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)',
+                       display: 'flex',
+                       alignItems: 'center',
+                       justifyContent: 'center',
+                       gap: '0.5rem'
+                     }}
+                   >
+                     🖨️ 인쇄 (정답)
+                   </button>
+                 </>
+               ) : (
+                 <>
+                   <button
+                     type="button"
+                     onClick={handlePrintProblem}
+                     style={{
+                       width: '130px',
+                       height: '48px',
+                       padding: '0.75rem 1rem',
+                       fontSize: '11pt',
+                       fontWeight: '600',
+                       border: 'none',
+                       borderRadius: '8px',
+                       background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
+                       color: 'white',
+                       cursor: 'pointer',
+                       boxShadow: '0 4px 6px rgba(14, 165, 233, 0.25)',
+                       display: 'flex',
+                       alignItems: 'center',
+                       justifyContent: 'center',
+                       gap: '0.5rem'
+                     }}
+                   >
+                     💾 저장 (문제)
+                   </button>
+                   <button
+                     type="button"
+                     onClick={handlePrintAnswer}
+                     style={{
+                       width: '130px',
+                       height: '48px',
+                       padding: '0.75rem 1rem',
+                       fontSize: '11pt',
+                       fontWeight: '600',
+                       border: 'none',
+                       borderRadius: '8px',
+                       background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
+                       color: 'white',
+                       cursor: 'pointer',
+                       boxShadow: '0 4px 6px rgba(16, 185, 129, 0.25)',
+                       display: 'flex',
+                       alignItems: 'center',
+                       justifyContent: 'center',
+                       gap: '0.5rem'
+                     }}
+                   >
+                     💾 저장 (정답)
+                   </button>
+                 </>
+               )}
               </div>
             </div>
           </div>

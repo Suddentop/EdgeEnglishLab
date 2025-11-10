@@ -12,6 +12,7 @@
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
     "axios": "^1.10.0",
+    "docx": "^9.5.1",
     "firebase": "^11.10.0",
     "firebase-admin": "^13.5.0",
     "formik": "^2.4.6",

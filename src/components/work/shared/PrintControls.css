@@ -1,0 +1,111 @@
+.file-format-selector {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.file-format-radio-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  border: 1.5px solid #cbd5f5;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.18);
+  font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+}
+
+.file-format-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #475569;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.file-format-radio:hover {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.file-format-radio.is-selected {
+  background: rgba(99, 102, 241, 0.22);
+  color: #11172d;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.35);
+}
+
+.file-format-radio input {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #94a3b8;
+  display: grid;
+  place-items: center;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  background: #ffffff;
+}
+
+.file-format-radio input::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4f46e5;
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+
+.file-format-radio input:checked {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.file-format-radio input:checked::after {
+  transform: scale(1);
+}
+
+.file-format-radio input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+}
+
+.file-format-label {
+  line-height: 1;
+}
+
+.file-format-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-format-radio,
+  .file-format-radio input {
+    transition: none;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+

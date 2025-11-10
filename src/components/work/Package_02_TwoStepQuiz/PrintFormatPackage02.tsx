@@ -35,6 +35,15 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
     return result.trim();
   };
 
+  const cleanOptionText = (value: string | number | undefined | null): string => {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (isAnswerMode) {
+      return str.replace(/\(정답\)/g, '').replace(/\s{2,}/g, ' ').trim();
+    }
+    return str;
+  };
+
   // 2단 레이아웃으로 퀴즈 아이템 렌더링
   const renderQuizItems = () => {
     // 번역 텍스트 공통 추출 (히스토리 불러오기 시 누락 보정)
@@ -552,18 +561,18 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   ))}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④'][quizData.answerIndex]} {quizData.choices?.[quizData.answerIndex]?.join(' → ')}
-                      <span className="print-answer-mark">(정답)</span>
-                    </div>
-                  ) : (
-                    quizData.choices?.map((choice: string[], cIndex: number) => (
+                  {quizData.choices?.map((choice: string[], cIndex: number) => {
+                    const isCorrect = quizData.answerIndex === cIndex;
+                    const optionText = cleanOptionText(choice.join(' → '));
+                    return (
                       <div key={cIndex} className="print-option">
-                        {['①', '②', '③', '④'][cIndex]} {choice.join(' → ')}
+                        {['①', '②', '③', '④'][cIndex]} {optionText}
+                        {isAnswerMode && isCorrect && (
+                          <span className="print-answer-mark" data-answer-index={cIndex}></span>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
                 {isAnswerMode && getTranslatedText(quizItem, quizData) && (
                   <div className="print-translation-section">
@@ -633,26 +642,34 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   }}
                 />
                 {isAnswerMode && (
-                  <div className="print-replacements-table">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>원래 단어</th>
-                          <th>교체 단어</th>
-                          <th>의미</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {work02Data?.replacements?.map((rep: any, rIndex: number) => (
-                          <tr key={rIndex}>
-                            <td className="original-word">{rep.original}</td>
-                            <td className="replacement-word">{rep.replacement}</td>
-                            <td className="original-meaning">{rep.originalMeaning}</td>
+                  <>
+                    <div className="print-replacements-table">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>원래 단어</th>
+                            <th>교체 단어</th>
+                            <th>의미</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {work02Data?.replacements?.map((rep: any, rIndex: number) => (
+                            <tr key={rIndex}>
+                              <td className="original-word">{rep.original}</td>
+                              <td className="replacement-word">{rep.replacement}</td>
+                              <td className="original-meaning">{rep.originalMeaning}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="print-translation-section">
+                      <div className="print-translation-title">본문해석 :</div>
+                      <div className="print-translation-content box-style">
+                        {getTranslatedText(quizItem, work02Data)}
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             );
@@ -710,18 +727,18 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {work03Data?.blankedText}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④', '⑤'][work03Data?.answerIndex]} {work03Data?.options?.[work03Data?.answerIndex]}
-                      <span className="print-answer-mark">(정답)</span>
-                    </div>
-                  ) : (
-                    work03Data?.options?.map((option: string, optIndex: number) => (
+                  {work03Data?.options?.map((option: string, optIndex: number) => {
+                    const isCorrect = work03Data?.answerIndex === optIndex;
+                    const optionText = cleanOptionText(option);
+                    return (
                       <div key={optIndex} className="print-option">
-                        {['①', '②', '③', '④', '⑤'][optIndex]} {option}
+                        {['①', '②', '③', '④', '⑤'][optIndex]} {optionText}
+                        {isAnswerMode && isCorrect && (
+                          <span className="print-answer-mark" data-answer-index={optIndex}></span>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
                 {isAnswerMode && getTranslatedText(quizItem, work03Data) && (
                   <div className="print-translation-section">
@@ -785,18 +802,18 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {work04Data?.blankedText || ''}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④', '⑤'][work04Data?.answerIndex]} {work04Data?.options?.[work04Data?.answerIndex]}
-                      <span className="print-answer-mark">(정답)</span>
-                    </div>
-                  ) : (
-                    work04Data?.options?.map((option: string, optIndex: number) => (
+                  {work04Data?.options?.map((option: string, optIndex: number) => {
+                    const isCorrect = work04Data?.answerIndex === optIndex;
+                    const optionText = cleanOptionText(option);
+                    return (
                       <div key={optIndex} className="print-option">
-                        {['①', '②', '③', '④', '⑤'][optIndex]} {option}
+                        {['①', '②', '③', '④', '⑤'][optIndex]} {optionText}
+                        {isAnswerMode && isCorrect && (
+                          <span className="print-answer-mark" data-answer-index={optIndex}></span>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
                 {isAnswerMode && getTranslatedText(quizItem, work04Data) && (
                   <div className="print-translation-section">
@@ -860,18 +877,18 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {work05Data?.blankedText || ''}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④', '⑤'][work05Data?.answerIndex]} {work05Data?.options?.[work05Data?.answerIndex]}
-                      <span className="print-answer-mark">(정답)</span>
-                    </div>
-                  ) : (
-                    work05Data?.options?.map((option: string, optIndex: number) => (
+                  {work05Data?.options?.map((option: string, optIndex: number) => {
+                    const isCorrect = work05Data?.answerIndex === optIndex;
+                    const optionText = cleanOptionText(option);
+                    return (
                       <div key={optIndex} className="print-option">
-                        {['①', '②', '③', '④', '⑤'][optIndex]} {option}
+                        {['①', '②', '③', '④', '⑤'][optIndex]} {optionText}
+                        {isAnswerMode && isCorrect && (
+                          <span className="print-answer-mark" data-answer-index={optIndex}></span>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
                 {isAnswerMode && getTranslatedText(quizItem, work05Data) && (
                   <div className="print-translation-section">
@@ -931,15 +948,17 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {work06Data?.numberedPassage || ''}
                 </div>
                 {isAnswerMode && (
-                  <div className="print-work06-answer">
-                    정답: {['①', '②', '③', '④', '⑤'][work06Data?.answerIndex]}
-                  </div>
-                )}
-                {isAnswerMode && getTranslatedText(quizItem, work06Data) && (
-                  <div className="print-translation-section">
-                    <div className="print-translation-title">본문해석 :</div>
-                    <div className="print-translation-content">{getTranslatedText(quizItem, work06Data)}</div>
-                  </div>
+                  <>
+                    <div className="print-work06-answer">
+                      정답: {['①', '②', '③', '④', '⑤'][work06Data?.answerIndex]}
+                    </div>
+                    <div className="print-translation-section">
+                      <div className="print-translation-title">본문해석 :</div>
+                      <div className="print-translation-content box-style">
+                        {getTranslatedText(quizItem, work06Data)}
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             );
@@ -980,18 +999,28 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {work07Data?.passage || ''}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④', '⑤'][work07Data?.answerIndex]} {work07Data?.options?.[work07Data?.answerIndex]}
-                      <span className="print-answer-mark">(정답)</span>
-                    </div>
-                  ) : (
-                    work07Data?.options?.map((option: string, optIndex: number) => (
+                  {work07Data?.options?.map((option: string, optIndex: number) => {
+                    const isCorrect = work07Data?.answerIndex === optIndex;
+                    const optionText = cleanOptionText(option);
+                    const optionTranslation =
+                      work07Data?.optionTranslations?.[optIndex] ||
+                      work07Data?.optionTranslationsKo?.[optIndex] ||
+                      work07Data?.optionTranslationsEnKo?.[optIndex];
+                    return (
                       <div key={optIndex} className="print-option">
-                        {['①', '②', '③', '④', '⑤'][optIndex]} {option}
+                        {['①', '②', '③', '④', '⑤'][optIndex]} {optionText}
+                        {isAnswerMode && optionTranslation && (
+                          <>
+                            {'\u00A0\u00A0'}
+                            <span className="print-option-translation">{optionTranslation}</span>
+                          </>
+                        )}
+                        {isAnswerMode && isCorrect && (
+                          <span className="print-answer-mark" data-answer-index={optIndex}></span>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
                 {isAnswerMode && getTranslatedText(quizItem, work07Data) && (
                   <div className="print-translation-section">
@@ -1038,18 +1067,18 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   {work08Data?.passage || ''}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {`①②③④⑤`[work08Data?.answerIndex]} {work08Data?.options?.[work08Data?.answerIndex]}
-                      <span className="print-answer-mark">(정답)</span>
-                    </div>
-                  ) : (
-                    work08Data?.options?.map((option: string, optIndex: number) => (
+                  {work08Data?.options?.map((option: string, optIndex: number) => {
+                    const isCorrect = work08Data?.answerIndex === optIndex;
+                    const optionText = cleanOptionText(option);
+                    return (
                       <div key={optIndex} className="print-option">
-                        {`①②③④⑤`[optIndex]} {option}
+                        {`①②③④⑤`[optIndex]} {optionText}
+                        {isAnswerMode && isCorrect && (
+                          <span className="print-answer-mark" data-answer-index={optIndex}></span>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
                 {isAnswerMode && getTranslatedText(quizItem, work08Data) && (
                   <div className="print-translation-section">
@@ -1099,18 +1128,18 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   }}
                 />
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④', '⑤'][work09Data?.answerIndex]} {work09Data?.options?.[work09Data?.answerIndex]}
-                      <span className="print-answer-mark">(정답)</span>
-                    </div>
-                  ) : (
-                    work09Data?.options?.map((option: string, optIndex: number) => (
+                  {work09Data?.options?.map((option: string, optIndex: number) => {
+                    const isCorrect = work09Data?.answerIndex === optIndex;
+                    const optionText = cleanOptionText(option);
+                    return (
                       <div key={optIndex} className="print-option">
-                        {['①', '②', '③', '④', '⑤'][optIndex]} {option}
+                        {['①', '②', '③', '④', '⑤'][optIndex]} {optionText}
+                        {isAnswerMode && isCorrect && (
+                          <span className="print-answer-mark" data-answer-index={optIndex}></span>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
                 {isAnswerMode && getTranslatedText(quizItem, work09Data) && (
                   <div className="print-translation-section">
@@ -1160,18 +1189,18 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                   }}
                 />
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④', '⑤', '⑥'][work10Data?.answerIndex]} {work10Data?.options?.[work10Data?.answerIndex]}개
-                      <span className="print-answer-mark">(정답)</span>
-                    </div>
-                  ) : (
-                    work10Data?.options?.map((option: number, optIndex: number) => (
+                  {work10Data?.options?.map((option: number, optIndex: number) => {
+                    const isCorrect = work10Data?.answerIndex === optIndex;
+                    const optionText = cleanOptionText(`${option}개`);
+                    return (
                       <div key={optIndex} className="print-option">
-                        {['①', '②', '③', '④', '⑤', '⑥'][optIndex]} {option}개
+                        {['①', '②', '③', '④', '⑤', '⑥'][optIndex]} {optionText}
+                        {isAnswerMode && isCorrect && (
+                          <span className="print-answer-mark" data-answer-index={optIndex}></span>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
                 {isAnswerMode && getTranslatedText(quizItem, work10Data) && (
                   <div className="print-translation-section">

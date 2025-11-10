@@ -1,12 +1,19 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType } from 'docx';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase/config';
+
+export type FileFormat = 'pdf' | 'doc';
 
 export interface PDFGenerationOptions {
   isAnswerMode?: boolean;
   orientation?: 'portrait' | 'landscape';
   filename?: string;
+}
+
+export interface FileGenerationOptions extends PDFGenerationOptions {
+  fileFormat?: FileFormat;
 }
 
 // HTML 요소를 PDF로 변환하여 Firebase Storage에 업로드
@@ -559,5 +566,870 @@ const generateWork14HTML = (quiz: any, isAnswerMode: boolean): string => {
       </div>
     ` : ''}
   `;
+};
+
+// Base64 Data URL을 Uint8Array로 변환 (브라우저 환경)
+const base64ToUint8Array = (base64: string): Uint8Array => {
+  const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
+  const binaryString = atob(base64Data);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+};
+
+// HTML 요소를 Canvas로 변환하여 이미지 Data URL 반환
+const elementToImageDataURL = async (element: HTMLElement): Promise<string> => {
+  const elementWidth = element.scrollWidth || element.offsetWidth || 800;
+  const elementHeight = element.scrollHeight || element.offsetHeight || 600;
+  
+  const canvas = await html2canvas(element, {
+    useCORS: true,
+    logging: false,
+    width: elementWidth,
+    height: elementHeight,
+    scale: 1,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    foreignObjectRendering: false,
+    removeContainer: true,
+    onclone: (clonedDoc: Document) => {
+      const clonedElement = clonedDoc.querySelector(`#${element.id}`) || clonedDoc.body;
+      if (clonedElement) {
+        (clonedElement as HTMLElement).style.width = `${elementWidth}px`;
+        (clonedElement as HTMLElement).style.height = `${elementHeight}px`;
+      }
+    }
+  } as any);
+  
+  return canvas.toDataURL('image/png', 1.0);
+};
+
+// 파일 다운로드 헬퍼 함수
+const downloadBlob = (blob: Blob, fileName: string): void => {
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(downloadUrl);
+};
+
+// HTML 요소를 DOCX Paragraph 배열로 변환 (PDF 디자인과 동일하게)
+const DOCX_BORDER_SPACE = 40; // 약 2pt 정도의 내부 여백
+
+const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
+  const paragraphs: (Paragraph | Table)[] = [];
+  
+  // 헤더 찾기 (가로선 포함) - PDF와 동일한 구조
+  const header = element.querySelector('.a4-landscape-page-header, .a4-page-header, .print-header-package02');
+  if (header) {
+    const headerText = header.querySelector('.print-header-text-package02, .print-header-text');
+    if (headerText) {
+      const text = headerText.textContent?.trim() || '';
+      if (text) {
+        // 헤더 텍스트 (중앙 정렬, 굵게, Noto Sans KR, 하단 가로선)
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: text,
+                bold: true,
+                size: 20, // 10pt
+                font: 'Noto Sans KR'
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+            border: {
+              bottom: {
+                color: '000000',
+                size: 20, // 1pt
+                style: BorderStyle.SINGLE
+              }
+            }
+          })
+        );
+      }
+    }
+  }
+  
+  // 문제 카드들을 찾아서 각각 처리
+  const questionCards = element.querySelectorAll('.print-question-card, .quiz-content');
+  
+  if (questionCards.length > 0) {
+    questionCards.forEach((card, cardIndex) => {
+      const typeBadge = card.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
+      const rawTypeLabel = typeBadge?.textContent?.trim() || '';
+      const typeLabel = rawTypeLabel ? rawTypeLabel.replace(/\s+/g, '') : '';
+      const titleSpan = card.querySelector('.print-question-title span, .question-title');
+      const titleSpanText = titleSpan?.textContent?.trim() || '';
+      
+      const instruction = card.querySelector('.print-instruction, .problem-instruction');
+      const instructionText = instruction?.textContent?.trim() || '';
+      let instructionHandled = false;
+      
+      if (typeLabel && instructionText) {
+        const combinedText = `${typeLabel}. ${instructionText}`;
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: combinedText,
+                bold: true,
+                font: 'Noto Sans KR'
+              })
+            ],
+            spacing: { before: cardIndex > 0 ? 400 : 200, after: 200 }
+          })
+        );
+        instructionHandled = true;
+      } else if (typeLabel && titleSpanText) {
+        const combinedText = `${typeLabel}. ${titleSpanText}`;
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: combinedText,
+                bold: true,
+                font: 'Noto Sans KR'
+              })
+            ],
+            spacing: { before: cardIndex > 0 ? 400 : 200, after: 200 }
+          })
+        );
+      } else if (titleSpanText) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: titleSpanText,
+                bold: true,
+                font: 'Noto Sans KR'
+              })
+            ],
+            spacing: { before: cardIndex > 0 ? 400 : 200, after: 200 }
+          })
+        );
+      }
+      
+      if (!instructionHandled && instructionText) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: instructionText,
+                font: 'Noto Sans KR'
+              })
+            ],
+            spacing: { before: cardIndex > 0 ? 400 : 200, after: 200 }
+          })
+        );
+      }
+      
+      // Work_06 등: 주요 문장 표시
+      const missingSentence = card.querySelector('.print-missing-sentence, .missing-sentence');
+      if (missingSentence) {
+        const missingSentenceText = missingSentence.textContent?.trim() || '';
+        if (missingSentenceText) {
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: missingSentenceText,
+                  bold: true,
+                  font: 'Noto Sans KR'
+                })
+              ],
+              spacing: { before: 120, after: 200 },
+              shading: {
+                type: ShadingType.CLEAR,
+                color: 'auto',
+                fill: 'E5E7EB' // Tailwind gray-200
+              }
+            })
+          );
+        }
+      }
+      
+      // 본문 (여러 종류의 본문 요소 확인) - 박스 테두리 포함
+      const passage = card.querySelector('.print-shuffled-paragraphs, .problem-passage, .print-passage, .passage, .print-numbered-passage');
+      if (passage) {
+        const passageText = passage.textContent?.trim() || '';
+        if (passageText) {
+          const lines = passageText.split(/\n+/).filter(line => line.trim());
+          lines.forEach((line, lineIndex) => {
+            const isFirstLine = lineIndex === 0;
+            const isLastLine = lineIndex === lines.length - 1;
+            
+            // 박스 테두리 설정: 첫 줄은 상단, 중간은 좌우, 마지막은 하단
+            const borderConfig: any = {
+              left: {
+                color: '000000',
+                size: 6, // 0.3pt
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              },
+              right: {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              }
+            };
+            
+            if (isFirstLine) {
+              borderConfig.top = {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              };
+            }
+            
+            if (isLastLine) {
+              borderConfig.bottom = {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              };
+            }
+            
+            paragraphs.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: line.trim(),
+                    font: 'Noto Sans KR'
+                  })
+                ],
+                spacing: { 
+                  before: isFirstLine ? 160 : 80, // 단락 간 간격
+                  after: isLastLine ? 160 : 80
+                },
+                indent: { left: 0, right: 0 },
+                border: borderConfig
+              })
+            );
+          });
+        }
+      }
+      
+      // Work_11: 문장별 해석
+      const sentenceItems = card.querySelectorAll('.print-sentence-item, .sentence-item');
+      if (sentenceItems.length > 0) {
+        const sentenceBlocks = Array.from(sentenceItems).map((item) => {
+          const englishElement = item.querySelector('.print-sentence-english, .sentence-english') as HTMLElement | null;
+          let englishText = '';
+          let koreanText = '';
+          
+          if (englishElement) {
+            const englishClone = englishElement.cloneNode(true) as HTMLElement;
+            const inlineKorean = englishClone.querySelector('.print-sentence-korean-inline, .sentence-korean');
+            if (inlineKorean) {
+              koreanText = inlineKorean.textContent?.trim() || '';
+              inlineKorean.remove();
+            }
+            englishText = englishClone.textContent?.trim() || '';
+          }
+          
+          const fallbackKorean = item.querySelector('.print-sentence-korean-inline, .sentence-korean');
+          if (!koreanText && fallbackKorean) {
+            koreanText = fallbackKorean.textContent?.trim() || '';
+          }
+          
+          return { englishText, koreanText };
+        }).filter(block => block.englishText);
+        
+        sentenceBlocks.forEach((block, blockIndex) => {
+          const isFirstSentence = blockIndex === 0;
+          const isLastSentence = blockIndex === sentenceBlocks.length - 1;
+          
+          const borderConfig: any = {
+            left: {
+              color: '000000',
+              size: 6,
+              style: BorderStyle.SINGLE,
+              space: DOCX_BORDER_SPACE
+            },
+            right: {
+              color: '000000',
+              size: 6,
+              style: BorderStyle.SINGLE,
+              space: DOCX_BORDER_SPACE
+            }
+          };
+          
+          if (isFirstSentence) {
+            borderConfig.top = {
+              color: '000000',
+              size: 6,
+              style: BorderStyle.SINGLE,
+              space: DOCX_BORDER_SPACE
+            };
+          }
+          
+          if (isLastSentence) {
+            borderConfig.bottom = {
+              color: '000000',
+              size: 6,
+              style: BorderStyle.SINGLE,
+              space: DOCX_BORDER_SPACE
+            };
+          }
+          
+          const children: TextRun[] = [
+            new TextRun({
+              text: block.englishText,
+              font: 'Noto Sans KR'
+            })
+          ];
+          
+          // 문장 사이 빈 줄
+          let hasKorean = false;
+          if (block.koreanText) {
+            children.push(
+              new TextRun({
+                break: 1,
+                text: block.koreanText,
+                font: 'Noto Sans KR',
+                italics: true,
+                color: '444444'
+              })
+            );
+            hasKorean = true;
+          }
+          
+          if (!hasKorean) {
+            children.push(
+              new TextRun({
+                break: 1,
+                text: '',
+                font: 'Noto Sans KR'
+              })
+            );
+          }
+          
+          paragraphs.push(
+            new Paragraph({
+              children,
+              spacing: {
+                before: isFirstSentence ? 200 : 160,
+                after: isLastSentence ? 200 : 160
+              },
+              indent: { left: 0, right: 0 },
+              border: borderConfig
+            })
+          );
+        });
+        
+        // 유형#11 블록과 다음 문제 사이 빈 줄
+        paragraphs.push(
+          new Paragraph({
+            text: '',
+            spacing: { before: 200, after: 0 }
+          })
+        );
+      }
+      
+      // 본문 (Work_02용 - 밑줄이 있는 텍스트) - 박스 테두리 포함
+      const passageWithUnderline = card.querySelector('.print-passage-with-underline, .problem-passage');
+      if (passageWithUnderline) {
+        const passageText = passageWithUnderline.textContent?.trim() || '';
+        if (passageText) {
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: passageText,
+                  font: 'Noto Sans KR'
+                })
+              ],
+              spacing: { 
+                before: 160,
+                after: 160
+              },
+              indent: { left: 0, right: 0 },
+              border: {
+                top: {
+                  color: '000000',
+                  size: 6, // 0.3pt
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                },
+                bottom: {
+                  color: '000000',
+                  size: 6, // 0.3pt
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                },
+                left: {
+                  color: '000000',
+                  size: 6, // 0.3pt
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                },
+                right: {
+                  color: '000000',
+                  size: 6, // 0.3pt
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                }
+              }
+            })
+          );
+        }
+      }
+      
+      // 선택지
+      const options = card.querySelectorAll('.print-option, .option, .quiz-option');
+      if (options.length > 0) {
+        const answerMarkElement = card.querySelector('.print-answer-mark');
+        const answerIndexAttr = answerMarkElement?.getAttribute('data-answer-index');
+        const answerIndex = answerIndexAttr ? parseInt(answerIndexAttr, 10) : -1;
+        
+        options.forEach((option, optionIndex) => {
+          const optionText = option.textContent?.trim() || '';
+          if (optionText) {
+            const children: TextRun[] = [
+              new TextRun({
+                text: optionText,
+                font: 'Noto Sans KR'
+              })
+            ];
+            
+            if (answerIndex === optionIndex) {
+              children.push(
+                new TextRun({
+                  text: ' (정답)',
+                  bold: true,
+                  color: '2e7d32',
+                  font: 'Noto Sans KR'
+                })
+              );
+            }
+            
+            paragraphs.push(
+              new Paragraph({
+                children,
+                indent: { left: 400 },
+                spacing: { before: optionIndex === 0 ? 200 : 80, after: 100 }
+              })
+            );
+          }
+        });
+      }
+      
+      const work06Answer = card.querySelector('.print-work06-answer');
+      if (work06Answer) {
+        const answerText = work06Answer.textContent?.trim() || '';
+        if (answerText) {
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: answerText,
+                  bold: true,
+                  color: '1565c0',
+                  font: 'Noto Sans KR'
+                })
+              ],
+              spacing: { before: 200, after: 120 }
+            })
+          );
+        }
+      }
+
+      const replacementsTable = card.querySelector('.print-replacements-table table');
+      if (replacementsTable) {
+        paragraphs.push(
+          new Paragraph({
+            text: '',
+            spacing: { before: 200, after: 120 }
+          })
+        );
+        
+        const tableRows = Array.from(replacementsTable.querySelectorAll('tr')).map((row, rowIndex) => {
+          const cells = Array.from(row.querySelectorAll('th, td')).map((cell) => {
+            const text = cell.textContent?.trim() || '';
+            return new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text,
+                      bold: rowIndex === 0,
+                      font: 'Noto Sans KR'
+                    })
+                  ],
+                  alignment: AlignmentType.CENTER,
+                  spacing: { before: 40, after: 40 }
+                })
+              ],
+              margins: {
+                top: 60,
+                bottom: 60,
+                left: 60,
+                right: 60
+              },
+              shading: rowIndex === 0 ? {
+                type: ShadingType.CLEAR,
+                color: 'auto',
+                fill: 'E5E7EB'
+              } : undefined
+            });
+          });
+
+          return new TableRow({
+            children: cells
+          });
+        });
+
+        paragraphs.push(
+          new Table({
+            rows: tableRows,
+            width: {
+              size: 100,
+              type: WidthType.PERCENTAGE
+            }
+          })
+        );
+
+        paragraphs.push(
+          new Paragraph({
+            text: '',
+            spacing: { before: 160, after: 0 }
+          })
+        );
+      }
+
+      // 정답 섹션
+      // 기존 정답 문단 출력 제거 (정답 표시는 선택지에 직접 표시)
+      
+      // 해석 섹션
+      const translation = card.querySelector('.print-translation-section, .translation');
+      if (translation) {
+        if (paragraphs.length > 0) {
+          const lastParagraph = paragraphs[paragraphs.length - 1];
+          if (lastParagraph && (lastParagraph as any).spacing?.after === 0) {
+            paragraphs.pop();
+          }
+        }
+
+        const translationTitle = translation.querySelector('.print-translation-title, h3');
+        if (translationTitle) {
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: translationTitle.textContent?.trim() || '본문 해석:',
+                  bold: true,
+                  color: '1565c0',
+                  font: 'Noto Sans KR'
+                })
+              ],
+              spacing: { after: 150 }
+            })
+          );
+        }
+        
+        const translationContent = translation.querySelector('.print-translation-content, p');
+        if (translationContent) {
+          const contentText = translationContent.textContent?.trim() || '';
+          if (contentText) {
+            const lines = contentText.split(/\n+/).filter(line => line.trim());
+            lines.forEach((line, lineIndex) => {
+              const isFirstLine = lineIndex === 0;
+              const isLastLine = lineIndex === lines.length - 1;
+              
+              const borderConfig: any = {
+                left: {
+                  color: 'C4C7CE',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                },
+                right: {
+                  color: 'C4C7CE',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                }
+              };
+              
+              if (isFirstLine) {
+                borderConfig.top = {
+                  color: 'C4C7CE',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                };
+              }
+              
+              if (isLastLine) {
+                borderConfig.bottom = {
+                  color: 'C4C7CE',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                };
+              }
+              
+              const paragraph = new Paragraph({
+                children: [
+                  new TextRun({
+                    text: line.trim(),
+                    font: 'Noto Sans KR'
+                  })
+                ],
+                spacing: {
+                  before: isFirstLine ? 160 : 100,
+                  after: isLastLine ? 200 : 100
+                },
+                shading: {
+                  type: ShadingType.CLEAR,
+                  color: 'auto',
+                  fill: 'F3F4F6'
+                },
+                indent: { left: 0, right: 0 },
+                border: borderConfig
+              });
+              
+              paragraphs.push(paragraph);
+            });
+            
+            paragraphs.push(
+              new Paragraph({
+                text: '',
+                spacing: { before: 200, after: 0 }
+              })
+            );
+          }
+        }
+      }
+
+      if (
+        options.length > 0 &&
+        !card.querySelector('.print-answer-mark') &&
+        !card.querySelector('.print-translation-section, .translation') &&
+        sentenceItems.length === 0
+      ) {
+        paragraphs.push(
+          new Paragraph({
+            text: '',
+            spacing: { before: 200, after: 0 }
+          })
+        );
+      }
+    });
+  } else {
+    // 문제 카드가 없으면 기존 방식으로 파싱
+    const problemInstruction = element.querySelector('.problem-instruction, .question-title');
+    if (problemInstruction) {
+      const instructionText = problemInstruction.textContent?.trim() || '';
+      if (instructionText) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: instructionText,
+                font: 'Noto Sans KR'
+              })
+            ],
+            spacing: { after: 200 }
+          })
+        );
+      }
+    }
+    
+    const passage = element.querySelector('.problem-passage, .passage, .quiz-content');
+    if (passage) {
+      const passageText = passage.textContent?.trim() || '';
+      if (passageText) {
+        const lines = passageText.split(/\n+/).filter(line => line.trim());
+        lines.forEach((line, lineIndex) => {
+          const isFirstLine = lineIndex === 0;
+          const isLastLine = lineIndex === lines.length - 1;
+          
+          // 박스 테두리 설정: 첫 줄은 상단, 중간은 좌우, 마지막은 하단
+          const borderConfig: any = {
+            left: {
+              color: '000000',
+              size: 6, // 0.3pt
+              style: BorderStyle.SINGLE,
+              space: DOCX_BORDER_SPACE
+            },
+            right: {
+              color: '000000',
+              size: 6, // 0.3pt
+              style: BorderStyle.SINGLE,
+              space: DOCX_BORDER_SPACE
+            }
+          };
+          
+          if (isFirstLine) {
+            borderConfig.top = {
+              color: '000000',
+              size: 6, // 0.3pt
+              style: BorderStyle.SINGLE,
+              space: DOCX_BORDER_SPACE
+            };
+          }
+          
+          if (isLastLine) {
+            borderConfig.bottom = {
+              color: '000000',
+              size: 6, // 0.3pt
+              style: BorderStyle.SINGLE,
+              space: DOCX_BORDER_SPACE
+            };
+          }
+          
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: line.trim(),
+                  font: 'Noto Sans KR'
+                })
+              ],
+              spacing: { 
+                before: isFirstLine ? 160 : 80,
+                after: isLastLine ? 160 : 80
+              },
+              indent: { left: 0, right: 0 },
+              border: borderConfig
+            })
+          );
+        });
+      }
+    }
+  }
+  
+  // 모든 텍스트 콘텐츠가 없으면 기본 텍스트 추출
+  if (paragraphs.length === 0) {
+    const allText = element.textContent?.trim() || '';
+    if (allText) {
+      const lines = allText.split(/\n+/).filter(line => line.trim());
+      lines.forEach(line => {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line.trim(),
+                font: 'Noto Sans KR'
+              })
+            ],
+            spacing: { after: 200 }
+          })
+        );
+      });
+    }
+  }
+  
+  return paragraphs;
+};
+
+// HTML 요소를 DOC 파일로 변환하여 Firebase Storage에 업로드 및 다운로드
+const deriveDocPrefix = (workTypeName: string): string => {
+  if (!workTypeName) return 'DOC';
+
+  const packageMatch = workTypeName.match(/패키지#?(\d+)/i);
+  if (packageMatch) {
+    return `P${packageMatch[1].padStart(2, '0')}`;
+  }
+
+  const typeMatch = workTypeName.match(/유형#?(\d+)/i);
+  if (typeMatch) {
+    return `T${typeMatch[1].padStart(2, '0')}`;
+  }
+
+  const normalized = workTypeName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  return normalized || 'DOC';
+};
+
+export const generateAndUploadDOC = async (
+  element: HTMLElement,
+  userId: string,
+  historyId: string,
+  workTypeName: string,
+  options: PDFGenerationOptions = {}
+): Promise<{ url: string; fileName: string; size: number }> => {
+  try {
+    const { isAnswerMode = false } = options;
+    
+    // HTML을 구조화된 DOCX Paragraph로 변환 (PDF 디자인과 동일하게)
+    const paragraphs = htmlToDocxParagraphs(element);
+    
+    // DOCX 문서 생성 (제목/생성일 없이 PDF와 동일한 구조, Noto Sans KR 폰트)
+    const doc = new DocxDocument({
+      sections: [{
+        properties: {},
+        children: paragraphs.length > 0 ? paragraphs : [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '문제 내용이 없습니다.',
+                font: 'Noto Sans KR'
+              })
+            ],
+            spacing: { after: 200 }
+          })
+        ]
+      }]
+    });
+    
+    // DOCX를 Blob으로 변환
+    const blob = await Packer.toBlob(doc);
+    
+    // 파일명 생성
+    const now = new Date();
+    const prefix = deriveDocPrefix(workTypeName);
+    const dateStr = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+    const fileName = `${prefix}_${dateStr}_${timeStr}.docx`;
+    
+    // 파일 다운로드 (Firebase 업로드 전에 먼저 다운로드)
+    downloadBlob(blob, fileName);
+    
+    // Firebase Storage에 업로드
+    const storageRef = ref(storage, `quiz-files/${userId}/${fileName}`);
+    await uploadBytes(storageRef, blob);
+    
+    // 다운로드 URL 가져오기
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    return {
+      url: downloadURL,
+      fileName,
+      size: blob.size
+    };
+  } catch (error) {
+    console.error('DOC 생성 및 업로드 실패:', error);
+    throw error;
+  }
+};
+
+// 통합 파일 생성 함수 (형식에 따라 PDF/DOC 생성)
+export const generateAndUploadFile = async (
+  element: HTMLElement,
+  userId: string,
+  historyId: string,
+  workTypeName: string,
+  options: FileGenerationOptions = {}
+): Promise<{ url: string; fileName: string; size: number }> => {
+  const { fileFormat = 'pdf' } = options;
+  
+  switch (fileFormat) {
+    case 'doc':
+      return await generateAndUploadDOC(element, userId, historyId, workTypeName, options);
+    case 'pdf':
+    default:
+      return await generateAndUploadPDF(element, userId, historyId, workTypeName, options);
+  }
 };
 

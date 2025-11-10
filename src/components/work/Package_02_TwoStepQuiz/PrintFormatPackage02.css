@@ -380,6 +380,23 @@
     padding: 0.25cm;
   }
 
+.print-replacements-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.4cm;
+}
+
+.print-translation-content.box-style {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.3cm;
+  margin-top: 0.2cm;
+  font-size: 8.5pt;
+  line-height: 1.5;
+  color: #1f2933;
+}
+
   /* 4지선다 옵션 (컨테이너 없이) */
   .print-options {
     margin-top: 0.25cm;
@@ -392,6 +409,13 @@
     margin-bottom: 0.12cm;
     padding-left: 0.1cm;
   }
+
+.print-option-translation {
+  font-size: 8pt;
+  color: #374151;
+  font-style: italic;
+  font-weight: 500;
+}
 
   .print-answer-mark {
     font-weight: bold;
