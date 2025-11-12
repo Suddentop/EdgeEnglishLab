@@ -390,7 +390,10 @@ ${passage}`;
       // 원본 단어를 변형된 단어로 교체하면서 번호/밑줄 적용
       const regex = new RegExp(`\\b${wordPos.word}\\b`);
       if (regex.test(result)) {
-        result = result.replace(regex, `${num}<u>${wordPos.transformedWord}</u>`);
+        result = result.replace(
+          regex,
+          `${num}<span class="grammar-error-highlight"><u>${wordPos.transformedWord}</u></span>`
+        );
         used.add(wordPos.word);
         console.log(`단어 교체: "${wordPos.word}" → "${wordPos.transformedWord}" (번호: ${numberIndex + 1})`);
       }

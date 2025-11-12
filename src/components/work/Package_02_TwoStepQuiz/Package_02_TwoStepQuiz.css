@@ -958,6 +958,11 @@
   color: #7b1fa2;
 }
 
+.grammar-error-highlight {
+  font-weight: 700;
+  color: #101010;
+}
+
 .arrow {
   color: #666;
   font-weight: bold;

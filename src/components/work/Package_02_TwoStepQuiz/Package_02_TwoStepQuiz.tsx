@@ -945,9 +945,23 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       appRoot.style.display = 'none';
     }
 
+    // 디버깅을 위한 원본 데이터 보관
+    (window as any).__PACKAGE02_LAST_PACKAGE_QUIZ__ = packageQuiz;
+    console.log('패키지#02 원본 packageQuiz', packageQuiz);
+
     // React 18 방식으로 렌더링
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage02 packageQuiz={packageQuiz} />);
+
+    const activatePrintContainer = () => {
+      const inner = printContainer.querySelector('.print-container');
+      if (inner) {
+        inner.classList.add('pdf-generation-active');
+      } else {
+        requestAnimationFrame(activatePrintContainer);
+      }
+    };
+    activatePrintContainer();
 
     // 렌더링 완료 후 인쇄 및 파일 생성
     setTimeout(async () => {
@@ -1044,7 +1058,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
-    printContainer.id = 'print-root-package02-answer';
+    printContainer.id = 'print-root-package02-answer-wrapper';
     printContainer.className = 'print-container-answer print-answer-mode';
     document.body.appendChild(printContainer);
 
@@ -1064,11 +1078,21 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       />
     );
 
+    const activateAnswerContainer = () => {
+      const inner = printContainer.querySelector('.print-container-answer');
+      if (inner) {
+        inner.classList.add('pdf-generation-active');
+      } else {
+        requestAnimationFrame(activateAnswerContainer);
+      }
+    };
+    activateAnswerContainer();
+
     // 렌더링 완료 후 인쇄 및 파일 생성
     setTimeout(async () => {
       // 파일 생성 및 Firebase Storage 업로드
       try {
-        const element = document.getElementById('print-root-package02-answer');
+        const element = document.querySelector('#print-root-package02-answer-wrapper .print-container-answer');
         if (element && userData?.uid) {
           const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
           

@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType } from 'docx';
+import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, UnderlineType } from 'docx';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase/config';
 
@@ -621,6 +621,164 @@ const downloadBlob = (blob: Blob, fileName: string): void => {
 // HTML 요소를 DOCX Paragraph 배열로 변환 (PDF 디자인과 동일하게)
 const DOCX_BORDER_SPACE = 40; // 약 2pt 정도의 내부 여백
 
+interface TextRunStyleState {
+  bold?: boolean;
+  italics?: boolean;
+  underline?: boolean;
+  color?: string;
+}
+
+const normalizeColorToHex = (colorValue: string): string | undefined => {
+  if (!colorValue) return undefined;
+  const value = colorValue.trim();
+
+  const hexMatch = value.match(/^#([0-9a-f]{3,8})$/i);
+  if (hexMatch) {
+    let hex = hexMatch[1];
+    if (hex.length === 3 || hex.length === 4) {
+      hex = hex
+        .split('')
+        .map((char) => char + char)
+        .join('');
+    }
+    if (hex.length >= 6) {
+      return hex.slice(0, 6).toUpperCase();
+    }
+    return hex.toUpperCase();
+  }
+
+  const rgbMatch = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1], 10);
+    const g = parseInt(rgbMatch[2], 10);
+    const b = parseInt(rgbMatch[3], 10);
+    const toHex = (num: number) => num.toString(16).padStart(2, '0');
+    return `${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+  }
+
+  return undefined;
+};
+
+const createTextRunWithStyles = (text: string, styles: TextRunStyleState): TextRun => {
+  const runOptions: any = {
+    text,
+    font: 'Noto Sans KR',
+    preserveSpace: true
+  };
+
+  if (styles.bold) {
+    runOptions.bold = true;
+  }
+
+  if (styles.italics) {
+    runOptions.italics = true;
+  }
+
+  if (styles.underline) {
+    runOptions.underline = { type: UnderlineType.SINGLE };
+  }
+
+  if (styles.color) {
+    runOptions.color = styles.color;
+  }
+
+  return new TextRun(runOptions);
+};
+
+const extractTextRunsByLine = (element: HTMLElement): TextRun[][] => {
+  const lines: TextRun[][] = [];
+  let currentLine: TextRun[] = [];
+
+  const pushCurrentLine = () => {
+    if (currentLine.length > 0) {
+      lines.push(currentLine);
+      currentLine = [];
+    }
+  };
+
+  const appendText = (text: string, styles: TextRunStyleState) => {
+    if (!text) return;
+
+    const normalized = text.replace(/\u00A0/g, ' ');
+    const parts = normalized.split(/\n/);
+
+    parts.forEach((part, index) => {
+      if (index > 0) {
+        pushCurrentLine();
+      }
+
+      const collapsed = part.replace(/\s+/g, ' ');
+      if (collapsed.length === 0) {
+        return;
+      }
+
+      currentLine.push(createTextRunWithStyles(collapsed, styles));
+    });
+  };
+
+  const traverse = (node: Node, inheritedStyles: TextRunStyleState) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      appendText(node.textContent || '', inheritedStyles);
+      return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
+
+    const el = node as HTMLElement;
+    const tagName = el.tagName.toLowerCase();
+
+    if (tagName === 'br') {
+      pushCurrentLine();
+      return;
+    }
+
+    const nextStyles: TextRunStyleState = { ...inheritedStyles };
+
+    if (tagName === 'strong' || tagName === 'b') {
+      nextStyles.bold = true;
+    }
+
+    if (tagName === 'em' || tagName === 'i') {
+      nextStyles.italics = true;
+    }
+
+    if (tagName === 'u') {
+      nextStyles.underline = true;
+    }
+
+    if (el.classList.contains('grammar-error-highlight')) {
+      nextStyles.bold = true;
+    }
+
+    const fontWeight = el.style.fontWeight;
+    if (fontWeight && fontWeight !== 'normal' && fontWeight !== '400') {
+      nextStyles.bold = true;
+    }
+
+    const textDecoration = el.style.textDecoration;
+    if (textDecoration && textDecoration.toLowerCase().includes('underline')) {
+      nextStyles.underline = true;
+    }
+
+    const colorHex = normalizeColorToHex(el.style.color);
+    if (colorHex) {
+      nextStyles.color = colorHex;
+    }
+
+    Array.from(el.childNodes).forEach((child) => traverse(child, nextStyles));
+  };
+
+  traverse(element, {});
+
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  return lines.filter((line) => line.length > 0);
+};
+
 const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   const paragraphs: (Paragraph | Table)[] = [];
   
@@ -756,20 +914,22 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 본문 (여러 종류의 본문 요소 확인) - 박스 테두리 포함
-      const passage = card.querySelector('.print-shuffled-paragraphs, .problem-passage, .print-passage, .passage, .print-numbered-passage');
+      const passage = card.querySelector('.print-shuffled-paragraphs, .problem-passage, .print-passage, .passage, .print-numbered-passage') as HTMLElement | null;
       if (passage) {
-        const passageText = passage.textContent?.trim() || '';
-        if (passageText) {
-          const lines = passageText.split(/\n+/).filter(line => line.trim());
-          lines.forEach((line, lineIndex) => {
+        const lineRuns = extractTextRunsByLine(passage);
+        if (lineRuns.length > 0) {
+          lineRuns.forEach((runs, lineIndex) => {
+            if (runs.length === 0) {
+              return;
+            }
+
             const isFirstLine = lineIndex === 0;
-            const isLastLine = lineIndex === lines.length - 1;
-            
-            // 박스 테두리 설정: 첫 줄은 상단, 중간은 좌우, 마지막은 하단
+            const isLastLine = lineIndex === lineRuns.length - 1;
+
             const borderConfig: any = {
               left: {
                 color: '000000',
-                size: 6, // 0.3pt
+                size: 6,
                 style: BorderStyle.SINGLE,
                 space: DOCX_BORDER_SPACE
               },
@@ -780,7 +940,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
                 space: DOCX_BORDER_SPACE
               }
             };
-            
+
             if (isFirstLine) {
               borderConfig.top = {
                 color: '000000',
@@ -789,7 +949,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
                 space: DOCX_BORDER_SPACE
               };
             }
-            
+
             if (isLastLine) {
               borderConfig.bottom = {
                 color: '000000',
@@ -798,17 +958,12 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
                 space: DOCX_BORDER_SPACE
               };
             }
-            
+
             paragraphs.push(
               new Paragraph({
-                children: [
-                  new TextRun({
-                    text: line.trim(),
-                    font: 'Noto Sans KR'
-                  })
-                ],
-                spacing: { 
-                  before: isFirstLine ? 160 : 80, // 단락 간 간격
+                children: runs,
+                spacing: {
+                  before: isFirstLine ? 160 : 80,
                   after: isLastLine ? 160 : 80
                 },
                 indent: { left: 0, right: 0 },
@@ -937,51 +1092,63 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 본문 (Work_02용 - 밑줄이 있는 텍스트) - 박스 테두리 포함
-      const passageWithUnderline = card.querySelector('.print-passage-with-underline, .problem-passage');
+      const passageWithUnderline = card.querySelector('.print-passage-with-underline') as HTMLElement | null;
       if (passageWithUnderline) {
-        const passageText = passageWithUnderline.textContent?.trim() || '';
-        if (passageText) {
-          paragraphs.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: passageText,
-                  font: 'Noto Sans KR'
-                })
-              ],
-              spacing: { 
-                before: 160,
-                after: 160
+        const lineRuns = extractTextRunsByLine(passageWithUnderline);
+        if (lineRuns.length > 0) {
+          lineRuns.forEach((runs, lineIndex) => {
+            if (runs.length === 0) {
+              return;
+            }
+
+            const isFirstLine = lineIndex === 0;
+            const isLastLine = lineIndex === lineRuns.length - 1;
+
+            const borderConfig: any = {
+              left: {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
               },
-              indent: { left: 0, right: 0 },
-              border: {
-                top: {
-                  color: '000000',
-                  size: 6, // 0.3pt
-                  style: BorderStyle.SINGLE,
-                  space: DOCX_BORDER_SPACE
-                },
-                bottom: {
-                  color: '000000',
-                  size: 6, // 0.3pt
-                  style: BorderStyle.SINGLE,
-                  space: DOCX_BORDER_SPACE
-                },
-                left: {
-                  color: '000000',
-                  size: 6, // 0.3pt
-                  style: BorderStyle.SINGLE,
-                  space: DOCX_BORDER_SPACE
-                },
-                right: {
-                  color: '000000',
-                  size: 6, // 0.3pt
-                  style: BorderStyle.SINGLE,
-                  space: DOCX_BORDER_SPACE
-                }
+              right: {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
               }
-            })
-          );
+            };
+
+            if (isFirstLine) {
+              borderConfig.top = {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              };
+            }
+
+            if (isLastLine) {
+              borderConfig.bottom = {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              };
+            }
+
+            paragraphs.push(
+              new Paragraph({
+                children: runs,
+                spacing: {
+                  before: isFirstLine ? 160 : 80,
+                  after: isLastLine ? 160 : 80
+                },
+                indent: { left: 0, right: 0 },
+                border: borderConfig
+              })
+            );
+          });
         }
       }
       
@@ -1108,7 +1275,76 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
 
       // 정답 섹션
-      // 기존 정답 문단 출력 제거 (정답 표시는 선택지에 직접 표시)
+      const answerSection = card.querySelector('.print-answer-section');
+      if (answerSection) {
+        const answerLabel = answerSection.querySelector('.print-answer-label');
+        const answerContents = Array.from(answerSection.querySelectorAll('.print-answer-content'));
+        
+        if (answerContents.length > 0) {
+          const labelText = (answerLabel?.textContent || '정답').replace(/\s*[:：]?\s*$/, '');
+          
+          answerContents.forEach((contentEl, contentIndex) => {
+            const rawText = contentEl.textContent || '';
+            const contentText = rawText.replace(/\s*\n\s*/g, ' ').trim();
+            if (!contentText) return;
+            
+            const isFirst = contentIndex === 0;
+            const needsLabelPrefix =
+              isFirst &&
+              !!labelText &&
+              !contentText.startsWith(labelText);
+            const effectiveLabel = needsLabelPrefix ? `${labelText} : ` : '';
+            
+            const iconMatch = contentText.match(/^(①|②|③|④|⑤|⑥|⑦|⑧|⑨)\s*(.*)$/);
+            if (iconMatch && isFirst) {
+              const [, icon, restText] = iconMatch;
+              paragraphs.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: effectiveLabel,
+                      bold: true,
+                      color: '1976D2',
+                      font: 'Noto Sans KR'
+                    }),
+                    new TextRun({
+                      text: `${icon} `,
+                      font: 'Noto Sans KR',
+                      bold: true
+                    }),
+                    new TextRun({
+                      text: restText,
+                      font: 'Noto Sans KR'
+                    })
+                  ],
+                  spacing: { before: isFirst ? 200 : 40, after: contentIndex === answerContents.length - 1 ? 160 : 40 }
+                })
+              );
+            } else {
+              paragraphs.push(
+                new Paragraph({
+                  children: [
+                    ...(isFirst ? [
+                      new TextRun({
+                        text: effectiveLabel,
+                        bold: true,
+                        color: '1976D2',
+                        font: 'Noto Sans KR'
+                      })
+                    ] : []),
+                    new TextRun({
+                      text: contentText,
+                      font: 'Noto Sans KR',
+                      bold: false
+                    })
+                  ],
+                  spacing: { before: isFirst ? 200 : 40, after: contentIndex === answerContents.length - 1 ? 160 : 40 }
+                })
+              );
+            }
+          });
+        }
+      }
       
       // 해석 섹션
       const translation = card.querySelector('.print-translation-section, .translation');
