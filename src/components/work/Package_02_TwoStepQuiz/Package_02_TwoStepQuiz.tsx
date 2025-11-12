@@ -23,6 +23,7 @@ import { generateWork11Quiz } from '../../../services/work11Service';
 import { generateBlankFillQuizWithAI } from '../../../services/work13Service';
 import { generateBlankQuizWithAI, imageToTextWithOpenAIVision } from '../../../services/work14Service';
 import { translateToKorean } from '../../../services/common';
+import { formatBlankedTextForWork13, formatBlankedText } from './printNormalization';
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 import PrintHeaderPackage02 from './PrintHeaderPackage02';
 import '../shared/PrintControls.css';
@@ -2274,7 +2275,10 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   fontSize: '1.08rem',
                   lineHeight: '1.7'
                 }}>
-                  {quizItem.work13Data.blankedText}
+                  {formatBlankedTextForWork13(
+                    quizItem.work13Data.blankedText,
+                    quizItem.work13Data.correctAnswers || []
+                  )}
                 </div>
 
                 <div style={{
@@ -2365,16 +2369,10 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   overflowWrap: 'break-word',
                   overflow: 'hidden'
                 }}>
-                  {(() => {
-                    const blankedText = quizItem.work14Data.blankedText || '';
-                    console.log('📝 패키지#02-유형#14 화면 표시:', {
-                      blankedText_길이: blankedText.length,
-                      blankedText_일부: blankedText.substring(0, 200),
-                      hasBlanks: blankedText.includes('( A '),
-                      hasUnderscores: blankedText.includes('_')
-                    });
-                    return blankedText;
-                  })()}
+                  {formatBlankedText(
+                    quizItem.work14Data.blankedText || '',
+                    quizItem.work14Data.correctAnswers || []
+                  )}
                 </div>
 
                 {/* 정답 표시 */}

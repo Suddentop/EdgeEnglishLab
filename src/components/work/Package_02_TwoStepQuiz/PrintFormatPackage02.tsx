@@ -7,7 +7,9 @@ import {
   PrintSection,
   PrintOptionItem,
   NormalizedQuizItem,
-  normalizeQuizItemForPrint
+  normalizeQuizItemForPrint,
+  formatBlankedTextForWork13,
+  formatBlankedText
 } from './printNormalization';
 import { renderNormalizedCardNode } from './printRenderers';
 import {
@@ -276,7 +278,15 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       if (work13Data || work14Data) {
         const data = work13Data || work14Data;
         estimatedHeight += COLUMN_CONFIG.TITLE_HEIGHT + COLUMN_CONFIG.INSTRUCTION_HEIGHT;
-        estimatedHeight += calculateTextHeight(data.blankedText || '', 0.32);
+        // 유형#13, #14의 경우 빈칸 표시 변환 후 높이 계산
+        let blankedTextForHeight = data.blankedText || '';
+        if ((quizItem.workTypeId === '13' || quizItem.workTypeId === '14') && Array.isArray(data?.correctAnswers)) {
+          blankedTextForHeight = formatBlankedText(
+            data.blankedText || '',
+            data.correctAnswers
+          );
+        }
+        estimatedHeight += calculateTextHeight(blankedTextForHeight, 0.32);
         // 정답 섹션 (정답 모드일 때 - 빈칸 정답들)
         if (isAnswerMode) {
           const answerCount = data.correctAnswers?.length || 0;
@@ -350,7 +360,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         >
           <div className="a4-landscape-page-header">
             <PrintHeaderPackage02 />
-          </div>
+                      </div>
 
           <div className="a4-landscape-page-content">
             <div className="print-two-column-container">
@@ -364,9 +374,9 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
                       normalizedItem,
                       `page-${pageIndex}-column-${columnIndex}-item-${itemIndex}`
                     )
-                  )}
-                </div>
-              ))}
+                        )}
+                      </div>
+                    ))}
                   </div>
           </div>
         </div>

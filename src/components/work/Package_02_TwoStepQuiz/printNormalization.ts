@@ -1,5 +1,57 @@
 export const OPTION_LABELS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
 
+/**
+ * 유형#13, #14의 blankedText에서 빈칸 표시를 변환
+ * (_____) → ( _ _ _ _ _ ) 형태로 변경 (정답 길이만큼 언더스코어 반복)
+ */
+export const formatBlankedTextForWork13 = (
+  blankedText: string,
+  correctAnswers: string[]
+): string => {
+  // 유형#14 (문장 단위)도 동일한 함수 사용
+  return formatBlankedText(blankedText, correctAnswers);
+};
+
+/**
+ * 빈칸 표시를 변환하는 공통 함수
+ * (_____) → ( _ _ _ _ _ ) 형태로 변경 (정답 길이만큼 언더스코어 반복)
+ */
+export const formatBlankedText = (
+  blankedText: string,
+  correctAnswers: string[]
+): string => {
+  if (!blankedText || !Array.isArray(correctAnswers) || correctAnswers.length === 0) {
+    return blankedText;
+  }
+
+  let formattedText = blankedText;
+  let answerIndex = 0;
+
+  // 포괄적인 빈칸 패턴: (_____), ( A _____ ), (_______________) 등 모든 형태를 찾음
+  // 괄호 안에 선택적 문자(A-Z)와 언더스코어가 있는 패턴
+  const blankPattern = /\([\s]*([A-Z])?[\s]*_+[\s]*\)/gi;
+
+  formattedText = formattedText.replace(blankPattern, (match) => {
+    if (answerIndex >= correctAnswers.length) {
+      return match; // 정답이 부족하면 원본 유지
+    }
+
+    const answer = correctAnswers[answerIndex];
+    const answerLength = answer.length;
+    
+    // 정답 길이만큼 " _ " 반복
+    const blanks = Array(answerLength).fill('_').join(' ');
+    
+    // 괄호 안에 공백과 함께 배치: ( _ _ _ _ _ )
+    const formattedBlank = `( ${blanks} )`;
+    
+    answerIndex++;
+    return formattedBlank;
+  });
+
+  return formattedText;
+};
+
 export const WORK_TYPE_LABELS: Record<string, string> = {
   '01': '문단 순서 맞추기',
   '02': '유사단어 독해',
@@ -480,10 +532,19 @@ export const normalizeQuizItemForPrint = (
 
       const data = quizItem?.[`work${workTypeId}Data`] || quizData?.[`work${workTypeId}Data`] || quizData;
       if (data?.blankedText) {
+        // 유형#13, #14의 경우 빈칸 표시를 변환: (_____) → ( _ _ _ _ _ )
+        let formattedBlankedText = data.blankedText;
+        if ((workTypeId === '13' || workTypeId === '14') && Array.isArray(data?.correctAnswers)) {
+          formattedBlankedText = formatBlankedText(
+            data.blankedText,
+            data.correctAnswers
+          );
+        }
+        
         pushSection({
           type: 'paragraph',
           key: `paragraph-${workTypeId}-blanked`,
-          text: data.blankedText
+          text: formattedBlankedText
         });
       }
 
