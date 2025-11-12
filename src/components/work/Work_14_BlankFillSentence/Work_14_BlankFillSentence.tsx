@@ -15,6 +15,7 @@ import {
   createAnswerText,
   type BlankQuizData 
 } from '../../../services/work14Service';
+import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 import '../../../styles/PrintFormat.css';
 
 interface VocabularyItem {
@@ -154,6 +155,17 @@ const Work_14_FillSentence: React.FC = () => {
     }
     
     let answerIndex = 0;
+    
+    // 패턴 0: ( _ _ _ _ _ ) - formatBlankedText로 변환된 형태 (공백 포함)
+    const blankPattern0 = /\([\s_]+\)/g;
+    result = result.replace(blankPattern0, (match: string) => {
+      if (answerIndex < correctAnswers.length) {
+        const answer = cleanAnswer(correctAnswers[answerIndex]);
+        answerIndex++;
+        return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+      }
+      return match;
+    });
     
     // 패턴 1: ( 공백 + 알파벳 + 공백 + 언더스코어들 + ) - 공백 있는 경우
     const blankPattern1 = /\( [A-Z] _+\)/g;
@@ -637,36 +649,27 @@ const Work_14_FillSentence: React.FC = () => {
   const displayBlankedText = useMemo(() => {
     if (!quiz?.blankedText) return '';
     
-    // 빈칸 패턴을 찾아서 ( A 부분은 줄바꿈 방지, 언더스코어 부분은 줄바꿈 가능
-    // 패턴: (A_______) - 공백 없는 경우
-    let problemText = quiz.blankedText;
+    // formatBlankedText로 변환: (_____) → ( _ _ _ _ _ )
+    const formattedText = formatBlankedText(
+      quiz.blankedText,
+      quiz.correctAnswers || []
+    );
     
-    const blankPattern = /\(([A-Z])([_]+)\)/g;
-    problemText = problemText.replace(blankPattern, (match, alphabet, underscores) => {
-      // ( A 부분은 줄바꿈 방지, 언더스코어는 줄바꿈 가능
-      return `<span style="white-space: nowrap;">( ${alphabet}</span>${underscores})`;
-    });
-    
-    return problemText;
-  }, [quiz?.blankedText]);
+    return formattedText;
+  }, [quiz?.blankedText, quiz?.correctAnswers]);
 
-  // 인쇄(문제) 페이지용 빈칸 텍스트 (원본 blankedText를 그대로 사용, 빈칸 패턴만 처리)
+  // 인쇄(문제) 페이지용 빈칸 텍스트
   const displayProblemText = useMemo(() => {
     if (!quiz?.blankedText) return '';
     
-    // 원본 blankedText를 그대로 사용 (work14Service.ts에서 생성된 빈칸 형식 유지)
-    let problemText = quiz.blankedText;
+    // formatBlankedText로 변환: (_____) → ( _ _ _ _ _ )
+    const formattedText = formatBlankedText(
+      quiz.blankedText,
+      quiz.correctAnswers || []
+    );
     
-    // 빈칸 패턴을 찾아서 ( A 부분은 줄바꿈 방지, 언더스코어 부분은 줄바꿈 가능
-    // 패턴: ( A_______) 
-    const blankPattern = /\( ([A-Z])([_]+)\)/g;
-    problemText = problemText.replace(blankPattern, (match, alphabet, underscores) => {
-      // ( A 부분은 줄바꿈 방지, 언더스코어는 줄바꿈 가능
-      return `<span style="white-space: nowrap;">( ${alphabet}</span>${underscores})`;
-    });
-    
-    return problemText;
-  }, [quiz?.blankedText]);
+    return formattedText;
+  }, [quiz?.blankedText, quiz?.correctAnswers]);
 
   // 문제 풀이/출력 화면
   if (quiz) {
@@ -871,31 +874,6 @@ const Work_14_FillSentence: React.FC = () => {
                       <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
                         다음 빈칸에 들어갈 문장을 직접 입력하시오.
                       </div>
-                      <div className="problem-answers" style={{margin:'1rem 0'}}>
-                        <div style={{height:'1.5rem'}}></div>
-                        <div style={{height:'1.5rem'}}></div>
-                        {quiz.selectedSentences?.map((sentence, i) => {
-                          const alphabetLabel = String.fromCharCode(65 + i); // A=65, B=66, C=67...
-                          return (
-                            <div key={i}>
-                              <div style={{
-                                fontSize:'1rem',
-                                fontFamily:'monospace',
-                                wordBreak: 'break-all',
-                                overflowWrap: 'anywhere'
-                              }}>
-                                {alphabetLabel} : {'_'.repeat(100)}
-                              </div>
-                              {quiz.selectedSentences && i < quiz.selectedSentences.length - 1 && (
-                                <>
-                                  <div style={{height:'1.5rem'}}></div>
-                                  <div style={{height:'1.5rem'}}></div>
-                                </>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -914,31 +892,6 @@ const Work_14_FillSentence: React.FC = () => {
                       <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap', wordWrap:'break-word', overflowWrap:'break-word', overflow:'hidden'}}>
                         <div dangerouslySetInnerHTML={{ __html: displayProblemText }} />
                       </div>
-                    <div className="problem-answers" style={{margin:'1rem 0'}}>
-                      <div style={{height:'1.5rem'}}></div>
-                      <div style={{height:'1.5rem'}}></div>
-                      {quiz.selectedSentences?.map((sentence, i) => {
-                        const alphabetLabel = String.fromCharCode(65 + i); // A=65, B=66, C=67...
-                        return (
-                          <div key={i}>
-                            <div style={{
-                              fontSize:'1rem',
-                              fontFamily:'monospace',
-                              whiteSpace:'nowrap',
-                              overflow:'hidden'
-                            }}>
-                              {alphabetLabel} : {'_'.repeat(100)}
-                            </div>
-                            {quiz.selectedSentences && i < quiz.selectedSentences.length - 1 && (
-                              <>
-                                <div style={{height:'1.5rem'}}></div>
-                                <div style={{height:'1.5rem'}}></div>
-                              </>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -963,7 +916,10 @@ const Work_14_FillSentence: React.FC = () => {
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#14</span>
                       </div>
                       <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap', wordWrap:'break-word', overflowWrap:'break-word', overflow:'hidden'}}>
-                        <div dangerouslySetInnerHTML={{ __html: createTextWithAnswers(quiz.blankedText, quiz.correctAnswers) }} />
+                        <div dangerouslySetInnerHTML={{ __html: createTextWithAnswers(
+                          formatBlankedText(quiz.blankedText || '', quiz.correctAnswers || []),
+                          quiz.correctAnswers || []
+                        ) }} />
                       </div>
                     </div>
                   </div>
@@ -1006,7 +962,10 @@ const Work_14_FillSentence: React.FC = () => {
                     </div>
                     <div  style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', border:'1px solid #e3e6f0', whiteSpace:'pre-wrap'}}
                     dangerouslySetInnerHTML={{
-                      __html: createTextWithAnswers(quiz.blankedText, quiz.correctAnswers)
+                      __html: createTextWithAnswers(
+                        formatBlankedText(quiz.blankedText || '', quiz.correctAnswers || []),
+                        quiz.correctAnswers || []
+                      )
                     }}
                     />
                     

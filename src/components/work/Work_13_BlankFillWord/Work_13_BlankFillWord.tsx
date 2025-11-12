@@ -15,6 +15,7 @@ import {
   translateToKorean, 
   generateBlankFillQuizWithAI 
 } from '../../../services/work13Service';
+import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 // import '../../../styles/PrintFormat.css'; // 독립적인 CSS로 변경
 
 // 인터페이스는 work13AIService.ts에서 import
@@ -580,7 +581,10 @@ const Work_13_BlankFillWord: React.FC = () => {
               <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
             </div>
           <div className="problem-text" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-              {quiz.blankedText}
+              {formatBlankedText(
+                quiz.blankedText || '',
+                quiz.correctAnswers || []
+              )}
             </div>
 
             {/* 정답 표시 */}
@@ -611,7 +615,10 @@ const Work_13_BlankFillWord: React.FC = () => {
                       <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
                     </div>
                     <div className="work13-print-problem-text" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                      {quiz.blankedText}
+                      {formatBlankedText(
+                        quiz.blankedText || '',
+                        quiz.correctAnswers || []
+                      )}
                     </div>
                   </div>
                 </div>
@@ -628,7 +635,10 @@ const Work_13_BlankFillWord: React.FC = () => {
                       다음 빈칸에 들어갈 단어를 직접 입력하시오.
                     </div>
                     <div className="work13-print-problem-text" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                      {quiz.blankedText}
+                      {formatBlankedText(
+                        quiz.blankedText || '',
+                        quiz.correctAnswers || []
+                      )}
                     </div>
                   </div>
                 </div>
@@ -654,11 +664,16 @@ const Work_13_BlankFillWord: React.FC = () => {
                       </div>
                         <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                           {(() => {
-                            const text = quiz.blankedText;
-                            const parts = text.split(/(\(_{15}\))/);
+                            const formattedText = formatBlankedText(
+                              quiz.blankedText || '',
+                              quiz.correctAnswers || []
+                            );
+                            // formatBlankedText로 변환된 패턴: ( _ _ _ _ _ )
+                            const parts = formattedText.split(/(\([\s_]+\))/);
                             let answerIndex = 0;
                             return parts.map((part, index) => {
-                              if (part === '(_______________)') {
+                              // ( _ _ _ _ _ ) 패턴을 찾아서 정답으로 교체
+                              if (part.match(/^\([\s_]+\)$/)) {
                                 const answer = quiz.correctAnswers?.[answerIndex] || '정답 없음';
                                 answerIndex++;
                                 return (
@@ -706,11 +721,16 @@ const Work_13_BlankFillWord: React.FC = () => {
                     </div>
                       <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'1.5rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                         {(() => {
-                          const text = quiz.blankedText;
-                          const parts = text.split(/(\(_{15}\))/);
+                          const formattedText = formatBlankedText(
+                            quiz.blankedText || '',
+                            quiz.correctAnswers || []
+                          );
+                          // formatBlankedText로 변환된 패턴: ( _ _ _ _ _ )
+                          const parts = formattedText.split(/(\([\s_]+\))/);
                           let answerIndex = 0;
                           return parts.map((part, index) => {
-                            if (part === '(_______________)') {
+                            // ( _ _ _ _ _ ) 패턴을 찾아서 정답으로 교체
+                            if (part.match(/^\([\s_]+\)$/)) {
                               const answer = quiz.correctAnswers?.[answerIndex] || '정답 없음';
                               answerIndex++;
                               return (

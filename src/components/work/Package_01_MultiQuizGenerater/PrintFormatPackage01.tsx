@@ -4,6 +4,7 @@ import { SentenceTranslationQuiz } from '../../../types/types';
 import { Quiz } from '../../../types/types';
 import { Work02QuizData } from '../../../services/work02Service';
 import Work11DynamicPrintPages from '../Work_11_SentenceTranslation/Work11DynamicPrintPages';
+import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 
 interface WordReplacement {
   original: string;
@@ -3926,6 +3927,15 @@ const PrintFormatPackage01Work13: React.FC<{
     let answerIndex = 0;
     
     // 다양한 빈칸 패턴을 찾아서 정답으로 교체 (파란색, 진하게 스타일 적용)
+    // 패턴 0: ( _ _ _ _ _ ) - formatBlankedText로 변환된 형태 (공백 포함)
+    result = result.replace(/\([\s_]+\)/g, () => {
+      if (answerIndex < correctAnswers.length) {
+        const answer = correctAnswers[answerIndex++];
+        return `(<span style="color: #1976d2; font-size: 0.9rem;">${answer}</span>)`;
+      }
+      return '( _ _ _ _ _ )';
+    });
+    
     // 패턴 1: (_{20,}[A-Z]_{20,}) - A, B, C 형태
     result = result.replace(/\(_{20,}[A-Z]_{20,}\)/g, () => {
       if (answerIndex < correctAnswers.length) {
@@ -3983,7 +3993,10 @@ const PrintFormatPackage01Work13: React.FC<{
                 lineHeight: '1.5', 
                 border: '2px solid #e3e6f0'
               }}>
-                {work13Data.blankedText}
+                {formatBlankedText(
+                  work13Data.blankedText || '',
+                  work13Data.correctAnswers || []
+                )}
               </div>
             </div>
           </div>
@@ -4032,7 +4045,10 @@ const PrintFormatPackage01Work13: React.FC<{
                     color: '#222', 
                     lineHeight: '1.5', 
                     border: '2px solid #e3e6f0'
-                  }} dangerouslySetInnerHTML={{__html: createTextWithAnswers(work13Data.blankedText || '', work13Data.correctAnswers || [])}}>
+                  }} dangerouslySetInnerHTML={{__html: createTextWithAnswers(
+                    formatBlankedText(work13Data.blankedText || '', work13Data.correctAnswers || []),
+                    work13Data.correctAnswers || []
+                  )}}>
                   </div>
                   <div className="package01-work13-translation package01-work13-translation-container" style={{
                     fontSize: '0.8rem !important', 
@@ -4090,11 +4106,16 @@ const PrintFormatPackage01Work13: React.FC<{
                   border: '2px solid #e3e6f0'
                 }}>
                   {(() => {
-                    const text = work13Data.blankedText;
-                    const parts = text.split(/(\(_{15}\))/);
+                    const formattedText = formatBlankedText(
+                      work13Data.blankedText || '',
+                      work13Data.correctAnswers || []
+                    );
+                    // formatBlankedText로 변환된 패턴: ( _ _ _ _ _ )
+                    const parts = formattedText.split(/(\([\s_]+\))/);
                     let answerIndex = 0;
                     return parts.map((part, index) => {
-                      if (part === '(_______________)') {
+                      // ( _ _ _ _ _ ) 패턴을 찾아서 정답으로 교체
+                      if (part.match(/^\([\s_]+\)$/)) {
                         const answer = work13Data.correctAnswers?.[answerIndex] || '정답 없음';
                         answerIndex++;
                         return (
@@ -4239,6 +4260,17 @@ const PrintFormatPackage01Work14: React.FC<{
     
     let answerIndex = 0;
     
+    // 패턴 0: ( _ _ _ _ _ ) - formatBlankedText로 변환된 형태 (공백 포함)
+    const blankPattern0 = /\([\s_]+\)/g;
+    result = result.replace(blankPattern0, (match: string) => {
+      if (answerIndex < correctAnswers.length) {
+        const answer = cleanAnswer(correctAnswers[answerIndex]);
+        answerIndex++;
+        return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+      }
+      return match;
+    });
+    
     // 패턴 1: ( 공백 + 알파벳 + 공백 + 언더스코어들 + ) - 공백 있는 경우
     const blankPattern1 = /\( [A-Z] _+\)/g;
     result = result.replace(blankPattern1, (match: string) => {
@@ -4370,13 +4402,13 @@ const PrintFormatPackage01Work14: React.FC<{
                 overflow: 'hidden'
               }}>
                 {(() => {
-                  // 빈칸 패턴을 찾아서 ( A 부분은 줄바꿈 방지, 언더스코어 부분은 줄바꿈 가능
-                  // 패턴: ( A_______) 
-                  const blankPattern = /\( ([A-Z])([_]+)\)/g;
-                  const processedText = (work14Data.blankedText || '').replace(blankPattern, (match: string, alphabet: string, underscores: string) => {
-                    return `<span style="white-space: nowrap;">( ${alphabet}</span>${underscores})`;
-                  });
-                  return <div dangerouslySetInnerHTML={{ __html: processedText }} />;
+                  // formatBlankedText로 변환: (_____) → ( _ _ _ _ _ )
+                  const formattedText = formatBlankedText(
+                    work14Data.blankedText || '',
+                    work14Data.correctAnswers || []
+                  );
+                  // 변환된 패턴: ( _ _ _ _ _ ) 에서 공백을 유지하면서 렌더링
+                  return formattedText;
                 })()}
               </div>
               
@@ -4469,11 +4501,17 @@ const PrintFormatPackage01Work14: React.FC<{
                     overflow: 'hidden'
                   }}
                   dangerouslySetInnerHTML={{
-                    __html: work14Data.correctAnswers ? 
-                      createTextWithAnswers(work14Data.blankedText, work14Data.correctAnswers) : 
-                      work14Data.selectedSentences ? 
-                        createTextWithAnswers(work14Data.blankedText, work14Data.selectedSentences) : 
-                        work14Data.blankedText
+                    __html: (() => {
+                      const formattedBlankedText = formatBlankedText(
+                        work14Data.blankedText || '',
+                        work14Data.correctAnswers || work14Data.selectedSentences || []
+                      );
+                      return work14Data.correctAnswers ? 
+                        createTextWithAnswers(formattedBlankedText, work14Data.correctAnswers) : 
+                        work14Data.selectedSentences ? 
+                          createTextWithAnswers(formattedBlankedText, work14Data.selectedSentences) : 
+                          formattedBlankedText;
+                    })()
                   }}
                   />
                 </div>
@@ -4545,11 +4583,17 @@ const PrintFormatPackage01Work14: React.FC<{
                   border: '2px solid #e3e6f0'
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: work14Data.correctAnswers ? 
-                    createTextWithAnswers(work14Data.blankedText, work14Data.correctAnswers) : 
-                    work14Data.selectedSentences ? 
-                      createTextWithAnswers(work14Data.blankedText, work14Data.selectedSentences) : 
-                      work14Data.blankedText
+                  __html: (() => {
+                    const formattedBlankedText = formatBlankedText(
+                      work14Data.blankedText || '',
+                      work14Data.correctAnswers || work14Data.selectedSentences || []
+                    );
+                    return work14Data.correctAnswers ? 
+                      createTextWithAnswers(formattedBlankedText, work14Data.correctAnswers) : 
+                      work14Data.selectedSentences ? 
+                        createTextWithAnswers(formattedBlankedText, work14Data.selectedSentences) : 
+                        formattedBlankedText;
+                  })()
                 }}
                 />
                 <div className="package01-work14-translation package01-work14-translation-container" style={{

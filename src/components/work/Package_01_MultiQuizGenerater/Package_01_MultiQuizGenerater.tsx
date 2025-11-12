@@ -19,6 +19,7 @@ import '../shared/PrintControls.css';
 import FileFormatSelector from '../shared/FileFormatSelector';
 import { callOpenAI } from '../../../services/common';
 import { FileFormat, generateAndUploadFile } from '../../../services/pdfService';
+import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 
 interface WordReplacement {
   original: string;           // 원본 단어/숙어
@@ -4087,7 +4088,10 @@ ${inputText}`;
                     fontFamily: 'inherit',
                     border: '2px solid #e3e6f0'
                   }}>
-                    {quizItem.work13Data.blankedText}
+                    {formatBlankedText(
+                      quizItem.work13Data.blankedText || '',
+                      quizItem.work13Data.correctAnswers || []
+                    )}
                   </div>
 
                   {/* 정답 표시 */}
@@ -4187,7 +4191,10 @@ ${inputText}`;
                     overflowWrap: 'break-word',
                     overflow: 'hidden'
                   }}>
-                    {quizItem.work14Data.blankedText}
+                    {formatBlankedText(
+                      quizItem.work14Data.blankedText || '',
+                      quizItem.work14Data.correctAnswers || []
+                    )}
                   </div>
 
                   {/* 정답 표시 */}
