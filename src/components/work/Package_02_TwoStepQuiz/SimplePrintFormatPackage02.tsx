@@ -60,11 +60,11 @@ const SimplePrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packa
       ''
     );
   };
- 
+
   // 2단 레이아웃으로 퀴즈 아이템 렌더링
   const renderQuizItems = () => {
     const helpers = {
-      isAnswerMode,
+          isAnswerMode,
       cleanOptionText,
       renderTextWithHighlight,
       getTranslatedText

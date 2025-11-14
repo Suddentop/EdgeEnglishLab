@@ -10,6 +10,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const OpenAI = require('openai');
+const axios = require('axios');
 
 // .env 파일 로드 (로컬 개발 및 프로덕션 환경 모두)
 // Firebase Functions 배포 시 .env 파일도 함께 배포되며, dotenv로 로드해야 함
@@ -82,6 +83,40 @@ function getOpenAIClient() {
     console.error('❌ OpenAI API 키 설정 오류:', error.message);
     return null;
   }
+}
+
+/**
+ * Toss Payments 설정 헬퍼
+ */
+function getTossConfig() {
+  const config = functions.config();
+  const tossConfig = config?.toss || {};
+
+  const secretKey = process.env.TOSS_SECRET_KEY || tossConfig.secret_key;
+  const securityKey = process.env.TOSS_SECURITY_KEY || tossConfig.security_key;
+  const clientKey = process.env.TOSS_CLIENT_KEY || tossConfig.client_key;
+
+  return { secretKey, securityKey, clientKey };
+}
+
+function maskKey(key) {
+  if (!key) {
+    return '****';
+  }
+  return key.length > 12
+    ? `${key.substring(0, 6)}...${key.substring(key.length - 4)}`
+    : '****';
+}
+
+function getTossAuthorization(secretKey) {
+  if (!secretKey) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      '토스페이먼츠 시크릿 키가 설정되지 않았습니다.'
+    );
+  }
+
+  return `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`;
 }
 
 /**
@@ -457,6 +492,156 @@ exports.openaiProxy = functions.https.onRequest(async (req, res) => {
         status: error?.status
       });
     }
+  }
+});
+
+/**
+ * Toss Payments - 결제 승인
+ */
+exports.confirmTossPayment = functions.https.onCall(async (data) => {
+  const { secretKey } = getTossConfig();
+  const { paymentKey, orderId, amount } = data || {};
+
+  if (!paymentKey || !orderId || !amount) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'paymentKey, orderId, amount는 필수값입니다.'
+    );
+  }
+
+  try {
+    const authorization = getTossAuthorization(secretKey);
+    const response = await axios.post(
+      'https://api.tosspayments.com/v1/payments/confirm',
+      { paymentKey, orderId, amount },
+      {
+        headers: {
+          Authorization: authorization,
+          'Content-Type': 'application/json'
+        },
+        timeout: 1000 * 30
+      }
+    );
+
+    console.log('✅ Toss 결제 승인 성공:', {
+      orderId,
+      amount,
+      paymentKeyPreview: maskKey(paymentKey)
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || error.message || '결제 승인에 실패했습니다.';
+    console.error('❌ Toss 결제 승인 실패:', {
+      orderId,
+      paymentKeyPreview: maskKey(paymentKey),
+      errorMessage,
+      code: error.response?.data?.code
+    });
+
+    throw new functions.https.HttpsError('internal', errorMessage);
+  }
+});
+
+/**
+ * Toss Payments - 결제 정보 조회
+ */
+exports.getTossPaymentInfo = functions.https.onCall(async (data) => {
+  const { secretKey } = getTossConfig();
+  const { paymentKey } = data || {};
+
+  if (!paymentKey) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'paymentKey는 필수값입니다.'
+    );
+  }
+
+  try {
+    const authorization = getTossAuthorization(secretKey);
+    const response = await axios.get(
+      `https://api.tosspayments.com/v1/payments/${paymentKey}`,
+      {
+        headers: {
+          Authorization: authorization,
+          'Content-Type': 'application/json'
+        },
+        timeout: 1000 * 15
+      }
+    );
+
+    console.log('✅ Toss 결제 정보 조회 성공:', {
+      paymentKeyPreview: maskKey(paymentKey)
+    });
+
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || error.message || '결제 정보를 조회할 수 없습니다.';
+    console.error('❌ Toss 결제 정보 조회 실패:', {
+      paymentKeyPreview: maskKey(paymentKey),
+      errorMessage,
+      code: error.response?.data?.code
+    });
+
+    throw new functions.https.HttpsError('internal', errorMessage);
+  }
+});
+
+/**
+ * Toss Payments - 결제 취소
+ */
+exports.cancelTossPayment = functions.https.onCall(async (data) => {
+  const { secretKey } = getTossConfig();
+  const { paymentKey, cancelReason, cancelAmount } = data || {};
+
+  if (!paymentKey || !cancelReason) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'paymentKey와 cancelReason은 필수값입니다.'
+    );
+  }
+
+  try {
+    const authorization = getTossAuthorization(secretKey);
+    const response = await axios.post(
+      `https://api.tosspayments.com/v1/payments/${paymentKey}/cancel`,
+      {
+        cancelReason,
+        cancelAmount: cancelAmount || undefined
+      },
+      {
+        headers: {
+          Authorization: authorization,
+          'Content-Type': 'application/json'
+        },
+        timeout: 1000 * 30
+      }
+    );
+
+    console.log('✅ Toss 결제 취소 성공:', {
+      paymentKeyPreview: maskKey(paymentKey),
+      cancelReason,
+      cancelAmount
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || error.message || '결제 취소에 실패했습니다.';
+    console.error('❌ Toss 결제 취소 실패:', {
+      paymentKeyPreview: maskKey(paymentKey),
+      cancelReason,
+      cancelAmount,
+      errorMessage,
+      code: error.response?.data?.code
+    });
+
+    throw new functions.https.HttpsError('internal', errorMessage);
   }
 });
 

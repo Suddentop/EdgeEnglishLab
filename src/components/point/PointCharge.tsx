@@ -75,9 +75,9 @@ const PointCharge: React.FC = () => {
 
       // 토스페이먼츠 결제 위젯 실행
       if (window.TossPayments) {
-        const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY || 'test_ck_your_client_key';
+        const clientKey = TossPaymentService.getClientKey();
         
-        if (!clientKey || clientKey === 'test_ck_your_client_key') {
+        if (!clientKey) {
           setMessage({ 
             type: 'error', 
             text: '토스페이먼츠 클라이언트 키가 설정되지 않았습니다. 환경 변수를 확인해주세요.' 

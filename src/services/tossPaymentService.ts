@@ -1,7 +1,8 @@
 import { PaymentService } from './paymentService';
 import { chargePoints } from './pointService';
-import { db } from '../firebase/config';
+import { app, db } from '../firebase/config';
 import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { PAYMENT_STATUS } from '../utils/pointConstants';
 
 // 토스페이먼츠 타입 정의
@@ -16,25 +17,30 @@ interface TossPaymentRequest {
   failUrl: string;
 }
 
-interface TossPaymentResponse {
-  success: boolean;
-  paymentKey?: string;
-  orderId?: string;
-  totalAmount?: number;
-  error?: string;
-}
-
-interface TossPaymentConfirmation {
-  paymentKey: string;
-  orderId: string;
-  amount: number;
-}
-
 // 토스페이먼츠 서비스 클래스
 export class TossPaymentService {
-  private static readonly BASE_URL = 'https://api.tosspayments.com/v1';
-  private static readonly CLIENT_KEY = process.env.REACT_APP_TOSS_CLIENT_KEY;
-  private static readonly SECRET_KEY = process.env.REACT_APP_TOSS_SECRET_KEY;
+  private static readonly CLIENT_KEY_TEST =
+    process.env.REACT_APP_TOSS_CLIENT_KEY_TEST || process.env.REACT_APP_TOSS_CLIENT_KEY || '';
+  private static readonly CLIENT_KEY_LIVE =
+    process.env.REACT_APP_TOSS_CLIENT_KEY_LIVE || '';
+
+  static getClientKey(): string {
+    if (process.env.NODE_ENV === 'production') {
+      return this.CLIENT_KEY_LIVE || this.CLIENT_KEY_TEST || '';
+    }
+    return this.CLIENT_KEY_TEST || this.CLIENT_KEY_LIVE || '';
+  }
+
+  private static getFunctionsInstance() {
+    return getFunctions(app);
+  }
+
+  private static async callTossFunction<T = any>(name: string, payload: Record<string, any>): Promise<T> {
+    const functionsInstance = this.getFunctionsInstance();
+    const callable = httpsCallable(functionsInstance, name);
+    const result = await callable(payload);
+    return result.data as T;
+  }
 
   // 결제 요청 생성
   static async createPaymentRequest(
@@ -113,27 +119,17 @@ export class TossPaymentService {
     try {
       console.log('🚀 결제 승인 처리 시작:', { paymentKey, orderId, amount });
 
-      // 1. 토스페이먼츠 API로 결제 승인 요청
-      const confirmResponse = await fetch(`${this.BASE_URL}/payments/confirm`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${btoa((this.SECRET_KEY || '') + ':')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          paymentKey: paymentKey,
-          orderId: orderId,
-          amount: amount
-        })
-      });
+      // 1. Firebase Functions를 통해 결제 승인 요청
+      const confirmResult = await this.callTossFunction<{ success: boolean; data?: any }>(
+        'confirmTossPayment',
+        { paymentKey, orderId, amount }
+      );
 
-      if (!confirmResponse.ok) {
-        const errorData = await confirmResponse.json();
-        console.error('❌ 토스페이먼츠 결제 승인 API 오류:', errorData);
-        throw new Error(errorData.message || '결제 승인에 실패했습니다.');
+      if (!confirmResult || confirmResult.success === false) {
+        throw new Error('결제 승인에 실패했습니다.');
       }
 
-      const paymentResult = await confirmResponse.json();
+      const paymentResult = confirmResult.data || {};
       console.log('✅ 토스페이먼츠 결제 승인 성공:', paymentResult);
 
       // 2. Firestore에서 결제 정보 조회 (orderId로 검색)
@@ -229,53 +225,6 @@ export class TossPaymentService {
     }
   }
 
-  // 토스페이먼츠 API 호출
-  private static async callTossAPI(
-    endpoint: string, 
-    data: any, 
-    testCode?: string
-  ): Promise<TossPaymentResponse> {
-    try {
-      const headers: HeadersInit = {
-        'Authorization': `Basic ${btoa((this.SECRET_KEY || '') + ':')}`,
-        'Content-Type': 'application/json'
-      };
-      
-      // 테스트 환경에서 에러 재현을 위한 테스트 헤더 추가
-      // 가이드: TossPayments-Test-Code 헤더를 사용하여 특정 에러 시나리오 테스트 가능
-      if (testCode && this.CLIENT_KEY?.startsWith('test_')) {
-        headers['TossPayments-Test-Code'] = testCode;
-      }
-      
-      const response = await fetch(`${this.BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: result.message || 'API 호출에 실패했습니다.'
-        };
-      }
-
-      return {
-        success: true,
-        ...result
-      };
-
-    } catch (error) {
-      console.error('토스페이먼츠 API 호출 오류:', error);
-      return {
-        success: false,
-        error: 'API 호출 중 오류가 발생했습니다.'
-      };
-    }
-  }
-
   // 결제 취소
   static async cancelPayment(
     paymentKey: string,
@@ -283,26 +232,11 @@ export class TossPaymentService {
     cancelAmount?: number
   ): Promise<boolean> {
     try {
-      const cancelData = {
+      await this.callTossFunction('cancelTossPayment', {
+        paymentKey,
         cancelReason,
         cancelAmount: cancelAmount || undefined
-      };
-
-      const response = await fetch(`${this.BASE_URL}/payments/${paymentKey}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${btoa(this.SECRET_KEY + ':')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(cancelData)
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || '결제 취소에 실패했습니다.');
-      }
-
       return true;
 
     } catch (error) {
@@ -314,20 +248,9 @@ export class TossPaymentService {
   // 결제 정보 조회
   static async getPaymentInfo(paymentKey: string): Promise<any> {
     try {
-      const response = await fetch(`${this.BASE_URL}/payments/${paymentKey}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Basic ${btoa(this.SECRET_KEY + ':')}`,
-          'Content-Type': 'application/json'
-        }
+      const result = await this.callTossFunction('getTossPaymentInfo', {
+        paymentKey
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || '결제 정보 조회에 실패했습니다.');
-      }
-
       return result;
 
     } catch (error) {

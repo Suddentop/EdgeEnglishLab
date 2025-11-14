@@ -2530,7 +2530,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         <div className="input-section">
           <div className="input-label-row">
             <label htmlFor="textInput" className="input-label">
-              영어 본문 직접 붙여넣기: (2,000자 미만 권장)
+              영어 본문 직접 붙여넣기: (1,500자 미만 권장)
             </label>
             {inputText.length < 100 && (
               <span className="warning">⚠️ 더 긴 본문을 입력하면 더 좋은 결과를 얻을 수 있습니다.</span>

@@ -358,7 +358,8 @@ export const normalizeQuizItemForPrint = (
         pushSection({
           type: 'paragraph',
           key: 'paragraph-06-missing',
-          text: `주요 문장: ${data.missingSentence}`
+          text: `주요 문장: ${data.missingSentence}`,
+          meta: { variant: 'missing-sentence' }
         });
       }
 
@@ -366,7 +367,8 @@ export const normalizeQuizItemForPrint = (
         pushSection({
           type: 'paragraph',
           key: 'paragraph-06-passage',
-          text: data.numberedPassage
+          text: data.numberedPassage,
+          meta: { variant: 'numbered-passage' }
         });
       }
 
@@ -469,28 +471,109 @@ export const normalizeQuizItemForPrint = (
         quizData?.data?.work11Data ||
         quizData;
 
+      // 디버깅: 유형#11 데이터 구조 확인
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 유형#11 정규화 디버깅:', {
+          hasQuizItem: !!quizItem,
+          hasQuizData: !!quizData,
+          hasWork11Data: !!quizItem?.work11Data,
+          hasQuizDataWork11Data: !!quizData?.work11Data,
+          data: data,
+          sentencesCount: Array.isArray(data?.sentences) ? data.sentences.length : 0,
+          isAnswerMode: isAnswerMode
+        });
+      }
+
       pushSection(createInstructionSection('11', '다음 본문을 문장별로 해석하세요', chunkMeta));
 
-      const sentences = Array.isArray(data?.sentences) ? data.sentences : [];
+      // sentences 배열 처리 (객체 배열 또는 문자열 배열)
+      let sentences = Array.isArray(data?.sentences) ? data.sentences : [];
+      
+      // translations 배열이 별도로 있는 경우 (SentenceTranslationQuiz 타입)
+      // sentences와 translations를 합쳐서 처리
+      if (sentences.length === 0 && Array.isArray(data?.translations) && data?.translations.length > 0) {
+        // translations만 있고 sentences가 없는 경우는 없어야 하지만, 안전하게 처리
+        console.warn('⚠️ 유형#11: translations는 있지만 sentences가 없습니다.', { data });
+      } else if (Array.isArray(data?.translations) && data?.translations.length > 0) {
+        // sentences가 문자열 배열이고 translations가 별도 배열인 경우
+        const isStringArray = sentences.length > 0 && typeof sentences[0] === 'string';
+        if (isStringArray) {
+          sentences = sentences.map((sentence: string, idx: number) => ({
+            english: sentence,
+            korean: data.translations[idx] || ''
+          }));
+        }
+      }
+      
+      // sentences 배열이 비어있으면 경고 로그 출력
+      if (sentences.length === 0) {
+        console.warn('⚠️ 유형#11: sentences 배열이 비어있습니다.', {
+          data: data,
+          quizItem: quizItem,
+          quizData: quizData,
+          hasTranslations: Array.isArray(data?.translations),
+          translationsCount: Array.isArray(data?.translations) ? data.translations.length : 0
+        });
+      }
+      
+      // sentences 배열이 비어있으면 경고하고 빈 섹션 추가 (빈 페이지 방지)
+      if (sentences.length === 0) {
+        console.error('❌ 유형#11: sentences 배열이 비어있어서 빈 페이지가 생성될 수 있습니다!', {
+          data: data,
+          quizItem: quizItem,
+          quizData: quizData,
+          hasTranslations: Array.isArray(data?.translations),
+          translationsCount: Array.isArray(data?.translations) ? data.translations.length : 0
+        });
+        // 빈 섹션 추가하여 최소한 제목과 instruction이 표시되도록 함
+        pushSection({
+          type: 'paragraph',
+          key: 'paragraph-11-empty',
+          text: '(문장 데이터가 없습니다.)',
+          meta: { variant: 'sentence' }
+        });
+      }
+      
       sentences.forEach((sentence: any, idx: number) => {
         const englishText = typeof sentence === 'string' ? sentence : sentence?.english || sentence?.text || '';
         const koreanText = typeof sentence === 'string' ? '' : sentence?.korean || sentence?.translation || '';
-        const label = sentence?.label || `문장 ${idx + 1}`;
+        const label = sentence?.label || `문장 ${idx + 1} : `;
 
-        pushSection({
-          type: 'paragraph',
-          key: `paragraph-11-${idx}`,
-          text: englishText,
-          label,
-          meta: { variant: 'sentence' }
-        });
+        // 영어 문장이 비어있으면 건너뛰기
+        if (!englishText || englishText.trim().length === 0) {
+          console.warn(`⚠️ 유형#11: ${idx + 1}번 문장이 비어있습니다.`, { sentence });
+          return;
+        }
 
-        if (isAnswerMode && koreanText) {
+        // 정답 모드: 영어 문장과 한글 해석을 하나의 섹션으로 묶기
+        if (isAnswerMode) {
           pushSection({
             type: 'paragraph',
-            key: `paragraph-11-${idx}-translation`,
-            text: koreanText,
-            meta: { variant: 'sentence-translation' }
+            key: `paragraph-11-${idx}-combined`,
+            text: englishText,
+            label,
+            meta: { 
+              variant: 'sentence-with-translation',
+              translation: koreanText && koreanText.trim().length > 0 ? koreanText : undefined
+            }
+          });
+          
+          if (!koreanText || koreanText.trim().length === 0) {
+            // 정답 모드인데 번역이 없는 경우 경고
+            console.warn(`⚠️ 유형#11: ${idx + 1}번 문장의 번역이 없습니다.`, { 
+              sentence, 
+              englishText,
+              hasKorean: !!koreanText 
+            });
+          }
+        } else {
+          // 문제 모드: 영어 문장만 표시
+          pushSection({
+            type: 'paragraph',
+            key: `paragraph-11-${idx}`,
+            text: englishText,
+            label,
+            meta: { variant: 'sentence' }
           });
         }
       });
@@ -532,19 +615,59 @@ export const normalizeQuizItemForPrint = (
 
       const data = quizItem?.[`work${workTypeId}Data`] || quizData?.[`work${workTypeId}Data`] || quizData;
       if (data?.blankedText) {
-        // 유형#13, #14의 경우 빈칸 표시를 변환: (_____) → ( _ _ _ _ _ )
         let formattedBlankedText = data.blankedText;
-        if ((workTypeId === '13' || workTypeId === '14') && Array.isArray(data?.correctAnswers)) {
+        
+        if (isAnswerMode && Array.isArray(data?.correctAnswers) && data.correctAnswers.length > 0) {
+          // 정답 모드: 빈칸을 정답으로 대체 (파란색 진하게 스타일 적용)
+          // 원본 blankedText에서 빈칸 패턴을 찾아서 정답으로 교체
+          let answerIndex = 0;
+          
+          // 포괄적인 빈칸 패턴: (_____), ( A _____ ), ( _ _ _ _ _ ), (_______________) 등 모든 형태를 찾음
+          // 괄호 안에 선택적 문자(A-Z), 공백, 언더스코어가 있는 패턴
+          const blankPattern = /\([\s]*([A-Z])?[\s]*_+[\s]*\)/gi;
+          
+          formattedBlankedText = formattedBlankedText.replace(blankPattern, () => {
+            if (answerIndex < data.correctAnswers.length) {
+              const answer = data.correctAnswers[answerIndex++];
+              // HTML로 파란색 진하게 스타일 적용
+              return `( <span style="color: #1976d2; font-weight: 700;">${answer}</span> )`;
+            }
+            // 정답이 부족하면 원본 유지 (이론적으로는 발생하지 않아야 함)
+            return '(_____)';
+          });
+          
+          // HTML이 포함된 텍스트이므로 html 타입으로 섹션 생성
+          pushSection({
+            type: 'html',
+            key: `paragraph-${workTypeId}-blanked`,
+            html: formattedBlankedText
+          });
+        } else if (!isAnswerMode && Array.isArray(data?.correctAnswers)) {
+          // 문제 모드: 빈칸 표시를 변환: (_____) → ( _ _ _ _ _ )
           formattedBlankedText = formatBlankedText(
             data.blankedText,
             data.correctAnswers
           );
+          
+          pushSection({
+            type: 'paragraph',
+            key: `paragraph-${workTypeId}-blanked`,
+            text: formattedBlankedText
+          });
+        } else {
+          // 정답이 없는 경우 기본 텍스트로 표시
+          pushSection({
+            type: 'paragraph',
+            key: `paragraph-${workTypeId}-blanked`,
+            text: formattedBlankedText
+          });
         }
-        
-        pushSection({
-          type: 'paragraph',
-          key: `paragraph-${workTypeId}-blanked`,
-          text: formattedBlankedText
+      } else {
+        // blankedText가 없으면 경고 (빈 페이지 방지)
+        console.error(`❌ 유형#${workTypeId}: blankedText가 없어서 빈 페이지가 생성될 수 있습니다!`, {
+          data: data,
+          quizItem: quizItem,
+          quizData: quizData
         });
       }
 

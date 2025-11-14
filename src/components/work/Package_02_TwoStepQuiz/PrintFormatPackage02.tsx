@@ -349,7 +349,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
             `  ↳ 컬럼 ${columnIndex + 1} 첫 카드 섹션 타입들:`,
             columnItems[0].sections.map((section) => section.type)
           );
-        }
+            }
       });
 
       pages.push(
