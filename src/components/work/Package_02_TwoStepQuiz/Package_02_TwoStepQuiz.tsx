@@ -1115,10 +1115,9 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     `;
     document.head.appendChild(style);
 
-    // 인쇄용 컨테이너 생성
+    // 인쇄용 컨테이너 생성 (문제 모드와 동일한 구조로 변경)
     const printContainer = document.createElement('div');
-    printContainer.id = 'print-root-package02-answer-wrapper';
-    printContainer.className = 'print-container-answer print-answer-mode';
+    printContainer.id = 'print-root-package02-answer';
     document.body.appendChild(printContainer);
 
     // 기존 화면 숨기기
@@ -1151,7 +1150,8 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     setTimeout(async () => {
       // 파일 생성 및 Firebase Storage 업로드
       try {
-        const element = document.querySelector('#print-root-package02-answer-wrapper .print-container-answer');
+        // 정답 모드: 문제 모드와 동일하게 래퍼 요소 직접 사용
+        const element = document.getElementById('print-root-package02-answer');
         if (element && userData?.uid) {
           const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
           

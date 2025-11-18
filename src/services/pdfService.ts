@@ -27,43 +27,29 @@ export const generateAndUploadPDF = async (
   try {
     const { isAnswerMode = false, orientation = 'portrait' } = options;
     
-    // 요소 크기 확인 및 조정
-    const elementWidth = element.scrollWidth || element.offsetWidth || 800;
-    const elementHeight = element.scrollHeight || element.offsetHeight || 600;
-    
-    console.log('📏 요소 크기:', { width: elementWidth, height: elementHeight });
-
-    // HTML을 Canvas로 변환
-    const canvas = await html2canvas(element, {
-      useCORS: true,
-      logging: process.env.NODE_ENV === 'development', // 개발 환경에서만 로깅
-      width: elementWidth,
-      height: elementHeight,
-      scale: 1,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      foreignObjectRendering: false,
-      removeContainer: true,
-      onclone: (clonedDoc: Document) => {
-        // 복제된 문서에서 요소가 제대로 렌더링되도록 보장
-        const clonedElement = clonedDoc.querySelector(`#${element.id}`) || clonedDoc.body;
-        if (clonedElement) {
-          (clonedElement as HTMLElement).style.width = `${elementWidth}px`;
-          (clonedElement as HTMLElement).style.height = `${elementHeight}px`;
-        }
-      }
-    } as any);
-
-    console.log('📏 Canvas 크기:', { width: canvas.width, height: canvas.height });
-
-    // Canvas 크기 재확인 및 조정
-    if (canvas.width <= 0 || canvas.height <= 0) {
-      console.error('❌ Canvas 크기 오류:', { width: canvas.width, height: canvas.height });
-      throw new Error(`Canvas 크기가 유효하지 않습니다. (${canvas.width}x${canvas.height})`);
+    // Package#02인지 확인: .print-page 또는 .a4-landscape-page-template 요소가 있는지 확인
+    // 디버깅: 요소 구조 확인
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 PDF 생성 요소 확인:', {
+        elementId: element.id,
+        elementClass: element.className,
+        elementTag: element.tagName,
+        hasPrintPage: element.querySelector('.print-page') !== null,
+        hasA4Template: element.querySelector('.a4-landscape-page-template') !== null,
+        isAnswerMode
+      });
     }
-
-    // Canvas를 Data URL로 직접 변환
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    
+    const pageElements = element.querySelectorAll('.print-page, .a4-landscape-page-template');
+    const hasMultiplePages = pageElements.length > 0;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📄 페이지 요소 검색 결과:', {
+        totalPages: pageElements.length,
+        pageIds: Array.from(pageElements).map(el => (el as HTMLElement).id),
+        hasMultiplePages
+      });
+    }
     
     // PDF 생성
     const pdf = new jsPDF({
@@ -74,22 +60,269 @@ export const generateAndUploadPDF = async (
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
     
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-    const scaledWidth = imgWidth * ratio;
-    const scaledHeight = imgHeight * ratio;
-    const imgX = Math.max(0, (pdfWidth - scaledWidth) / 2);
-    const imgY = 0;
+    if (hasMultiplePages) {
+      // 여러 페이지가 있는 경우 (Package#02): 각 페이지를 개별 PDF 페이지로 추가
+      console.log(`📄 ${pageElements.length}개 페이지를 개별 PDF 페이지로 변환 중...`);
+      
+      // A4 가로 크기 (mm 단위)
+      const A4_LANDSCAPE_WIDTH_MM = 297; // 가로
+      const A4_LANDSCAPE_HEIGHT_MM = 210; // 세로
+      // 픽셀 변환 (96 DPI 기준)
+      const MM_TO_PX = 96 / 25.4; // 1mm = 약 3.78px
+      const A4_LANDSCAPE_WIDTH_PX = A4_LANDSCAPE_WIDTH_MM * MM_TO_PX;
+      const A4_LANDSCAPE_HEIGHT_PX = A4_LANDSCAPE_HEIGHT_MM * MM_TO_PX;
+      
+      for (let i = 0; i < pageElements.length; i++) {
+        const pageElement = pageElements[i] as HTMLElement;
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`📄 페이지 ${i + 1}/${pageElements.length} 처리 시작:`, {
+            pageId: pageElement.id,
+            pageClass: pageElement.className,
+            pageRect: pageElement.getBoundingClientRect()
+          });
+        }
+        
+        // 첫 페이지가 아니면 새 PDF 페이지 추가
+        if (i > 0) {
+          pdf.addPage();
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ PDF 페이지 ${i + 1} 추가됨`);
+          }
+        }
+        
+        // 현재 페이지의 위치와 크기 계산
+        const pageRect = pageElement.getBoundingClientRect();
+        const originalStyles = {
+          position: pageElement.style.position,
+          top: pageElement.style.top,
+          left: pageElement.style.left,
+          display: pageElement.style.display,
+          visibility: pageElement.style.visibility,
+          opacity: pageElement.style.opacity,
+          transform: pageElement.style.transform,
+          zIndex: pageElement.style.zIndex
+        };
+        
+        // 다른 페이지 요소들을 완전히 숨기기
+        const hiddenElements: Array<{ el: HTMLElement; styles: Partial<CSSStyleDeclaration> }> = [];
+        pageElements.forEach((el, idx) => {
+          if (idx !== i) {
+            const hiddenEl = el as HTMLElement;
+            const hiddenStyles = {
+              display: hiddenEl.style.display,
+              visibility: hiddenEl.style.visibility,
+              opacity: hiddenEl.style.opacity,
+              position: hiddenEl.style.position
+            };
+            hiddenEl.style.display = 'none';
+            hiddenEl.style.visibility = 'hidden';
+            hiddenEl.style.opacity = '0';
+            hiddenEl.style.position = 'fixed';
+            hiddenEl.style.left = '-99999px';
+            hiddenEl.style.top = '-99999px';
+            hiddenElements.push({ el: hiddenEl, styles: hiddenStyles });
+          }
+        });
+        
+        // 임시 컨테이너를 try 블록 밖에서 선언 (finally에서 접근 가능하도록)
+        let tempContainer: HTMLElement | null = null;
+        
+        try {
+          // 현재 페이지 요소를 완전히 격리하기 위해 임시 컨테이너 생성
+          tempContainer = document.createElement('div');
+          tempContainer.id = `temp-pdf-page-${i}`;
+          tempContainer.style.position = 'fixed';
+          tempContainer.style.top = '0px';
+          tempContainer.style.left = '0px';
+          tempContainer.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`;
+          tempContainer.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+          tempContainer.style.overflow = 'hidden';
+          tempContainer.style.backgroundColor = '#ffffff';
+          tempContainer.style.zIndex = '99999';
+          document.body.appendChild(tempContainer);
+          
+          // 현재 페이지 요소를 임시 컨테이너로 이동
+          const clonedPage = pageElement.cloneNode(true) as HTMLElement;
+          clonedPage.style.position = 'relative';
+          clonedPage.style.top = '0px';
+          clonedPage.style.left = '0px';
+          clonedPage.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`;
+          clonedPage.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+          clonedPage.style.display = 'block';
+          clonedPage.style.visibility = 'visible';
+          clonedPage.style.opacity = '1';
+          clonedPage.style.transform = 'none';
+          clonedPage.style.margin = '0';
+          clonedPage.style.padding = '0';
+          tempContainer.appendChild(clonedPage);
+          
+          // 원본 페이지 요소는 숨김
+          pageElement.style.display = 'none';
+          
+          // 임시 컨테이너를 Canvas로 변환 (완전히 격리된 상태)
+          const canvas = await html2canvas(tempContainer, {
+            useCORS: true,
+            logging: process.env.NODE_ENV === 'development',
+            width: A4_LANDSCAPE_WIDTH_PX,
+            height: A4_LANDSCAPE_HEIGHT_PX,
+            scale: 2, // 고해상도를 위해 2배 스케일
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            foreignObjectRendering: false,
+            x: 0,
+            y: 0,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: A4_LANDSCAPE_WIDTH_PX,
+            windowHeight: A4_LANDSCAPE_HEIGHT_PX,
+            onclone: (clonedDoc: Document) => {
+              // tempContainer가 null이 아니어야 함
+              if (!tempContainer) return;
+              
+              // 복제된 문서에서 tempContainer 찾기
+              const body = clonedDoc.body;
+              if (body) {
+                const tempContainerClone = body.querySelector(`#${tempContainer.id}`) as HTMLElement;
+                
+                if (tempContainerClone) {
+                  // body의 모든 자식을 제거하고 tempContainer만 남김
+                  Array.from(body.children).forEach(child => {
+                    if (child !== tempContainerClone) {
+                      child.remove();
+                    }
+                  });
+                  
+                  // tempContainer가 body의 유일한 자식이 되도록 보장
+                  if (tempContainerClone.parentNode !== body) {
+                    body.appendChild(tempContainerClone);
+                  }
+                } else {
+                  // tempContainer를 찾을 수 없으면 body의 모든 자식 제거
+                  Array.from(body.children).forEach(child => child.remove());
+                }
+                
+                // body 스타일 설정
+                body.style.margin = '0';
+                body.style.padding = '0';
+                body.style.overflow = 'hidden';
+                body.style.backgroundColor = '#ffffff';
+                body.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`;
+                body.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+              }
+              
+              // html 요소 스타일 설정
+              const html = clonedDoc.documentElement;
+              if (html) {
+                html.style.margin = '0';
+                html.style.padding = '0';
+                html.style.overflow = 'hidden';
+                html.style.backgroundColor = '#ffffff';
+                html.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`;
+                html.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+              }
+            }
+          } as any);
+          
+          if (canvas.width <= 0 || canvas.height <= 0) {
+            console.error(`❌ 페이지 ${i + 1} Canvas 크기 오류:`, { width: canvas.width, height: canvas.height });
+            continue;
+          }
+          
+          // Canvas를 Data URL로 변환
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          
+          // PDF 페이지 크기에 맞게 이미지 추가 (페이지 전체 크기 사용)
+          pdf.addImage(imgData, 'JPEG', 0, 0, A4_LANDSCAPE_WIDTH_MM, A4_LANDSCAPE_HEIGHT_MM);
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ 페이지 ${i + 1}/${pageElements.length} 추가 완료`, {
+              canvasSize: { width: canvas.width, height: canvas.height },
+              pdfSize: { width: A4_LANDSCAPE_WIDTH_MM, height: A4_LANDSCAPE_HEIGHT_MM },
+              pageRect: { width: pageRect.width, height: pageRect.height, top: pageRect.top, left: pageRect.left }
+            });
+          }
+        } finally {
+          // 임시 컨테이너 제거
+          if (tempContainer && tempContainer.parentNode) {
+            tempContainer.parentNode.removeChild(tempContainer);
+            tempContainer = null;
+          }
+          
+          // 원본 페이지 요소 원래 상태로 복원
+          Object.keys(originalStyles).forEach(key => {
+            (pageElement.style as any)[key] = originalStyles[key as keyof typeof originalStyles] || '';
+          });
+          
+          // 숨겨진 요소들 원래 상태로 복원
+          hiddenElements.forEach(({ el, styles }) => {
+            if (styles.display !== undefined) el.style.display = styles.display as string;
+            if (styles.visibility !== undefined) el.style.visibility = styles.visibility as string;
+            if (styles.opacity !== undefined) el.style.opacity = styles.opacity as string;
+            if (styles.position !== undefined) el.style.position = styles.position as string;
+            el.style.left = '';
+            el.style.top = '';
+          });
+        }
+      }
+    } else {
+      // 단일 페이지인 경우: 기존 로직 사용
+      // 요소 크기 확인 및 조정
+      const elementWidth = element.scrollWidth || element.offsetWidth || 800;
+      const elementHeight = element.scrollHeight || element.offsetHeight || 600;
+      
+      console.log('📏 요소 크기:', { width: elementWidth, height: elementHeight });
 
-    // 유효한 좌표와 크기인지 확인
-    if (isNaN(imgX) || isNaN(imgY) || isNaN(scaledWidth) || isNaN(scaledHeight) || 
-        scaledWidth <= 0 || scaledHeight <= 0) {
-      throw new Error('PDF 이미지 크기 계산 오류');
+      // HTML을 Canvas로 변환
+      const canvas = await html2canvas(element, {
+        useCORS: true,
+        logging: process.env.NODE_ENV === 'development', // 개발 환경에서만 로깅
+        width: elementWidth,
+        height: elementHeight,
+        scale: 1,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        foreignObjectRendering: false,
+        removeContainer: true,
+        onclone: (clonedDoc: Document) => {
+          // 복제된 문서에서 요소가 제대로 렌더링되도록 보장
+          const clonedElement = clonedDoc.querySelector(`#${element.id}`) || clonedDoc.body;
+          if (clonedElement) {
+            (clonedElement as HTMLElement).style.width = `${elementWidth}px`;
+            (clonedElement as HTMLElement).style.height = `${elementHeight}px`;
+          }
+        }
+      } as any);
+
+      console.log('📏 Canvas 크기:', { width: canvas.width, height: canvas.height });
+
+      // Canvas 크기 재확인 및 조정
+      if (canvas.width <= 0 || canvas.height <= 0) {
+        console.error('❌ Canvas 크기 오류:', { width: canvas.width, height: canvas.height });
+        throw new Error(`Canvas 크기가 유효하지 않습니다. (${canvas.width}x${canvas.height})`);
+      }
+
+      // Canvas를 Data URL로 직접 변환
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const scaledWidth = imgWidth * ratio;
+      const scaledHeight = imgHeight * ratio;
+      const imgX = Math.max(0, (pdfWidth - scaledWidth) / 2);
+      const imgY = 0;
+
+      // 유효한 좌표와 크기인지 확인
+      if (isNaN(imgX) || isNaN(imgY) || isNaN(scaledWidth) || isNaN(scaledHeight) || 
+          scaledWidth <= 0 || scaledHeight <= 0) {
+        throw new Error('PDF 이미지 크기 계산 오류');
+      }
+
+      pdf.addImage(imgData, 'JPEG', imgX, imgY, scaledWidth, scaledHeight);
     }
-
-    pdf.addImage(imgData, 'JPEG', imgX, imgY, scaledWidth, scaledHeight);
 
     // PDF를 Blob으로 변환
     const pdfBlob = pdf.output('blob');
