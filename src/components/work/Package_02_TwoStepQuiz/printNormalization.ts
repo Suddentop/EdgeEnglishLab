@@ -231,6 +231,16 @@ export const normalizeQuizItemForPrint = (
 
   const addAnswerSection = (answers: string[], description?: string, keySuffix: string = '') => {
     if (!isAnswerMode) return;
+    // 유형#06의 경우 항상 정답 섹션 추가
+    if (workTypeId === '06') {
+      pushSection({
+        type: 'answer',
+        key: `answer-${workTypeId}${keySuffix}`,
+        items: answers,
+        meta: description ? { description } : undefined
+      });
+      return;
+    }
     if (chunkMeta && chunkMeta.showAnswer === false) return;
     pushSection({
       type: 'answer',
@@ -241,14 +251,10 @@ export const normalizeQuizItemForPrint = (
   };
 
   const addTranslationSection = (text: string | undefined | null, keySuffix: string = '') => {
-    if (!isAnswerMode) return;
-    if (chunkMeta && chunkMeta.showTranslation === false) return;
-    if (!text || !text.trim()) return;
-    pushSection({
-      type: 'translation',
-      key: `translation-${workTypeId}${keySuffix}`,
-      text
-    });
+    // 패키지#02 인쇄(정답) 모드에서는 각 유형의 translation 섹션을 추가하지 않음
+    // 모든 유형의 translation을 모아서 마지막에 하나만 표시하도록 변경
+    // 따라서 이 함수는 더 이상 사용하지 않음 (하위 호환성을 위해 유지)
+    return;
   };
 
   const titleSection = createTitleSection(workTypeId, chunkMeta);
@@ -267,16 +273,32 @@ export const normalizeQuizItemForPrint = (
         });
       });
 
-      const options = ensureOptionsArray(quizData.choices || [], helpers).map((option, idx) => ({
-        ...option,
-        text: cleanOptionText(option.text),
-        isCorrect: isAnswerMode ? quizData.answerIndex === idx : undefined
-      }));
+      // 정답 모드일 때: 영어 단락과 본문해석 사이에 정답 추가
+      if (isAnswerMode) {
+        const answerChoice = Array.isArray(quizData.choices) && quizData.choices[quizData.answerIndex]
+          ? quizData.choices[quizData.answerIndex]
+          : [];
+        const answerText = answerChoice.length > 0
+          ? `${OPTION_LABELS[quizData.answerIndex] || ''} ${answerChoice.join(' → ')}`
+          : `${OPTION_LABELS[quizData.answerIndex] || '-'}`;
+        addAnswerSection([`정답: ${answerText}`]);
+      }
+
+      // 유형#01의 경우 choices는 배열의 배열이므로 "→"로 join
+      const choices = quizData.choices || [];
+      const options = choices.map((choice: any, idx: number) => {
+        const choiceArray = Array.isArray(choice) ? choice : [];
+        const choiceText = choiceArray.length > 0 
+          ? choiceArray.join(' → ')
+          : cleanOptionText(choice);
+        return {
+          label: OPTION_LABELS[idx],
+          text: choiceText,
+          isCorrect: isAnswerMode ? quizData.answerIndex === idx : undefined
+        };
+      });
       addOptionsSection(options);
 
-      if (isAnswerMode) {
-        addAnswerSection([`정답: ${OPTION_LABELS[quizData.answerIndex] || '-'}`]);
-      }
       addTranslationSection(getTranslatedText(quizItem, quizData));
       break;
     }
@@ -372,8 +394,68 @@ export const normalizeQuizItemForPrint = (
         });
       }
 
-      if (isAnswerMode && typeof data?.answerIndex === 'number') {
-        addAnswerSection([`정답: ${OPTION_LABELS[data.answerIndex] || '-'}`]);
+      // 유형#06의 경우 answerIndex를 여러 소스에서 확인 (가장 우선순위 높은 것부터)
+      let answerIndex: number | undefined = undefined;
+      if (quizItem?.work06Data?.answerIndex !== undefined && typeof quizItem.work06Data.answerIndex === 'number') {
+        answerIndex = quizItem.work06Data.answerIndex;
+      } else if (data?.answerIndex !== undefined && typeof data.answerIndex === 'number') {
+        answerIndex = data.answerIndex;
+      } else if (quizData?.work06Data?.answerIndex !== undefined && typeof quizData.work06Data.answerIndex === 'number') {
+        answerIndex = quizData.work06Data.answerIndex;
+      } else if (quizItem?.quiz?.work06Data?.answerIndex !== undefined && typeof quizItem.quiz.work06Data.answerIndex === 'number') {
+        answerIndex = quizItem.quiz.work06Data.answerIndex;
+      } else if (quizItem?.quiz?.answerIndex !== undefined && typeof quizItem.quiz.answerIndex === 'number') {
+        answerIndex = quizItem.quiz.answerIndex;
+      }
+
+      // 디버깅: 유형#06의 answerIndex 확인
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 유형#06 answerIndex 찾기:', {
+          answerIndex,
+          'quizItem.work06Data?.answerIndex': quizItem?.work06Data?.answerIndex,
+          'data?.answerIndex': data?.answerIndex,
+          'quizData?.work06Data?.answerIndex': quizData?.work06Data?.answerIndex,
+          'quizItem?.quiz?.work06Data?.answerIndex': quizItem?.quiz?.work06Data?.answerIndex,
+          'quizItem?.quiz?.answerIndex': quizItem?.quiz?.answerIndex,
+          isAnswerMode
+        });
+      }
+
+      // 영어본문 컨테이너 바로 아래에 정답이 들어갈 컨테이너 추가 (유형#06 인쇄 정답 모드)
+      // 유형#06의 경우 영어본문 컨테이너 바로 아래에 "정답 : ④" 형식으로 표시
+      if (isAnswerMode) {
+        if (answerIndex !== undefined && typeof answerIndex === 'number') {
+          const answerText = `정답 : ${OPTION_LABELS[answerIndex] || '-'}`;
+          
+          // 영어본문 컨테이너 바로 아래에 정답이 들어갈 컨테이너 추가
+          const infoSection = {
+            type: 'text' as const,
+            key: 'text-06-info',
+            text: answerText, // 정답 텍스트
+            meta: { variant: 'work06-info' }
+          };
+          console.log('✅ 유형#06 정답 컨테이너 섹션 추가:', infoSection);
+          pushSection(infoSection);
+          console.log('✅ 유형#06 정답 컨테이너 섹션 추가 완료, 현재 섹션 수:', sections.length);
+          
+          // 기존 answer 섹션은 추가하지 않음 (정답이 컨테이너에 표시됨)
+        } else {
+          // answerIndex를 찾지 못한 경우 경고
+          console.warn('⚠️ 유형#06: answerIndex를 찾을 수 없습니다', {
+            quizItem: {
+              work06Data: quizItem?.work06Data,
+              quiz: quizItem?.quiz
+            },
+            data: {
+              answerIndex: data?.answerIndex,
+              work06Data: data?.work06Data
+            },
+            quizData: {
+              work06Data: quizData?.work06Data,
+              answerIndex: quizData?.answerIndex
+            }
+          });
+        }
       }
 
       addTranslationSection(getTranslatedText(quizItem, data || quizData));
@@ -444,6 +526,49 @@ export const normalizeQuizItemForPrint = (
           isCorrect: isAnswerMode ? data?.answerIndex === idx : undefined
         }));
         addOptionsSection(options);
+      }
+
+      // 유형#10 인쇄(정답) 모드: 4지선다 아래에 어법 오류 정보 텍스트 추가
+      // 중요: 이 섹션은 options 섹션 다음에 추가되어야 함
+      if (isAnswerMode && workTypeId === '10') {
+        // 어법 오류 정보 포맷팅
+        let errorText = '유형테스트';
+        if (Array.isArray(data?.wrongIndexes) && Array.isArray(data?.originalWords) && Array.isArray(data?.transformedWords)) {
+          const wrongIndexes = data.wrongIndexes;
+          const originalWords = data.originalWords;
+          const transformedWords = data.transformedWords;
+          
+          // 틀린 단어들을 인덱스 순서대로 정렬하여 포맷팅
+          const sortedIndexes = [...wrongIndexes].sort((a, b) => a - b);
+          const errorItems = sortedIndexes
+            .filter(index => index >= 0 && index < 8 && originalWords[index] && transformedWords[index])
+            .map(index => {
+              const label = OPTION_LABELS[index] || `(${index + 1})`;
+              const original = originalWords[index];
+              const transformed = transformedWords[index];
+              return `${label}${original} → ${transformed}`;
+            });
+          
+          if (errorItems.length > 0) {
+            errorText = `어법상 틀린 단어: ${errorItems.join(', ')}`;
+          }
+        }
+        
+        const testTextSection: PrintSection = {
+          type: 'text',
+          key: `text-${workTypeId}-test-label`,
+          text: errorText
+        };
+        pushSection(testTextSection);
+        console.log('✅ 유형#10 텍스트 섹션 추가 (항상 로그):', {
+          workTypeId,
+          isAnswerMode,
+          section: testTextSection,
+          sectionsCount: sections.length,
+          allSectionTypes: sections.map(s => s.type),
+          allSectionKeys: sections.map(s => s.key),
+          errorText
+        });
       }
 
       if (isAnswerMode) {
@@ -622,8 +747,25 @@ export const normalizeQuizItemForPrint = (
           // 원본 blankedText에서 빈칸 패턴을 찾아서 정답으로 교체
           let answerIndex = 0;
           
-          // 포괄적인 빈칸 패턴: (_____), ( A _____ ), ( _ _ _ _ _ ), (_______________) 등 모든 형태를 찾음
+          // 먼저 원본 텍스트에서 이상한 패턴들을 제거 (정답 교체 전에 정리)
+          // 패턴: ( ( (____________________E____________________) 문장 ) 같은 복잡한 패턴 제거
+          // 여러 개의 여는 괄호 + 빈칸 패턴 + 문장 + 닫는 괄호들
+          // 더 포괄적인 패턴: 괄호 안에 언더스코어와 문자가 섞여있고 그 뒤에 문장이 있는 경우
+          let hasCleanup = true;
+          while (hasCleanup) {
+            const beforeCleanup = formattedBlankedText;
+            // 3개 이상의 여는 괄호 + 빈칸 패턴 + 문장 + 닫는 괄호들
+            formattedBlankedText = formattedBlankedText.replace(/\(\s*\(\s*\([\s]*_+[A-Z]_+[\s]*\)[^)]*\)/gi, '');
+            // 2개의 여는 괄호 + 빈칸 패턴 + 문장 + 닫는 괄호
+            formattedBlankedText = formattedBlankedText.replace(/\(\s*\([\s]*_+[A-Z]_+[\s]*\)[^)]*\)/gi, '');
+            // 괄호 안에 언더스코어가 있고 그 뒤에 문장이 있는 패턴 (일반적인 경우)
+            formattedBlankedText = formattedBlankedText.replace(/\([\s]*_+[A-Z]_+[\s]*\)[^)]*\)/gi, '');
+            hasCleanup = beforeCleanup !== formattedBlankedText;
+          }
+          
+          // 포괄적인 빈칸 패턴: (_____), ( A _____ ), ( _ _ _ _ _ ), (_______________), (____________________A____________________) 등 모든 형태를 찾음
           // 괄호 안에 선택적 문자(A-Z), 공백, 언더스코어가 있는 패턴
+          // 패턴 1: 일반적인 빈칸 (_____), ( A _____ )
           const blankPattern = /\([\s]*([A-Z])?[\s]*_+[\s]*\)/gi;
           
           formattedBlankedText = formattedBlankedText.replace(blankPattern, () => {
@@ -635,6 +777,56 @@ export const normalizeQuizItemForPrint = (
             // 정답이 부족하면 원본 유지 (이론적으로는 발생하지 않아야 함)
             return '(_____)';
           });
+          
+          // 패턴 2: 언더스코어 사이에 문자가 있는 패턴 (____________________A____________________) 제거
+          // 정답 교체 후 남은 이런 패턴들을 제거
+          formattedBlankedText = formattedBlankedText.replace(/\([\s]*_+[A-Z]_+[\s]*\)/gi, () => {
+            if (answerIndex < data.correctAnswers.length) {
+              const answer = data.correctAnswers[answerIndex++];
+              // HTML로 파란색 진하게 스타일 적용
+              return `( <span style="color: #1976d2; font-weight: 700;">${answer}</span> )`;
+            }
+            // 정답이 없으면 빈 괄호로 제거
+            return '';
+          });
+          
+          // 패턴 3: 앞에 여분의 괄호가 있는 패턴 ( (____________________E____________________) 제거
+          // 두 개의 괄호가 연속으로 있는 경우 (공백 있거나 없거나)
+          // 정규식: 여는 괄호 하나 이상, 공백 0개 이상, 빈칸 패턴, 닫는 괄호
+          let hasReplacement = true;
+          while (hasReplacement) {
+            const beforeReplace = formattedBlankedText;
+            formattedBlankedText = formattedBlankedText.replace(/\(\s*\([\s]*_+[A-Z]_+[\s]*\)/gi, () => {
+              if (answerIndex < data.correctAnswers.length) {
+                const answer = data.correctAnswers[answerIndex++];
+                // HTML로 파란색 진하게 스타일 적용 (여분의 괄호 제거)
+                return `( <span style="color: #1976d2; font-weight: 700;">${answer}</span> )`;
+              }
+              // 정답이 없으면 완전히 제거
+              return '';
+            });
+            hasReplacement = beforeReplace !== formattedBlankedText;
+          }
+          
+          // 패턴 4: 남은 모든 빈칸 패턴 제거 (언더스코어만 있는 패턴, 두 개의 괄호 포함)
+          formattedBlankedText = formattedBlankedText.replace(/\([\s]*_+[\s]*\)/gi, '');
+          // 두 개의 괄호가 연속으로 있는 빈 패턴도 제거 (반복적으로)
+          hasReplacement = true;
+          while (hasReplacement) {
+            const beforeReplace = formattedBlankedText;
+            formattedBlankedText = formattedBlankedText.replace(/\(\s*\([\s]*_+[\s]*\)/gi, '');
+            hasReplacement = beforeReplace !== formattedBlankedText;
+          }
+          
+          // 패턴 5: 복잡한 중첩 패턴 제거 (정답 교체 후에도 남아있을 수 있는 패턴)
+          // ( ( (___E___) 문장 ) 같은 패턴
+          hasReplacement = true;
+          while (hasReplacement) {
+            const beforeReplace = formattedBlankedText;
+            formattedBlankedText = formattedBlankedText.replace(/\(\s*\(\s*\([^)]*\)[^)]*\)/gi, '');
+            formattedBlankedText = formattedBlankedText.replace(/\(\s*\([^)]*_+[^)]*\)[^)]*\)/gi, '');
+            hasReplacement = beforeReplace !== formattedBlankedText;
+          }
           
           // HTML이 포함된 텍스트이므로 html 타입으로 섹션 생성
           pushSection({

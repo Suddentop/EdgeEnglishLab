@@ -30,6 +30,27 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
       console.log('  응답 상태:', response.status, response.statusText);
       console.log('  응답 헤더:', Object.fromEntries(response.headers.entries()));
       
+      // 프록시 응답에서 401 에러인 경우 상세 정보 제공
+      if (response.status === 401) {
+        const errorText = await response.text().catch(() => '');
+        let errorMessage = 'OpenAI API 인증 실패 (401)';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error?.message) {
+            errorMessage = `OpenAI API 인증 실패: ${errorData.error.message}`;
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 기본 메시지 사용
+        }
+        
+        console.error('❌ API 인증 오류:', errorMessage);
+        console.error('💡 해결 방법:');
+        console.error('   1. 프록시 서버의 OpenAI API 키가 올바른지 확인하세요.');
+        console.error('   2. API 키가 만료되지 않았는지 확인하세요.');
+        console.error('   3. 프록시 서버 설정을 확인하세요.');
+      }
+      
       return response;
     } catch (fetchError: any) {
       console.error('❌ [프록시 호출 실패]');
@@ -62,6 +83,27 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
     });
     
     console.log('  응답 상태:', response.status, response.statusText);
+    
+    // 직접 API 호출에서 401 에러인 경우 상세 정보 제공
+    if (response.status === 401) {
+      const errorText = await response.text().catch(() => '');
+      let errorMessage = 'OpenAI API 인증 실패 (401)';
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message) {
+          errorMessage = `OpenAI API 인증 실패: ${errorData.error.message}`;
+        }
+      } catch (e) {
+        // JSON 파싱 실패 시 기본 메시지 사용
+      }
+      
+      console.error('❌ API 인증 오류:', errorMessage);
+      console.error('💡 해결 방법:');
+      console.error('   1. .env.local 파일의 REACT_APP_OPENAI_API_KEY가 올바른지 확인하세요.');
+      console.error('   2. API 키가 만료되지 않았는지 확인하세요.');
+      console.error('   3. OpenAI 계정의 API 키 사용량을 확인하세요.');
+    }
     
     return response;
   } catch (fetchError: any) {
@@ -167,7 +209,23 @@ ${englishText}`;
     const response = await callOpenAIAPI(request);
 
     if (!response.ok) {
-      throw new Error(`API 호출 실패: ${response.status}`);
+      const errorText = await response.text().catch(() => '');
+      let errorMessage = `API 호출 실패: ${response.status}`;
+      
+      // 401 에러인 경우 더 명확한 메시지 제공
+      if (response.status === 401) {
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error?.message) {
+            errorMessage = `API 인증 실패: ${errorData.error.message}. API 키를 확인해주세요.`;
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 기본 메시지 사용
+          errorMessage = `API 인증 실패 (401). API 키를 확인해주세요.`;
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -327,20 +385,8 @@ ${passage}`;
           temperature: 0.01
         };
 
-        // 직접 OpenAI API 호출 (재시도)
-        const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-        if (!apiKey) {
-          throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-        }
-
-        const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify(retryRequest)
-        });
+        // callOpenAIAPI를 사용하여 재시도
+        const retryResponse = await callOpenAIAPI(retryRequest);
 
         if (!retryResponse.ok) {
           throw new Error(`API 호출 실패: ${retryResponse.status}`);

@@ -13,13 +13,36 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
   // 프록시 URL이 설정된 경우 프록시 사용 (프로덕션)
   if (proxyUrl) {
     console.log('🤖 OpenAI 프록시 서버 호출 중...', proxyUrl);
-    return await fetch(proxyUrl, {
+    const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
     });
+    
+    // 프록시 응답에서 401 에러인 경우 상세 정보 제공
+    if (response.status === 401) {
+      const errorText = await response.text().catch(() => '');
+      let errorMessage = 'OpenAI API 인증 실패 (401)';
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message) {
+          errorMessage = `OpenAI API 인증 실패: ${errorData.error.message}`;
+        }
+      } catch (e) {
+        // JSON 파싱 실패 시 기본 메시지 사용
+      }
+      
+      console.error('❌ API 인증 오류:', errorMessage);
+      console.error('💡 해결 방법:');
+      console.error('   1. 프록시 서버의 OpenAI API 키가 올바른지 확인하세요.');
+      console.error('   2. API 키가 만료되지 않았는지 확인하세요.');
+      console.error('   3. 프록시 서버 설정을 확인하세요.');
+    }
+    
+    return response;
   }
   
   // 개발 환경: 직접 API 호출
@@ -28,7 +51,7 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
   }
   
   console.log('🤖 OpenAI 직접 API 호출 중...');
-  return await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -36,6 +59,29 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
     },
     body: JSON.stringify(requestBody),
   });
+  
+  // 직접 API 호출에서 401 에러인 경우 상세 정보 제공
+  if (response.status === 401) {
+    const errorText = await response.text().catch(() => '');
+    let errorMessage = 'OpenAI API 인증 실패 (401)';
+    
+    try {
+      const errorData = JSON.parse(errorText);
+      if (errorData.error?.message) {
+        errorMessage = `OpenAI API 인증 실패: ${errorData.error.message}`;
+      }
+    } catch (e) {
+      // JSON 파싱 실패 시 기본 메시지 사용
+    }
+    
+    console.error('❌ API 인증 오류:', errorMessage);
+    console.error('💡 해결 방법:');
+    console.error('   1. .env.local 파일의 REACT_APP_OPENAI_API_KEY가 올바른지 확인하세요.');
+    console.error('   2. API 키가 만료되지 않았는지 확인하세요.');
+    console.error('   3. OpenAI 계정의 API 키 사용량을 확인하세요.');
+  }
+  
+  return response;
 }
 
 export interface BlankQuizData {
@@ -433,7 +479,33 @@ export const translateToKorean = async (text: string, _apiKey?: string): Promise
       max_tokens: 2000,
       temperature: 0.3
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      let errorMessage = `API 호출 실패: ${response.status}`;
+      
+      // 401 에러인 경우 더 명확한 메시지 제공
+      if (response.status === 401) {
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error?.message) {
+            errorMessage = `API 인증 실패: ${errorData.error.message}. API 키를 확인해주세요.`;
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 기본 메시지 사용
+          errorMessage = `API 인증 실패 (401). API 키를 확인해주세요.`;
+        }
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
     const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('API 응답 형식 오류');
+    }
+    
     return data.choices[0].message.content.trim();
   } catch (error) {
     console.error('❌ 번역 오류:', error);

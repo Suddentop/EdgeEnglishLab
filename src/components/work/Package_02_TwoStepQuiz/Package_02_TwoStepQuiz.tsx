@@ -686,20 +686,58 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         case '01': {
           const quiz = await generateWork01Quiz(inputText);
           quizItem.quiz = quiz;
-          quizItem.translatedText = await translateToKorean(inputText);
+          
+          // work01Service에서 생성된 번역을 우선 사용
+          // 번역이 있고 실패 메시지가 포함되지 않은 경우
+          if (quiz.translation && quiz.translation.trim() && !quiz.translation.includes('[번역 실패')) {
+            quizItem.translatedText = quiz.translation;
+          } else {
+            // work01Service의 번역이 실패한 경우, 단락별 번역을 조합하여 사용
+            if (quiz.paragraphs && quiz.paragraphs.length > 0) {
+              const paragraphTranslations = quiz.paragraphs
+                .map((p: any) => p.translation)
+                .filter((t: string) => t && t.trim() && !t.includes('[번역 실패'))
+                .join('\n\n');
+              
+              if (paragraphTranslations && paragraphTranslations.trim()) {
+                quizItem.translatedText = paragraphTranslations;
+              } else {
+                // 모든 번역이 실패한 경우, 영어 원문을 표시하거나 빈 문자열
+                // (문제는 생성되었지만 번역이 없는 상태)
+                console.warn('⚠️ 유형#01 모든 번역 실패, 문제는 생성되었습니다.');
+                quizItem.translatedText = ''; // 빈 문자열로 설정하여 UI에서 처리
+              }
+            } else {
+              // paragraphs가 없는 경우 (이론적으로 발생하지 않아야 함)
+              quizItem.translatedText = '';
+            }
+          }
           break;
         }
 
         case '02': {
           const quiz = await generateWork02Quiz(inputText);
           quizItem.work02Data = quiz;
-          quizItem.translatedText = await translateToKorean(inputText);
+          // 번역 실패 시에도 문제 생성은 계속 진행
+          try {
+            quizItem.translatedText = await translateToKorean(inputText);
+          } catch (error: any) {
+            console.warn('⚠️ 유형#02 번역 실패, 문제는 생성되었습니다:', error.message);
+            quizItem.translatedText = '[번역 실패: API 인증 오류]';
+          }
           break;
         }
 
         case '03': {
           const quiz = await generateWork03Quiz(inputText);
-          const translation = await translateToKorean(inputText);
+          // 번역 실패 시에도 문제 생성은 계속 진행
+          let translation = '';
+          try {
+            translation = await translateToKorean(inputText);
+          } catch (error: any) {
+            console.warn('⚠️ 유형#03 번역 실패, 문제는 생성되었습니다:', error.message);
+            translation = '[번역 실패: API 인증 오류]';
+          }
           quizItem.work03Data = {
             ...quiz,
             translation
@@ -710,7 +748,14 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
         case '04': {
           const quiz = await generateWork04Quiz(inputText);
-          const translation = await translateToKorean(inputText);
+          // 번역 실패 시에도 문제 생성은 계속 진행
+          let translation = '';
+          try {
+            translation = await translateToKorean(inputText);
+          } catch (error: any) {
+            console.warn('⚠️ 유형#04 번역 실패, 문제는 생성되었습니다:', error.message);
+            translation = '[번역 실패: API 인증 오류]';
+          }
           quizItem.work04Data = {
             ...quiz,
             translation
@@ -721,7 +766,14 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
         case '05': {
           const quiz = await generateWork05Quiz(inputText);
-          const translation = await translateToKorean(inputText);
+          // 번역 실패 시에도 문제 생성은 계속 진행
+          let translation = '';
+          try {
+            translation = await translateToKorean(inputText);
+          } catch (error: any) {
+            console.warn('⚠️ 유형#05 번역 실패, 문제는 생성되었습니다:', error.message);
+            translation = '[번역 실패: API 인증 오류]';
+          }
           quizItem.work05Data = {
             ...quiz,
             translation
@@ -734,7 +786,13 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           const quiz = await generateWork06Quiz(inputText);
           quizItem.work06Data = quiz;
           // 주요 문장을 포함한 원본 전체 본문의 번역
-          quizItem.translatedText = await translateToKorean(inputText);
+          // 번역 실패 시에도 문제 생성은 계속 진행
+          try {
+            quizItem.translatedText = await translateToKorean(inputText);
+          } catch (error: any) {
+            console.warn('⚠️ 유형#06 번역 실패, 문제는 생성되었습니다:', error.message);
+            quizItem.translatedText = '[번역 실패: API 인증 오류]';
+          }
           break;
         }
 
@@ -1106,14 +1164,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           );
           
           // 패키지 내역에 파일 URL 저장
-          const { getQuizHistory } = await import('../../../services/quizHistoryService');
-          const history = await getQuizHistory(userData.uid, { limit: 10 });
-          const packageHistory = history.find(h => h.workTypeId === 'P02');
-          
-          if (packageHistory) {
-            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 패키지#02 정답 ${formatName} 저장 완료:`, result.fileName);
+          try {
+            const { getQuizHistory } = await import('../../../services/quizHistoryService');
+            const history = await getQuizHistory(userData.uid, { limit: 10 });
+            const packageHistory = history.find(h => h.workTypeId === 'P02');
+            
+            if (packageHistory) {
+              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
+              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              console.log(`📁 패키지#02 정답 ${formatName} 저장 완료:`, result.fileName);
+            }
+          } catch (historyError: any) {
+            // 인덱스 오류는 이미 처리되었으므로 조용히 넘어감
+            if (historyError?.code === 'failed-precondition' || historyError?.message?.includes('index')) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('⚠️ 문제 내역 조회 중 인덱스 오류 (무시됨):', historyError?.message);
+              }
+              // 파일은 이미 생성되었으므로 정상 완료로 처리
+              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              console.log(`📁 패키지#02 정답 ${formatName} 생성 완료 (내역 저장 스킵):`, result.fileName);
+            } else {
+              // 다른 에러는 정상적으로 로그 출력
+              console.error('문제 내역 조회 실패:', historyError);
+            }
           }
         }
       } catch (error) {

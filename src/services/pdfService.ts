@@ -36,7 +36,7 @@ export const generateAndUploadPDF = async (
     // HTML을 Canvas로 변환
     const canvas = await html2canvas(element, {
       useCORS: true,
-      logging: true, // 디버깅을 위해 로깅 활성화
+      logging: process.env.NODE_ENV === 'development', // 개발 환경에서만 로깅
       width: elementWidth,
       height: elementHeight,
       scale: 1,
@@ -914,10 +914,41 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 본문 (여러 종류의 본문 요소 확인) - 박스 테두리 포함
-      const passage = card.querySelector('.print-shuffled-paragraphs, .problem-passage, .print-passage, .passage, .print-numbered-passage') as HTMLElement | null;
+      // 패키지#02에서 사용하는 모든 본문 클래스 포함
+      // 여러 개의 본문 요소가 있을 수 있으므로 querySelectorAll 사용
+      const passageSelectors = [
+        '.print-shuffled-paragraphs',
+        '.problem-passage',
+        '.print-passage',
+        '.passage',
+        '.print-numbered-passage',
+        '.print-html-block',
+        '.print-paragraph-item'
+      ];
+      
+      // 각 셀렉터를 순서대로 시도하여 본문 찾기
+      let passage: HTMLElement | null = null;
+      for (const selector of passageSelectors) {
+        const found = card.querySelector(selector) as HTMLElement | null;
+        if (found) {
+          passage = found;
+          break;
+        }
+      }
+      
+      // 본문이 여러 개 있을 수 있으므로 모든 본문 요소 찾기
+      if (!passage) {
+        // 모든 본문 요소 찾기
+        const allPassages = card.querySelectorAll(passageSelectors.join(', '));
+        if (allPassages.length > 0) {
+          passage = allPassages[0] as HTMLElement;
+        }
+      }
+      
       if (passage) {
         const lineRuns = extractTextRunsByLine(passage);
         if (lineRuns.length > 0) {
+          let isFirstPassage = true;
           lineRuns.forEach((runs, lineIndex) => {
             if (runs.length === 0) {
               return;
@@ -963,7 +994,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
               new Paragraph({
                 children: runs,
                 spacing: {
-                  before: isFirstLine ? 160 : 80,
+                  before: isFirstLine && isFirstPassage ? 160 : 80,
                   after: isLastLine ? 160 : 80
                 },
                 indent: { left: 0, right: 0 },
@@ -972,6 +1003,71 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
             );
           });
         }
+      }
+      
+      // 여러 개의 본문 요소가 있는 경우 추가 처리
+      // (예: 유형#01의 여러 문단)
+      const allPassages = card.querySelectorAll('.print-html-block, .print-paragraph-item, .print-shuffled-paragraphs');
+      if (allPassages.length > 1) {
+        // 첫 번째 본문은 이미 처리되었으므로 나머지 처리
+        Array.from(allPassages).slice(1).forEach((additionalPassage) => {
+          const lineRuns = extractTextRunsByLine(additionalPassage as HTMLElement);
+          if (lineRuns.length > 0) {
+            lineRuns.forEach((runs, lineIndex) => {
+              if (runs.length === 0) {
+                return;
+              }
+
+              const isFirstLine = lineIndex === 0;
+              const isLastLine = lineIndex === lineRuns.length - 1;
+
+              const borderConfig: any = {
+                left: {
+                  color: '000000',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                },
+                right: {
+                  color: '000000',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                }
+              };
+
+              if (isFirstLine) {
+                borderConfig.top = {
+                  color: '000000',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                };
+              }
+
+              if (isLastLine) {
+                borderConfig.bottom = {
+                  color: '000000',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                };
+              }
+
+              paragraphs.push(
+                new Paragraph({
+                  children: runs,
+                  spacing: {
+                    before: isFirstLine ? 160 : 80,
+                    after: isLastLine ? 160 : 80
+                  },
+                  indent: { left: 0, right: 0 },
+                  border: borderConfig
+                })
+              );
+            });
+          }
+        });
       }
       
       // Work_11: 문장별 해석

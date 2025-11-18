@@ -13,6 +13,11 @@
   gap: 0.6cm;
   width: 100%;
   position: relative;
+  /* 페이지 높이 고정: 컨테이너가 항상 19.3cm 높이로 고정됨 */
+  height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+  min-height: 19.3cm !important;
+  max-height: 19.3cm !important;
+  overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
 }
 
 .print-column {
@@ -27,6 +32,11 @@
   -ms-flex-direction: column;
   flex-direction: column;
   gap: 0.35cm;
+  /* 페이지 높이 고정: 컬럼이 항상 19.3cm 높이로 고정됨 */
+  height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+  min-height: 19.3cm !important;
+  max-height: 19.3cm !important;
+  overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
 }
 
 /* 패키지#02 인쇄 전용 스타일 - A4 가로 페이지 */
@@ -103,7 +113,6 @@
 /* 정답 모드에서 정답 섹션 강조 */
 .print-container-answer .print-answer-section {
   background: #e3f2fd !important;
-  border: 2px solid #1976d2 !important;
   border-radius: 0.2cm !important;
   margin-top: 0.4cm !important;
   padding: 0.3cm !important;
@@ -153,13 +162,22 @@
 }
 
 .print-replacements-table {
-  margin-top: 0.1cm;
-}
-
-.print-replacements-table table {
+  margin-top: 0.4cm;
+  margin-bottom: 0;
   width: 100%;
   border-collapse: collapse;
-  font-size: 8.5pt;
+  font-size: 8.3pt; /* 한글해석과 동일한 크기 (8pt + 0.3pt) */
+}
+
+/* 유형#02 인쇄(정답) 모드: 테이블 */
+.print-container-answer .print-replacements-table {
+  margin-top: 0.4cm !important;
+  margin-bottom: 0 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  z-index: 2 !important;
+  display: table !important;
+  width: 100% !important;
 }
 
 .print-replacements-table th,
@@ -167,7 +185,7 @@
   border: 1px solid #ddd;
   padding: 0.1cm;
   text-align: center;
-  font-size: 8.5pt;
+  font-size: 8.3pt; /* 한글해석과 동일한 크기 (8pt + 0.3pt) */
 }
 
 .print-replacements-table th {
@@ -295,8 +313,10 @@
     flex-wrap: nowrap !important;
     width: 100% !important;
     min-width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
+    height: 19.3cm !important; /* 페이지 높이 고정: 21cm - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    min-height: 19.3cm !important;
+    max-height: 19.3cm !important; /* 페이지 높이 제한: 21cm - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
     gap: 0.6cm !important;
   }
 
@@ -307,6 +327,10 @@
     min-width: 0 !important;
     width: calc(50% - 0.3cm) !important;
     max-width: calc(50% - 0.3cm) !important;
+    height: 19.3cm !important; /* 페이지 높이 고정: 21cm - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    min-height: 19.3cm !important;
+    max-height: 19.3cm !important; /* 페이지 높이 제한: 21cm - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
   }
 
   /* 카드 크기 강제 */
@@ -366,6 +390,11 @@
     gap: 0.6cm;
     width: 100%;
     position: relative;
+    /* 페이지 높이 고정: 컨테이너가 항상 19.3cm 높이로 고정됨 */
+    height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    min-height: 19.3cm !important;
+    max-height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
   }
 
   .print-column {
@@ -381,6 +410,11 @@
     flex-direction: column;
     gap: 0.35cm;
   min-width: 0;
+    /* 페이지 높이 고정: 컬럼이 항상 19.3cm 높이로 고정됨 */
+    height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    min-height: 19.3cm !important;
+    max-height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
   }
 
   .print-container-answer .print-column {
@@ -400,9 +434,17 @@
     display: block;
     position: relative;
   }
+  
+  /* 유형#01의 경우: 영어 단락과 4지선다를 명확히 구분하기 위해 초록색 테두리 완전히 제거 */
+  .print-container-answer .print-question-card {
+    border: none !important; /* 초록색 테두리 제거 */
+    padding: 0 !important; /* 패딩도 제거하여 겹침 방지 */
+    margin-bottom: 0 !important; /* 마진도 제거 */
+  }
 
   /* 정답 모드용 문제 카드 - 그리드 아이템 */
-  .print-container-answer .print-question-card {
+  /* 유형#01의 경우 한 문제가 두 컬럼에 걸쳐 있으므로 초록색 테두리는 제거 */
+  /* .print-container-answer .print-question-card {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 100% !important;
@@ -410,12 +452,11 @@
     page-break-inside: avoid !important;
     -webkit-column-break-inside: avoid !important;
     margin-bottom: 0.3cm !important;
-    border: none !important;
     padding: 0.5cm !important;
     box-sizing: border-box !important;
     display: block !important;
     position: relative !important;
-  }
+  } */
 
   /* 인라인 스타일이 우선되도록 CSS 규칙 제거 */
   /* .print-question-card:nth-child(odd) { grid-column: 1; } */
@@ -425,9 +466,20 @@
   /* .print-container-answer .print-question-card:nth-child(odd) { grid-column: 1 !important; } */
   /* .print-container-answer .print-question-card:nth-child(even) { grid-column: 2 !important; } */
 
+  /* 인쇄(문제) 모드: 모든 본문 글씨 크기 9.4pt 통일 */
+  .print-container .print-passage,
+  .print-container .print-paragraph-item,
+  .print-container .print-html-block,
+  .print-container .print-sentence-english,
+  .print-container .print-paragraphs,
+  .print-container .print-paragraph,
+  .print-container .print-shuffled-paragraphs {
+    font-size: 9.4pt !important;
+  }
+
   /* 문제 제목 + 유형번호 */
   .print-question-title {
-    font-size: 11pt; /* 글씨 크기 조정 */
+    font-size: 11.3pt; /* 글씨 크기 조정 (11pt + 0.3pt) */
     font-weight: 700;
     color: #000;
     margin-bottom: 0.25cm;
@@ -439,14 +491,14 @@
   }
 
   .print-question-type-badge {
-    font-size: 8.5pt;
+    font-size: 8.8pt; /* 8.5pt + 0.3pt */
     color: #555;
     font-weight: 600;
   }
 
   /* 청크 정보 표시 */
   .print-chunk-info {
-    font-size: 7.5pt;
+    font-size: 7.8pt; /* 7.5pt + 0.3pt */
     color: #888;
     font-weight: 500;
     margin-left: 8px;
@@ -454,7 +506,7 @@
 
   /* 문제 지시문 */
   .print-instruction {
-    font-size: 8.5pt;
+    font-size: 8.8pt; /* 8.5pt + 0.3pt */
     font-weight: 600;
     color: #000;
     background: #f0f0f0;
@@ -466,18 +518,34 @@
 
   /* 영어 본문 */
   .print-passage {
-    font-size: 9pt;
+    font-size: 9.4pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     line-height: 1.4;
     color: #000;
     margin-bottom: 0.25cm;
     padding: 0.25cm;
   }
 
-.print-replacements-table table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.4cm;
-}
+  /* 유형#01-11 줄간격 10% 증가 (1.4 * 1.1 = 1.54) */
+  .print-passage-work01-11 {
+    line-height: 1.54 !important;
+  }
+
+  /* 유형#02 인쇄(정답) 모드: 영어 본문 */
+  .print-container-answer .print-passage {
+    margin-bottom: 0.25cm !important;
+    padding: 0.25cm !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 2 !important;
+    /* 높이 자동 조정 명시 */
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+/* .print-replacements-table가 이제 table 요소 자체이므로 이 규칙은 제거됨 */
 
 .print-translation-content.box-style {
   background: #f3f4f6;
@@ -485,30 +553,62 @@
   border-radius: 6px;
   padding: 0.3cm;
   margin-top: 0.2cm;
-  font-size: 8.5pt;
+  font-size: 8.8pt; /* 8.5pt + 0.3pt */
   line-height: 1.5;
   color: #1f2933;
 }
 
-  /* 4지선다 옵션 (컨테이너 없이) */
+  /* 4지선다 옵션 - 독립적인 컨테이너로 배치 */
+  .print-container-answer .print-options,
   .print-options {
-    margin-top: 0.25cm;
-    border-bottom: none !important;
+    margin-top: 0 !important; /* 마지막 영어 단락의 margin-bottom(0.3cm)만 사용 */
+    margin-bottom: 0.5cm !important; /* 하단 간격 증가 (한글해석과의 간격 확보) */
+    padding: 0.25cm !important; /* 내부 패딩 */
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 100% !important;
+    position: relative !important;
+    clear: both !important; /* 겹침 방지 */
+    z-index: 1 !important; /* 겹침 방지 */
+    /* 페이지 분할 시 options가 잘리지 않도록 보장 */
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+    /* 겹침 방지를 위한 추가 스타일 */
+    flex-shrink: 0 !important;
+    min-height: 0 !important;
+    overflow: visible !important;
   }
 
   .print-option {
-    font-size: 8.5pt;
+    font-size: 9.0pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     line-height: 1.3;
     color: #000;
     margin-bottom: 0.12cm;
-    padding-left: 0.1cm;
+    padding-left: 0.1cm; /* 옵션 내부 좌측 패딩 */
+  }
+  
+  .print-option:last-child {
+    margin-bottom: 0 !important; /* 마지막 옵션 하단 마진 제거 */
   }
 
+.print-option-text {
+  display: block;
+  margin-bottom: 0.05cm;
+}
+
 .print-option-translation {
-  font-size: 8pt;
+  font-size: 9.0pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
   color: #374151;
   font-style: italic;
   font-weight: 500;
+  display: block;
+  margin-top: 0.05cm;
+  padding-left: 0.2cm;
+  line-height: 1.4;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
   .print-answer-mark {
@@ -519,7 +619,7 @@
 
   /* 정답 항목 해석 스타일 */
   .print-answer-translation {
-    font-size: 8pt;
+    font-size: 8.3pt; /* 8pt + 0.3pt */
     color: #1976d2;
     font-weight: 600;
     margin-top: 0.1cm;
@@ -530,22 +630,31 @@
   .print-option-label {
     font-weight: bold;
     color: #1976d2;
-    font-size: 8.5pt;
+    font-size: 9.0pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     margin-bottom: 0.1cm;
   }
 
   /* 본문 해석 섹션 */
   .print-translation-section {
-    margin-top: 0;
+    margin-top: 0.3cm !important; /* 4지선다와의 간격 확보 */
     padding-top: 0;
     border-top: none !important;
     border-bottom: none !important;
+    /* 겹침 방지를 위한 추가 스타일 */
+    position: relative !important;
+    clear: both !important;
+    z-index: 1 !important;
+    flex-shrink: 0 !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    padding: 0.1cm !important;
   }
 
   .print-answer-before-translation {
     font-weight: 700;
     color: #1976d2;
-    font-size: 9pt;
+    font-size: 9.3pt; /* 9pt + 0.3pt */
     margin-bottom: 0.15cm;
     padding: 0.1cm 0;
   }
@@ -553,19 +662,19 @@
   .print-translation-title {
     font-weight: 700;
     color: #000;
-    font-size: 8pt;
+    font-size: 8.3pt; /* 8pt + 0.3pt */
     margin-bottom: 0.05cm;
   }
 
   .print-translation-content {
-    font-size: 8pt; /* 한글해석 통일: 8pt */
+    font-size: 8.3pt; /* 한글해석 통일: 8pt + 0.3pt */
     line-height: 1.35;
     color: #1976d2;
     white-space: pre-wrap;
   }
 
   .print-choice {
-    font-size: 8.5pt;
+    font-size: 9.0pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     line-height: 1.3;
     color: #000;
     margin-bottom: 0.12cm;
@@ -612,7 +721,7 @@
 
   /* SimplePrintFormat용 Work_01 스타일 */
   .print-paragraphs {
-    font-size: 8.5pt;
+    font-size: 9.4pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     line-height: 1.4;
     color: #000;
     margin-bottom: 0.25cm;
@@ -621,7 +730,7 @@
 
   .print-paragraph {
     margin-bottom: 0.15cm;
-    font-size: 8.5pt;
+    font-size: 9.4pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
   }
 
   .print-paragraph-label {
@@ -635,7 +744,7 @@
 
   /* Work_01 전용 */
   .print-shuffled-paragraphs {
-    font-size: 8.5pt;
+    font-size: 9.4pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     line-height: 1.4;
     color: #000;
     margin-bottom: 0.25cm;
@@ -644,15 +753,43 @@
 
   .print-paragraph-item {
     margin-bottom: 0.15cm;
-    font-size: 8.5pt;
+    font-size: 9.4pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
+    padding-left: 0.2cm; /* 지시문과 왼쪽 정렬 맞추기 */
+  }
+
+  /* 유형#01-11 줄간격 10% 증가 (1.4 * 1.1 = 1.54) */
+  .print-paragraph-item-work01-11 {
+    line-height: 1.54 !important;
+  }
+
+  /* 유형#13, 14 줄간격 30% 증가 (1.4 * 1.3 = 1.82) */
+  .print-paragraph-item-work13-14 {
+    line-height: 1.82 !important;
+  }
+  
+  /* 유형#01: 마지막 영어 단락(D) 다음에 4지선다가 오므로 간격 확보 */
+  .print-container-answer .print-paragraph-item:last-of-type,
+  .print-container-answer .print-question-card .print-paragraph-item:last-of-type {
+    margin-bottom: 0.3cm !important; /* 4지선다와의 간격 확보 (겹침 방지) */
   }
 
   /* HTML 블록 (유형#02, 09, 10) - 유형#03과 동일한 글씨 크기 */
   .print-html-block {
-    font-size: 8.5pt;
+    font-size: 9.4pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     line-height: 1.4;
     color: #000;
     margin-bottom: 0.15cm;
+    padding-left: 0.2cm; /* 지시문과 왼쪽 정렬 맞추기 */
+  }
+
+  /* 유형#01-11 줄간격 10% 증가 (1.4 * 1.1 = 1.54) */
+  .print-html-block-work01-11 {
+    line-height: 1.54 !important;
+  }
+
+  /* 유형#13, 14 줄간격 30% 증가 (1.4 * 1.3 = 1.82) */
+  .print-html-block-work13-14 {
+    line-height: 1.82 !important;
   }
 
   /* Work_02 전용 */
@@ -665,7 +802,7 @@
   .print-replacements-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 8.5pt;
+    font-size: 8.8pt; /* 한글해석과 동일한 크기 (8pt → 8.8pt) */
     margin-top: 0.2cm;
     margin-bottom: 0.15cm;
   }
@@ -676,36 +813,36 @@
     padding: 0.06cm;
     text-align: center;
     line-height: 1.25;
-    font-size: 8.5pt !important;
+    font-size: 8.8pt !important; /* 한글해석과 동일한 크기 (8pt → 8.8pt) */
   }
 
   .print-replacements-table th {
     background: #f0f0f0 !important;
     font-weight: 600;
-    font-size: 8.5pt !important;
+    font-size: 8.8pt !important; /* 한글해석과 동일한 크기 (8pt → 8.8pt) */
     text-align: center !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /* 교체 단어 테이블 강제 적용 */
-  .print-container-answer .print-replacements-table table {
-    font-size: 8.5pt !important;
+  /* 교체 단어 테이블 강제 적용 (이제 table 요소 자체가 .print-replacements-table) */
+  .print-container-answer .print-replacements-table {
+    font-size: 8.8pt !important; /* 한글해석과 동일한 크기 (8pt → 8.8pt) */
   }
 
   .print-container-answer .print-replacements-table th,
   .print-container-answer .print-replacements-table td {
-    font-size: 8.5pt !important;
+    font-size: 8.8pt !important; /* 한글해석과 동일한 크기 (8pt → 8.8pt) */
   }
 
   /* 더 구체적인 선택자로 강제 적용 */
-  .print-container-answer .print-question-card .print-replacements-table table {
-    font-size: 8.5pt !important;
+  .print-container-answer .print-question-card .print-replacements-table {
+    font-size: 8.8pt !important; /* 한글해석과 동일한 크기 (8pt → 8.8pt) */
   }
 
   .print-container-answer .print-question-card .print-replacements-table th,
   .print-container-answer .print-question-card .print-replacements-table td {
-    font-size: 8.5pt !important;
+    font-size: 8.8pt !important; /* 한글해석과 동일한 크기 (8pt → 8.8pt) */
   }
 
   /* 교체 단어 테이블 셀 배경색 제거 */
@@ -719,6 +856,17 @@
 
   .print-container-answer .print-question-card .print-replacements-table td {
     background: transparent !important;
+  }
+
+  /* 유형#02 인쇄(정답) 모드: 테이블 (print 미디어 내부) */
+  .print-container-answer .print-replacements-table {
+    margin-top: 0.4cm !important;
+    margin-bottom: 0 !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 2 !important;
+    display: table !important;
+    width: 100% !important;
   }
 
   /* Work_06 전용 */
@@ -799,12 +947,17 @@
   }
 
   .print-sentence-english {
-    font-size: 8.5pt;
+    font-size: 9.4pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     line-height: 1.4;
     color: #000;
     padding: 0 0.15cm 0.15cm 0.15cm !important;
     margin-top: 0 !important;
     margin-bottom: 0.1cm;
+  }
+
+  /* 유형#01-11 문장 줄간격 10% 증가 (1.4 * 1.1 = 1.54) */
+  .print-sentence-item-work01-11 .print-sentence-english {
+    line-height: 1.54 !important;
   }
 
   .sentence-number {
@@ -913,6 +1066,78 @@
     print-color-adjust: exact;
   }
 
+  /* Work_13, 14 빈칸 언더스코어 회색 스타일 (문제 모드) */
+  .print-blank-underscore {
+    color: #999 !important; /* 회색 */
+  }
+
+  /* 텍스트 블록 스타일 */
+  .print-text-block {
+    font-size: 9.4pt;
+    line-height: 1.4;
+    color: #000;
+    margin-top: 0.2cm;
+    margin-bottom: 0.2cm;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 0.3cm !important;
+  }
+
+  /* 인쇄(정답) 모드: 텍스트 블록 스타일 */
+  .print-answer-mode .print-text-block,
+  .print-container-answer .print-text-block {
+    font-size: 9.9pt !important; /* 인쇄(정답) 모드: 10% 증가 (9.4pt * 1.1) */
+    line-height: 1.4 !important;
+    color: #000 !important;
+    margin-top: 0.2cm !important;
+    margin-bottom: 0.2cm !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 0.3cm !important;
+  }
+
+  /* 유형#10 인쇄(정답) 모드: 단 높이 최대한 사용 */
+  .print-answer-mode .print-question-card[data-work-type="10"],
+  .print-container-answer .print-question-card[data-work-type="10"] {
+    /* 단 높이 최대한 사용 */
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .print-answer-mode .print-question-card[data-work-type="10"] .print-text-block,
+  .print-container-answer .print-question-card[data-work-type="10"] .print-text-block {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 0.5cm !important;
+    padding: 0.1cm !important;
+    margin-top: 0.1cm !important; /* 50% 감소: 0.2cm → 0.1cm */
+    margin-bottom: 0.2cm !important;
+    background: #ffffff !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+
+  /* 유형#10 텍스트 블록 강제 표시 */
+  .print-text-block-work10 {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 0.5cm !important;
+    padding: 0.1cm !important;
+    margin-top: 0.1cm !important; /* 50% 감소: 0.2cm → 0.1cm */
+    margin-bottom: 0.2cm !important;
+    background: #ffffff !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+
   /* Work_13, 14 빈칸 안 정답 표시 (정답 모드) */
   .print-blank-filled-answer {
     font-size: 9pt;
@@ -942,12 +1167,39 @@
 
   /* 인쇄(정답) 페이지 전용 스타일 - 인쇄(문제)와 동일한 크기 적용 */
   
+  /* 한글해석 스타일 - 10% 크기 증가 */
+  .print-answer-mode .print-translation-title {
+    font-size: 8.8pt !important;
+  }
+
+  .print-answer-mode .print-translation-content {
+    font-size: 8.8pt !important; /* 한글해석 통일: 8pt → 8.8pt */
+  }
+
+  /* 마지막 단(페이지)의 본문해석 - 0.5pt 추가 증가 */
+  .print-answer-mode .print-translation-last .print-translation-title {
+    font-size: 9.3pt !important; /* 8.8pt + 0.5pt */
+  }
+
+  .print-answer-mode .print-translation-last .print-translation-content {
+    font-size: 9.3pt !important; /* 8.8pt + 0.5pt */
+  }
+
+  .print-answer-mode .print-option-translation {
+    font-size: 8.8pt !important;
+  }
+
+  .print-answer-mode .print-word-korean {
+    font-size: 8.8pt !important; /* 한글해석 통일: 8pt → 8.8pt */
+  }
+
   /* 문제 제목 */
   .print-answer-mode .print-question-title {
-    font-size: 11pt !important;
+    font-size: 12.1pt !important;
     font-weight: 700 !important;
     color: #000 !important;
     margin-bottom: 0.25cm !important;
+    margin-top: 0 !important;
     padding-bottom: 0.15cm !important;
     border-bottom: 1.5px solid #333 !important;
     display: flex !important;
@@ -955,9 +1207,15 @@
     align-items: center !important;
   }
 
+  /* 첫 번째 카드의 제목: 헤더와의 간격 확보 */
+  .print-answer-mode .print-column > .print-question-card:first-child .print-question-title,
+  .print-container-answer .print-column > .print-question-card:first-child .print-question-title {
+    margin-top: 0.3cm !important;
+  }
+
   /* 유형 뱃지 - 노란색 제거하고 통일 */
   .print-answer-mode .print-question-type-badge {
-    font-size: 8.5pt !important;
+    font-size: 9.35pt !important;
     color: #555 !important;
     font-weight: 600 !important;
     background: none !important;
@@ -968,7 +1226,7 @@
 
   /* 청크 정보 - 정답 모드 */
   .print-answer-mode .print-chunk-info {
-    font-size: 7.5pt !important;
+    font-size: 8.25pt !important;
     color: #888 !important;
     font-weight: 500 !important;
     margin-left: 8px !important;
@@ -976,7 +1234,7 @@
 
   /* 지시문 */
   .print-answer-mode .print-instruction {
-    font-size: 8.5pt !important;
+    font-size: 9.35pt !important;
     font-weight: 600 !important;
     color: #000 !important;
     background: #f0f0f0 !important;
@@ -989,7 +1247,7 @@
 
   /* 영어 본문 */
   .print-answer-mode .print-passage {
-    font-size: 9pt !important;
+    font-size: 9.9pt !important;
     line-height: 1.4 !important;
     color: #000 !important;
     margin-bottom: 0.25cm !important;
@@ -997,18 +1255,48 @@
     margin-top: 0 !important;
   }
 
+  /* 유형#01-11 인쇄(정답) 모드 줄간격 10% 증가 (1.4 * 1.1 = 1.54) */
+  .print-answer-mode .print-passage-work01-11 {
+    line-height: 1.54 !important;
+  }
+
+  /* 유형#06: 영어본문 컨테이너 바로 아래 정보 컨테이너 */
+  .print-answer-mode .print-work06-info-container {
+    font-size: 9.9pt !important;
+    line-height: 1.5 !important;
+    color: #000 !important;
+    margin-top: 0.3cm !important;
+    margin-bottom: 0 !important;
+    padding: 0.2cm 0.25cm !important;
+    min-height: 0.5cm !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 유형#06 인쇄(정답) 모드: 정보 컨테이너 */
+  .print-container-answer .print-work06-info-container {
+    margin-top: 0.3cm !important;
+    padding: 0.2cm 0.25cm !important;
+    min-height: 0.5cm !important;
+  }
+
   /* 4지선다 옵션 컨테이너 */
-  .print-answer-mode .print-options {
-    margin-top: 0.25cm !important;
-    padding: 0 !important;
-    border: none !important;
+  .print-answer-mode .print-options,
+  .print-container-answer .print-answer-mode .print-options {
+    margin-top: 0 !important; /* 마지막 영어 단락의 margin-bottom(0.3cm)만 사용 */
+    margin-bottom: 0.5cm !important; /* 하단 간격 증가 (한글해석과의 간격 확보) */
+    padding: 0.25cm !important; /* 내부 패딩 추가 */
+    clear: both !important; /* 겹침 방지 */
     border-radius: 0 !important;
-    background: transparent !important;
+    z-index: 1 !important; /* 겹침 방지 */
+    /* 페이지 분할 시 options가 잘리지 않도록 보장 */
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
   }
 
   /* 4지선다 옵션 */
   .print-answer-mode .print-option {
-    font-size: 8.5pt !important;
+    font-size: 9.35pt !important;
     line-height: 1.3 !important;
     color: #000 !important;
     margin-bottom: 0.12cm !important;
@@ -1020,7 +1308,7 @@
 
   /* Work_01 전용 스타일 */
   .print-answer-mode .print-shuffled-paragraphs {
-    font-size: 8.5pt !important;
+    font-size: 9.35pt !important;
     line-height: 1.4 !important;
     color: #000 !important;
     margin-bottom: 0.25cm !important;
@@ -1029,12 +1317,39 @@
 
   .print-answer-mode .print-paragraph-item {
     margin-bottom: 0.15cm !important;
-    font-size: 8.5pt !important;
+    font-size: 9.35pt !important;
+  }
+
+  /* 유형#01-11 인쇄(정답) 모드 줄간격 10% 증가 (1.4 * 1.1 = 1.54) */
+  .print-answer-mode .print-paragraph-item-work01-11 {
+    line-height: 1.54 !important;
+  }
+
+  /* 유형#13, 14 인쇄(정답) 모드 줄간격 30% 증가 (1.4 * 1.3 = 1.82) */
+  .print-answer-mode .print-paragraph-item-work13-14 {
+    line-height: 1.82 !important;
+  }
+
+  /* 유형#01-11 인쇄(정답) 모드 html 블록 줄간격 10% 증가 (1.4 * 1.1 = 1.54) */
+  .print-answer-mode .print-html-block-work01-11 {
+    line-height: 1.54 !important;
+  }
+
+  /* 유형#13, 14 인쇄(정답) 모드 html 블록 줄간격 30% 증가 (1.4 * 1.3 = 1.82) */
+  .print-answer-mode .print-html-block-work13-14 {
+    line-height: 1.82 !important;
+  }
+  
+  /* 유형#01: 마지막 영어 단락(D) 다음에 4지선다가 오므로 간격 확보 */
+  .print-answer-mode .print-paragraph-item:last-of-type,
+  .print-container-answer .print-answer-mode .print-paragraph-item:last-of-type,
+  .print-container-answer .print-question-card .print-answer-mode .print-paragraph-item:last-of-type {
+    margin-bottom: 0.3cm !important; /* 4지선다와의 간격 확보 (겹침 방지) */
   }
 
   /* Work_01 A, B, C, D 라벨 크기 조정 */
   .print-answer-mode .print-paragraph-item strong {
-    font-size: 8.5pt !important; /* 영어 문장과 동일한 크기 */
+    font-size: 9.35pt !important; /* 영어 문장과 동일한 크기 */
     font-weight: 700 !important;
     color: #000 !important;
   }
@@ -1044,12 +1359,12 @@
     text-decoration: underline !important;
     font-weight: 700 !important;
     color: #1976d2 !important;
-    font-size: 8.5pt !important; /* 본문보다 작게 조정 */
+    font-size: 9.35pt !important; /* 본문보다 작게 조정 */
   }
 
   /* 더 구체적인 선택자로 강제 적용 */
   .print-answer-mode .print-passage .print-word-highlight {
-    font-size: 8.5pt !important;
+    font-size: 9.35pt !important;
     line-height: 1.4 !important;
     text-decoration: underline !important;
     font-weight: 700 !important;
@@ -1058,7 +1373,7 @@
 
   /* Work_06 전용 스타일 - 크기 증가 */
   .print-answer-mode .print-main-sentence {
-    font-size: 8pt !important; /* 크기 증가 */
+    font-size: 8.8pt !important; /* 크기 증가 */
     font-weight: 600 !important;
     color: #6a5acd !important;
     border: 1px solid #666 !important;
@@ -1071,7 +1386,7 @@
 
   /* Work_06 전용 주요문장 컨테이너 - 독립적 스타일 */
   .print-answer-mode .work06-main-sentence {
-    font-size: 8pt !important;
+    font-size: 8.8pt !important;
     font-weight: 600 !important;
     color: #000 !important; /* 검은색으로 변경 */
     border: 1px solid #000 !important; /* 검정색 테두리 */
@@ -1100,7 +1415,7 @@
   }
 
   .print-answer-mode .work06-answer-text {
-    font-size: 9pt !important;
+    font-size: 9.9pt !important;
     color: #333 !important;
     font-weight: 600 !important;
   }
@@ -1117,7 +1432,7 @@
 
   .print-answer-mode .work13-answer-text,
   .print-answer-mode .work14-answer-text {
-    font-size: 9pt !important;
+    font-size: 9.9pt !important;
     color: #333 !important;
   }
 
@@ -1126,14 +1441,14 @@
   .print-answer-mode .work14-answer-label {
     font-weight: bold !important;
     color: #1976d2 !important;
-    font-size: 8.5pt !important; /* 본문(9pt)보다 작게 */
+    font-size: 9.35pt !important; /* 본문(9pt)보다 작게 */
     margin-bottom: 0.2rem !important;
   }
 
   /* Work_13, 14 정답 내용 - 본문보다 작게 */
   .print-answer-mode .work13-answer-content,
   .print-answer-mode .work14-answer-content {
-    font-size: 8.5pt !important; /* 본문(9pt)보다 작게 */
+    font-size: 9.35pt !important; /* 본문(9pt)보다 작게 */
     color: #333 !important;
   }
 
@@ -1141,19 +1456,19 @@
   .print-answer-mode .work13-answer-item,
   .print-answer-mode .work14-answer-item {
     margin-bottom: 0.2rem !important;
-    font-size: 8.5pt !important; /* 본문(9pt)보다 작게 */
+    font-size: 9.35pt !important; /* 본문(9pt)보다 작게 */
   }
 
   .print-answer-mode .print-answer-text {
     font-weight: bold !important;
     color: #1976d2 !important;
-    font-size: 8.5pt !important;
+    font-size: 9.35pt !important;
     margin-bottom: 0 !important;
   }
 
   /* Work_13, 14 빈칸 안 정답 표시 강제 적용 */
   .print-answer-mode .print-blank-filled-answer {
-    font-size: 9pt !important;
+    font-size: 9.9pt !important;
     color: #1565c0 !important; /* 진한 파란색 */
     font-weight: 700 !important; /* 진하게 */
     -webkit-print-color-adjust: exact !important;
@@ -1161,7 +1476,7 @@
   }
 
   .print-container-answer .print-blank-filled-answer {
-    font-size: 9pt !important;
+    font-size: 9.9pt !important;
     color: #1565c0 !important; /* 진한 파란색 */
     font-weight: 700 !important; /* 진하게 */
     -webkit-print-color-adjust: exact !important;
@@ -1187,14 +1502,19 @@
   }
 
   .print-answer-mode .work11-print-answer-sentence > div:first-child {
-    font-size: 8.5pt !important; /* 영어 문장 */
+    font-size: 9.35pt !important; /* 영어 문장 */
     line-height: 1.4 !important;
     color: #000 !important;
     margin-bottom: 0.1cm !important;
   }
 
+  /* 유형#01-11 인쇄(정답) 모드 문장 줄간격 10% 증가 (1.4 * 1.1 = 1.54) */
+  .print-answer-mode .print-sentence-item-work01-11 .print-sentence-english {
+    line-height: 1.54 !important;
+  }
+
   .print-answer-mode .work11-print-answer-sentence > div:last-child {
-    font-size: 8pt !important; /* 한글 해석 크기 증가 */
+    font-size: 8.8pt !important; /* 한글 해석 크기 증가 */
     line-height: 1.35 !important;
     color: #1976d2 !important;
     font-weight: 600 !important;
@@ -1207,7 +1527,7 @@
     color: #1976d2 !important;
     font-weight: bold !important;
     margin-left: 0.4rem !important;
-    font-size: 8.5pt !important; /* 선택지와 동일한 크기 */
+    font-size: 9.35pt !important; /* 선택지와 동일한 크기 */
   }
 }
 

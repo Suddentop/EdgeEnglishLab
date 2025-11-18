@@ -175,17 +175,43 @@ ${paragraphContent}
     });
 
     if (!response.ok) {
-      throw new Error(`API 오류: ${response.status}`);
+      const errorText = await response.text().catch(() => '');
+      let errorMessage = `API 오류: ${response.status}`;
+      
+      // 401 에러인 경우 더 명확한 메시지 제공
+      if (response.status === 401) {
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error?.message) {
+            errorMessage = `API 인증 실패: ${errorData.error.message}`;
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 기본 메시지 사용
+        }
+        console.error('❌ 단락 번역 인증 오류:', errorMessage);
+        console.error('💡 API 키를 확인해주세요. 번역 없이 진행합니다.');
+      } else {
+        console.error('❌ 단락 번역 오류:', errorMessage);
+      }
+      
+      // 번역 실패 시 원문 반환 (문제 생성은 계속 진행)
+      return `[번역 실패: ${errorMessage}] ${paragraphContent}`;
     }
 
     const data = await response.json();
-    const translation = data.choices[0].message.content.trim();
     
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('❌ 단락 번역 응답 형식 오류');
+      return `[번역 실패: 응답 형식 오류] ${paragraphContent}`;
+    }
+    
+    const translation = data.choices[0].message.content.trim();
     console.log('✅ 단락 번역 완료');
     return translation;
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ 단락 번역 오류:', error);
-    return '번역을 생성할 수 없습니다.';
+    // 번역 실패 시에도 문제 생성은 계속되도록 원문 반환
+    return `[번역 실패: ${error.message || '알 수 없는 오류'}] ${paragraphContent}`;
   }
 }
 
@@ -312,12 +338,26 @@ export async function generateWork01Quiz(text: string, useAI: boolean = false): 
     console.log('✅ 전체 본문 번역 완료');
     
     // 6. 정답 순서대로 번역을 \n\n으로 구분된 문자열로 생성 (Work_01과 동일한 방식)
-    const correctOrderTranslations = correctOrder.map(paragraphLabel => {
-      const paragraph = translatedParagraphs.find(p => p.label === paragraphLabel);
-      return paragraph?.translation || '';
+    // 번역 실패 메시지를 필터링하고, 성공한 번역만 조합
+    const correctOrderTranslations = correctOrder
+      .map(paragraphLabel => {
+        const paragraph = translatedParagraphs.find(p => p.label === paragraphLabel);
+        const translation = paragraph?.translation || '';
+        // 번역 실패 메시지가 포함된 경우 제외
+        if (translation && !translation.includes('[번역 실패')) {
+          return translation;
+        }
+        return null;
+      })
+      .filter((t): t is string => t !== null && t.length > 0);
+    
+    const paragraphTranslations = correctOrderTranslations.length > 0
+      ? correctOrderTranslations.join('\n\n')
+      : ''; // 모든 번역이 실패한 경우 빈 문자열
+    console.log('✅ 정답 순서대로 단락별 번역 문자열 생성 완료:', {
+      성공한_번역_수: correctOrderTranslations.length,
+      전체_단락_수: correctOrder.length
     });
-    const paragraphTranslations = correctOrderTranslations.join('\n\n');
-    console.log('✅ 정답 순서대로 단락별 번역 문자열 생성 완료');
 
     const result: Quiz = {
       id: `quiz-${Date.now()}`, // 고유 ID 생성

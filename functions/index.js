@@ -455,12 +455,31 @@ exports.openaiProxy = functions.https.onRequest(async (req, res) => {
     
     // 401 에러인 경우 API 키 정보 추가 출력
     if (error?.status === 401 || error?.code === 'invalid_api_key') {
-      const openaiClient = getOpenAIClient();
-      if (openaiClient) {
-        // 클라이언트가 초기화되었지만 401 에러가 발생했다는 것은 키가 잘못되었다는 의미
-        console.error('  ⚠️ API 키 인증 실패 - 설정된 키를 확인해주세요.');
-        console.error('  현재 사용 중인 키 소스:', process.env.OPENAI_API_KEY ? 'environment variable' : 'functions.config()');
+      console.error('  ⚠️ API 키 인증 실패 - 설정된 키를 확인해주세요.');
+      console.error('  현재 사용 중인 키 소스:', process.env.OPENAI_API_KEY ? 'environment variable' : 'functions.config()');
+      
+      // API 키 마스킹하여 일부만 표시
+      const currentKey = process.env.OPENAI_API_KEY || (() => {
+        try {
+          const config = functions.config();
+          return config.openai?.api_key;
+        } catch (e) {
+          return null;
+        }
+      })();
+      
+      if (currentKey) {
+        const maskedKey = currentKey.length > 12 
+          ? `${currentKey.substring(0, 8)}...${currentKey.substring(currentKey.length - 4)}`
+          : '****';
+        console.error('  현재 설정된 키 (마스킹):', maskedKey);
+        console.error('  키 길이:', currentKey.length);
       }
+      
+      console.error('  💡 해결 방법:');
+      console.error('     1. Firebase Console에서 환경 변수 확인');
+      console.error('     2. 유효한 OpenAI API 키로 업데이트');
+      console.error('     3. firebase deploy --only functions:openaiProxy 실행');
     }
     
     console.error('  전체 에러:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));

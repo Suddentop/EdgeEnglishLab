@@ -63,8 +63,23 @@ ${englishText}`;
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorText = await response.text().catch(() => '');
       console.error('❌ API 오류:', response.status, errorText);
+      
+      // 401 에러인 경우 더 명확한 메시지 제공
+      if (response.status === 401) {
+        let errorMessage = 'OpenAI API 인증 실패';
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error?.message) {
+            errorMessage = errorData.error.message;
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 기본 메시지 사용
+        }
+        throw new Error(`API 인증 실패: ${errorMessage}. API 키를 확인해주세요.`);
+      }
+      
       throw new Error(`API 호출 실패: ${response.status}`);
     }
     

@@ -108,7 +108,14 @@ export const getQuizHistory = async (
       querySnapshot = await getDocs(q);
     } catch (queryError: any) {
       // 인덱스 오류 또는 기타 쿼리 오류 시 orderBy 없이 재시도
-      console.warn('orderBy 쿼리 실패, orderBy 없이 재시도:', queryError?.code, queryError?.message);
+      // 인덱스 오류는 정상적인 경우이므로 개발 환경에서만 경고 로그 출력
+      if (process.env.NODE_ENV === 'development') {
+        if (queryError?.code === 'failed-precondition' || queryError?.message?.includes('index')) {
+          console.warn('⚠️ Firestore 인덱스가 필요합니다. orderBy 없이 재시도합니다:', queryError?.message);
+        } else {
+          console.warn('orderBy 쿼리 실패, orderBy 없이 재시도:', queryError?.code, queryError?.message);
+        }
+      }
       
       if (includeAll) {
         q = query(
@@ -241,7 +248,17 @@ export const getQuizHistory = async (
     }
 
     return filteredHistory;
-  } catch (error) {
+  } catch (error: any) {
+    // 인덱스 오류는 이미 위에서 처리되었으므로 조용히 처리
+    // 하지만 혹시 모를 경우를 대비해 여기서도 확인
+    if (error?.code === 'failed-precondition' || error?.message?.includes('index')) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ Firestore 인덱스 오류 (이미 재시도됨):', error?.message);
+      }
+      // 빈 배열 반환 (에러를 throw하지 않음)
+      return [];
+    }
+    // 다른 에러는 정상적으로 로그 출력 및 throw
     console.error('문제 생성 내역 조회 실패:', error);
     throw error;
   }

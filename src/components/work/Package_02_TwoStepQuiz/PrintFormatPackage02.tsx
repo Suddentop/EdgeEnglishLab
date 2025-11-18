@@ -18,7 +18,8 @@ import {
   calculateTextHeight,
   calculateSentenceHeight,
   splitNormalizedItemByHeight,
-  distributeNormalizedItemsToPages
+  distributeNormalizedItemsToPages,
+  estimateNormalizedItemHeight
 } from './printLayoutUtils';
 
 interface PrintFormatPackage02Props {
@@ -111,9 +112,11 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       );
     };
     // 패키지#03과 동일한 단순한 로직으로 퀴즈 아이템 렌더링
-    console.log('🖨️ 패키지#02 인쇄 페이지 렌더링 - 패키지#03과 동일한 로직:', packageQuiz.map((item, index) => 
-      `${index + 1}. 유형#${item.workTypeId || 'unknown'}`
-    ));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🖨️ 패키지#02 인쇄 페이지 렌더링 - 패키지#03과 동일한 로직:', packageQuiz.map((item, index) => 
+        `${index + 1}. 유형#${item.workTypeId || 'unknown'}`
+      ));
+    }
     
     // 퀴즈 항목의 예상 높이 계산 (문제 카드 패딩과 마진 포함)
     const estimateQuizItemHeight = (quizItem: any): number => {
@@ -318,7 +321,20 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       console.log('🧱 정규화된 섹션', {
         index,
         workTypeId: normalized.workTypeId,
-        sectionCount: normalized.sections.length
+        sectionCount: normalized.sections.length,
+        sectionTypes: normalized.sections.map(s => s.type),
+        // 유형#06의 경우 정답 섹션 확인
+        ...(normalized.workTypeId === '06' ? {
+          hasAnswerSection: normalized.sections.some(s => s.type === 'answer'),
+          answerSection: normalized.sections.find(s => s.type === 'answer'),
+          allSections: normalized.sections.map((s, idx) => ({ 
+            index: idx, 
+            type: s.type, 
+            key: s.key,
+            ...(s.type === 'answer' ? { items: s.items } : {}),
+            ...(s.type === 'paragraph' && s.meta?.variant === 'numbered-passage' ? { variant: 'numbered-passage' } : {})
+          }))
+        } : {})
       });
       return normalized;
     });
@@ -337,6 +353,128 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
  
     const distributedPages = distributeNormalizedItemsToPages(expandedNormalizedItems);
     console.log(`📄 총 ${distributedPages.length}개 페이지 생성 중...`);
+
+    // 마지막 유형의 한글해석만 수집 (인쇄 정답 모드일 때만)
+    let lastTranslation: string | null = null;
+    if (isAnswerMode && packageQuiz.length > 0) {
+      // 마지막 유형의 translation만 가져오기
+      const lastItem = packageQuiz[packageQuiz.length - 1];
+      const translation = getTranslatedText(lastItem, lastItem.quiz || lastItem.data || {});
+      if (translation && translation.trim()) {
+        lastTranslation = translation;
+      }
+    }
+
+    // 마지막 유형 다음 단에 translation 섹션 추가
+    // 마지막 유형이 있는 페이지의 다음 단(오른쪽 단)에 추가
+    if (isAnswerMode && lastTranslation) {
+      // 마지막 유형의 translation 섹션 생성
+      const translationText = lastTranslation;
+      const translationSection: PrintSection = {
+        type: 'translation',
+        key: 'translation-last-item',
+        text: translationText
+      };
+      
+      // translation 섹션을 포함하는 NormalizedQuizItem 생성
+      const translationItem: NormalizedQuizItem = {
+        workTypeId: 'all',
+        sections: [translationSection],
+        originalItem: null,
+        chunkMeta: {}
+      };
+      
+      // translation 섹션의 높이 계산
+      const translationHeight = estimateNormalizedItemHeight(translationItem);
+      const PAGE_HEIGHT = 21; // A4 가로 페이지 높이 (cm)
+      const HEADER_HEIGHT = 1.2; // 헤더 높이 (cm)
+      const CONTENT_BOTTOM_PADDING = 0.5; // 콘텐츠 하단 패딩 (cm)
+      const availableHeight = PAGE_HEIGHT - HEADER_HEIGHT - CONTENT_BOTTOM_PADDING; // 19.3cm
+      
+      // 마지막 페이지 확인 및 다음 단 결정
+      if (distributedPages.length > 0) {
+        const lastPage = distributedPages[distributedPages.length - 1];
+        // 마지막 유형이 오른쪽 단에 있는지 왼쪽 단에 있는지 확인
+        const leftColumnHeight = lastPage[0].reduce((sum, item) => sum + estimateNormalizedItemHeight(item), 0);
+        const rightColumnHeight = lastPage[1].reduce((sum, item) => sum + estimateNormalizedItemHeight(item), 0);
+        
+        // 마지막 유형이 있는 단 결정 (둘 다 있으면 오른쪽 단, 오른쪽 단만 있으면 오른쪽 단, 왼쪽 단만 있으면 왼쪽 단)
+        let lastItemColumnIndex = 0;
+        if (lastPage[1].length > 0) {
+          // 오른쪽 단에 아이템이 있으면 마지막 유형은 오른쪽 단에 있음
+          lastItemColumnIndex = 1;
+        } else if (lastPage[0].length > 0) {
+          // 왼쪽 단에만 아이템이 있으면 마지막 유형은 왼쪽 단에 있음
+          lastItemColumnIndex = 0;
+        }
+        
+        // 다음 단 결정: 마지막 유형이 왼쪽 단에 있으면 오른쪽 단, 오른쪽 단에 있으면 다음 페이지의 왼쪽 단
+        let targetColumnIndex = lastItemColumnIndex === 0 ? 1 : 0; // 다음 단 (왼쪽이면 오른쪽, 오른쪽이면 왼쪽... 아니다, 오른쪽이면 다음 페이지의 왼쪽)
+        let targetPage = lastPage;
+        
+        if (lastItemColumnIndex === 0) {
+          // 마지막 유형이 왼쪽 단에 있으면 -> 오른쪽 단에 추가 시도
+          targetColumnIndex = 1;
+          targetPage = lastPage;
+          
+          // 오른쪽 단의 현재 높이 확인
+          const rightColumnCurrentHeight = rightColumnHeight;
+          
+          // 오른쪽 단에 들어갈 수 있는지 확인
+          if (rightColumnCurrentHeight + translationHeight <= availableHeight) {
+            // 오른쪽 단에 추가
+            targetPage[targetColumnIndex].push(translationItem);
+            
+            console.log('✅ 마지막 유형의 한글해석 섹션을 마지막 페이지의 오른쪽 단에 추가:', {
+              pageIndex: distributedPages.length - 1,
+              columnIndex: targetColumnIndex,
+              lastItemColumn: lastItemColumnIndex,
+              rightColumnHeight: rightColumnCurrentHeight.toFixed(2) + 'cm',
+              translationHeight: translationHeight.toFixed(2) + 'cm',
+              lastWorkTypeId: packageQuiz.length > 0 ? packageQuiz[packageQuiz.length - 1].workTypeId : 'unknown'
+            });
+          } else {
+            // 오른쪽 단에 들어갈 수 없으면 다음 페이지의 왼쪽 단에 추가
+            const newPage: NormalizedQuizItem[][] = [[], []];
+            newPage[0].push(translationItem);
+            distributedPages.push(newPage);
+            
+            console.log('✅ 마지막 유형의 한글해석 섹션을 다음 페이지의 왼쪽 단에 추가 (오른쪽 단 공간 부족):', {
+              newPageIndex: distributedPages.length - 1,
+              columnIndex: 0,
+              rightColumnHeight: rightColumnCurrentHeight.toFixed(2) + 'cm',
+              translationHeight: translationHeight.toFixed(2) + 'cm',
+              availableHeight: availableHeight.toFixed(2) + 'cm',
+              lastWorkTypeId: packageQuiz.length > 0 ? packageQuiz[packageQuiz.length - 1].workTypeId : 'unknown'
+            });
+          }
+        } else {
+          // 마지막 유형이 오른쪽 단에 있으면 -> 다음 페이지의 왼쪽 단에 추가
+          const newPage: NormalizedQuizItem[][] = [[], []];
+          newPage[0].push(translationItem);
+          distributedPages.push(newPage);
+          
+          console.log('✅ 마지막 유형의 한글해석 섹션을 다음 페이지의 왼쪽 단에 추가 (마지막 유형이 오른쪽 단에 있음):', {
+            newPageIndex: distributedPages.length - 1,
+            columnIndex: 0,
+            lastItemColumn: lastItemColumnIndex,
+            translationHeight: translationHeight.toFixed(2) + 'cm',
+            lastWorkTypeId: packageQuiz.length > 0 ? packageQuiz[packageQuiz.length - 1].workTypeId : 'unknown'
+          });
+        }
+      } else {
+        // 페이지가 없으면 새 페이지 생성
+        const newPage: NormalizedQuizItem[][] = [[], []];
+        newPage[0].push(translationItem);
+        distributedPages.push(newPage);
+        
+        console.log('✅ 마지막 유형의 한글해석 섹션을 새 페이지에 추가 (페이지 없음):', {
+          newPageIndex: distributedPages.length - 1,
+          columnIndex: 0,
+          lastWorkTypeId: packageQuiz.length > 0 ? packageQuiz[packageQuiz.length - 1].workTypeId : 'unknown'
+        });
+      }
+    }
 
     distributedPages.forEach((pageColumns: NormalizedQuizItem[][], pageIndex: number) => {
       console.log(

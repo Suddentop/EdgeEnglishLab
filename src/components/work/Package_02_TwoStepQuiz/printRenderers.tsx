@@ -23,17 +23,29 @@ export const renderSectionNode = (
   if (section.type === 'instruction' && chunkMeta.showInstruction === false) {
     return null;
   }
-  // 유형#05, #07, #08의 경우 options를 항상 표시
-  if (section.type === 'options' && chunkMeta.showOptions === false && normalizedItem.workTypeId !== '05' && normalizedItem.workTypeId !== '07' && normalizedItem.workTypeId !== '08') {
+  // 유형#01, #03, #04, #05, #07, #08의 경우 options를 항상 표시 (유형#01은 첫 번째 청크에 options가 있음)
+  if (section.type === 'options' && chunkMeta.showOptions === false && normalizedItem.workTypeId !== '01' && normalizedItem.workTypeId !== '03' && normalizedItem.workTypeId !== '04' && normalizedItem.workTypeId !== '05' && normalizedItem.workTypeId !== '07' && normalizedItem.workTypeId !== '08') {
     return null;
   }
   // 정답 섹션은 chunkMeta가 있고 showAnswer가 false인 경우에만 제외
+  // 단, 유형#06의 경우 항상 정답 섹션 렌더링
   // chunkMeta가 없거나 showAnswer가 true/undefined인 경우에는 렌더링
-  if (section.type === 'answer' && chunkMeta && chunkMeta.showAnswer === false) {
+  if (section.type === 'answer' && normalizedItem.workTypeId !== '06' && chunkMeta && chunkMeta.showAnswer === false) {
     return null;
   }
   if (section.type === 'translation' && chunkMeta.showTranslation === false) {
     return null;
+  }
+  // 유형#10의 text 섹션은 항상 렌더링 (필터링 방지)
+  if (section.type === 'text' && normalizedItem.workTypeId === '10' && section.key?.includes('text-10-test-label')) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 유형#10 텍스트 섹션 렌더링 확인:', {
+        key: section.key,
+        text: section.text,
+        workTypeId: normalizedItem.workTypeId,
+        isAnswerMode: options.isAnswerMode
+      });
+    }
   }
 
   switch (section.type) {
@@ -54,8 +66,13 @@ export const renderSectionNode = (
     case 'paragraph': {
       const variant = section.meta?.variant;
       if (variant === 'sentence') {
+        // 유형#11의 경우 줄간격 증가를 위한 클래스 추가
+        const isWork01To11 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].includes(normalizedItem.workTypeId);
+        const sentenceClassName = isWork01To11 
+          ? 'print-sentence-item print-sentence-item-work01-11' 
+          : 'print-sentence-item';
         return (
-          <div key={key} className="print-sentence-item">
+          <div key={key} className={sentenceClassName}>
             <div className="print-sentence-english">
               {section.label ? (
                 <span className="sentence-number">{section.label}</span>
@@ -68,8 +85,12 @@ export const renderSectionNode = (
       if (variant === 'sentence-with-translation') {
         // 유형#11 정답 모드: 영어 문장과 한글 해석을 구분선 없이 함께 표시
         const translation = section.meta?.translation;
+        const isWork01To11 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].includes(normalizedItem.workTypeId);
+        const sentenceClassName = isWork01To11 
+          ? 'print-sentence-item print-sentence-with-translation print-sentence-item-work01-11' 
+          : 'print-sentence-item print-sentence-with-translation';
         return (
-          <div key={key} className="print-sentence-item print-sentence-with-translation">
+          <div key={key} className={sentenceClassName}>
             <div className="print-sentence-english">
               {section.label ? (
                 <span className="sentence-number">{section.label}</span>
@@ -117,9 +138,13 @@ export const renderSectionNode = (
         );
       }
       if (variant === 'numbered-passage') {
-        // 유형#06: 영어본문 앞에 여백 추가
+        // 유형#06: 영어본문 컨테이너로 표시 (print-passage 클래스 사용)
+        const isWork01To11 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].includes(normalizedItem.workTypeId);
+        const passageClassName = isWork01To11 
+          ? 'print-passage print-passage-work01-11' 
+          : 'print-passage';
         return (
-          <div key={key} className="print-paragraph-item" style={{ marginTop: '0.4cm' }}>
+          <div key={key} className={passageClassName} style={{ marginTop: '0.4cm' }}>
             {section.label ? (
               <strong>
                 {section.label}
@@ -130,8 +155,17 @@ export const renderSectionNode = (
           </div>
         );
       }
+      // 유형#01-11과 #13, 14의 경우 줄간격 증가를 위한 클래스 추가
+      const isWork01To11 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].includes(normalizedItem.workTypeId);
+      const isWork13Or14 = normalizedItem.workTypeId === '13' || normalizedItem.workTypeId === '14';
+      let paragraphClassName = 'print-paragraph-item';
+      if (isWork01To11) {
+        paragraphClassName += ' print-paragraph-item-work01-11';
+      } else if (isWork13Or14) {
+        paragraphClassName += ' print-paragraph-item-work13-14';
+      }
       return (
-        <div key={key} className="print-paragraph-item">
+        <div key={key} className={paragraphClassName}>
           {section.label ? (
             <strong>
               {section.label}
@@ -143,16 +177,100 @@ export const renderSectionNode = (
       );
     }
     case 'text':
+      // 유형#06의 work06-info variant는 특별한 컨테이너로 렌더링 (텍스트가 없어도 컨테이너는 표시)
+      if (normalizedItem.workTypeId === '06' && section.meta?.variant === 'work06-info') {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🎨 유형#06 정보 컨테이너 렌더링:', {
+            key,
+            text: section.text,
+            className: 'print-work06-info-container'
+          });
+        }
+        return (
+          <div key={key} className="print-work06-info-container">
+            {section.text || '\u00A0'} {/* 빈 텍스트일 때도 공간 확보를 위해 non-breaking space 사용 */}
+          </div>
+        );
+      }
+      // 유형#10 인쇄(정답) 모드: 텍스트 블록 렌더링 (항상 표시)
+      if (normalizedItem.workTypeId === '10' && section.key?.includes('text-10-test-label')) {
+        console.log('🎨 유형#10 텍스트 블록 렌더링 (항상 로그):', {
+          key,
+          text: section.text,
+          className: 'print-text-block',
+          sectionKey: section.key,
+          hasText: !!section.text,
+          workTypeId: normalizedItem.workTypeId,
+          isAnswerMode: options.isAnswerMode,
+          sectionType: section.type
+        });
+        
+        // 텍스트가 없어도 컨테이너는 표시 (디버깅을 위해)
+        const displayText = section.text || '(텍스트 없음)';
+        
+        // "어법상 틀린 단어: " 다음에 줄바꿈 처리 및 진하게 표시
+        let formattedText: React.ReactNode = displayText;
+        if (typeof displayText === 'string' && displayText.startsWith('어법상 틀린 단어:')) {
+          const parts = displayText.split('어법상 틀린 단어:');
+          if (parts.length === 2 && parts[1].trim()) {
+            formattedText = (
+              <>
+                <strong>어법상 틀린 단어:</strong> <br />
+                {parts[1].trim()}
+              </>
+            );
+          }
+        }
+        
+        return (
+          <div 
+            key={key} 
+            className="print-text-block print-text-block-work10" 
+            style={{ 
+              minHeight: '0.5cm',
+              padding: '0.1cm',
+              marginTop: '0.1cm', /* 50% 감소: 0.2cm → 0.1cm */
+              marginBottom: '0.2cm',
+              display: 'block',
+              visibility: 'visible',
+              opacity: 1,
+              background: '#ffffff',
+              position: 'relative',
+              zIndex: 10,
+              width: '100%',
+              boxSizing: 'border-box'
+            }}
+          >
+            {formattedText}
+          </div>
+        );
+      }
       return section.text ? (
         <div key={key} className="print-text-block">
           {section.text}
         </div>
       ) : null;
     case 'html':
+      // 유형#02의 경우 영어 본문이므로 print-passage 클래스 사용
+      const isWork02 = normalizedItem.workTypeId === '02';
+      const isWork01To11 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].includes(normalizedItem.workTypeId);
+      const isWork13Or14 = normalizedItem.workTypeId === '13' || normalizedItem.workTypeId === '14';
+      let htmlClassName = isWork02 ? 'print-passage' : 'print-html-block';
+      // 유형#01-11의 경우 줄간격 증가를 위한 클래스 추가
+      if (isWork01To11) {
+        if (isWork02) {
+          htmlClassName += ' print-passage-work01-11';
+        } else {
+          htmlClassName += ' print-html-block-work01-11';
+        }
+      } else if (isWork13Or14) {
+        // 유형#13, 14의 경우 줄간격 증가를 위한 클래스 추가
+        htmlClassName += ' print-html-block-work13-14';
+      }
       return section.html ? (
         <div
           key={key}
-          className="print-html-block"
+          className={htmlClassName}
           dangerouslySetInnerHTML={{ __html: section.html }}
         />
       ) : null;
@@ -165,19 +283,18 @@ export const renderSectionNode = (
             const showAnswerMarkTypes = ['01', '03', '04', '05', '07', '08', '09', '10'];
             return (
               <div key={`${key}-option-${optionIndex}`} className="print-option">
-                {displayLabel && <span>{displayLabel} </span>}
-                {option.text}
-                {isAnswerMode && option.isCorrect && showAnswerMarkTypes.includes(normalizedItem.workTypeId) && (
-                  <span className="print-answer-mark"> (정답)</span>
-                )}
-                {isAnswerMode && option.isCorrect && !showAnswerMarkTypes.includes(normalizedItem.workTypeId) && (
-                  <span className="print-answer-mark" data-answer-index={optionIndex}></span>
-                )}
+                <div className="print-option-text">
+                  {displayLabel && <span>{displayLabel} </span>}
+                  {option.text}
+                  {isAnswerMode && option.isCorrect && showAnswerMarkTypes.includes(normalizedItem.workTypeId) && (
+                    <span className="print-answer-mark"> (정답)</span>
+                  )}
+                  {isAnswerMode && option.isCorrect && !showAnswerMarkTypes.includes(normalizedItem.workTypeId) && (
+                    <span className="print-answer-mark" data-answer-index={optionIndex}></span>
+                  )}
+                </div>
                 {isAnswerMode && option.translation && (
-                  <>
-                    {'\u00A0\u00A0'}
-                    <span className="print-option-translation">{option.translation}</span>
-                  </>
+                  <div className="print-option-translation">{option.translation}</div>
                 )}
               </div>
             );
@@ -185,46 +302,76 @@ export const renderSectionNode = (
         </div>
       ) : null;
     case 'table':
+      // 유형#02의 경우 컨테이너 div 없이 table을 직접 반환 (단에 직접 배치)
       return section.rows && section.rows.length > 0 ? (
-        <div key={key} className="print-replacements-table">
-          <table>
-            {section.headers && section.headers.length > 0 && (
-              <thead>
-                <tr>
-                  {section.headers.map((header, headerIndex) => (
-                    <th key={`${key}-header-${headerIndex}`}>{header}</th>
-                  ))}
-                </tr>
-              </thead>
-            )}
-            <tbody>
-              {section.rows.map((row, rowIndex) => (
-                <tr key={`${key}-row-${rowIndex}`}>
-                  {row.map((cell, cellIndex) => (
-                    <td key={`${key}-row-${rowIndex}-cell-${cellIndex}`}>{cell}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <table key={key} className="print-replacements-table">
+          {section.headers && section.headers.length > 0 && (
+            <thead>
+              <tr>
+                {section.headers.map((header, headerIndex) => (
+                  <th key={`${key}-header-${headerIndex}`}>{header}</th>
+                ))}
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {section.rows.map((row, rowIndex) => (
+              <tr key={`${key}-row-${rowIndex}`}>
+                {row.map((cell, cellIndex) => (
+                  <td key={`${key}-row-${rowIndex}-cell-${cellIndex}`}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : null;
     case 'answer':
-      return section.items && section.items.length > 0 ? (
+      // 디버깅: 유형#06의 정답 섹션 렌더링 확인 (항상 로그 출력)
+      if (normalizedItem.workTypeId === '06') {
+        console.log('🔍 유형#06 정답 섹션 렌더링 시도:', {
+          hasItems: !!section.items,
+          itemsLength: section.items?.length,
+          items: section.items,
+          key,
+          chunkMeta,
+          showAnswer: chunkMeta?.showAnswer,
+          workTypeId: normalizedItem.workTypeId,
+          sectionType: section.type,
+          willRender: !(section.type === 'answer' && normalizedItem.workTypeId !== '06' && chunkMeta && chunkMeta.showAnswer === false)
+        });
+      }
+      const shouldRenderAnswer = section.items && section.items.length > 0 && 
+        !(section.type === 'answer' && normalizedItem.workTypeId !== '06' && chunkMeta && chunkMeta.showAnswer === false);
+      
+      if (!shouldRenderAnswer && normalizedItem.workTypeId === '06') {
+        console.warn('⚠️ 유형#06 정답 섹션이 렌더링되지 않음:', {
+          hasItems: !!section.items,
+          itemsLength: section.items?.length,
+          chunkMetaShowAnswer: chunkMeta?.showAnswer
+        });
+      }
+      
+      if (!shouldRenderAnswer || !section.items || section.items.length === 0) {
+        return null;
+      }
+      
+      // 이 시점에서 section.items는 확실히 존재하고 길이가 0보다 큼
+      const items = section.items;
+      return (
         <div key={key} className="print-answer-section">
-          {/* items의 첫 번째 항목이 이미 "정답: "으로 시작하는 경우 라벨을 표시하지 않음 */}
-          {section.items[0] && !section.items[0].toString().startsWith('정답:') && (
+          {/* items의 첫 번째 항목이 이미 "정답:" 또는 "정답 : "으로 시작하는 경우 라벨을 표시하지 않음 */}
+          {items[0] && !items[0].toString().trim().startsWith('정답') && (
             <div className="print-answer-label">
               {section.meta?.description || '정답'}
             </div>
           )}
           <div className="print-answer-content">
-            {section.items.map((item, itemIndex) => (
+            {items.map((item, itemIndex) => (
               <div key={`${key}-answer-${itemIndex}`}>{item}</div>
             ))}
           </div>
         </div>
-      ) : null;
+      );
     case 'translation':
       // 유형#06의 경우 answerIndex를 originalItem에서 직접 가져오기
       let answerIndex: number | undefined = undefined;
@@ -252,7 +399,10 @@ export const renderSectionNode = (
       }
       
       return section.text ? (
-        <div key={key} className="print-translation-section">
+        <div 
+          key={key} 
+          className={`print-translation-section ${section.key === 'translation-last-item' ? 'print-translation-last' : ''}`}
+        >
           {/* 유형#06의 경우 영어본문과 한글해석 사이에 정답 표시 */}
           {isAnswerMode && normalizedItem.workTypeId === '06' && answerIndex !== undefined && (
             <div className="print-answer-before-translation">
@@ -287,6 +437,22 @@ export const renderNormalizedCardNode = (
     return null;
   }
 
+  // 유형#10 디버깅: 섹션 확인 (항상 로그)
+  if (normalizedItem.workTypeId === '10') {
+    const textSections = normalizedItem.sections.filter(s => s.type === 'text');
+    console.log('🧾 유형#10 카드 렌더링 (항상 로그):', {
+      workTypeId: normalizedItem.workTypeId,
+      totalSections: normalizedItem.sections.length,
+      sectionTypes: normalizedItem.sections.map((section) => section.type),
+      sectionKeys: normalizedItem.sections.map((section) => section.key),
+      textSectionsCount: textSections.length,
+      textSectionsKeys: textSections.map(s => s.key),
+      textSections: textSections,
+      chunkMeta: normalizedItem.chunkMeta,
+      isAnswerMode: options.isAnswerMode
+    });
+  }
+
   if (process.env.NODE_ENV === 'development') {
     const answerSections = normalizedItem.sections.filter(s => s.type === 'answer');
     console.log('🧾 카드 렌더링', {
@@ -302,6 +468,7 @@ export const renderNormalizedCardNode = (
     <div
       key={`card-${keyPrefix}`}
       className="print-question-card"
+      data-work-type={normalizedItem.workTypeId}
     >
       {normalizedItem.sections.map((section, sectionIndex) =>
         renderSectionNode(normalizedItem, section, sectionIndex, keyPrefix, options)
