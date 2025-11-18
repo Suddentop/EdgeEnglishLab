@@ -1489,21 +1489,60 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         const answerIndex = answerIndexAttr ? parseInt(answerIndexAttr, 10) : -1;
         
         options.forEach((option, optionIndex) => {
-          const optionText = option.textContent?.trim() || '';
-          if (optionText) {
-            const children: TextRun[] = [
-              new TextRun({
-                text: optionText,
-                font: 'Noto Sans KR'
-              })
-            ];
+          // 각 옵션 내에서 .print-answer-mark 요소 찾기
+          const optionAnswerMark = option.querySelector('.print-answer-mark');
+          const hasAnswerMarkInOption = optionAnswerMark && optionAnswerMark.textContent?.trim();
+          
+          let optionText = '';
+          let answerMarkText = '';
+          
+          if (hasAnswerMarkInOption) {
+            // .print-answer-mark가 옵션 내에 있는 경우 (유형#01 등)
+            const answerMarkTextContent = optionAnswerMark.textContent?.trim() || '';
+            // 옵션 텍스트에서 정답 마크 제거
+            const optionClone = option.cloneNode(true) as HTMLElement;
+            const answerMarkClone = optionClone.querySelector('.print-answer-mark');
+            if (answerMarkClone) {
+              answerMarkClone.remove();
+            }
+            optionText = optionClone.textContent?.trim() || '';
+            answerMarkText = answerMarkTextContent;
+          } else {
+            // 일반적인 경우
+            optionText = option.textContent?.trim() || '';
+          }
+          
+          if (optionText || answerMarkText) {
+            const children: TextRun[] = [];
             
-            if (answerIndex === optionIndex) {
+            // 옵션 텍스트 추가
+            if (optionText) {
               children.push(
                 new TextRun({
-                  text: ' (정답)',
+                  text: optionText,
+                  font: 'Noto Sans KR'
+                })
+              );
+            }
+            
+            // 정답 마크 추가 (옵션 내에 있는 경우 또는 data-answer-index가 있는 경우)
+            if (hasAnswerMarkInOption && answerMarkText) {
+              // answerMarkText가 " (정답)" 형식이므로 앞에 공백 하나 더 추가하여 "  (정답)"으로 만듦
+              const formattedAnswerText = ' ' + answerMarkText.trimStart();
+              children.push(
+                new TextRun({
+                  text: formattedAnswerText,
                   bold: true,
-                  color: '2e7d32',
+                  color: 'FF0000',
+                  font: 'Noto Sans KR'
+                })
+              );
+            } else if (answerIndex === optionIndex) {
+              children.push(
+                new TextRun({
+                  text: '  (정답)',
+                  bold: true,
+                  color: 'FF0000',
                   font: 'Noto Sans KR'
                 })
               );
