@@ -985,6 +985,11 @@ const extractTextRunsByLine = (element: HTMLElement): TextRun[][] => {
       nextStyles.bold = true;
     }
 
+    // 유형#02 교체된 단어 강조 (.print-word-highlight)
+    if (el.classList.contains('print-word-highlight')) {
+      nextStyles.bold = true;
+    }
+
     const fontWeight = el.style.fontWeight;
     if (fontWeight && fontWeight !== 'normal' && fontWeight !== '400') {
       nextStyles.bold = true;
@@ -1451,6 +1456,35 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         }
       }
       
+      // 유형#06 정답 정보 컨테이너 (본문 바로 아래에 표시)
+      // workType 변수는 이미 위에서 선언되었으므로 재사용
+      const isWork06 = workType === '6' || workType === '06';
+      if (isWork06) {
+        const work06Answer = card.querySelector('.print-work06-info-container') as HTMLElement | null;
+        if (work06Answer) {
+          const answerText = work06Answer.textContent?.trim() || '';
+          if (answerText && answerText !== '\u00A0') { // non-breaking space가 아닌 경우만
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔍 유형#06 정답 정보 컨테이너 발견 (본문 아래):', answerText);
+            }
+            
+            paragraphs.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: answerText,
+                    bold: true,
+                    color: '0066cc', // CSS에서 사용하는 색상과 동일
+                    font: 'Noto Sans KR'
+                  })
+                ],
+                spacing: { before: 120, after: 120 }
+              })
+            );
+          }
+        }
+      }
+      
       // 여러 개의 본문 요소가 있는 경우 추가 처리
       // (예: 유형#01의 여러 문단)
       const allPassages = card.querySelectorAll('.print-html-block, .print-paragraph-item, .print-shuffled-paragraphs');
@@ -1701,31 +1735,64 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         const answerIndexAttr = answerMarkElement?.getAttribute('data-answer-index');
         const answerIndex = answerIndexAttr ? parseInt(answerIndexAttr, 10) : -1;
         
+        // 유형#07, 08은 한글해석을 별도 줄로 표시
+        const isWork07 = workType === '7' || workType === '07';
+        const isWork08 = workType === '8' || workType === '08';
+        const needsTranslationLineBreak = isWork07 || isWork08;
+        
         options.forEach((option, optionIndex) => {
           // 각 옵션 내에서 .print-answer-mark 요소 찾기
           const optionAnswerMark = option.querySelector('.print-answer-mark');
           const hasAnswerMarkInOption = optionAnswerMark && optionAnswerMark.textContent?.trim();
           
+          // 유형#07, 08: 한글해석을 별도로 찾기
+          const optionTranslation = needsTranslationLineBreak 
+            ? option.querySelector('.print-option-translation') 
+            : null;
+          
           let optionText = '';
           let answerMarkText = '';
+          let translationText = '';
           
           if (hasAnswerMarkInOption) {
             // .print-answer-mark가 옵션 내에 있는 경우 (유형#01 등)
             const answerMarkTextContent = optionAnswerMark.textContent?.trim() || '';
-            // 옵션 텍스트에서 정답 마크 제거
+            // 옵션 텍스트에서 정답 마크와 한글해석 제거
             const optionClone = option.cloneNode(true) as HTMLElement;
             const answerMarkClone = optionClone.querySelector('.print-answer-mark');
             if (answerMarkClone) {
               answerMarkClone.remove();
             }
+            if (needsTranslationLineBreak) {
+              const translationClone = optionClone.querySelector('.print-option-translation');
+              if (translationClone) {
+                translationClone.remove();
+              }
+            }
             optionText = optionClone.textContent?.trim() || '';
             answerMarkText = answerMarkTextContent;
           } else {
             // 일반적인 경우
-            optionText = option.textContent?.trim() || '';
+            if (needsTranslationLineBreak && optionTranslation) {
+              // 한글해석 제거 후 옵션 텍스트 추출
+              const optionClone = option.cloneNode(true) as HTMLElement;
+              const translationClone = optionClone.querySelector('.print-option-translation');
+              if (translationClone) {
+                translationText = translationClone.textContent?.trim() || '';
+                translationClone.remove();
+              }
+              optionText = optionClone.textContent?.trim() || '';
+            } else {
+              optionText = option.textContent?.trim() || '';
+            }
           }
           
-          if (optionText || answerMarkText) {
+          // 유형#07, 08: 한글해석을 별도로 찾지 못한 경우, textContent에서 추출 시도
+          if (needsTranslationLineBreak && !translationText && optionTranslation) {
+            translationText = optionTranslation.textContent?.trim() || '';
+          }
+          
+          if (optionText || answerMarkText || translationText) {
             const children: TextRun[] = [];
             
             // 옵션 텍스트 추가
@@ -1761,39 +1828,108 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
               );
             }
             
+            // 옵션 텍스트 Paragraph 추가
             paragraphs.push(
               new Paragraph({
                 children,
                 indent: { left: 400 },
-                spacing: { before: optionIndex === 0 ? 200 : 80, after: 100 }
+                spacing: { before: optionIndex === 0 ? 200 : 80, after: needsTranslationLineBreak && translationText ? 0 : 100 }
               })
             );
+            
+            // 유형#07, 08: 한글해석을 별도 Paragraph로 추가
+            if (needsTranslationLineBreak && translationText) {
+              paragraphs.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: translationText,
+                      font: 'Noto Sans KR',
+                      italics: true,
+                      color: '374151'
+                    })
+                  ],
+                  indent: { left: 600 }, // 옵션보다 더 들여쓰기
+                  spacing: { before: 40, after: 100 }
+                })
+              );
+            }
           }
         });
       }
       
-      const work06Answer = card.querySelector('.print-work06-answer');
-      if (work06Answer) {
-        const answerText = work06Answer.textContent?.trim() || '';
-        if (answerText) {
-          paragraphs.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: answerText,
-                  bold: true,
-                  color: '1565c0',
-                  font: 'Noto Sans KR'
+      // 유형#10 어법 오류 정보 텍스트 블록 (4지선다 아래)
+      const isWork10 = workType === '10' || workType === '010';
+      if (isWork10) {
+        const textBlock = card.querySelector('.print-text-block-work10, .print-text-block') as HTMLElement | null;
+        if (textBlock) {
+          const textContent = textBlock.textContent?.trim() || '';
+          if (textContent && textContent !== '\u00A0') {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔍 유형#10 텍스트 블록 발견:', textContent);
+            }
+            
+            // "어법상 틀린 단어: " 부분을 굵게 처리
+            let formattedText = textContent;
+            if (textContent.startsWith('어법상 틀린 단어:')) {
+              const parts = textContent.split('어법상 틀린 단어:');
+              if (parts.length === 2 && parts[1].trim()) {
+                paragraphs.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: '어법상 틀린 단어:',
+                        bold: true,
+                        font: 'Noto Sans KR'
+                      }),
+                      new TextRun({
+                        text: ` ${parts[1].trim()}`,
+                        font: 'Noto Sans KR'
+                      })
+                    ],
+                    indent: { left: 400 },
+                    spacing: { before: 120, after: 100 }
+                  })
+                );
+              } else {
+                paragraphs.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: textContent,
+                        font: 'Noto Sans KR'
+                      })
+                    ],
+                    indent: { left: 400 },
+                    spacing: { before: 120, after: 100 }
+                  })
+                );
+              }
+            } else {
+              paragraphs.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: textContent,
+                      font: 'Noto Sans KR'
+                    })
+                  ],
+                  indent: { left: 400 },
+                  spacing: { before: 120, after: 100 }
                 })
-              ],
-              spacing: { before: 200, after: 120 }
-            })
-          );
+              );
+            }
+          }
         }
       }
-
-      const replacementsTable = card.querySelector('.print-replacements-table table');
-      if (replacementsTable) {
+      
+      // 유형#02 교체된 단어 테이블 (정답 모드)
+      const replacementsTable = card.querySelector('.print-replacements-table') as HTMLTableElement | null;
+      if (replacementsTable && replacementsTable.tagName === 'TABLE') {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 유형#02 교체된 단어 테이블 발견');
+        }
+        
         paragraphs.push(
           new Paragraph({
             text: '',
@@ -1930,10 +2066,29 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // 해석 섹션
       const translation = card.querySelector('.print-translation-section, .translation');
       if (translation) {
-        if (paragraphs.length > 0) {
-          const lastParagraph = paragraphs[paragraphs.length - 1];
-          if (lastParagraph && (lastParagraph as any).spacing?.after === 0) {
-            paragraphs.pop();
+        // 마지막 본문해석(print-translation-last)인 경우, 이전 유형과의 간격 추가
+        const isLastTranslation = translation.classList.contains('print-translation-last');
+        if (isLastTranslation) {
+          // 마지막 유형과 본문해석 사이에 두 줄 추가
+          paragraphs.push(
+            new Paragraph({
+              text: '',
+              spacing: { before: 0, after: 200 }
+            })
+          );
+          paragraphs.push(
+            new Paragraph({
+              text: '',
+              spacing: { before: 0, after: 200 }
+            })
+          );
+        } else {
+          // 일반 해석 섹션인 경우 기존 로직 유지
+          if (paragraphs.length > 0) {
+            const lastParagraph = paragraphs[paragraphs.length - 1];
+            if (lastParagraph && (lastParagraph as any).spacing?.after === 0) {
+              paragraphs.pop();
+            }
           }
         }
 
