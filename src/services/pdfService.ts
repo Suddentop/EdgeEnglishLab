@@ -1051,11 +1051,224 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   // 문제 카드들을 찾아서 각각 처리
   const questionCards = element.querySelectorAll('.print-question-card, .quiz-content');
   
+  // 유형#11의 경우: 모든 문장을 수집하여 하나의 박스로 처리
+  const allWork11Cards = Array.from(questionCards).filter(card => {
+    // data-work-type 속성 확인
+    const workType = (card as HTMLElement).getAttribute('data-work-type');
+    if (workType === '11' || workType === '011') {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 유형#11 카드 발견 (data-work-type):', workType);
+      }
+      return true;
+    }
+    
+    // 타입 뱃지 텍스트 확인
+    const typeBadge = card.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
+    const rawTypeLabel = typeBadge?.textContent?.trim() || '';
+    const typeLabel = rawTypeLabel ? rawTypeLabel.replace(/\s+/g, '') : '';
+    
+    // 제목에서도 확인
+    const title = card.querySelector('.print-question-title, .question-title');
+    const titleText = title?.textContent?.trim() || '';
+    
+    const isWork11 = typeLabel.includes('11') || 
+                     typeLabel.includes('#11') || 
+                     titleText.includes('#11') || 
+                     titleText.includes('본문 문장별 해석');
+    
+    if (isWork11 && process.env.NODE_ENV === 'development') {
+      console.log('🔍 유형#11 카드 발견 (텍스트):', { typeLabel, titleText });
+    }
+    
+    return isWork11;
+  });
+  
+  let work11SentencesProcessed = false;
+  
+  if (allWork11Cards.length > 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 유형#11 카드 ${allWork11Cards.length}개 발견`);
+    }
+    
+    // 유형#11의 모든 문장 수집
+    const allWork11Sentences: Array<{ englishText: string; koreanText: string }> = [];
+    
+    allWork11Cards.forEach((card, cardIdx) => {
+      const sentenceItems = card.querySelectorAll('.print-sentence-item, .sentence-item');
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔍 유형#11 카드 ${cardIdx + 1}에서 문장 ${sentenceItems.length}개 발견`);
+      }
+      
+      sentenceItems.forEach((item) => {
+        const englishElement = item.querySelector('.print-sentence-english, .sentence-english') as HTMLElement | null;
+        let englishText = '';
+        let koreanText = '';
+        
+        if (englishElement) {
+          const englishClone = englishElement.cloneNode(true) as HTMLElement;
+          const inlineKorean = englishClone.querySelector('.print-sentence-korean-inline, .sentence-korean');
+          if (inlineKorean) {
+            koreanText = inlineKorean.textContent?.trim() || '';
+            inlineKorean.remove();
+          }
+          englishText = englishClone.textContent?.trim() || '';
+        }
+        
+        const fallbackKorean = item.querySelector('.print-sentence-korean-inline, .sentence-korean');
+        if (!koreanText && fallbackKorean) {
+          koreanText = fallbackKorean.textContent?.trim() || '';
+        }
+        
+        if (englishText) {
+          allWork11Sentences.push({ englishText, koreanText });
+        }
+      });
+    });
+    
+    // 유형#11의 모든 문장을 하나의 박스로 처리
+    if (allWork11Sentences.length > 0) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ 유형#11 총 ${allWork11Sentences.length}개 문장을 하나의 박스로 처리`);
+      }
+      // 첫 번째 카드의 제목과 지시문 처리
+      const firstCard = allWork11Cards[0];
+      const typeBadge = firstCard.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
+      const rawTypeLabel = typeBadge?.textContent?.trim() || '';
+      const typeLabel = rawTypeLabel ? rawTypeLabel.replace(/\s+/g, '') : '';
+      const instruction = firstCard.querySelector('.print-instruction, .problem-instruction');
+      const instructionText = instruction?.textContent?.trim() || '';
+      
+      if (typeLabel && instructionText) {
+        const combinedText = `${typeLabel}. ${instructionText}`;
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: combinedText,
+                bold: true,
+                font: 'Noto Sans KR'
+              })
+            ],
+            spacing: { before: 200, after: 200 }
+          })
+        );
+      }
+      
+      // 모든 문장을 하나의 박스로 처리
+      allWork11Sentences.forEach((block, blockIndex) => {
+        const isFirstSentence = blockIndex === 0;
+        const isLastSentence = blockIndex === allWork11Sentences.length - 1;
+        
+        const borderConfig: any = {
+          left: {
+            color: '000000',
+            size: 6,
+            style: BorderStyle.SINGLE,
+            space: DOCX_BORDER_SPACE
+          },
+          right: {
+            color: '000000',
+            size: 6,
+            style: BorderStyle.SINGLE,
+            space: DOCX_BORDER_SPACE
+          }
+        };
+        
+        if (isFirstSentence) {
+          borderConfig.top = {
+            color: '000000',
+            size: 6,
+            style: BorderStyle.SINGLE,
+            space: DOCX_BORDER_SPACE
+          };
+        }
+        
+        if (isLastSentence) {
+          borderConfig.bottom = {
+            color: '000000',
+            size: 6,
+            style: BorderStyle.SINGLE,
+            space: DOCX_BORDER_SPACE
+          };
+        }
+        
+        const children: TextRun[] = [
+          new TextRun({
+            text: block.englishText,
+            font: 'Noto Sans KR'
+          })
+        ];
+        
+        if (block.koreanText) {
+          children.push(
+            new TextRun({
+              break: 1,
+              text: block.koreanText,
+              font: 'Noto Sans KR',
+              italics: true,
+              color: '444444'
+            })
+          );
+        } else {
+          children.push(
+            new TextRun({
+              break: 1,
+              text: '',
+              font: 'Noto Sans KR'
+            })
+          );
+        }
+        
+        paragraphs.push(
+          new Paragraph({
+            children,
+            spacing: {
+              before: isFirstSentence ? 200 : 160,
+              after: isLastSentence ? 200 : 160
+            },
+            indent: { left: 0, right: 0 },
+            border: borderConfig
+          })
+        );
+      });
+      
+      // 유형#11 블록과 다음 문제 사이 빈 줄
+      paragraphs.push(
+        new Paragraph({
+          text: '',
+          spacing: { before: 200, after: 0 }
+        })
+      );
+      
+      work11SentencesProcessed = true;
+    }
+  }
+  
   if (questionCards.length > 0) {
     questionCards.forEach((card, cardIndex) => {
+      // data-work-type 속성 확인
+      const workType = (card as HTMLElement).getAttribute('data-work-type');
+      const isWork11 = workType === '11' || workType === '011';
+      
+      // 타입 뱃지 텍스트 확인
       const typeBadge = card.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
       const rawTypeLabel = typeBadge?.textContent?.trim() || '';
       const typeLabel = rawTypeLabel ? rawTypeLabel.replace(/\s+/g, '') : '';
+      
+      // 제목에서도 확인
+      const title = card.querySelector('.print-question-title, .question-title');
+      const titleText = title?.textContent?.trim() || '';
+      
+      const isWork11ByText = typeLabel.includes('11') || 
+                             typeLabel.includes('#11') || 
+                             titleText.includes('#11') || 
+                             titleText.includes('본문 문장별 해석');
+      
+      // 유형#11은 이미 처리되었으므로 건너뛰기
+      if (work11SentencesProcessed && (isWork11 || isWork11ByText)) {
+        return;
+      }
+      
       const titleSpan = card.querySelector('.print-question-title span, .question-title');
       const titleSpanText = titleSpan?.textContent?.trim() || '';
       

@@ -95,6 +95,7 @@
     visibility: visible !important;
     opacity: 1 !important;
   }
+
 }
 
 /* 정답 섹션 스타일 */
@@ -378,6 +379,12 @@
     font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
   }
 
+  /* 인쇄(정답) 모드: 헤더 아래 여백 0.2cm */
+  .print-container-answer .print-header-package02,
+  .print-container-answer .a4-landscape-page-header {
+    margin-bottom: 0.2cm !important;
+  }
+
   .print-header-text-package02 {
     font-size: 10pt;
     font-weight: 700;
@@ -493,7 +500,8 @@
   }
   
   /* 유형#01의 경우: 영어 단락과 4지선다를 명확히 구분하기 위해 초록색 테두리 완전히 제거 */
-  .print-container-answer .print-question-card {
+  /* 단, 유형#06은 디버깅 테두리를 위해 제외 */
+  .print-container-answer .print-question-card:not([data-work-type="6"]):not([data-work-type="06"]) {
     border: none !important; /* 초록색 테두리 제거 */
     padding: 0 !important; /* 패딩도 제거하여 겹침 방지 */
     margin-bottom: 0 !important; /* 마진도 제거 */
@@ -1233,13 +1241,16 @@
     font-size: 8.8pt !important; /* 한글해석 통일: 8pt → 8.8pt */
   }
 
-  /* 마지막 단(페이지)의 본문해석 - 0.5pt 추가 증가 */
-  .print-answer-mode .print-translation-last .print-translation-title {
-    font-size: 9.3pt !important; /* 8.8pt + 0.5pt */
+  /* 마지막 단(페이지)의 본문해석 - 9.5pt로 설정 */
+  .print-answer-mode .print-translation-last .print-translation-title,
+  .print-container-answer .print-translation-last .print-translation-title {
+    font-size: 9.5pt !important;
+    margin-bottom: 0.4cm !important; /* 제목과 본문 사이 한 줄 띄움 */
   }
 
-  .print-answer-mode .print-translation-last .print-translation-content {
-    font-size: 9.3pt !important; /* 8.8pt + 0.5pt */
+  .print-answer-mode .print-translation-last .print-translation-content,
+  .print-container-answer .print-translation-last .print-translation-content {
+    font-size: 9.5pt !important;
   }
 
   .print-answer-mode .print-option-translation {
@@ -1319,9 +1330,10 @@
 
   /* 유형#06: 영어본문 컨테이너 바로 아래 정보 컨테이너 */
   .print-answer-mode .print-work06-info-container {
-    font-size: 9.9pt !important;
+    font-size: 9.0pt !important;
     line-height: 1.5 !important;
-    color: #000 !important;
+    color: #0066cc !important; /* 굵은 파란색 */
+    font-weight: bold !important;
     margin-top: 0.3cm !important;
     margin-bottom: 0 !important;
     padding: 0.2cm 0.25cm !important;
@@ -1331,9 +1343,23 @@
 
   /* 유형#06 인쇄(정답) 모드: 정보 컨테이너 */
   .print-container-answer .print-work06-info-container {
+    font-size: 9.0pt !important;
+    line-height: 1.5 !important;
+    color: #0066cc !important; /* 굵은 파란색 */
+    font-weight: bold !important;
     margin-top: 0.3cm !important;
     padding: 0.2cm 0.25cm !important;
     min-height: 0.5cm !important;
+  }
+
+  /* 유형#06 인쇄(정답) 모드: 정답 정보 컨테이너 스타일 */
+  .print-container-answer .print-question-card[data-work-type="6"] .print-work06-info-container,
+  .print-container-answer .print-question-card[data-work-type="06"] .print-work06-info-container {
+    font-size: 9.0pt !important;
+    line-height: 1.5 !important;
+    color: #0066cc !important; /* 굵은 파란색 */
+    font-weight: bold !important;
+    box-sizing: border-box !important;
   }
 
   /* 4지선다 옵션 컨테이너 */

@@ -728,6 +728,18 @@ export const normalizeQuizItemForPrint = (
         const koreanText = typeof sentence === 'string' ? '' : sentence?.korean || sentence?.translation || '';
         const label = sentence?.label || `문장 ${idx + 1} : `;
 
+        // 디버깅: 각 문장 생성 확인 (특히 문장8)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔍 유형#11 정규화: ${idx + 1}번 문장 (인덱스 ${idx}) 생성:`, {
+            label: label,
+            englishText: englishText.substring(0, 80) + (englishText.length > 80 ? '...' : ''),
+            koreanText: koreanText.substring(0, 80) + (koreanText.length > 80 ? '...' : ''),
+            hasEnglish: !!englishText && englishText.trim().length > 0,
+            hasKorean: !!koreanText && koreanText.trim().length > 0,
+            isAnswerMode: isAnswerMode
+          });
+        }
+
         // 영어 문장이 비어있으면 건너뛰기
         if (!englishText || englishText.trim().length === 0) {
           console.warn(`⚠️ 유형#11: ${idx + 1}번 문장이 비어있습니다.`, { sentence });
@@ -747,6 +759,10 @@ export const normalizeQuizItemForPrint = (
             }
           });
           
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ 유형#11: ${idx + 1}번 문장 섹션 생성 완료 (sentence-with-translation)`);
+          }
+          
           if (!koreanText || koreanText.trim().length === 0) {
             // 정답 모드인데 번역이 없는 경우 경고
             console.warn(`⚠️ 유형#11: ${idx + 1}번 문장의 번역이 없습니다.`, { 
@@ -764,8 +780,23 @@ export const normalizeQuizItemForPrint = (
             label,
             meta: { variant: 'sentence' }
           });
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ 유형#11: ${idx + 1}번 문장 섹션 생성 완료 (sentence)`);
+          }
         }
       });
+      
+      // 디버깅: 전체 문장 섹션 생성 완료 확인
+      if (process.env.NODE_ENV === 'development') {
+        const allSections = (window as any).__package02_debug_sections || [];
+        const sentenceSections = allSections.filter((s: any) => s.key?.includes('paragraph-11-'));
+        console.log(`📊 유형#11: 전체 ${sentences.length}개 문장 중 ${sentenceSections.length}개 섹션 생성됨`, {
+          sentencesCount: sentences.length,
+          sectionsCount: sentenceSections.length,
+          sectionKeys: sentenceSections.map((s: any) => s.key)
+        });
+      }
 
       break;
     }

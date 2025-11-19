@@ -253,19 +253,22 @@ export const estimateSectionHeight = (section: PrintSection): number => {
         return textHeight + marginTop + marginBottom + padding + baseMargin;
       }
       
-      // 유형#11 정답 모드: 영어 문장과 한글 해석을 함께 계산
+      // 유형#11 정답 모드: 영어 문장과 한글 해석을 각각 따로 계산
       if (variant === 'sentence-with-translation') {
         const englishText = section.text || '';
         const koreanText = section.meta?.translation || '';
+        const label = section.label || '';
         
-        // 실제 CSS 기반 정확한 높이 계산 (보수적으로 계산하여 과대평가 방지)
-        // .print-sentence-english: font-size: 8.5pt, line-height: 1.4, margin-bottom: 0.1cm
-        // calculateTextHeight는 기본적으로 line-height 1.2로 계산하므로 1.4로 조정하되, 10% 여유를 둠
-        const englishHeight = calculateTextHeight(englishText, 0.32) * (1.4 / 1.2) * 0.9; // line-height 1.4 반영, 10% 여유
+        // 실제 CSS 기반 정확한 높이 계산 (정확도를 높이기 위해 여유 제거 또는 최소화)
+        // .print-sentence-english: font-size: 8.5pt, line-height: 1.54 (1.4 * 1.1), margin-bottom: 0.1cm
+        // calculateTextHeight는 기본적으로 line-height 1.2로 계산하므로 1.54로 조정
+        // 정확도를 위해 여유를 최소화 (5% 마진만 적용)
+        const englishHeight = calculateTextHeight(englishText, 0.32) * (1.54 / 1.2) * 0.95; // line-height 1.54 반영, 5% 마진
         
         // .print-sentence-korean-inline: font-size: 8pt, line-height: 1.35, margin-top: 0.1cm (또는 0.1rem)
-        // calculateTextHeight는 기본적으로 line-height 1.2로 계산하므로 1.35로 조정하되, 10% 여유를 둠
-        const koreanHeight = calculateTextHeight(koreanText, 0.28) * (1.35 / 1.2) * 0.9; // line-height 1.35 반영, 10% 여유
+        // calculateTextHeight는 기본적으로 line-height 1.2로 계산하므로 1.35로 조정
+        // 정확도를 위해 여유를 최소화 (5% 마진만 적용)
+        const koreanHeight = calculateTextHeight(koreanText, 0.28) * (1.35 / 1.2) * 0.95; // line-height 1.35 반영, 5% 마진
         
         // .print-sentence-item: margin-bottom: 0.25cm (문장 간 마진)
         // .print-sentence-english: margin-bottom: 0.1cm
@@ -274,17 +277,22 @@ export const estimateSectionHeight = (section: PrintSection): number => {
         const koreanMarginTop = 0.03; // 한글 해석 상단 마진 (0.1rem ≈ 0.03cm)
         const itemMarginBottom = 0.25; // 문장 아이템 하단 마진
         
-        // 높이를 보수적으로 계산 (과대평가 방지)
+        // 정확한 높이 계산 (여유 최소화)
         const totalHeight = englishHeight + koreanHeight + englishMarginBottom + koreanMarginTop + itemMarginBottom;
         
-        // 디버깅: 유형#11 높이 계산 확인
+        // 디버깅: 유형#11 문장 높이 계산 (각 문장과 해석을 따로 계산)
         if (process.env.NODE_ENV === 'development') {
-          console.log('📏 유형#11 문장 높이 계산:', {
-            englishText: englishText.substring(0, 50) + '...',
-            koreanText: koreanText.substring(0, 50) + '...',
-            englishHeight: englishHeight.toFixed(2),
-            koreanHeight: koreanHeight.toFixed(2),
-            totalHeight: totalHeight.toFixed(2)
+          console.log(`📏 유형#11 ${label || '문장'} 높이 계산 (영어/한글 따로):`, {
+            label: label,
+            englishText: englishText.substring(0, 80) + (englishText.length > 80 ? '...' : ''),
+            koreanText: koreanText.substring(0, 80) + (koreanText.length > 80 ? '...' : ''),
+            englishHeight: englishHeight.toFixed(3) + 'cm',
+            koreanHeight: koreanHeight.toFixed(3) + 'cm',
+            englishMarginBottom: englishMarginBottom.toFixed(2) + 'cm',
+            koreanMarginTop: koreanMarginTop.toFixed(2) + 'cm',
+            itemMarginBottom: itemMarginBottom.toFixed(2) + 'cm',
+            totalHeight: totalHeight.toFixed(3) + 'cm',
+            totalHeightWithBaseMargin: (totalHeight + baseMargin).toFixed(3) + 'cm'
           });
         }
         
@@ -1683,93 +1691,117 @@ export const splitNormalizedItemByHeight = (
       }
     } else if (isWork11SentenceSection) {
       // 유형#11 전용: 연속된 문장(paragraph) 섹션들을 효율적으로 배치
-      // 각 문장은 하나의 단위로 취급되며, 하나의 문장이 페이지를 넘기면 안 됨
-      // 여러 문장을 한 페이지에 배치할 수 있을 때는 가능한 한 많이 배치
+      // 각 문장과 해석의 높이를 정확히 계산하여 단 높이를 초과하지 않는 최대 개수의 문장을 한 번에 추가
       
-      // 각 문장의 높이를 독립적으로 계산
-      const sentenceLabel = section.label || `문장 ${sectionIndex + 1}`;
+      // 현재 문장부터 시작해서 연속된 문장들의 누적 높이를 계산
+      let checkIndex = sectionIndex;
+      let cumulativeHeight = currentHeight; // 현재까지의 높이
+      const sentencesToAdd: { section: PrintSection; clonedSection: PrintSection; height: number; index: number }[] = [];
       
-      // 디버깅: 각 문장의 높이 계산 확인
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`📏 유형#11 ${sentenceLabel} 높이 계산:`, {
-          sentenceText: (section.text || '').substring(0, 50) + '...',
-          sectionHeight: sectionHeight.toFixed(2) + 'cm',
-          currentHeight: currentHeight.toFixed(2) + 'cm',
-          availableHeight: availableHeight.toFixed(2) + 'cm',
-          canFit: (currentHeight + sectionHeight <= availableHeight)
-        });
-      }
-      
-      // 현재 문장을 추가할 수 있는지 확인
-      // 높이 계산의 과대평가를 보정하기 위해 여유를 둠 (10% 여유)
-      // 실제 렌더링 높이가 계산 높이보다 작을 수 있으므로 충분한 여유 필요
-      const heightTolerance = availableHeight * 0.1; // 10% 여유
-      const effectiveAvailableHeight = availableHeight + heightTolerance;
-      
-      if (currentHeight + sectionHeight <= effectiveAvailableHeight) {
-        // 현재 청크에 추가 가능: 문장 추가
-        currentSections.push(clonedSection);
-        currentHeight += sectionHeight;
+      // 현재 문장부터 연속된 문장들을 확인하여 단 높이를 초과하지 않는 최대 개수 구하기
+      while (checkIndex < contentSections.length) {
+        const checkSection = contentSections[checkIndex];
+        const isCheckSentence = checkSection?.type === 'paragraph' && 
+          (checkSection.meta?.variant === 'sentence' || checkSection.meta?.variant === 'sentence-with-translation');
         
-        // 디버깅: 유형#11 문장 추가 확인
+        // 문장 섹션이 아니면 중단
+        if (!isCheckSentence) {
+          break;
+        }
+        
+        // 현재 체크할 문장의 높이 계산
+        const checkClonedSection = cloneSectionForChunk(checkSection, chunkIndex, currentSections.length + sentencesToAdd.length);
+        const checkSentenceHeight = estimateSectionHeight(checkClonedSection);
+        
+        // 현재 문장과 해석, 사이 여백을 포함한 높이를 누적 계산
+        const newCumulativeHeight = cumulativeHeight + checkSentenceHeight;
+        
+        // 단 높이를 초과하지 않으면 추가 목록에 포함
+        // 정확도를 위해 약간의 마진을 두어 겹침 방지 (1% 마진)
+        const heightMargin = availableHeight * 0.01; // 1% 마진
+        const effectiveAvailableHeight = availableHeight - heightMargin;
+        
+        // 디버깅: 각 문장의 높이 계산 확인
         if (process.env.NODE_ENV === 'development') {
-          console.log(`✅ 유형#11 문장 ${sectionIndex + 1} 추가:`, {
-            sectionHeight: sectionHeight.toFixed(2),
-            currentHeight: currentHeight.toFixed(2),
-            availableHeight: availableHeight.toFixed(2),
-            remainingHeight: (availableHeight - currentHeight).toFixed(2)
+          const checkLabel = checkSection.label || `문장 ${checkIndex + 1}`;
+          const checkEnglishText = checkSection.text || '';
+          const checkKoreanText = checkSection.meta?.translation || '';
+          console.log(`📏 유형#11 ${checkLabel} (인덱스 ${checkIndex}) 누적 높이 계산:`, {
+            label: checkLabel,
+            englishText: checkEnglishText.substring(0, 60) + (checkEnglishText.length > 60 ? '...' : ''),
+            koreanText: checkKoreanText.substring(0, 60) + (checkKoreanText.length > 60 ? '...' : ''),
+            sentenceHeight: checkSentenceHeight.toFixed(3) + 'cm',
+            cumulativeHeight: cumulativeHeight.toFixed(3) + 'cm',
+            newCumulativeHeight: newCumulativeHeight.toFixed(3) + 'cm',
+            availableHeight: availableHeight.toFixed(3) + 'cm',
+            heightMargin: heightMargin.toFixed(3) + 'cm',
+            effectiveAvailableHeight: effectiveAvailableHeight.toFixed(3) + 'cm',
+            canFit: (newCumulativeHeight <= effectiveAvailableHeight),
+            overflow: (newCumulativeHeight > effectiveAvailableHeight ? (newCumulativeHeight - effectiveAvailableHeight).toFixed(3) + 'cm' : '0cm')
           });
         }
         
-        // 다음 섹션이 유형#11의 문장이 아니면 여기서 종료
-        if (!nextIsWork11Sentence) {
-          continue;
-        }
-        
-        // 다음 문장도 확인하여 가능한 한 많이 배치
-        let nextSentenceIndex = sectionIndex + 1;
-        while (nextSentenceIndex < contentSections.length) {
-          const nextSentenceSection = contentSections[nextSentenceIndex];
-          const isNextSentence = nextSentenceSection?.type === 'paragraph' && 
-            (nextSentenceSection.meta?.variant === 'sentence' || nextSentenceSection.meta?.variant === 'sentence-with-translation');
-          
-          if (!isNextSentence) {
-            break;
+        if (newCumulativeHeight <= effectiveAvailableHeight) {
+          sentencesToAdd.push({
+            section: checkSection,
+            clonedSection: checkClonedSection,
+            height: checkSentenceHeight,
+            index: checkIndex
+          });
+          cumulativeHeight = newCumulativeHeight;
+          checkIndex++;
+        } else {
+          // 단 높이를 초과하면 중단
+          // 이 문장부터는 다음 청크에서 처리되어야 함
+          if (process.env.NODE_ENV === 'development') {
+            const checkLabel = checkSection.label || `문장 ${checkIndex + 1}`;
+            console.log(`⚠️ 유형#11 ${checkLabel} (인덱스 ${checkIndex}) 누적 높이 초과, 다음 청크에서 처리:`, {
+              sentenceHeight: checkSentenceHeight.toFixed(3) + 'cm',
+              cumulativeHeight: cumulativeHeight.toFixed(3) + 'cm',
+              newCumulativeHeight: newCumulativeHeight.toFixed(3) + 'cm',
+              availableHeight: availableHeight.toFixed(3) + 'cm',
+              overflow: (newCumulativeHeight - availableHeight).toFixed(3) + 'cm',
+              willMoveToNextChunk: true
+            });
           }
-          
-          const clonedNextSentence = cloneSectionForChunk(nextSentenceSection, chunkIndex, currentSections.length);
-          const nextSentenceHeight = estimateSectionHeight(clonedNextSentence);
-          
-          // 다음 문장을 추가할 수 있으면 추가 (여유 포함)
-          if (currentHeight + nextSentenceHeight <= effectiveAvailableHeight) {
-            currentSections.push(clonedNextSentence);
-            currentHeight += nextSentenceHeight;
-            
-            // 디버깅: 유형#11 연속 문장 추가 확인
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`✅ 유형#11 문장 ${nextSentenceIndex + 1} 연속 추가:`, {
-                sectionHeight: nextSentenceHeight.toFixed(2),
-                currentHeight: currentHeight.toFixed(2),
-                availableHeight: availableHeight.toFixed(2),
-                remainingHeight: (availableHeight - currentHeight).toFixed(2)
-              });
-            }
-            
-            nextSentenceIndex++;
-          } else {
-            // 다음 문장을 추가할 수 없으면 중단
-            break;
-          }
+          break;
         }
+      }
+      
+      // 계산된 문장들을 실제로 추가
+      if (sentencesToAdd.length > 0) {
+        // 현재 문장부터 연속된 문장들을 한 번에 추가
+        sentencesToAdd.forEach((item, idx) => {
+          currentSections.push(item.clonedSection);
+          currentHeight += item.height;
+          
+          if (process.env.NODE_ENV === 'development') {
+            const itemLabel = item.section.label || `문장 ${item.index + 1}`;
+            console.log(`✅ 유형#11 ${itemLabel} (인덱스 ${item.index}) 추가:`, {
+              sentenceHeight: item.height.toFixed(3) + 'cm',
+              currentHeight: currentHeight.toFixed(3) + 'cm',
+              availableHeight: availableHeight.toFixed(3) + 'cm',
+              remainingHeight: (availableHeight - currentHeight).toFixed(3) + 'cm',
+              sequence: `${idx + 1}/${sentencesToAdd.length}`
+            });
+          }
+        });
         
         // 처리된 문장들을 건너뛰기
-        if (nextSentenceIndex > sectionIndex + 1) {
-          sectionIndex = nextSentenceIndex - 1; // 다음 반복에서 처리하도록 (증가될 예정이므로 -1)
+        // 마지막으로 추가한 문장의 인덱스로 sectionIndex 설정
+        const lastAddedIndex = sentencesToAdd[sentencesToAdd.length - 1].index;
+        sectionIndex = lastAddedIndex;
+        
+        if (process.env.NODE_ENV === 'development') {
+          const firstLabel = sentencesToAdd[0].section.label || `문장 ${sentencesToAdd[0].index + 1}`;
+          const lastLabel = sentencesToAdd[sentencesToAdd.length - 1].section.label || `문장 ${lastAddedIndex + 1}`;
+          console.log(`🔄 유형#11: ${sentencesToAdd.length}개 문장 (${firstLabel}~${lastLabel}) 처리 완료, 다음 반복에서 sectionIndex=${lastAddedIndex + 1} 처리`);
         }
         
         continue;
       } else {
-        // 현재 문장을 추가할 수 없는 경우
+        // 현재 문장 하나도 추가할 수 없는 경우
+        // (첫 청크에 title만 있거나, 문장 하나의 높이가 단 높이를 초과하는 경우)
         if (onlyTitlePresent) {
           // 첫 청크에 title만 있는 경우: 문장을 강제로 추가 (빈 페이지 방지)
           currentSections.push(clonedSection);
@@ -1777,104 +1809,108 @@ export const splitNormalizedItemByHeight = (
           
           if (process.env.NODE_ENV === 'development') {
             console.log(`⚠️ 유형#11: 첫 청크에 문장 강제 추가 (높이 초과):`, {
-              sectionHeight: sectionHeight.toFixed(2),
-              currentHeight: currentHeight.toFixed(2),
-              availableHeight: availableHeight.toFixed(2)
+              label: section.label || `문장 ${sectionIndex + 1}`,
+              sectionHeight: sectionHeight.toFixed(3) + 'cm',
+              currentHeight: currentHeight.toFixed(3) + 'cm',
+              availableHeight: availableHeight.toFixed(3) + 'cm'
             });
           }
           continue;
-        } else {
-          // 현재 문장을 추가할 수 없어서 새 청크로 분할
-          // 디버깅: 문장 분할 확인
+        }
+        
+        // 현재 문장 하나도 추가할 수 없는 경우
+        // 새 청크로 이동하여 처리
+        const sentenceLabel = section.label || `문장 ${sectionIndex + 1}`;
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔄 유형#11 ${sentenceLabel} 새 청크로 이동 (현재 청크에 공간 부족):`, {
+            reason: '현재 청크에 공간 부족',
+            sectionHeight: sectionHeight.toFixed(3) + 'cm',
+            currentHeight: currentHeight.toFixed(3) + 'cm',
+            availableHeight: availableHeight.toFixed(3) + 'cm',
+            overflow: (currentHeight + sectionHeight - availableHeight).toFixed(3) + 'cm',
+            chunkIndex: chunkIndex + 1
+          });
+        }
+        
+        // 현재 청크를 저장하고 새 청크로 이동
+        if (currentSections.length > 0) {
+          chunkSectionsList.push(currentSections);
+          chunkIndex++;
+          ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+        }
+        
+        // 새 청크에서도 현재 문장부터 연속된 문장들의 누적 높이를 다시 계산
+        // (새 청크에서도 동일한 로직 적용)
+        let newChunkCheckIndex = sectionIndex;
+        let newChunkCumulativeHeight = currentHeight;
+        const newChunkSentencesToAdd: { section: PrintSection; clonedSection: PrintSection; height: number; index: number }[] = [];
+        
+        while (newChunkCheckIndex < contentSections.length) {
+          const newChunkCheckSection = contentSections[newChunkCheckIndex];
+          const isNewChunkCheckSentence = newChunkCheckSection?.type === 'paragraph' && 
+            (newChunkCheckSection.meta?.variant === 'sentence' || newChunkCheckSection.meta?.variant === 'sentence-with-translation');
+          
+          if (!isNewChunkCheckSentence) {
+            break;
+          }
+          
+          const newChunkCheckClonedSection = cloneSectionForChunk(newChunkCheckSection, chunkIndex, currentSections.length + newChunkSentencesToAdd.length);
+          const newChunkCheckSentenceHeight = estimateSectionHeight(newChunkCheckClonedSection);
+          const newChunkNewCumulativeHeight = newChunkCumulativeHeight + newChunkCheckSentenceHeight;
+          
+          // 정확도를 위해 약간의 마진을 두어 겹침 방지 (1% 마진)
+          const newChunkHeightMargin = availableHeight * 0.01; // 1% 마진
+          const newChunkEffectiveAvailableHeight = availableHeight - newChunkHeightMargin;
+          
+          if (newChunkNewCumulativeHeight <= newChunkEffectiveAvailableHeight) {
+            newChunkSentencesToAdd.push({
+              section: newChunkCheckSection,
+              clonedSection: newChunkCheckClonedSection,
+              height: newChunkCheckSentenceHeight,
+              index: newChunkCheckIndex
+            });
+            newChunkCumulativeHeight = newChunkNewCumulativeHeight;
+            newChunkCheckIndex++;
+          } else {
+            break;
+          }
+        }
+        
+        // 새 청크에 계산된 문장들 추가
+        if (newChunkSentencesToAdd.length > 0) {
+          newChunkSentencesToAdd.forEach((item) => {
+            currentSections.push(item.clonedSection);
+            currentHeight += item.height;
+          });
+          
+          const lastAddedIndex = newChunkSentencesToAdd[newChunkSentencesToAdd.length - 1].index;
+          sectionIndex = lastAddedIndex;
+          
           if (process.env.NODE_ENV === 'development') {
-            console.log(`🔄 유형#11 ${sentenceLabel} 분할:`, {
-              reason: '현재 청크에 공간 부족',
-              sectionHeight: sectionHeight.toFixed(2) + 'cm',
-              currentHeight: currentHeight.toFixed(2) + 'cm',
-              availableHeight: availableHeight.toFixed(2) + 'cm',
-              overflow: (currentHeight + sectionHeight - availableHeight).toFixed(2) + 'cm',
-              chunkIndex: chunkIndex + 1
+            const firstLabel = newChunkSentencesToAdd[0].section.label || `문장 ${newChunkSentencesToAdd[0].index + 1}`;
+            const lastLabel = newChunkSentencesToAdd[newChunkSentencesToAdd.length - 1].section.label || `문장 ${lastAddedIndex + 1}`;
+            console.log(`🔄 유형#11: 새 청크에 ${newChunkSentencesToAdd.length}개 문장 (${firstLabel}~${lastLabel}) 추가, 다음 반복에서 sectionIndex=${lastAddedIndex + 1} 처리`);
+          }
+          
+          continue;
+        } else {
+          // 새 청크에도 하나도 추가할 수 없으면 강제로 현재 문장만 추가 (높이 초과해도)
+          clonedSection = cloneSectionForChunk(section, chunkIndex, currentSections.length);
+          sectionHeight = estimateSectionHeight(clonedSection);
+          currentSections.push(clonedSection);
+          currentHeight += sectionHeight;
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`⚠️ 유형#11: 새 청크에 문장 강제 추가 (높이 초과):`, {
+              label: sentenceLabel,
+              sectionHeight: sectionHeight.toFixed(3) + 'cm',
+              currentHeight: currentHeight.toFixed(3) + 'cm',
+              availableHeight: availableHeight.toFixed(3) + 'cm'
             });
           }
           
-          // 현재 청크를 저장하고 새 청크로 이동
-          if (currentSections.length > 0) {
-            chunkSectionsList.push(currentSections);
-            chunkIndex++;
-            ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
-            
-            // 새 청크에 현재 문장 추가
-            clonedSection = cloneSectionForChunk(section, chunkIndex, currentSections.length);
-            sectionHeight = estimateSectionHeight(clonedSection);
-            
-            // 새 청크에 문장을 추가할 수 있는지 확인 (여유 포함)
-            if (currentHeight + sectionHeight <= effectiveAvailableHeight) {
-              // 새 청크에 추가 가능: 문장 추가
-              currentSections.push(clonedSection);
-              currentHeight += sectionHeight;
-              
-              // 다음 문장들도 확인하여 가능한 한 많이 배치
-              let nextSentenceIndex = sectionIndex + 1;
-              while (nextSentenceIndex < contentSections.length) {
-                const nextSentenceSection = contentSections[nextSentenceIndex];
-                const isNextSentence = nextSentenceSection?.type === 'paragraph' && 
-                  (nextSentenceSection.meta?.variant === 'sentence' || nextSentenceSection.meta?.variant === 'sentence-with-translation');
-                
-                if (!isNextSentence) {
-                  break;
-                }
-                
-                const clonedNextSentence = cloneSectionForChunk(nextSentenceSection, chunkIndex, currentSections.length);
-                const nextSentenceHeight = estimateSectionHeight(clonedNextSentence);
-                
-                // 다음 문장을 추가할 수 있으면 추가 (여유 포함)
-                if (currentHeight + nextSentenceHeight <= effectiveAvailableHeight) {
-                  currentSections.push(clonedNextSentence);
-                  currentHeight += nextSentenceHeight;
-                  
-                  if (process.env.NODE_ENV === 'development') {
-                    console.log(`✅ 유형#11 새 청크: 문장 ${nextSentenceIndex + 1} 연속 추가:`, {
-                      sectionHeight: nextSentenceHeight.toFixed(2),
-                      currentHeight: currentHeight.toFixed(2),
-                      availableHeight: availableHeight.toFixed(2)
-                    });
-                  }
-                  
-                  nextSentenceIndex++;
-                } else {
-                  break;
-                }
-              }
-              
-              // 처리된 문장들을 건너뛰기
-              if (nextSentenceIndex > sectionIndex + 1) {
-                sectionIndex = nextSentenceIndex - 1; // 다음 반복에서 처리하도록 (증가될 예정이므로 -1)
-              }
-            } else {
-              // 새 청크에도 추가할 수 없으면 강제로 추가 (높이 초과해도)
-              currentSections.push(clonedSection);
-              currentHeight += sectionHeight;
-              
-              if (process.env.NODE_ENV === 'development') {
-                console.log(`⚠️ 유형#11: 새 청크에 문장 강제 추가 (높이 초과):`, {
-                  sectionHeight: sectionHeight.toFixed(2),
-                  currentHeight: currentHeight.toFixed(2),
-                  availableHeight: availableHeight.toFixed(2)
-                });
-              }
-            }
-            
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`🔄 유형#11: 새 청크로 이동 - 문장 ${sectionIndex + 1}:`, {
-                sectionHeight: sectionHeight.toFixed(2),
-                currentHeight: currentHeight.toFixed(2),
-                availableHeight: availableHeight.toFixed(2)
-              });
-            }
-            
-            // 유형#11 문장은 이미 처리되었으므로 continue
-            continue;
-          }
+          continue;
         }
       }
     } else if (isWork13Or14 && isInstructionSection && nextIsParagraphOrHtml) {
