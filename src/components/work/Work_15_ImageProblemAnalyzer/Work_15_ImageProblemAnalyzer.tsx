@@ -8,8 +8,11 @@ import { imageToTextWithOpenAIVision } from '../../../services/work14Service';
 import { translateToKorean as translateToKoreanCommon, callOpenAI } from '../../../services/common';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { getUserCurrentPoints, getWorkTypePoints, deductUserPoints, refundUserPoints } from '../../../services/pointService';
-import { saveQuizHistory } from '../../../services/quizHistoryService';
+import { saveQuizHistory, updateQuizHistoryFile, getQuizHistory } from '../../../services/quizHistoryService';
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
+import FileFormatSelector from '../shared/FileFormatSelector';
+import { FileFormat, generateAndUploadFile } from '../../../services/pdfService';
+import ReactDOM from 'react-dom/client';
 import './Work_15_ImageProblemAnalyzer.css';
 import '../../../styles/PrintFormat.css';
 
@@ -46,6 +49,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
   const [isPasteFocused, setIsPasteFocused] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [printMode, setPrintMode] = useState<'none' | 'problem' | 'answer'>('none');
+  const [fileFormat, setFileFormat] = useState<FileFormat>('pdf');
 
   // 포인트 관련 상태 (유형#15)
   const [showPointModal, setShowPointModal] = useState(false);
@@ -506,6 +510,178 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     navigate('/quiz-list');
   };
 
+  // 인쇄(문제) 핸들러 - PDF/DOC 저장
+  const handlePrintProblem = async () => {
+    if (!analysisResult) {
+      alert('저장할 내용이 없습니다.');
+      return;
+    }
+
+    console.log('🖨️ 유형#15 문제 저장 시작');
+    
+    // A4 세로 페이지 스타일 동적 추가
+    const style = document.createElement('style');
+    style.id = 'print-style-work15-problem';
+    style.textContent = `
+      @page {
+        margin: 0;
+        size: A4 portrait;
+      }
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // 인쇄용 컨테이너 생성
+    const printContainer = document.createElement('div');
+    printContainer.id = 'print-root-work15-problem';
+    document.body.appendChild(printContainer);
+
+    // 기존 화면 숨기기
+    const appRoot = document.getElementById('root');
+    if (appRoot) {
+      appRoot.style.display = 'none';
+    }
+
+    // React 18 방식으로 렌더링
+    const root = ReactDOM.createRoot(printContainer);
+    root.render(
+      <div className="only-print">
+        <div className="a4-page-template">
+          <div className="a4-page-header">
+            <PrintHeaderWork01 />
+          </div>
+          <div className="a4-page-content">
+            <div className="quiz-content">
+              <div className="problem-instruction" style={{
+                fontWeight: 800, 
+                fontSize: '1rem', 
+                background: '#222', 
+                color: '#fff', 
+                padding: '0.7rem 0.5rem', 
+                borderRadius: '8px', 
+                marginBottom: '1.2rem', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                width: '100%'
+              }}>
+                <span>영어 본문 추출 결과 및 한글해석</span>
+                <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#15</span>
+              </div>
+              
+              <div className="print-content-section">
+                <div className="print-section-title" style={{
+                  fontSize: '14pt',
+                  fontWeight: 'bold',
+                  marginBottom: '8pt',
+                  color: '#2d3a60',
+                  borderBottom: '2px solid #6a5acd',
+                  paddingBottom: '4pt'
+                }}>
+                  📖 영어 본문
+                </div>
+                <div className="print-text-content" style={{
+                  fontSize: '11pt',
+                  lineHeight: '1.6',
+                  textAlign: 'justify',
+                  marginBottom: '12pt'
+                }}>
+                  {analysisResult.englishText}
+                </div>
+              </div>
+              
+              <div className="print-divider" style={{
+                borderTop: '1px solid #ddd',
+                margin: '15pt 0'
+              }}></div>
+              
+              <div className="print-content-section">
+                <div className="print-section-title" style={{
+                  fontSize: '14pt',
+                  fontWeight: 'bold',
+                  marginBottom: '8pt',
+                  color: '#2d3a60',
+                  borderBottom: '2px solid #6a5acd',
+                  paddingBottom: '4pt'
+                }}>
+                  🇰🇷 한글 해석
+                </div>
+                <div className="print-text-content korean" style={{
+                  fontSize: '11pt',
+                  lineHeight: '1.6',
+                  textAlign: 'justify',
+                  marginBottom: '12pt',
+                  color: '#1976d2',
+                  fontWeight: '500'
+                }}>
+                  {analysisResult.koreanTranslation}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    // 렌더링 완료 후 파일 생성
+    setTimeout(async () => {
+      try {
+        const element = document.getElementById('print-root-work15-problem');
+        if (element && userData?.uid) {
+          const result = await generateAndUploadFile(
+            element as HTMLElement,
+            userData.uid,
+            `work15_problem_${Date.now()}`,
+            '유형#15_문제',
+            { isAnswerMode: false, orientation: 'portrait', fileFormat }
+          );
+          
+          // 문제 내역에 파일 URL 저장
+          const history = await getQuizHistory(userData.uid, { limit: 10 });
+          const work15History = history.find(h => h.workTypeId === WORK_TYPE_ID);
+          
+          if (work15History) {
+            await updateQuizHistoryFile(work15History.id, result.url, result.fileName, 'problem');
+            const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+            console.log(`📁 유형#15 문제 ${formatName} 저장 완료:`, result.fileName);
+          }
+        }
+      } catch (error) {
+        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+      }
+
+      // PDF인 경우에만 브라우저 인쇄
+      if (fileFormat === 'pdf') {
+        window.print();
+      }
+      
+      // 정리
+      setTimeout(() => {
+        root.unmount();
+        document.body.removeChild(printContainer);
+        if (appRoot) {
+          appRoot.style.display = 'block';
+        }
+        const styleElement = document.getElementById('print-style-work15-problem');
+        if (styleElement) {
+          document.head.removeChild(styleElement);
+        }
+        console.log('✅ 유형#15 문제 저장 완료');
+      }, 100);
+    }, 500);
+  };
+
+  // 인쇄(정답) 핸들러 - PDF/DOC 저장 (유형#15는 문제와 정답이 동일)
+  const handlePrintAnswer = async () => {
+    // 유형#15는 문제와 정답이 동일하므로 handlePrintProblem과 동일하게 처리
+    await handlePrintProblem();
+  };
+
   return (
     <div className={`work-15-container${printMode !== 'none' ? ' print-mode-active' : ''}`} onPaste={handlePaste}>
       <div className="work-15-header">
@@ -782,39 +958,94 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
               >
                 문제생성목록
               </button>
-              {/* 인쇄 버튼을 우측 액션 영역으로 이동 */}
-              <button 
-                className="work-15-print-btn"
-                onClick={() => {
-                  // A4 세로형 인쇄 스타일 주입
-                  const styleId = 'print-style-work15';
-                  let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
-                  if (!styleEl) {
-                    styleEl = document.createElement('style');
-                    styleEl.id = styleId;
-                    styleEl.textContent = `
-                      @page { margin: 0; size: A4 portrait; }
-                      @media print { body { margin: 0; padding: 0; } }
-                    `;
-                    document.head.appendChild(styleEl);
-                  }
-
-                  // 현재 탭에서 인쇄용 화면 렌더
-                  setPrintMode('problem');
-
-                  // 인쇄 실행 후 정리
-                  setTimeout(() => {
-                    window.print();
-                    setTimeout(() => {
-                      const el = document.getElementById(styleId);
-                      if (el && el.parentNode) el.parentNode.removeChild(el);
-                      setPrintMode('none');
-                    }, 200);
-                  }, 100);
-                }}
-              >
-                🖨️ 인쇄 (저장)
-              </button>
+              {/* 파일 형식 선택 및 저장 버튼 */}
+              <FileFormatSelector
+                value={fileFormat}
+                onChange={setFileFormat}
+              />
+              {fileFormat === 'pdf' ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrintProblem}
+                    style={{
+                      width: '130px',
+                      height: '48px',
+                      padding: '0.75rem 1rem',
+                      fontSize: '11pt',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)'
+                    }}
+                  >
+                    🖨️ 인쇄 (문제)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePrintAnswer}
+                    style={{
+                      width: '130px',
+                      height: '48px',
+                      padding: '0.75rem 1rem',
+                      fontSize: '11pt',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
+                    }}
+                  >
+                    🖨️ 인쇄 (정답)
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrintProblem}
+                    style={{
+                      width: '130px',
+                      height: '48px',
+                      padding: '0.75rem 1rem',
+                      fontSize: '11pt',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 6px rgba(14, 165, 233, 0.25)'
+                    }}
+                  >
+                    💾 저장 (문제)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePrintAnswer}
+                    style={{
+                      width: '130px',
+                      height: '48px',
+                      padding: '0.75rem 1rem',
+                      fontSize: '11pt',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 6px rgba(16, 185, 129, 0.25)'
+                    }}
+                  >
+                    💾 저장 (정답)
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
