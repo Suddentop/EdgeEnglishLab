@@ -144,6 +144,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
   const [showQuizDisplay, setShowQuizDisplay] = useState(false);
   const [packageQuiz, setPackageQuiz] = useState<PackageQuizItem[] | null>(null);
   const [translatedText, setTranslatedText] = useState<string>('');
+  const [failedWorkTypes, setFailedWorkTypes] = useState<Array<{ id: string; name: string }>>([]);
 
   // Work_02 전용: 교체된 단어 강조 함수
   const renderTextWithHighlight = (text: string, replacements: any[]) => {
@@ -355,6 +356,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
     setIsLoading(true);
     setPackageQuiz(null);
+    setFailedWorkTypes([]); // 실패한 유형 목록 초기화
     let deductedPoints = 0;
     let successfulTypes: string[] = [];
     
@@ -417,6 +419,9 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       
       if (failedTypes.length > 0) {
         console.warn(`⚠️ 일부 유형 생성 실패: ${failedTypes.map(t => t.name).join(', ')}`);
+        
+        // 실패한 유형들을 상태에 저장
+        setFailedWorkTypes(failedTypes);
         
         // 실패한 유형들의 포인트만 환불
         let refundAmount = 0;
@@ -1226,7 +1231,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '2rem',
+          marginBottom: '1rem',
           marginTop: '2rem',
           paddingBottom: '1rem',
           borderBottom: '1px solid #e2e8f0'
@@ -1351,6 +1356,45 @@ const Package_02_TwoStepQuiz: React.FC = () => {
              )}
           </div>
         </div>
+
+        {/* 실패한 유형 알림 */}
+        {failedWorkTypes.length > 0 && (
+          <div style={{
+            padding: '1rem 1.5rem',
+            backgroundColor: '#fff3cd',
+            border: '1px solid #ffc107',
+            borderRadius: '8px',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.5rem'
+            }}>
+              <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+              <strong style={{
+                fontFamily: "'Noto Sans KR', sans-serif",
+                fontSize: '1rem',
+                color: '#856404'
+              }}>
+                일부 유형 생성 실패
+              </strong>
+            </div>
+            <div style={{
+              fontFamily: "'Noto Sans KR', sans-serif",
+              fontSize: '0.9rem',
+              color: '#856404',
+              marginLeft: '1.7rem'
+            }}>
+              다음 유형의 문제 생성에 실패했습니다: <strong>{failedWorkTypes.map(t => t.name).join(', ')}</strong>
+              <br />
+              <span style={{ fontSize: '0.85rem', color: '#856404', opacity: 0.8 }}>
+                실패한 유형의 포인트는 환불되었습니다.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* 생성된 문제들 표시 */}
         {packageQuiz.map((quizItem, index) => {
