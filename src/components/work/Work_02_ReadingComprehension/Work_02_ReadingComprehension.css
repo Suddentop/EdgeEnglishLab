@@ -9,12 +9,13 @@
   padding: 0rem 3rem 2rem 3rem !important;
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 .generator-header h2,
 .vocabulary-generator h2,
 .vocabulary-quiz-container h2 {
-  font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   font-size: 2.2rem;
   font-weight: 800;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -402,7 +403,7 @@
   border-radius: 12px;
   border: 2px solid rgba(102, 126, 234, 0.2);
   margin-bottom: 0.5rem;
-  font-family: inherit;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   resize: none;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);

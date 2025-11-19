@@ -3,7 +3,7 @@
   max-width: 1200px;
   margin: 0 auto; /* 상단 마진 제거 (0 auto = 상단 0, 좌우 auto) */
   padding: 10px 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 .work-15-header {
@@ -140,7 +140,7 @@
   padding: 20px;
   border: 2px solid #e0e0e0;
   border-radius: 12px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   font-size: 1rem;
   line-height: 1.6;
   resize: vertical;

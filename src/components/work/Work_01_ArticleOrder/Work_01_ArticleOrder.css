@@ -9,6 +9,7 @@
   border-radius: 16px;
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.07);
   padding: 2.5rem 1.2rem 3.5rem 1.2rem;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 .input-section {
@@ -196,6 +197,7 @@
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 16px;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   resize: vertical;
 }
 
@@ -421,6 +423,7 @@
 .quiz-display {
   margin: 0 auto 3.5rem auto !important; /* 전역 스타일 덮어쓰기 */
   padding: 2.5rem 2rem 3.5rem 2rem !important; /* 좌우패딩 복구 (1.2rem → 2rem) */
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 /* 문제 결과 화면 내부 여백 조정 - quiz-header와 quiz-content 사이 여백 늘림 */
@@ -460,6 +463,7 @@
 .generator-header h2 {
   margin: 0 0 1rem 0 !important; /* 제목 하단 여백 추가 */
   padding: 0 !important;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 .generator-header p {

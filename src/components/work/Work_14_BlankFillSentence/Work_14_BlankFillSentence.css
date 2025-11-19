@@ -2,7 +2,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 .generator-header {
@@ -234,7 +234,7 @@
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
-  font-family: inherit;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   resize: vertical;
   transition: border-color 0.3s ease;
 }
@@ -376,7 +376,7 @@
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
-  font-family: inherit;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   resize: vertical;
   transition: border-color 0.3s ease;
 }

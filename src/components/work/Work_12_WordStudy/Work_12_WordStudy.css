@@ -13,7 +13,7 @@
 .generator-header h2,
 .word-study-generator h2,
 .word-study-quiz-container h2 {
-  font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   font-size: 2rem;
   font-weight: 800;
   color: #000000;
@@ -591,7 +591,7 @@
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.07);
-  font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 .button-group {
@@ -666,7 +666,7 @@
   border-radius: 8px;
   padding: 1.2rem;
   border: 1.5px solid #e3e6f0;
-  font-family: inherit;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 .problem-options label {
@@ -674,7 +674,7 @@
   font-size: 1.08rem;
   margin: 0.4rem 0;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
 }
 
 .problem-answer, .print-answer {
@@ -700,7 +700,7 @@
     background: #fff;
     z-index: 9999;
     padding: 2.5rem 1.2rem 3.5rem 1.2rem;
-    font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
+    font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   }
   .print-only .problem-instruction {
     font-weight: 800;
@@ -720,7 +720,7 @@
     border-radius: 8px;
     padding: 1.2rem;
     border: 1.5px solid #e3e6f0;
-    font-family: inherit;
+    font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
   }
   .print-only .print-answer {
     margin-top: 1.2rem;
