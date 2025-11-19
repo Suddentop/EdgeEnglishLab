@@ -4,6 +4,7 @@
   max-width: 100% !important; /* Type#15 페이지에서는 부모 제약 해제 */
   padding-left: 0 !important;
   padding-right: 0 !important;
+  margin-top: 32.5px !important; /* 네비게이션바와 제목 사이 간격 50% 감소 (65px → 32.5px) */
 }
 
 .work-15-container {
@@ -20,6 +21,7 @@
   margin-bottom: 40px;
   padding: 20px;
   box-sizing: border-box;
+  margin-top: 0; /* 상단 마진 제거 (부모 컨테이너에서 조정) */
 }
 
 .work-15-header h1 {
@@ -648,6 +650,9 @@
   gap: 30px;
   padding: 20px;
   box-sizing: border-box;
+  max-width: 70%; /* 가로폭 30% 감소 (100% → 70%) */
+  width: 70%;
+  margin: 0 auto; /* 중앙 정렬 */
 }
 
 .work-15-result-header {

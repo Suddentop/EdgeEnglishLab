@@ -510,18 +510,18 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     navigate('/quiz-list');
   };
 
-  // 인쇄(문제) 핸들러 - PDF/DOC 저장
-  const handlePrintProblem = async () => {
+  // 인쇄(정답) 핸들러 - PDF/DOC 저장
+  const handlePrintAnswer = async () => {
     if (!analysisResult) {
       alert('저장할 내용이 없습니다.');
       return;
     }
 
-    console.log('🖨️ 유형#15 문제 저장 시작');
+    console.log('🖨️ 유형#15 정답 저장 시작');
     
     // A4 세로 페이지 스타일 동적 추가
     const style = document.createElement('style');
-    style.id = 'print-style-work15-problem';
+    style.id = 'print-style-work15-answer';
     style.textContent = `
       @page {
         margin: 0;
@@ -538,7 +538,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
-    printContainer.id = 'print-root-work15-problem';
+    printContainer.id = 'print-root-work15-answer';
     document.body.appendChild(printContainer);
 
     // 기존 화면 숨기기
@@ -631,14 +631,14 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     // 렌더링 완료 후 파일 생성
     setTimeout(async () => {
       try {
-        const element = document.getElementById('print-root-work15-problem');
+        const element = document.getElementById('print-root-work15-answer');
         if (element && userData?.uid) {
           const result = await generateAndUploadFile(
             element as HTMLElement,
             userData.uid,
-            `work15_problem_${Date.now()}`,
-            '유형#15_문제',
-            { isAnswerMode: false, orientation: 'portrait', fileFormat }
+            `work15_answer_${Date.now()}`,
+            '유형#15_정답',
+            { isAnswerMode: true, orientation: 'portrait', fileFormat }
           );
           
           // 문제 내역에 파일 URL 저장
@@ -646,9 +646,9 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           const work15History = history.find(h => h.workTypeId === WORK_TYPE_ID);
           
           if (work15History) {
-            await updateQuizHistoryFile(work15History.id, result.url, result.fileName, 'problem');
+            await updateQuizHistoryFile(work15History.id, result.url, result.fileName, 'answer');
             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 유형#15 문제 ${formatName} 저장 완료:`, result.fileName);
+            console.log(`📁 유형#15 정답 ${formatName} 저장 완료:`, result.fileName);
           }
         }
       } catch (error) {
@@ -667,19 +667,13 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
         if (appRoot) {
           appRoot.style.display = 'block';
         }
-        const styleElement = document.getElementById('print-style-work15-problem');
+        const styleElement = document.getElementById('print-style-work15-answer');
         if (styleElement) {
           document.head.removeChild(styleElement);
         }
-        console.log('✅ 유형#15 문제 저장 완료');
+        console.log('✅ 유형#15 정답 저장 완료');
       }, 100);
     }, 500);
-  };
-
-  // 인쇄(정답) 핸들러 - PDF/DOC 저장 (유형#15는 문제와 정답이 동일)
-  const handlePrintAnswer = async () => {
-    // 유형#15는 문제와 정답이 동일하므로 handlePrintProblem과 동일하게 처리
-    await handlePrintProblem();
   };
 
   return (
@@ -964,87 +958,45 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
                 onChange={setFileFormat}
               />
               {fileFormat === 'pdf' ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={handlePrintProblem}
-                    style={{
-                      width: '130px',
-                      height: '48px',
-                      padding: '0.75rem 1rem',
-                      fontSize: '11pt',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)'
-                    }}
-                  >
-                    🖨️ 인쇄 (문제)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handlePrintAnswer}
-                    style={{
-                      width: '130px',
-                      height: '48px',
-                      padding: '0.75rem 1rem',
-                      fontSize: '11pt',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                      color: 'white',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
-                    }}
-                  >
-                    🖨️ 인쇄 (정답)
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={handlePrintAnswer}
+                  style={{
+                    width: '130px',
+                    height: '48px',
+                    padding: '0.75rem 1rem',
+                    fontSize: '11pt',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
+                  }}
+                >
+                  🖨️ 인쇄 (정답)
+                </button>
               ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={handlePrintProblem}
-                    style={{
-                      width: '130px',
-                      height: '48px',
-                      padding: '0.75rem 1rem',
-                      fontSize: '11pt',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
-                      color: 'white',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 6px rgba(14, 165, 233, 0.25)'
-                    }}
-                  >
-                    💾 저장 (문제)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handlePrintAnswer}
-                    style={{
-                      width: '130px',
-                      height: '48px',
-                      padding: '0.75rem 1rem',
-                      fontSize: '11pt',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
-                      color: 'white',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 6px rgba(16, 185, 129, 0.25)'
-                    }}
-                  >
-                    💾 저장 (정답)
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={handlePrintAnswer}
+                  style={{
+                    width: '130px',
+                    height: '48px',
+                    padding: '0.75rem 1rem',
+                    fontSize: '11pt',
+                    fontWeight: '600',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 6px rgba(16, 185, 129, 0.25)'
+                  }}
+                >
+                  💾 저장 (정답)
+                </button>
               )}
             </div>
           </div>

@@ -1021,9 +1021,12 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   const paragraphs: (Paragraph | Table)[] = [];
   
   // 헤더 찾기 (가로선 포함) - PDF와 동일한 구조
+  // 패키지#02: .print-header-package02 > .print-header-text-package02
+  // 유형#01-15: .a4-page-header > .print-header-text-work01
   const header = element.querySelector('.a4-landscape-page-header, .a4-page-header, .print-header-package02');
   if (header) {
-    const headerText = header.querySelector('.print-header-text-package02, .print-header-text');
+    // 여러 헤더 텍스트 셀렉터 시도
+    const headerText = header.querySelector('.print-header-text-package02, .print-header-text-work01, .print-header-text');
     if (headerText) {
       const text = headerText.textContent?.trim() || '';
       if (text) {
@@ -1054,7 +1057,14 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   }
   
   // 문제 카드들을 찾아서 각각 처리
+  // 유형#15는 .quiz-content를 사용하지만 특수 구조이므로 별도로 처리됨
   const questionCards = element.querySelectorAll('.print-question-card, .quiz-content');
+  
+  // 유형#15 식별 (questionCards 처리 전에)
+  const work15QuizContentForCheck = element.querySelector('.quiz-content');
+  const hasPrintContentSection = work15QuizContentForCheck?.querySelector('.print-content-section') !== null;
+  const hasQuestionCard = element.querySelector('.print-question-card') !== null;
+  const isWork15 = hasPrintContentSection && !hasQuestionCard;
   
   // 유형#11의 경우: 모든 문장을 수집하여 하나의 박스로 처리
   const allWork11Cards = Array.from(questionCards).filter(card => {
@@ -1251,6 +1261,15 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   
   if (questionCards.length > 0) {
     questionCards.forEach((card, cardIndex) => {
+      // 유형#15는 별도로 처리되므로 건너뛰기
+      if (isWork15) {
+        const cardElement = card as HTMLElement;
+        if (cardElement.classList.contains('quiz-content') && 
+            cardElement.querySelector('.print-content-section') !== null) {
+          return; // 유형#15는 나중에 별도로 처리
+        }
+      }
+      
       // data-work-type 속성 확인
       const workType = (card as HTMLElement).getAttribute('data-work-type');
       const isWork11 = workType === '11' || workType === '011';
@@ -2280,6 +2299,121 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         });
       }
     }
+  }
+  
+  // 유형#15 처리: .quiz-content 내부의 .print-content-section 처리
+  // 유형#15는 .quiz-content 안에 .print-content-section이 있고, .print-question-card가 없는 구조
+  // (isWork15는 위에서 이미 선언됨)
+  const work15QuizContent = element.querySelector('.quiz-content');
+  if (isWork15 && work15QuizContent) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 유형#15 DOC 변환 시작:', {
+        hasPrintContentSection,
+        hasQuestionCard,
+        isWork15,
+        contentSectionsCount: work15QuizContent.querySelectorAll('.print-content-section').length
+      });
+    }
+    // 유형#15의 경우: .print-content-section을 찾아서 처리
+    const contentSections = work15QuizContent.querySelectorAll('.print-content-section');
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 유형#15 섹션 개수:', contentSections.length);
+    }
+    
+    contentSections.forEach((section, sectionIndex) => {
+      const sectionTitle = section.querySelector('.print-section-title');
+      const sectionText = section.querySelector('.print-text-content');
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔍 유형#15 섹션 ${sectionIndex + 1}:`, {
+          hasTitle: !!sectionTitle,
+          hasText: !!sectionText,
+          titleText: sectionTitle?.textContent?.trim()?.substring(0, 50),
+          textPreview: sectionText?.textContent?.trim()?.substring(0, 50)
+        });
+      }
+      
+      // 섹션 제목 추가
+      if (sectionTitle) {
+        const titleText = sectionTitle.textContent?.trim() || '';
+        if (titleText) {
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: titleText,
+                  bold: true,
+                  size: 24, // 12pt
+                  font: 'Noto Sans KR'
+                })
+              ],
+              spacing: { before: sectionIndex === 0 ? 200 : 400, after: 200 }
+            })
+          );
+        }
+      }
+      
+      // 섹션 텍스트 추가 (박스 테두리 포함)
+      if (sectionText) {
+        const lineRuns = extractTextRunsByLine(sectionText as HTMLElement);
+        if (lineRuns.length > 0) {
+          lineRuns.forEach((runs, lineIndex) => {
+            if (runs.length === 0) {
+              return;
+            }
+
+            const isFirstLine = lineIndex === 0;
+            const isLastLine = lineIndex === lineRuns.length - 1;
+
+            const borderConfig: any = {
+              left: {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              },
+              right: {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              }
+            };
+
+            if (isFirstLine) {
+              borderConfig.top = {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              };
+            }
+
+            if (isLastLine) {
+              borderConfig.bottom = {
+                color: '000000',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              };
+            }
+
+            paragraphs.push(
+              new Paragraph({
+                children: runs,
+                spacing: {
+                  before: isFirstLine ? 160 : 80,
+                  after: isLastLine ? 160 : 80
+                },
+                indent: { left: 0, right: 0 },
+                border: borderConfig
+              })
+            );
+          });
+        }
+      }
+    });
   }
   
   // 모든 텍스트 콘텐츠가 없으면 기본 텍스트 추출
