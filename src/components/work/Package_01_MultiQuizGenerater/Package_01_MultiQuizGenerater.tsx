@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
 import { useNavigate } from 'react-router-dom';
 import './Package_01_MultiQuizGenerater.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
@@ -2609,176 +2610,228 @@ ${inputText}`;
     return resultElements.length > 0 ? resultElements : text;
   };
 
-  // 인쇄(문제) 함수 - 패키지#02 전용: 모든 유형이 연결된 하나의 인쇄물
+  // 인쇄(문제) 함수 - 패키지#01: 모든 유형이 연결된 하나의 인쇄물
   const handlePrintProblem = async () => {
-    console.log('🖨️ 인쇄(문제) 시작 - printMode:', 'no-answer');
-    console.log('📦 packageQuiz:', packageQuiz);
+    if (!packageQuiz || packageQuiz.length === 0) {
+      alert('인쇄할 문제가 없습니다.');
+      return;
+    }
+
+    console.log('🖨️ 인쇄(문제) 시작');
     
+    // A4 세로 페이지 스타일 동적 추가
     const style = document.createElement('style');
-    style.id = 'print-style';
+    style.id = 'print-style-package01';
     style.textContent = `
       @page {
         margin: 0;
         size: A4;
       }
       @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .print-container {
-          display: block !important;
-        }
-        .no-print {
-          display: none !important;
-        }
-        .a4-page-template {
-          --print-margin-horizontal: 0.8cm;
+        body {
+          margin: 0;
+          padding: 0;
         }
       }
     `;
     document.head.appendChild(style);
     
-    setPrintMode('no-answer');
+    // 인쇄용 컨테이너 생성
+    const printContainer = document.createElement('div');
+    printContainer.id = 'print-root-package01';
+    document.body.appendChild(printContainer);
+
+    // 기존 화면 숨기기
+    const appRoot = document.getElementById('root');
+    if (appRoot) {
+      appRoot.style.display = 'none';
+    }
+
+    // React 18 방식으로 렌더링
+    const root = ReactDOM.createRoot(printContainer);
+    root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={false} />);
+
+    const activatePrintContainer = () => {
+      const inner = printContainer.querySelector('.print-container');
+      if (inner) {
+        inner.classList.add('pdf-generation-active');
+      } else {
+        requestAnimationFrame(activatePrintContainer);
+      }
+    };
+    activatePrintContainer();
+
+    // 렌더링 완료 후 인쇄 및 파일 생성
     setTimeout(async () => {
-      console.log('🖨️ 인쇄 실행 - printMode:', 'no-answer');
-      
       // 파일 생성 및 Firebase Storage 업로드
       try {
-        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-        
-        const element = document.getElementById('print-root');
-        if (element) {
+        const element = document.getElementById('print-root-package01');
+        if (element && userData?.uid) {
+          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+          
           const result = await generateAndUploadFile(
             element as HTMLElement,
-            userData?.uid || '',
+            userData.uid,
             `package01_problem_${Date.now()}`,
             '패키지#01_문제',
             { isAnswerMode: false, orientation: 'portrait', fileFormat }
           );
           
-          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
-          if (userData?.uid) {
-            const { getQuizHistory } = await import('../../../services/quizHistoryService');
-            const history = await getQuizHistory(userData.uid, { limit: 10 });
-            const packageHistory = history.find(h => h.workTypeId === 'P01');
-            
-            if (packageHistory) {
-              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
-               const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-              console.log(`📁 패키지#01 문제 ${formatName} 저장 완료:`, result.fileName);
-            }
+          // 패키지 내역에 파일 URL 저장
+          const { getQuizHistory } = await import('../../../services/quizHistoryService');
+          const history = await getQuizHistory(userData.uid, { limit: 10 });
+          const packageHistory = history.find(h => h.workTypeId === 'P01');
+          
+          if (packageHistory) {
+            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
+            const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+            console.log(`📁 패키지#01 문제 ${formatName} 저장 완료:`, result.fileName);
           }
         }
       } catch (error) {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
-      
+
       // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
-       if (fileFormat === 'pdf') {
-         window.print();
+      if (fileFormat === 'pdf') {
+        window.print();
       }
+      
+      // 인쇄 후 정리
       setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
+        root.unmount();
+        document.body.removeChild(printContainer);
+        if (appRoot) {
+          appRoot.style.display = 'block';
         }
-        setPrintMode('none');
-        console.log('🖨️ 인쇄 완료 - printMode:', 'none');
-      }, 1000);
-    }, 100);
+        const styleElement = document.getElementById('print-style-package01');
+        if (styleElement) {
+          document.head.removeChild(styleElement);
+        }
+        console.log('✅ 인쇄(문제) 완료');
+      }, 100);
+    }, 500);
   };
 
-  // 인쇄(정답) 함수 - 패키지#02 전용: 모든 유형이 연결된 하나의 인쇄물
+  // 인쇄(정답) 함수 - 패키지#01: 모든 유형이 연결된 하나의 인쇄물
   const handlePrintAnswer = async () => {
-    console.log('🖨️ 인쇄(정답) 시작 - printMode:', 'with-answer');
-    console.log('📦 packageQuiz:', packageQuiz);
+    if (!packageQuiz || packageQuiz.length === 0) {
+      alert('인쇄할 문제가 없습니다.');
+      return;
+    }
+
+    console.log('🖨️ 인쇄(정답) 시작');
     
+    // A4 세로 페이지 스타일 동적 추가
     const style = document.createElement('style');
-    style.id = 'print-style';
+    style.id = 'print-style-package01-answer';
     style.textContent = `
       @page {
         margin: 0;
         size: A4;
       }
       @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .print-container {
-          display: block !important;
-        }
-        .no-print {
-          display: none !important;
-        }
-        .a4-page-template {
-          --print-margin-horizontal: 0.8cm;
+        body {
+          margin: 0;
+          padding: 0;
         }
       }
     `;
     document.head.appendChild(style);
-    
-    setPrintMode('with-answer');
+
+    // 인쇄용 컨테이너 생성
+    const printContainer = document.createElement('div');
+    printContainer.id = 'print-root-package01-answer';
+    document.body.appendChild(printContainer);
+
+    // 기존 화면 숨기기
+    const appRoot = document.getElementById('root');
+    if (appRoot) {
+      appRoot.style.display = 'none';
+    }
+
+    // React 18 방식으로 렌더링
+    const root = ReactDOM.createRoot(printContainer);
+    root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={true} />);
+
+    const activateAnswerContainer = () => {
+      const inner = printContainer.querySelector('.print-container');
+      if (inner) {
+        inner.classList.add('pdf-generation-active');
+      } else {
+        requestAnimationFrame(activateAnswerContainer);
+      }
+    };
+    activateAnswerContainer();
+
+    // 렌더링 완료 후 인쇄 및 파일 생성
     setTimeout(async () => {
-      console.log('🖨️ 인쇄 실행 - printMode:', 'with-answer');
-      
       // 파일 생성 및 Firebase Storage 업로드
       try {
-        const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-        
-        const element = document.getElementById('print-root');
-        if (element) {
+        const element = document.getElementById('print-root-package01-answer');
+        if (element && userData?.uid) {
+          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+          
           const result = await generateAndUploadFile(
             element as HTMLElement,
-            userData?.uid || '',
+            userData.uid,
             `package01_answer_${Date.now()}`,
             '패키지#01_정답',
             { isAnswerMode: true, orientation: 'portrait', fileFormat }
           );
           
-          // 패키지 내역에 파일 URL 저장 (가장 최근 패키지 내역 찾기)
-          if (userData?.uid) {
+          // 패키지 내역에 파일 URL 저장
+          try {
             const { getQuizHistory } = await import('../../../services/quizHistoryService');
             const history = await getQuizHistory(userData.uid, { limit: 10 });
             const packageHistory = history.find(h => h.workTypeId === 'P01');
             
             if (packageHistory) {
               await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-               const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
               console.log(`📁 패키지#01 정답 ${formatName} 저장 완료:`, result.fileName);
+            }
+          } catch (historyError: any) {
+            // 인덱스 오류는 이미 처리되었으므로 조용히 넘어감
+            if (historyError?.code === 'failed-precondition' || historyError?.message?.includes('index')) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('⚠️ 문제 내역 조회 중 인덱스 오류 (무시됨):', historyError?.message);
+              }
+              // 파일은 이미 생성되었으므로 정상 완료로 처리
+              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              console.log(`📁 패키지#01 정답 ${formatName} 생성 완료 (내역 저장 스킵):`, result.fileName);
+            } else {
+              // 다른 에러는 정상적으로 로그 출력
+              console.error('문제 내역 조회 실패:', historyError);
             }
           }
         }
       } catch (error) {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
-      
+
       // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
-       if (fileFormat === 'pdf') {
-         window.print();
+      if (fileFormat === 'pdf') {
+        window.print();
       }
+      
+      // 인쇄 후 정리
       setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
+        root.unmount();
+        document.body.removeChild(printContainer);
+        if (appRoot) {
+          appRoot.style.display = 'block';
         }
-        setPrintMode('none');
-        console.log('🖨️ 인쇄 완료 - printMode:', 'none');
-      }, 1000);
-    }, 100);
+        
+        // 동적으로 추가한 스타일 제거
+        const styleElement = document.getElementById('print-style-package01-answer');
+        if (styleElement && styleElement.parentNode) {
+          styleElement.parentNode.removeChild(styleElement);
+        }
+
+        console.log('✅ 인쇄(정답) 완료');
+      }, 100);
+    }, 500);
   };
 
   // 로딩 중이거나 사용자 데이터가 없을 때
@@ -4413,218 +4466,6 @@ ${inputText}`;
             return null;
           })}
         </div>
-
-        {/* 인쇄용 문제 - 모든 유형이 연결된 하나의 인쇄물 */}
-        {printMode !== 'none' && (() => {
-          console.log('🖨️ 인쇄용 렌더링 시작 - printMode:', printMode, 'packageQuiz:', packageQuiz);
-          return (
-          <div className="print-container">
-            {packageQuiz.map((quizItem, index) => {
-              // Work_01 인쇄용
-              if (quizItem.workTypeId === '01' && quizItem.quiz) {
-                return (
-                  <PrintFormatPackage01
-                    key={`print-work-01-${index}`}
-                    quiz={quizItem.quiz}
-                    translatedText={quizItem.translatedText || quizItem.quiz.translation || ''}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_02 인쇄용
-              if (quizItem.workTypeId === '02' && quizItem.work02Data) {
-                return (
-                  <PrintFormatPackage01Work02
-                    key={`print-work-02-${index}`}
-                    work02Data={quizItem.work02Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_03 인쇄용
-              if (quizItem.workTypeId === '03' && quizItem.work03Data) {
-                return (
-                  <PrintFormatPackage01Work03
-                    key={`print-work-03-${index}`}
-                    work03Data={quizItem.work03Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_04 인쇄용
-              if (quizItem.workTypeId === '04' && quizItem.work04Data) {
-                return (
-                  <PrintFormatPackage01Work04
-                    key={`print-work-04-${index}`}
-                    work04Data={quizItem.work04Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_05 인쇄용
-              if (quizItem.workTypeId === '05' && quizItem.work05Data) {
-                return (
-                  <PrintFormatPackage01Work05
-                    key={`print-work-05-${index}`}
-                    work05Data={quizItem.work05Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_06 인쇄용
-              if (quizItem.workTypeId === '06' && quizItem.work06Data) {
-                return (
-                  <PrintFormatPackage01Work06
-                    key={`print-work-06-${index}`}
-                    work06Data={quizItem.work06Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_07 인쇄용
-              if (quizItem.workTypeId === '07' && quizItem.work07Data) {
-                console.log('🖨️ Work_07 인쇄용 렌더링:', {
-                  workTypeId: quizItem.workTypeId,
-                  hasWork07Data: !!quizItem.work07Data,
-                  printMode,
-                  work07Data: quizItem.work07Data,
-                  translatedText: quizItem.translatedText
-                });
-                return (
-                  <PrintFormatPackage01Work07
-                    key={`print-work-07-${index}`}
-                    work07Data={quizItem.work07Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-              
-              // Work_07 데이터가 없는 경우 로그
-              if (quizItem.workTypeId === '07' && !quizItem.work07Data) {
-                console.error('❌ Work_07 데이터가 없습니다:', {
-                  workTypeId: quizItem.workTypeId,
-                  hasWork07Data: !!quizItem.work07Data,
-                  quizItemKeys: Object.keys(quizItem)
-                });
-              }
-
-              // Work_08 인쇄용
-              if (quizItem.workTypeId === '08' && quizItem.work08Data) {
-                console.log('🖨️ Work_08 인쇄용 렌더링:', {
-                  workTypeId: quizItem.workTypeId,
-                  hasWork08Data: !!quizItem.work08Data,
-                  printMode,
-                  work08Data: quizItem.work08Data,
-                  translatedText: quizItem.translatedText
-                });
-                return (
-                  <PrintFormatPackage01Work08
-                    key={`print-work-08-${index}`}
-                    work08Data={quizItem.work08Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_09 인쇄용
-              if (quizItem.workTypeId === '09' && quizItem.work09Data) {
-                console.log('🖨️ Work_09 인쇄용 렌더링:', {
-                  workTypeId: quizItem.workTypeId,
-                  hasWork09Data: !!quizItem.work09Data,
-                  printMode,
-                  work09Data: quizItem.work09Data,
-                  translatedText: quizItem.translatedText
-                });
-                return (
-                  <PrintFormatPackage01Work09
-                    key={`print-work-09-${index}`}
-                    work09Data={quizItem.work09Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_10 인쇄용
-              if (quizItem.workTypeId === '10' && quizItem.work10Data) {
-                console.log('🖨️ Work_10 인쇄용 렌더링:', {
-                  workTypeId: quizItem.workTypeId,
-                  hasWork10Data: !!quizItem.work10Data,
-                  printMode,
-                  work10Data: quizItem.work10Data,
-                  translatedText: quizItem.translatedText
-                });
-                return (
-                  <PrintFormatPackage01Work10
-                    key={`print-work-10-${index}`}
-                    work10Data={quizItem.work10Data}
-                    translatedText={quizItem.translatedText}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_11 문장별 해석 문제
-              if (quizItem.workTypeId === '11' && quizItem.work11Data) {
-                return (
-                  <PrintFormatPackage01Work11
-                    key={`print-work-11-${index}`}
-                    work11Data={quizItem.work11Data}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_13 빈칸 채우기 문제 (단어-주관식)
-              if (quizItem.workTypeId === '13' && quizItem.work13Data) {
-                return (
-                  <PrintFormatPackage01Work13
-                    key={`print-work-13-${index}`}
-                    work13Data={quizItem.work13Data}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              // Work_14 빈칸 채우기 문제 (문장-주관식)
-              if (quizItem.workTypeId === '14' && quizItem.work14Data) {
-                return (
-                  <PrintFormatPackage01Work14
-                    key={`print-work-14-${index}`}
-                    work14Data={quizItem.work14Data}
-                    printMode={printMode}
-                  />
-                );
-              }
-
-              
-              // Work_08 데이터가 없는 경우 로그
-              if (quizItem.workTypeId === '08' && !quizItem.work08Data) {
-                console.error('❌ Work_08 데이터가 없습니다:', {
-                  workTypeId: quizItem.workTypeId,
-                  hasWork08Data: !!quizItem.work08Data,
-                  quizItemKeys: Object.keys(quizItem)
-                });
-              }
-
-              return null;
-            })}
-          </div>
-          );
-        })()}
       </React.Fragment>
     );
   }

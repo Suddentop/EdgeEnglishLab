@@ -144,19 +144,15 @@
     }
   }
   
-  /* 패키지#02 전용 인쇄 헤더 스타일 */
+  /* 패키지#01 전용 인쇄 헤더 스타일 (패키지#02와 동일) */
   .print-header-package02 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 100%;
-    background: #fff;
-    padding: 0.3rem 0;
-    margin: 0;
-    margin-bottom: 0;
-    box-sizing: border-box;
-    border: none;
-    border-bottom: none;
+    padding: 0.2cm 0;
+    margin-bottom: 0.25cm;
+    border-bottom: 2px solid #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
   }
   
   /* 화면에서도 헤더가 보이도록 설정 */
@@ -167,29 +163,60 @@
       justify-content: center;
       width: 100%;
       background: #fff;
-      padding: 0.3rem 0;
+      padding: 0.2cm 0;
       margin: 0;
-      margin-bottom: 0;
+      margin-bottom: 0.25cm;
       box-sizing: border-box;
-      border: none;
-      border-bottom: none;
+      border-bottom: 2px solid #000;
     }
   }
   
   .print-header-text-package02 {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 10pt;
+    font-weight: 700;
     color: #000;
-    font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
+    text-align: center;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
   }
   
   /* 화면에서도 헤더 텍스트가 보이도록 설정 */
   @media screen {
     .print-header-text-package02 {
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 10pt;
+      font-weight: 700;
       color: #000;
-      font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
+      text-align: center;
+      font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+    }
+  }
+
+  /* 화면에서 숨김 (PDF 생성 시에는 보이도록 예외 처리) */
+  @media screen {
+    .print-container {
+      display: none !important;
+    }
+    
+    /* PDF 생성 중일 때는 보이도록 함 */
+    .print-container.pdf-generation-active {
+      display: block !important;
+      position: fixed !important;
+      top: -9999px !important;
+      left: -9999px !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      width: auto !important;
+      height: auto !important;
+      min-width: auto !important;
+      min-height: auto !important;
+      max-width: none !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    
+    /* PDF 생성 중 자식 요소들도 보이도록 */
+    .print-container.pdf-generation-active * {
+      visibility: visible !important;
+      opacity: 1 !important;
     }
   }
   

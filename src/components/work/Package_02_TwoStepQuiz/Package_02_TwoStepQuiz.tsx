@@ -1170,14 +1170,14 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           
           // 패키지 내역에 파일 URL 저장
           try {
-            const { getQuizHistory } = await import('../../../services/quizHistoryService');
-            const history = await getQuizHistory(userData.uid, { limit: 10 });
-            const packageHistory = history.find(h => h.workTypeId === 'P02');
-            
-            if (packageHistory) {
-              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-              console.log(`📁 패키지#02 정답 ${formatName} 저장 완료:`, result.fileName);
+          const { getQuizHistory } = await import('../../../services/quizHistoryService');
+          const history = await getQuizHistory(userData.uid, { limit: 10 });
+          const packageHistory = history.find(h => h.workTypeId === 'P02');
+          
+          if (packageHistory) {
+            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
+             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+            console.log(`📁 패키지#02 정답 ${formatName} 저장 완료:`, result.fileName);
             }
           } catch (historyError: any) {
             // 인덱스 오류는 이미 처리되었으므로 조용히 넘어감

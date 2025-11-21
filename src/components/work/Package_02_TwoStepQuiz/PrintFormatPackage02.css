@@ -608,7 +608,7 @@
     max-height: none !important;
     overflow: visible !important;
     display: block !important;
-  }
+}
 
 /* .print-replacements-table가 이제 table 요소 자체이므로 이 규칙은 제거됨 */
 
@@ -660,7 +660,7 @@
 .print-option-text {
   display: block;
   margin-bottom: 0.05cm;
-}
+  }
 
 .print-option-translation {
   font-size: 9.0pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
@@ -1260,7 +1260,7 @@
   .print-answer-mode .print-word-korean {
     font-size: 8.8pt !important; /* 한글해석 통일: 8pt → 8.8pt */
   }
-
+  
   /* 문제 제목 */
   .print-answer-mode .print-question-title {
     font-size: 12.1pt !important;

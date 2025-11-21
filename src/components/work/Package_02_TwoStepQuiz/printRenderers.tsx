@@ -284,14 +284,14 @@ export const renderSectionNode = (
             return (
               <div key={`${key}-option-${optionIndex}`} className="print-option">
                 <div className="print-option-text">
-                  {displayLabel && <span>{displayLabel} </span>}
-                  {option.text}
-                  {isAnswerMode && option.isCorrect && showAnswerMarkTypes.includes(normalizedItem.workTypeId) && (
-                    <span className="print-answer-mark"> (정답)</span>
-                  )}
-                  {isAnswerMode && option.isCorrect && !showAnswerMarkTypes.includes(normalizedItem.workTypeId) && (
-                    <span className="print-answer-mark" data-answer-index={optionIndex}></span>
-                  )}
+                {displayLabel && <span>{displayLabel} </span>}
+                {option.text}
+                {isAnswerMode && option.isCorrect && showAnswerMarkTypes.includes(normalizedItem.workTypeId) && (
+                  <span className="print-answer-mark"> (정답)</span>
+                )}
+                {isAnswerMode && option.isCorrect && !showAnswerMarkTypes.includes(normalizedItem.workTypeId) && (
+                  <span className="print-answer-mark" data-answer-index={optionIndex}></span>
+                )}
                 </div>
                 {isAnswerMode && option.translation && (
                   <div className="print-option-translation">{option.translation}</div>
@@ -305,25 +305,25 @@ export const renderSectionNode = (
       // 유형#02의 경우 컨테이너 div 없이 table을 직접 반환 (단에 직접 배치)
       return section.rows && section.rows.length > 0 ? (
         <table key={key} className="print-replacements-table">
-          {section.headers && section.headers.length > 0 && (
-            <thead>
-              <tr>
-                {section.headers.map((header, headerIndex) => (
-                  <th key={`${key}-header-${headerIndex}`}>{header}</th>
-                ))}
-              </tr>
-            </thead>
-          )}
-          <tbody>
-            {section.rows.map((row, rowIndex) => (
-              <tr key={`${key}-row-${rowIndex}`}>
-                {row.map((cell, cellIndex) => (
-                  <td key={`${key}-row-${rowIndex}-cell-${cellIndex}`}>{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            {section.headers && section.headers.length > 0 && (
+              <thead>
+                <tr>
+                  {section.headers.map((header, headerIndex) => (
+                    <th key={`${key}-header-${headerIndex}`}>{header}</th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {section.rows.map((row, rowIndex) => (
+                <tr key={`${key}-row-${rowIndex}`}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={`${key}-row-${rowIndex}-cell-${cellIndex}`}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
       ) : null;
     case 'answer':
       // 디버깅: 유형#06의 정답 섹션 렌더링 확인 (항상 로그 출력)

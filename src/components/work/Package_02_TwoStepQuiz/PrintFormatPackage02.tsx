@@ -53,7 +53,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
     sortedReplacements.forEach((replacement) => {
       if (!replacement || !replacement.replacement) return;
       
-      const word = replacement.replacement;
+        const word = replacement.replacement;
       // 단어 경계를 포함한 정규식 (대소문자 구분 없음)
       const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
       
@@ -145,9 +145,9 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
     };
     // 패키지#03과 동일한 단순한 로직으로 퀴즈 아이템 렌더링
     if (process.env.NODE_ENV === 'development') {
-      console.log('🖨️ 패키지#02 인쇄 페이지 렌더링 - 패키지#03과 동일한 로직:', packageQuiz.map((item, index) => 
-        `${index + 1}. 유형#${item.workTypeId || 'unknown'}`
-      ));
+    console.log('🖨️ 패키지#02 인쇄 페이지 렌더링 - 패키지#03과 동일한 로직:', packageQuiz.map((item, index) => 
+      `${index + 1}. 유형#${item.workTypeId || 'unknown'}`
+    ));
     }
     
     // 퀴즈 항목의 예상 높이 계산 (문제 카드 패딩과 마진 포함)

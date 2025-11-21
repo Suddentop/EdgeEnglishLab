@@ -243,7 +243,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           boxSizing: 'border-box',
           overflow: 'visible'
         }}>
-          <div className="problem-instruction" style={{
+          <div className="problem-instruction" data-work-type="11" style={{
             fontWeight: 800,
             fontSize: '1rem',
             background: '#222',

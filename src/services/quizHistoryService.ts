@@ -113,7 +113,7 @@ export const getQuizHistory = async (
         if (queryError?.code === 'failed-precondition' || queryError?.message?.includes('index')) {
           console.warn('⚠️ Firestore 인덱스가 필요합니다. orderBy 없이 재시도합니다:', queryError?.message);
         } else {
-          console.warn('orderBy 쿼리 실패, orderBy 없이 재시도:', queryError?.code, queryError?.message);
+      console.warn('orderBy 쿼리 실패, orderBy 없이 재시도:', queryError?.code, queryError?.message);
         }
       }
       
