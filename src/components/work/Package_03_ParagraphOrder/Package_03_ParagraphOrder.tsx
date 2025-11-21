@@ -1550,7 +1550,30 @@ const Package_03_ParagraphOrder: React.FC = () => {
                       fontFamily: 'inherit',
                       border: '2px solid #e3e6f0'
                     }}>
-                      {quizItem.work13Data.blankedText}
+                      {(() => {
+                        const blankedText = quizItem.work13Data.blankedText || '';
+                        const correctAnswers = quizItem.work13Data.correctAnswers || [];
+                        
+                        // 빈칸을 원래 단어 길이만큼의 "_"로 표시하고 " _ "로 변경
+                        let displayText = blankedText;
+                        let answerIndex = 0;
+                        
+                        // 다양한 빈칸 패턴을 찾아서 원래 단어 길이만큼의 "_"로 교체
+                        // 패턴: ( ), (  ), (___), (____), (_______________) 등
+                        displayText = displayText.replace(/\(\s*_*\s*\)/g, () => {
+                          if (answerIndex < correctAnswers.length) {
+                            const answer = correctAnswers[answerIndex];
+                            const answerLength = answer ? answer.trim().length : 10; // 기본값 10
+                            // 원래 단어 길이만큼의 "_"를 생성하고, 각 "_"를 " _ "로 변경
+                            const formattedUnderscores = ' _ '.repeat(answerLength).trim();
+                            answerIndex++;
+                            return `( ${formattedUnderscores} )`;
+                          }
+                          return '( _ )';
+                        });
+                        
+                        return displayText;
+                      })()}
                     </div>
 
                     {/* 정답 표시 */}
@@ -1650,14 +1673,73 @@ const Package_03_ParagraphOrder: React.FC = () => {
                     }}>
                       {(() => {
                         const blankedText = quizItem.work14Data.blankedText || '';
+                        const selectedSentences = quizItem.work14Data.selectedSentences || [];
+                        
                         console.log('📝 패키지#03-유형#14 화면 표시:', {
                           blankedText_길이: blankedText.length,
                           blankedText_일부: blankedText.substring(0, 200),
                           hasBlanks: blankedText.includes('( A '),
                           hasUnderscores: blankedText.includes('_'),
+                          selectedSentences_개수: selectedSentences.length,
+                          selectedSentences: selectedSentences,
                           work14Data: quizItem.work14Data
                         });
-                        return blankedText;
+                        
+                        // 빈칸을 원래 문장 길이만큼의 "_"로 표시하고 " _ "로 변경
+                        let displayText = blankedText;
+                        let sentenceIndex = 0;
+                        
+                        // 다양한 빈칸 패턴을 찾아서 원래 문장 길이만큼의 "_"로 교체
+                        // 패턴 1: ( A _+ ) 또는 ( 공백 + A + 공백 + _+ )
+                        displayText = displayText.replace(/\(\s*([A-Z])\s*_+/g, (match, alphabet) => {
+                          if (sentenceIndex < selectedSentences.length) {
+                            const sentence = selectedSentences[sentenceIndex];
+                            const sentenceLength = sentence ? sentence.trim().length : 10; // 기본값 10
+                            // 원래 문장 길이만큼의 "_"를 생성하고, 각 "_"를 " _ "로 변경
+                            const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                            sentenceIndex++;
+                            return `( ${formattedUnderscores}`;
+                          }
+                          return '( _ ';
+                        });
+                        
+                        // 패턴 2: ( _+ A _+ ) 형식
+                        displayText = displayText.replace(/\(_+([A-Z])_+/g, (match, alphabet) => {
+                          if (sentenceIndex < selectedSentences.length) {
+                            const sentence = selectedSentences[sentenceIndex];
+                            const sentenceLength = sentence ? sentence.trim().length : 10;
+                            const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                            sentenceIndex++;
+                            return `( ${formattedUnderscores}`;
+                          }
+                          return '( _ ';
+                        });
+                        
+                        // 패턴 3: ( 공백 + A + _+ ) 형식 (공백 없는 경우)
+                        displayText = displayText.replace(/\(([A-Z])_+/g, (match, alphabet) => {
+                          if (sentenceIndex < selectedSentences.length) {
+                            const sentence = selectedSentences[sentenceIndex];
+                            const sentenceLength = sentence ? sentence.trim().length : 10;
+                            const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                            sentenceIndex++;
+                            return `( ${formattedUnderscores}`;
+                          }
+                          return '( _ ';
+                        });
+                        
+                        // 알파벳이 없는 빈칸 패턴도 처리 (이미 알파벳이 제거된 경우)
+                        displayText = displayText.replace(/\(_+\)/g, (match) => {
+                          if (sentenceIndex < selectedSentences.length) {
+                            const sentence = selectedSentences[sentenceIndex];
+                            const sentenceLength = sentence ? sentence.trim().length : 10;
+                            const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                            sentenceIndex++;
+                            return `( ${formattedUnderscores} )`;
+                          }
+                          return '( _ )';
+                        });
+                        
+                        return displayText;
                       })()}
                     </div>
 
@@ -1735,33 +1817,11 @@ const Package_03_ParagraphOrder: React.FC = () => {
   return (
     <div className="quiz-generator" onPaste={handlePaste}>
       <div className="generator-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ textAlign: 'center' }}>
             <h2>📦 패키지 퀴즈 #03 (본문 집중 문제)</h2>
             <p>하나의 영어 본문으로 여러 유형의 문제를 한번에 생성합니다.</p>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate('/quiz-list')}
-            style={{
-              width: '160px',
-              height: '48px',
-              padding: '0.75rem 1rem',
-              fontSize: '1rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: 'none',
-              borderRadius: '8px',
-              transition: 'all 0.3s ease',
-              background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
-              color: 'white',
-              boxShadow: '0 4px 6px rgba(20, 184, 166, 0.25)'
-            }}
-          >
-            📋 문제생성목록
-          </button>
         </div>
       </div>
       

@@ -990,6 +990,12 @@ const extractTextRunsByLine = (element: HTMLElement): TextRun[][] => {
       nextStyles.bold = true;
     }
 
+    // 유형#13 빈칸 정답 (.print-blank-filled-answer) - 파란색 진하게
+    if (el.classList.contains('print-blank-filled-answer')) {
+      nextStyles.bold = true;
+      nextStyles.color = '1565C0'; // 파란색 (#1565c0)
+    }
+
     const fontWeight = el.style.fontWeight;
     if (fontWeight && fontWeight !== 'normal' && fontWeight !== '400') {
       nextStyles.bold = true;

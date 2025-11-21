@@ -2,8 +2,8 @@
 
 /* 빈칸 스타일 */
 .print-blank {
-  background-color: #f0f0f0;
-  border-bottom: 2px solid #333;
+  background-color: transparent;
+  border-bottom: none;
   padding: 2px 4px;
   font-weight: bold;
   color: #333;
@@ -41,14 +41,14 @@
 }
 
 .print-translation-title {
-  font-size: 8pt;
+  font-size: 9.3pt;
   font-weight: bold;
   color: #333;
   margin-bottom: 0.1cm;
 }
 
 .print-translation-content {
-  font-size: 8pt;
+  font-size: 9.3pt;
   color: #1976d2;
   line-height: 1.4;
   text-align: left;
@@ -165,13 +165,14 @@
     display: flex;
     gap: 0.6cm;
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
     height: 100%;
   }
 
   /* 각 문제 카드 (1단 = 50% 너비) - 가로 A4용 */
   .print-question-card {
     width: calc(50% - 0.3cm);
+    flex: 0 0 calc(50% - 0.3cm);
     break-inside: avoid;
     page-break-inside: avoid;
     -webkit-column-break-inside: avoid;
@@ -184,7 +185,7 @@
 
   /* 문제 제목 + 유형번호 - 가로 A4용 */
   .print-question-title {
-    font-size: 11pt;
+    font-size: 9.3pt;
     font-weight: 700;
     color: #000;
     margin-bottom: 0.25cm;
@@ -196,7 +197,7 @@
   }
 
   .print-question-type-badge {
-    font-size: 8.5pt;
+    font-size: 9.3pt;
     color: #555;
     font-weight: 600;
   }
@@ -215,11 +216,17 @@
 
   /* 영어 본문 - 가로 A4용 */
   .print-passage {
-    font-size: 9pt;
+    font-size: 9.3pt;
     line-height: 1.4;
     color: #000;
     margin-bottom: 0.25cm;
     padding: 0.25cm;
+  }
+
+  /* 유형#13, 14 인쇄(정답) 화면에서 영어본문 줄간격 30% 증가 */
+  .print-passage-work13-answer,
+  .print-passage-work14-answer {
+    line-height: 1.82; /* 1.4 * 1.3 = 1.82 */
   }
 
   /* 4지선다 옵션 (컨테이너 없이) - 가로 A4용 */
@@ -228,7 +235,7 @@
   }
 
   .print-option {
-    font-size: 8.5pt;
+    font-size: 9.3pt;
     line-height: 1.3;
     color: #000;
     margin-bottom: 0.15cm;
@@ -237,7 +244,7 @@
 
   /* Work_01 전용 - 가로 A4용 */
   .print-shuffled-paragraphs {
-    font-size: 9pt;
+    font-size: 9.3pt;
     line-height: 1.4;
     color: #000;
     margin-bottom: 0.25cm;
@@ -246,7 +253,7 @@
 
   .print-paragraph-item {
     margin-bottom: 0.15cm;
-    font-size: 8.5pt;
+    font-size: 9.3pt;
   }
 
   /* Work_02 전용 */
@@ -257,11 +264,17 @@
   }
 
   .print-replacements-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 6.5pt;
+    text-align: center;
     margin-top: 0.2cm;
     margin-bottom: 0.15cm;
+  }
+
+  .print-replacements-table table {
+    width: 95%;
+    max-width: 95%;
+    border-collapse: collapse;
+    font-size: 6.5pt;
+    margin: 0 auto;
   }
 
   .print-replacements-table th,

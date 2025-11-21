@@ -113,6 +113,57 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
       distributedItems.push(currentPageItems);
     }
     
+    // 마지막 유형의 translation 수집 (인쇄 정답 모드일 때만)
+    let lastTranslation: string | null = null;
+    if (isAnswerMode && packageQuiz.length > 0) {
+      const lastQuizItem = packageQuiz[packageQuiz.length - 1];
+      let lastQuizData: any;
+      if (lastQuizItem.workTypeId === '01') {
+        lastQuizData = lastQuizItem.work01Data || lastQuizItem.quiz || lastQuizItem.data;
+      } else if (lastQuizItem.workTypeId === '02') {
+        lastQuizData = lastQuizItem.work02Data || lastQuizItem.data;
+      } else if (lastQuizItem.workTypeId === '07') {
+        lastQuizData = lastQuizItem.work07Data || lastQuizItem.data;
+      } else if (lastQuizItem.workTypeId === '08') {
+        lastQuizData = lastQuizItem.work08Data || lastQuizItem.data;
+      } else if (lastQuizItem.workTypeId === '13') {
+        lastQuizData = lastQuizItem.work13Data || lastQuizItem.data;
+      } else if (lastQuizItem.workTypeId === '14') {
+        lastQuizData = lastQuizItem.work14Data || lastQuizItem.data;
+      } else {
+        lastQuizData = lastQuizItem.work01Data || lastQuizItem.work02Data || lastQuizItem.work07Data || lastQuizItem.work08Data || lastQuizItem.work13Data || lastQuizItem.work14Data || lastQuizItem.quiz || lastQuizItem.data;
+      }
+      
+      const translation = lastQuizItem.translatedText || lastQuizData?.translation;
+      if (translation && translation.trim()) {
+        lastTranslation = translation;
+      }
+    }
+    
+    // 마지막 유형 다음 단에 translation 섹션 추가
+    if (isAnswerMode && lastTranslation && distributedItems.length > 0) {
+      const lastPage = distributedItems[distributedItems.length - 1];
+      const lastPageItemCount = lastPage.length;
+      
+      // 마지막 유형이 왼쪽 단(첫 번째 아이템)에 있으면 오른쪽 단에 추가
+      // 마지막 유형이 오른쪽 단(두 번째 아이템)에 있으면 다음 페이지의 왼쪽 단에 추가
+      if (lastPageItemCount === 1) {
+        // 마지막 유형이 왼쪽 단에 있음 -> 오른쪽 단에 본문해석 추가
+        const translationItem: PackageQuizItem = {
+          workTypeId: 'translation',
+          translatedText: lastTranslation
+        } as PackageQuizItem;
+        lastPage.push(translationItem);
+      } else {
+        // 마지막 유형이 오른쪽 단에 있음 -> 다음 페이지의 왼쪽 단에 본문해석 추가
+        const translationItem: PackageQuizItem = {
+          workTypeId: 'translation',
+          translatedText: lastTranslation
+        } as PackageQuizItem;
+        distributedItems.push([translationItem]);
+      }
+    }
+    
     // 페이지 렌더링
     distributedItems.forEach((pageItems: PackageQuizItem[], pageIndex: number) => {
       pages.push(
@@ -124,6 +175,10 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
           <div className="a4-landscape-page-content">
             <div className="print-two-column-container">
               {pageItems.map((quizItem: PackageQuizItem, index: number) => {
+                // 마지막 페이지에 아이템이 하나만 있고, 현재 아이템이 마지막인 경우 빈 div 추가
+                const isLastPage = pageIndex === distributedItems.length - 1;
+                const isSingleItemOnLastPage = isLastPage && pageItems.length === 1;
+                const isLastItem = index === pageItems.length - 1;
                 // 데이터 소스 결정
                 let quizData: any;
                 if (quizItem.workTypeId === '01') {
@@ -167,18 +222,14 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                   ))}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④'][quizData.answerIndex]} {quizData.choices?.[quizData.answerIndex]?.join(' → ')}
-                      <span className="print-answer-mark">(정답)</span>
+                  {quizData.choices?.map((choice: string[], cIndex: number) => (
+                    <div key={cIndex} className="print-option">
+                      {['①', '②', '③', '④'][cIndex]} {choice.join(' → ')}
+                      {isAnswerMode && cIndex === quizData.answerIndex && (
+                        <span className="print-answer-mark">(정답)</span>
+                      )}
                     </div>
-                  ) : (
-                    quizData.choices?.map((choice: string[], cIndex: number) => (
-                      <div key={cIndex} className="print-option">
-                        {['①', '②', '③', '④'][cIndex]} {choice.join(' → ')}
-                      </div>
-                    ))
-                  )}
+                  ))}
                 </div>
               </div>
             );
@@ -269,25 +320,15 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                   {quizData.passage}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {['①', '②', '③', '④', '⑤'][quizData.answerIndex]} {quizData.options?.[quizData.answerIndex]}
-                      <span className="print-answer-mark">(정답)</span>
+                  {quizData.options?.map((option: string, optIndex: number) => (
+                    <div key={optIndex} className="print-option">
+                      {['①', '②', '③', '④', '⑤'][optIndex]} {option}
+                      {isAnswerMode && optIndex === quizData.answerIndex && (
+                        <span className="print-answer-mark">(정답)</span>
+                      )}
                     </div>
-                  ) : (
-                    quizData.options?.map((option: string, optIndex: number) => (
-                      <div key={optIndex} className="print-option">
-                        {['①', '②', '③', '④', '⑤'][optIndex]} {option}
-                      </div>
-                    ))
-                  )}
+                  ))}
                 </div>
-                {isAnswerMode && (quizItem.translatedText || quizData.translation) && (
-                  <div className="print-translation-section">
-                    <div className="print-translation-title">본문해석 :</div>
-                    <div className="print-translation-content">{quizItem.translatedText || quizData.translation}</div>
-                  </div>
-                )}
               </div>
             );
           }
@@ -307,25 +348,15 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                   {quizData.passage}
                 </div>
                 <div className="print-options">
-                  {isAnswerMode ? (
-                    <div className="print-option">
-                      {`①②③④⑤`[quizData.answerIndex]} {quizData.options?.[quizData.answerIndex]}
-                      <span className="print-answer-mark">(정답)</span>
+                  {quizData.options?.map((option: string, optIndex: number) => (
+                    <div key={optIndex} className="print-option">
+                      {`①②③④⑤`[optIndex]} {option}
+                      {isAnswerMode && optIndex === quizData.answerIndex && (
+                        <span className="print-answer-mark">(정답)</span>
+                      )}
                     </div>
-                  ) : (
-                    quizData.options?.map((option: string, optIndex: number) => (
-                      <div key={optIndex} className="print-option">
-                        {`①②③④⑤`[optIndex]} {option}
-                      </div>
-                    ))
-                  )}
+                  ))}
                 </div>
-                {isAnswerMode && (quizItem.translatedText || quizData.translation) && (
-                  <div className="print-translation-section">
-                    <div className="print-translation-title">본문해석 :</div>
-                    <div className="print-translation-content">{quizItem.translatedText || quizData.translation}</div>
-                  </div>
-                )}
               </div>
             );
           }
@@ -372,9 +403,35 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
             // correctAnswers가 없으면 selectedSentences 사용
             const answers = quizData.correctAnswers || quizData.selectedSentences || [];
             
+            // 문제 모드에서 빈칸을 원래 단어 길이만큼의 "_"로 표시하고 " _ "로 변경
+            const formatBlanksForProblem = (text: string, correctAnswers: string[]): string => {
+              if (!text || !correctAnswers || correctAnswers.length === 0) {
+                return text;
+              }
+              
+              let result = text;
+              let answerIndex = 0;
+              
+              // 다양한 빈칸 패턴을 찾아서 원래 단어 길이만큼의 "_"로 교체
+              // ( ), (  ), (___), (____), (_______________) 등 다양한 패턴 지원
+              result = result.replace(/\([^)]*_+[^)]*\)/g, () => {
+                if (answerIndex < correctAnswers.length) {
+                  const answer = correctAnswers[answerIndex];
+                  const answerLength = answer.length;
+                  // 원래 단어 길이만큼의 "_"를 생성하고, 각 "_"를 " _ "로 변경
+                  const formattedUnderscores = ' _ '.repeat(answerLength).trim();
+                  answerIndex++;
+                  return `( <span class="print-blank">${formattedUnderscores}</span> )`;
+                }
+                return '( )';
+              });
+              
+              return result;
+            };
+            
             const displayText = isAnswerMode 
               ? fillBlanksWithAnswers(quizData.blankedText, answers)
-              : quizData.blankedText?.replace(/\(______\)/g, '<span class="print-blank">(______)</span>') || '';
+              : formatBlanksForProblem(quizData.blankedText || '', answers);
             
             return (
               <div key={`print-13-${index}`} className="print-question-card">
@@ -386,7 +443,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                   다음 빈칸에 들어갈 적절한 단어를 쓰시오
                 </div>
                 <div 
-                  className="print-passage"
+                  className={`print-passage ${isAnswerMode ? 'print-passage-work13-answer' : ''}`}
                   dangerouslySetInnerHTML={{ __html: displayText }}
                 />
               </div>
@@ -446,7 +503,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                   const answer = cleanAnswer(answers[answerIndex]);
                   console.log(`✅ 유형#14 정답 ${answerIndex + 1}: ${answer}`);
                   answerIndex++;
-                  return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                  return `( <span style="color: #1976d2; font-weight: bold;">${answer}</span> )`;
                 }
                 return match;
               });
@@ -459,7 +516,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                     const answer = cleanAnswer(answers[answerIndex]);
                     console.log(`✅ 유형#14 정답 ${answerIndex + 1}: ${answer}`);
                     answerIndex++;
-                    return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                    return `( <span style="color: #1976d2; font-weight: bold;">${answer}</span> )`;
                   }
                   return match;
                 });
@@ -473,7 +530,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                     const answer = cleanAnswer(answers[answerIndex]);
                     console.log(`✅ 유형#14 정답 ${answerIndex + 1}: ${answer}`);
                     answerIndex++;
-                    return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                    return `( <span style="color: #1976d2; font-weight: bold;">${answer}</span> )`;
                   }
                   return match;
                 });
@@ -487,7 +544,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                     const answer = cleanAnswer(answers[answerIndex]);
                     console.log(`✅ 유형#14 정답 ${answerIndex + 1}: ${answer}`);
                     answerIndex++;
-                    return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                    return `( <span style="color: #1976d2; font-weight: bold;">${answer}</span> )`;
                   }
                   return match;
                 });
@@ -501,7 +558,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                     const answer = cleanAnswer(answers[answerIndex]);
                     console.log(`✅ 유형#14 정답 ${answerIndex + 1}: ${answer}`);
                     answerIndex++;
-                    return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                    return `( <span style="color: #1976d2; font-weight: bold;">${answer}</span> )`;
                   }
                   return match;
                 });
@@ -524,7 +581,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                     const answer = cleanAnswer(answers[answerIndex]);
                     console.log(`✅ 유형#14 정답 ${answerIndex + 1}: ${answer}`);
                     answerIndex++;
-                    return `(<span style="color: #1976d2; font-weight: bold;">${answer}</span>)`;
+                    return `( <span style="color: #1976d2; font-weight: bold;">${answer}</span> )`;
                   }
                   return match;
                 });
@@ -537,18 +594,99 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
             // correctAnswers가 없으면 selectedSentences 사용
             const answers = quizData.correctAnswers || quizData.selectedSentences || [];
             
+            // 문제 모드에서 빈칸을 원래 문장 길이만큼의 "_"로 표시하고 " _ "로 변경, 알파벳 제거
+            const formatBlanksForProblem = (text: string, selectedSentences: string[]): string => {
+              if (!text || !selectedSentences || selectedSentences.length === 0) {
+                return text;
+              }
+              
+              let result = text;
+              let sentenceIndex = 0;
+              
+              // 다양한 빈칸 패턴을 찾아서 원래 문장 길이만큼의 "_"로 교체하고 알파벳 제거
+              // 패턴 1: ( 공백 + A + 공백 + 언더스코어들 + ) - 공백 있는 경우
+              result = result.replace(/\(\s*([A-Z])\s*_+/g, (match: string, alphabet: string) => {
+                if (sentenceIndex < selectedSentences.length) {
+                  const sentence = selectedSentences[sentenceIndex];
+                  const sentenceLength = sentence ? sentence.trim().length : 10; // 기본값 10
+                  // 원래 문장 길이만큼의 "_"를 생성하고, 각 "_"를 " _ "로 변경
+                  const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                  sentenceIndex++;
+                  return `( ${formattedUnderscores}`;
+                }
+                return '( _ ';
+              });
+              
+              // 패턴 2: ( 공백 + A + 언더스코어들 + ) - 알파벳과 언더스코어 사이 공백 없는 경우
+              result = result.replace(/\(\s*([A-Z])_+/g, (match: string, alphabet: string) => {
+                if (sentenceIndex < selectedSentences.length) {
+                  const sentence = selectedSentences[sentenceIndex];
+                  const sentenceLength = sentence ? sentence.trim().length : 10;
+                  const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                  sentenceIndex++;
+                  return `( ${formattedUnderscores}`;
+                }
+                return '( _ ';
+              });
+              
+              // 패턴 3: ( A + 언더스코어들 + ) - (A_______) 형식 (공백 없음)
+              result = result.replace(/\(([A-Z])([_]+)\)/g, (match: string, alphabet: string, underscores: string) => {
+                if (sentenceIndex < selectedSentences.length) {
+                  const sentence = selectedSentences[sentenceIndex];
+                  const sentenceLength = sentence ? sentence.trim().length : 10;
+                  const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                  sentenceIndex++;
+                  return `( ${formattedUnderscores} )`;
+                }
+                return '( _ )';
+              });
+              
+              // 패턴 4: ( 언더스코어들 + A + 언더스코어들 + ) - (___A___) 형식
+              result = result.replace(/\(_+([A-Z])_+/g, (match: string, alphabet: string) => {
+                if (sentenceIndex < selectedSentences.length) {
+                  const sentence = selectedSentences[sentenceIndex];
+                  const sentenceLength = sentence ? sentence.trim().length : 10;
+                  const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                  sentenceIndex++;
+                  return `( ${formattedUnderscores}`;
+                }
+                return '( _ ';
+              });
+              
+              // 패턴 5: ( 언더스코어들 + A + 언더스코어들 + ) - (____________________A____________________) 형식 (긴 언더스코어)
+              result = result.replace(/\(_{10,}([A-Z])_{10,}\)/g, (match: string, alphabet: string) => {
+                if (sentenceIndex < selectedSentences.length) {
+                  const sentence = selectedSentences[sentenceIndex];
+                  const sentenceLength = sentence ? sentence.trim().length : 10;
+                  const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                  sentenceIndex++;
+                  return `( ${formattedUnderscores} )`;
+                }
+                return '( _ )';
+              });
+              
+              // 패턴 6: 모든 언더스코어 포함 빈칸 패턴 (어떤 형식이든 매칭) - 최종 fallback
+              result = result.replace(/\([^)]*_[^)]*\)/g, (match: string) => {
+                // 이미 처리된 패턴은 건너뛰기 (알파벳이 없는 경우)
+                if (!match.match(/[A-Z]/)) {
+                  return match;
+                }
+                if (sentenceIndex < selectedSentences.length) {
+                  const sentence = selectedSentences[sentenceIndex];
+                  const sentenceLength = sentence ? sentence.trim().length : 10;
+                  const formattedUnderscores = ' _ '.repeat(sentenceLength).trim();
+                  sentenceIndex++;
+                  return `( ${formattedUnderscores} )`;
+                }
+                return match;
+              });
+              
+              return result;
+            };
+            
             let displayText = isAnswerMode 
               ? fillBlanksWithAnswers(quizData.blankedText, answers)
-              : quizData.blankedText?.replace(/\(______\)/g, '<span class="print-blank">(______)</span>') || '';
-            
-            // 문제 모드일 때 빈칸 패턴에 nowrap 스타일 적용 (( A 부분만 줄바꿈 방지)
-            if (!isAnswerMode) {
-              // 패턴: ( A_______) 
-              const blankPattern = /\( ([A-Z])([_]+)\)/g;
-              displayText = displayText.replace(blankPattern, (match: string, alphabet: string, underscores: string) => {
-                return `<span style="white-space: nowrap;">( ${alphabet}</span>${underscores})`;
-              });
-            }
+              : formatBlanksForProblem(quizData.blankedText || '', answers);
             
             const selectedSentences = quizData?.selectedSentences || quizData?.correctAnswers || [];
             
@@ -562,7 +700,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                   다음 빈칸에 들어갈 적절한 문장을 쓰시오
                 </div>
                 <div 
-                  className="print-passage"
+                  className={`print-passage ${isAnswerMode ? 'print-passage-work14-answer' : ''}`}
                   style={{
                     whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word',
@@ -575,8 +713,24 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
             );
           }
 
+          // Translation 섹션 (마지막 유형 다음 단에 표시)
+          if (quizItem.workTypeId === 'translation' && quizItem.translatedText) {
+            return (
+              <div key={`print-translation-${index}`} className="print-question-card">
+                <div className="print-translation-section">
+                  <div className="print-translation-title">본문해석 :</div>
+                  <div className="print-translation-content">{quizItem.translatedText}</div>
+                </div>
+              </div>
+            );
+          }
+
                 return null;
               })}
+              {/* 마지막 페이지에 아이템이 하나만 있을 때 빈 div 추가하여 2단 레이아웃 유지 */}
+              {pageIndex === distributedItems.length - 1 && pageItems.length === 1 && pageItems[0]?.workTypeId !== 'translation' && (
+                <div className="print-question-card" style={{ visibility: 'hidden', height: 0, padding: 0, margin: 0, border: 'none' }}></div>
+              )}
             </div>
           </div>
         </div>
