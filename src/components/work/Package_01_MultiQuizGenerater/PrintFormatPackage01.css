@@ -243,6 +243,19 @@
     padding-bottom: 0.3rem !important;
   }
 
+  /* 유형#02, 03, 04 전용: problem-passage 클래스에 1rem 강제 적용 (최고 우선순위) */
+  .only-print.work-02-print .problem-passage,
+  .only-print.work-03-print .problem-passage,
+  .only-print.work-04-print .problem-passage,
+  .only-print.work-02-print .a4-page-content .problem-passage,
+  .only-print.work-03-print .a4-page-content .problem-passage,
+  .only-print.work-04-print .a4-page-content .problem-passage,
+  .only-print.work-02-print .quiz-content .problem-passage,
+  .only-print.work-03-print .quiz-content .problem-passage,
+  .only-print.work-04-print .quiz-content .problem-passage {
+    font-size: 1rem !important;
+  }
+
   /* 패키지#01-유형#02 전용: 영어본문과 교체된 단어들 제목 사이 여백 증가 */
   .only-print.print-answer-mode .problem-passage {
     margin-bottom: 1.6rem !important;
@@ -1006,25 +1019,33 @@
   .only-print.work-06-print div[style*="fontSize: '0.2rem'"],
   .only-print.work-06-print div[style*="fontSize:0.2rem"],
   .only-print.work-06-print div[style*="fontSize:'0.2rem'"] {
-    font-size: 0.9rem !important;
+    font-size: 1rem !important;
   }
   
-  /* 유형#06 전용: 모든 div 요소에 0.9rem 강제 적용 */
-  .only-print.work-06-print div {
-    font-size: 0.9rem !important;
+  /* 유형#06 전용: 영어본문 영역에 1rem 강제 적용 */
+  .only-print.work-06-print div[style*="background:'#FFF3CD'"],
+  .only-print.work-06-print div[style*="background:#FFF3CD"],
+  .only-print.work-06-print div[style*="background: #FFF3CD"],
+  .only-print.work-06-print div[style*="fontSize:'1rem !important'"],
+  .only-print.work-06-print div[style*="fontSize: '1rem !important'"],
+  .only-print.work-06-print div[style*="fontSize:1rem !important"],
+  .only-print.work-06-print div[style*="fontSize:'1rem'"],
+  .only-print.work-06-print div[style*="fontSize: '1rem'"],
+  .only-print.work-06-print div[style*="fontSize:1rem"] {
+    font-size: 1rem !important;
   }
   
-  /* 유형#07 전용: 영어본문만 0.9rem 강제 적용 */
+  /* 유형#07 전용: 영어본문만 1rem 강제 적용 */
   .only-print.work-07-print div[style*="background:'#fff3cd'"],
   .only-print.work-07-print div[style*="background:#fff3cd"],
   .only-print.work-07-print div[style*="background: #fff3cd"] {
-    font-size: 0.9rem !important;
+    font-size: 1rem !important;
   }
   
-  /* 유형#13 전용: 영어본문 0.9rem 강제 적용 */
+  /* 유형#13 전용: 영어본문 1rem 강제 적용 */
   .only-print.work-13-print .package01-work13-answer-text,
   .only-print.work-13-print .package01-work13-problem-text {
-    font-size: 0.9rem !important;
+    font-size: 1rem !important;
   }
   
   /* 유형#10 전용: 영어본문만 0.2rem 강제 적용 */
@@ -1046,10 +1067,10 @@
   }
   
   
-  /* 유형#14 전용: 영어본문 0.9rem 강제 적용 */
+  /* 유형#14 전용: 영어본문 1rem 강제 적용 */
   .only-print.work-14-print .package01-work14-answer-text,
   .only-print.work-14-print .package01-work14-problem-text {
-    font-size: 0.9rem !important;
+    font-size: 1rem !important;
   }
 
   /* 모든 유형 통일: 인라인 스타일 오버라이드 */
@@ -1081,6 +1102,25 @@
     margin-bottom: 0.1rem !important;
   }
 
+  /* 유형#02, 03, 04, 05, 07 전용: problem-passage 클래스에 1rem 강제 적용 (인라인 스타일 오버라이드) */
+  .only-print.work-02-print .problem-passage[style],
+  .only-print.work-03-print .problem-passage[style],
+  .only-print.work-04-print .problem-passage[style],
+  .only-print.work-05-print .problem-passage[style],
+  .only-print.work-07-print .problem-passage[style],
+  .only-print.work-02-print .a4-page-content .problem-passage[style],
+  .only-print.work-03-print .a4-page-content .problem-passage[style],
+  .only-print.work-04-print .a4-page-content .problem-passage[style],
+  .only-print.work-05-print .a4-page-content .problem-passage[style],
+  .only-print.work-07-print .a4-page-content .problem-passage[style],
+  .only-print.work-02-print .quiz-content .problem-passage[style],
+  .only-print.work-03-print .quiz-content .problem-passage[style],
+  .only-print.work-04-print .quiz-content .problem-passage[style],
+  .only-print.work-05-print .quiz-content .problem-passage[style],
+  .only-print.work-07-print .quiz-content .problem-passage[style] {
+    font-size: 1rem !important;
+  }
+
   /* 모든 유형 통일: 속성별 인라인 스타일 오버라이드 */
   .only-print.work-02-print .shuffled-paragraph[style*="font-size"],
   .only-print.work-03-print .shuffled-paragraph[style*="font-size"],
@@ -1105,6 +1145,34 @@
   .only-print.work-13-print .print-passage-container[style*="font-size"],
   .only-print.work-14-print .print-passage-container[style*="font-size"] {
     font-size: 0.2rem !important;
+  }
+
+  /* 유형#02, 03, 04, 05, 07 전용: problem-passage 클래스에 1rem 강제 적용 (속성별 오버라이드 - 최고 우선순위) */
+  .only-print.work-02-print .problem-passage[style*="font-size"],
+  .only-print.work-02-print .problem-passage[style*="fontSize"],
+  .only-print.work-02-print .problem-passage[style*="fontSize:"],
+  .only-print.work-03-print .problem-passage[style*="font-size"],
+  .only-print.work-03-print .problem-passage[style*="fontSize"],
+  .only-print.work-03-print .problem-passage[style*="fontSize:"],
+  .only-print.work-04-print .problem-passage[style*="font-size"],
+  .only-print.work-04-print .problem-passage[style*="fontSize"],
+  .only-print.work-04-print .problem-passage[style*="fontSize:"],
+  .only-print.work-05-print .problem-passage[style*="font-size"],
+  .only-print.work-05-print .problem-passage[style*="fontSize"],
+  .only-print.work-05-print .problem-passage[style*="fontSize:"],
+  .only-print.work-07-print .problem-passage[style*="font-size"],
+  .only-print.work-07-print .problem-passage[style*="fontSize"],
+  .only-print.work-07-print .problem-passage[style*="fontSize:"],
+  .only-print.work-02-print .a4-page-content .quiz-content .problem-passage[style*="font-size"],
+  .only-print.work-02-print .a4-page-content .quiz-content .problem-passage[style*="fontSize"],
+  .only-print.work-02-print .a4-page-content .quiz-content .problem-passage[style*="fontSize:"],
+  .only-print.work-03-print .a4-page-content .quiz-content .problem-passage[style*="font-size"],
+  .only-print.work-03-print .a4-page-content .quiz-content .problem-passage[style*="fontSize"],
+  .only-print.work-03-print .a4-page-content .quiz-content .problem-passage[style*="fontSize:"],
+  .only-print.work-04-print .a4-page-content .quiz-content .problem-passage[style*="font-size"],
+  .only-print.work-04-print .a4-page-content .quiz-content .problem-passage[style*="fontSize"],
+  .only-print.work-04-print .a4-page-content .quiz-content .problem-passage[style*="fontSize:"] {
+    font-size: 1rem !important;
   }
 
   .only-print.work-02-print .shuffled-paragraph[style*="padding"],
@@ -1306,6 +1374,19 @@
     background: #FFF3CD !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* 유형#02, 03, 04 전용: problem-passage 클래스에 1rem 강제 적용 (최고 우선순위 - 모든 규칙 오버라이드) */
+  .only-print.work-02-print .a4-page-template .a4-page-content .quiz-content .problem-passage,
+  .only-print.work-03-print .a4-page-template .a4-page-content .quiz-content .problem-passage,
+  .only-print.work-04-print .a4-page-template .a4-page-content .quiz-content .problem-passage,
+  .only-print.work-02-print .a4-page-template .a4-page-content .quiz-content .problem-passage[style],
+  .only-print.work-03-print .a4-page-template .a4-page-content .quiz-content .problem-passage[style],
+  .only-print.work-04-print .a4-page-template .a4-page-content .quiz-content .problem-passage[style],
+  .only-print.work-02-print .a4-page-template .a4-page-content .quiz-content .problem-passage[style*="font"],
+  .only-print.work-03-print .a4-page-template .a4-page-content .quiz-content .problem-passage[style*="font"],
+  .only-print.work-04-print .a4-page-template .a4-page-content .quiz-content .problem-passage[style*="font"] {
+    font-size: 1rem !important;
   }
 }
 

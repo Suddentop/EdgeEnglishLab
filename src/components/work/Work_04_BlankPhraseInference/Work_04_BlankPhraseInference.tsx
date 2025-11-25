@@ -359,20 +359,13 @@ const Work_04_BlankPhraseInference: React.FC = () => {
     while ((match = bracketRegex.exec(passage)) !== null) {
       excludedPhrases.push(match[1].trim());
     }
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문에서 글의 주제와 가장 밀접한, 의미 있는 구(phrase, 3~10단어 이내) 1개를 선정해.\n1. 반드시 본문에 실제로 등장한 구(철자, 형태, 대소문자까지 동일)를 정답으로 선정해야 해. 변형, 대체, 동의어, 어형 변화 없이 본문에 있던 그대로 사용해야 해.\n2. 문제의 본문(빈칸 포함)은 반드시 사용자가 입력한 전체 본문과 완전히 동일해야 하며, 일부 문장만 추출하거나, 문장 순서를 바꾸거나, 본문을 요약/변형해서는 안 돼. 오직 정답 구만 ()로 치환해.\n3. 입력된 본문에 이미 ()로 묶인 단어나 구가 있다면, 그 부분은 절대 빈칸 처리 대상으로 삼지 마세요. 반드시 괄호 밖에 있는 구만 빈칸 후보로 선정하세요.\n4. 아래 구는 절대 빈칸 처리하지 마세요: ${excludedPhrases.length > 0 ? excludedPhrases.join(', ') : '없음'}\n5. 정답(구) + 오답(비슷한 길이의 구 4개, 의미는 다름) 총 5개를 생성해.\n6. 정답의 위치는 1~5번 중 랜덤.\n7. 본문 해석도 함께 제공.\n8. 아래 JSON 형식으로 응답:\n{\n  "options": ["...", ...],\n  "answerIndex": 2, // 0~4\n  "translation": "..."\n}\n주의: options의 정답(정답 인덱스에 해당하는 구)는 반드시 본문에 있던 구와 완전히 일치해야 하며, 변형/대체/동의어/어형 변화가 있으면 안 됨. 문제의 본문(빈칸 포함)은 반드시 입력한 전체 본문과 동일해야 함. 입력된 본문에 이미 ()로 묶인 부분은 빈칸 처리 대상에서 제외해야 함.\n본문:\n${passage}`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1200,
-        temperature: 0.7
-      })
+    const { callOpenAI } = await import('../../../services/common');
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1200,
+      temperature: 0.7
     });
     const data = await response.json();
     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);

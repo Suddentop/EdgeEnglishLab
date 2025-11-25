@@ -100,7 +100,7 @@ ${englishText}`;
 
 // Work_13: 빈칸 채우기 문제 (단어-주관식) 생성
 async function generateWork13Quiz(passage: string, retryCount: number = 0): Promise<BlankFillItem> {
-  const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+  // API 키는 프록시 서버에서 관리 (보안)
   
   // 먼저 문장을 분할하고 필터링
   const allSentences = splitSentences(passage);
@@ -310,9 +310,40 @@ You will receive a list of sentences. Process each sentence in order and select 
 
     // 빈칸 본문이 원본 본문과 일치하는지 검증
     let blankRestore = result.blankedText;
-    for (let i = 0; i < correctAnswers.length; i++) {
-      blankRestore = blankRestore.replace(/\(_{15}\)/, correctAnswers[i]);
-    }
+    let answerIndex = 0;
+    
+    // 다양한 빈칸 패턴을 정답 단어로 교체
+    // 패턴 1: (_______________) - 15개의 언더스코어
+    blankRestore = blankRestore.replace(/\(_{15}\)/g, () => {
+      if (answerIndex < correctAnswers.length) {
+        return correctAnswers[answerIndex++];
+      }
+      return '(_______________)';
+    });
+    
+    // 패턴 2: (__________) - 10개 이상의 언더스코어
+    blankRestore = blankRestore.replace(/\(_{10,}\)/g, () => {
+      if (answerIndex < correctAnswers.length) {
+        return correctAnswers[answerIndex++];
+      }
+      return '(__________)';
+    });
+    
+    // 패턴 3: ( _ _ _ _ _ ) - 공백 포함 언더스코어
+    blankRestore = blankRestore.replace(/\([\s_]+\)/g, () => {
+      if (answerIndex < correctAnswers.length) {
+        return correctAnswers[answerIndex++];
+      }
+      return '( _ _ _ _ _ )';
+    });
+    
+    // 패턴 4: (_{5,}) - 5개 이상의 언더스코어 (나머지 패턴)
+    blankRestore = blankRestore.replace(/\(_{5,}\)/g, () => {
+      if (answerIndex < correctAnswers.length) {
+        return correctAnswers[answerIndex++];
+      }
+      return '(_____)';
+    });
     
     // 공백과 구두점을 정규화하여 비교
     const normalizeText = (text: string) => {
@@ -330,7 +361,9 @@ You will receive a list of sentences. Process each sentence in order and select 
       original: normalizedOriginal.substring(0, 100),
       restored: normalizedRestored.substring(0, 100),
       blankedText: result.blankedText.substring(0, 100),
-      match: normalizedRestored === normalizedOriginal
+      match: normalizedRestored === normalizedOriginal,
+      answerIndex: answerIndex,
+      correctAnswersLength: correctAnswers.length
     });
     
     if (normalizedRestored !== normalizedOriginal) {
@@ -338,17 +371,27 @@ You will receive a list of sentences. Process each sentence in order and select 
         original: passage.substring(0, 300),
         blankedText: result.blankedText.substring(0, 300),
         restored: blankRestore.substring(0, 300),
-        correctAnswers: correctAnswers
+        correctAnswers: correctAnswers,
+        answerIndex: answerIndex
       });
       
       // 정답 단어가 본문에 존재하고, 빈칸이 적절히 배치되어 있으면 통과
       const allAnswersExist = correctAnswers.every((answer: string) => 
         passageLower.includes(answer.toLowerCase())
       );
-      if (allAnswersExist && result.blankedText.includes('(_______________)')) {
-        console.log('정답 단어가 본문에 존재하고 빈칸이 적절히 배치되어 있어 통과합니다.');
+      
+      // 빈칸 패턴이 있는지 확인 (다양한 패턴 지원)
+      const hasBlankPattern = /\([\s_]+\)|\(_{5,}\)/g.test(result.blankedText);
+      
+      if (allAnswersExist && hasBlankPattern) {
+        console.log('✅ 정답 단어가 본문에 존재하고 빈칸이 적절히 배치되어 있어 통과합니다.');
       } else {
-        throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
+        // 더 유연한 검증: 정답 단어가 모두 존재하고 개수가 일치하면 통과
+        if (allAnswersExist && answerIndex === correctAnswers.length) {
+          console.log('✅ 정답 단어가 모두 본문에 존재하고 개수가 일치하여 통과합니다.');
+        } else {
+          throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
+        }
       }
     }
     

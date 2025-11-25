@@ -544,10 +544,7 @@ const Work_12_WordStudy: React.FC = () => {
 
   // 영어 단어만 있는 경우 한글뜻 생성
   async function generateKoreanMeanings(englishWords: string[]): Promise<WordItem[]> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-    }
+    const { callOpenAI } = await import('../../../services/common');
 
     const prompt = `다음 영어 단어들의 한국어 뜻을 정확하게 번역해주세요. 각 단어의 가장 일반적이고 적절한 한국어 뜻을 제공해주세요.
 
@@ -566,19 +563,12 @@ ${englishWords.join(', ')}
 - 복합어나 구문이 아닌 단일 단어의 뜻을 제공해주세요
 - JSON 형식으로만 응답해주세요`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 2048
-      })
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 2048
     });
     
     const data = await response.json();

@@ -1,90 +1,39 @@
 // Work13 (빈칸 채우기 단어) 관련 AI 서비스 함수들
 // import { openAIProxyService } from './openaiProxyService'; // 프록시 서버 대신 직접 API 호출 사용
 
-// 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
+// 프록시 서버를 통한 OpenAI API 호출 헬퍼 함수 (보안상 직접 호출 제거)
 async function callOpenAIAPI(requestBody: any): Promise<Response> {
   console.log('🌐 [callOpenAIAPI] 호출 시작');
   
   const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
-  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
   
   console.log('🔍 [환경변수 확인]');
   console.log('  REACT_APP_API_PROXY_URL:', proxyUrl ? `설정됨 (${proxyUrl})` : '❌ 없음');
-  console.log('  REACT_APP_OPENAI_API_KEY:', directApiKey ? '설정됨 (sk-proj-****...)' : '❌ 없음');
   
-  // 프록시 URL이 설정된 경우 프록시 사용 (프로덕션)
-  if (proxyUrl) {
-    console.log('✅ [프록시 모드] 프록시 서버 사용');
-    console.log('  프록시 URL:', proxyUrl);
-    console.log('  요청 본문 크기:', JSON.stringify(requestBody).length, 'bytes');
-    
-    try {
-      const response = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      console.log('  응답 상태:', response.status, response.statusText);
-      console.log('  응답 헤더:', Object.fromEntries(response.headers.entries()));
-      
-      // 프록시 응답에서 401 에러인 경우 상세 정보 제공
-      if (response.status === 401) {
-        const errorText = await response.text().catch(() => '');
-        let errorMessage = 'OpenAI API 인증 실패 (401)';
-        
-        try {
-          const errorData = JSON.parse(errorText);
-          if (errorData.error?.message) {
-            errorMessage = `OpenAI API 인증 실패: ${errorData.error.message}`;
-          }
-        } catch (e) {
-          // JSON 파싱 실패 시 기본 메시지 사용
-        }
-        
-        console.error('❌ API 인증 오류:', errorMessage);
-        console.error('💡 해결 방법:');
-        console.error('   1. 프록시 서버의 OpenAI API 키가 올바른지 확인하세요.');
-        console.error('   2. API 키가 만료되지 않았는지 확인하세요.');
-        console.error('   3. 프록시 서버 설정을 확인하세요.');
-      }
-      
-      return response;
-    } catch (fetchError: any) {
-      console.error('❌ [프록시 호출 실패]');
-      console.error('  에러 타입:', fetchError.constructor.name);
-      console.error('  에러 메시지:', fetchError.message);
-      console.error('  전체 에러:', fetchError);
-      throw fetchError;
-    }
+  // 프록시 URL이 필수로 설정되어야 함 (보안상 직접 API 호출 제거)
+  if (!proxyUrl) {
+    const errorMessage = '프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.';
+    console.error('❌ [보안 오류]', errorMessage);
+    throw new Error(errorMessage);
   }
   
-  // 개발 환경: 직접 API 호출
-  console.log('🔧 [개발 모드] 직접 API 호출');
-  
-  if (!directApiKey) {
-    console.error('❌ [개발 모드] API 키가 없습니다!');
-    throw new Error('API Key가 설정되지 않았습니다. .env.local 파일에 REACT_APP_OPENAI_API_KEY를 설정해주세요.');
-  }
-  
-  console.log('  API 키 확인: OK');
-  console.log('  OpenAI API 직접 호출 시작...');
+  console.log('✅ [프록시 모드] 프록시 서버 사용');
+  console.log('  프록시 URL:', proxyUrl);
+  console.log('  요청 본문 크기:', JSON.stringify(requestBody).length, 'bytes');
   
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${directApiKey}`,
       },
       body: JSON.stringify(requestBody),
     });
     
     console.log('  응답 상태:', response.status, response.statusText);
+    console.log('  응답 헤더:', Object.fromEntries(response.headers.entries()));
     
-    // 직접 API 호출에서 401 에러인 경우 상세 정보 제공
+    // 프록시 응답에서 401 에러인 경우 상세 정보 제공
     if (response.status === 401) {
       const errorText = await response.text().catch(() => '');
       let errorMessage = 'OpenAI API 인증 실패 (401)';
@@ -100,16 +49,17 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
       
       console.error('❌ API 인증 오류:', errorMessage);
       console.error('💡 해결 방법:');
-      console.error('   1. .env.local 파일의 REACT_APP_OPENAI_API_KEY가 올바른지 확인하세요.');
+      console.error('   1. 프록시 서버의 OpenAI API 키가 올바른지 확인하세요.');
       console.error('   2. API 키가 만료되지 않았는지 확인하세요.');
-      console.error('   3. OpenAI 계정의 API 키 사용량을 확인하세요.');
+      console.error('   3. 프록시 서버 설정을 확인하세요.');
     }
     
     return response;
   } catch (fetchError: any) {
-    console.error('❌ [직접 호출 실패]');
+    console.error('❌ [프록시 호출 실패]');
     console.error('  에러 타입:', fetchError.constructor.name);
     console.error('  에러 메시지:', fetchError.message);
+    console.error('  전체 에러:', fetchError);
     throw fetchError;
   }
 }

@@ -9,7 +9,7 @@ const path = require('path');
 
 console.log('🔒 안전한 프로덕션 빌드 시작...\n');
 
-// 1. .env.local 파일 백업 및 임시 제거
+// 1. .env.local 파일 백업 및 임시 제거 (dotenv 로드 전에 수행)
 const envLocalPath = path.join(__dirname, '..', '.env.local');
 const envLocalBackupPath = path.join(__dirname, '..', '.env.local.backup');
 let envLocalExists = false;
@@ -47,6 +47,9 @@ if (fs.existsSync(envLocalPath)) {
 } else {
   console.log('✅ .env.local 파일이 없습니다.\n');
 }
+
+// 1-1. .env.local 파일 수정 후 dotenv 로드
+require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
 
 // 2. 환경 변수 확인 및 설정
 console.log('📝 환경 변수 확인 중...');
@@ -101,7 +104,55 @@ try {
   process.exit(1);
 }
 
-// 5. 빌드 파일 검증
+// 5. 소스 코드에서 REACT_APP_OPENAI_API_KEY 사용 검사
+console.log('🔍 소스 코드에서 API 키 사용 검사 중...\n');
+const srcPath = path.join(__dirname, '..', 'src');
+let foundApiKeyInSource = false;
+const problematicFiles = [];
+
+function searchInDirectory(dir) {
+  const files = fs.readdirSync(dir);
+  files.forEach(file => {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    
+    if (stat.isDirectory()) {
+      // node_modules, build 등 제외
+      if (!['node_modules', 'build', '.git'].includes(file)) {
+        searchInDirectory(filePath);
+      }
+    } else if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') || file.endsWith('.jsx')) {
+      const content = fs.readFileSync(filePath, 'utf8');
+      
+      // REACT_APP_OPENAI_API_KEY 사용 검사
+      if (content.includes('REACT_APP_OPENAI_API_KEY') || 
+          content.includes('process.env.REACT_APP_OPENAI_API_KEY') ||
+          content.match(/Authorization.*Bearer.*process\.env/) ||
+          content.match(/fetch\(['"]https:\/\/api\.openai\.com/)) {
+        problematicFiles.push(filePath.replace(path.join(__dirname, '..'), ''));
+        foundApiKeyInSource = true;
+      }
+    }
+  });
+}
+
+searchInDirectory(srcPath);
+
+if (foundApiKeyInSource) {
+  console.log('❌ [보안 경고] 소스 코드에서 API 키 사용이 발견되었습니다!');
+  console.log('   다음 파일들을 확인하세요:\n');
+  problematicFiles.forEach(file => {
+    console.log(`   - ${file}`);
+  });
+  console.log('\n⚠️  이 파일들은 프록시 서버를 사용하도록 수정해야 합니다.');
+  console.log('   직접 API 호출을 제거하고 callOpenAI 함수를 사용하세요.\n');
+  console.log('❌ 빌드를 중단합니다. 보안 문제를 해결한 후 다시 빌드하세요.\n');
+  process.exit(1);
+} else {
+  console.log('✅ 소스 코드에서 API 키 직접 사용이 없습니다.\n');
+}
+
+// 6. 빌드 파일 검증
 console.log('🔍 빌드 파일 검증 중...\n');
 const buildJsPath = path.join(__dirname, '..', 'build', 'static', 'js');
 if (fs.existsSync(buildJsPath)) {
@@ -117,19 +168,27 @@ if (fs.existsSync(buildJsPath)) {
       console.log(`❌ 경고: ${file}에 API 키가 포함되어 있습니다!`);
       foundApiKey = true;
     }
+    
+    // REACT_APP_OPENAI_API_KEY 환경 변수 참조 검사
+    if (content.includes('REACT_APP_OPENAI_API_KEY')) {
+      console.log(`❌ 경고: ${file}에 REACT_APP_OPENAI_API_KEY 참조가 포함되어 있습니다!`);
+      foundApiKey = true;
+    }
   });
   
   if (!foundApiKey) {
     console.log('✅ 빌드 파일에 API 키가 포함되지 않았습니다.');
   } else {
-    console.log('\n⚠️  경고: 빌드 파일에 API 키가 포함되어 있습니다!');
-    console.log('   이 빌드는 배포하지 마세요. API 키가 노출될 수 있습니다.\n');
+    console.log('\n❌ [치명적 오류] 빌드 파일에 API 키가 포함되어 있습니다!');
+    console.log('   이 빌드는 절대 배포하지 마세요. API 키가 노출될 수 있습니다.');
+    console.log('   소스 코드를 수정하고 다시 빌드하세요.\n');
+    process.exit(1);
   }
 } else {
   console.log('⚠️  빌드 파일을 찾을 수 없습니다.');
 }
 
-// 6. .env.local 복원
+// 7. .env.local 복원
 if (envLocalBackedUp && fs.existsSync(envLocalBackupPath)) {
   console.log('\n🔄 .env.local 파일 복원 중...');
   fs.copyFileSync(envLocalBackupPath, envLocalPath);

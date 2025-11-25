@@ -47,78 +47,45 @@ function base64EncodeUtf8(obj: any): string {
   // encodeURIComponent handles UTF-8, unescape converts percent-encoding back to raw bytes for btoa
   return btoa(unescape(encodeURIComponent(json)));
 }
-// OpenAI Vision API 호출
+// OpenAI Vision API 호출 (프록시만 사용)
 async function callOpenAIVisionAPI(imageBase64: string, prompt: string): Promise<string> {
   const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
-  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
+  
+  if (!proxyUrl) {
+    throw new Error('프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.');
+  }
 
-  const requestBody = {
+  // 웹방화벽 회피: data URL이면 Firebase Storage에 업로드 후 공개 URL로 교체
+  let imageUrl = imageBase64;
+  if (imageBase64.startsWith('data:')) {
+    const { mimeType, base64 } = parseDataUrl(imageBase64);
+    const binary = atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: mimeType || 'image/png' });
+    const filePath = `vision-uploads/${Date.now()}.png`;
+    const ref = storageRef(storage, filePath);
+    await uploadBytes(ref, blob);
+    imageUrl = await getDownloadURL(ref);
+  }
+
+  const proxyRequest = {
     model: 'gpt-4o',
     messages: [
       {
         role: 'user' as const,
         content: [
           { type: 'text' as const, text: prompt },
-          { type: 'image_url' as const, image_url: { url: imageBase64 } }
+          { type: 'image_url' as const, image_url: { url: imageUrl } }
         ]
       }
     ],
     max_tokens: 2048
   };
 
-  // 프로덕션: 프록시 사용
-  if (proxyUrl) {
-    // 웹방화벽 회피: data URL이면 Firebase Storage에 업로드 후 공개 URL로 교체
-    let imageUrl = imageBase64;
-    if (imageBase64.startsWith('data:')) {
-      const { mimeType, base64 } = parseDataUrl(imageBase64);
-      const binary = atob(base64);
-      const len = binary.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-      const blob = new Blob([bytes], { type: mimeType || 'image/png' });
-      const filePath = `vision-uploads/${Date.now()}.png`;
-      const ref = storageRef(storage, filePath);
-      await uploadBytes(ref, blob);
-      imageUrl = await getDownloadURL(ref);
-    }
-
-    const proxyRequest = {
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'user' as const,
-          content: [
-            { type: 'text' as const, text: prompt },
-            { type: 'image_url' as const, image_url: { url: imageUrl } }
-          ]
-        }
-      ],
-      max_tokens: 2048
-    };
-
-    // 공통 헬퍼로 프록시(JSON) 호출
-    const response = await callOpenAI(proxyRequest);
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error('OpenAI Vision API 호출 실패: ' + errText);
-    }
-    const data = await response.json();
-    return data.choices[0].message.content;
-  }
-
-  // 개발: 직접 호출
-  if (!directApiKey) {
-    throw new Error('API Key가 비어 있습니다. .env 파일과 개발 서버 재시작을 확인하세요.');
-  }
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${directApiKey}`,
-    },
-    body: JSON.stringify(requestBody)
-  });
+  // 공통 헬퍼로 프록시 호출
+  const response = await callOpenAI(proxyRequest);
   if (!response.ok) {
     const errText = await response.text();
     throw new Error('OpenAI Vision API 호출 실패: ' + errText);
@@ -136,60 +103,10 @@ function cleanOpenAIVisionResult(text: string): string {
 }
 
 // OpenAI API를 사용하여 영어를 한글로 번역
-async function translateToKorean(englishText: string, apiKey: string): Promise<string> {
-  try {
-    console.log('🌐 번역 시작:', englishText.substring(0, 50) + '...');
-    
-    if (!apiKey) {
-      throw new Error('API 키가 설정되지 않았습니다.');
-    }
-
-    const prompt = `다음 영어 본문을 자연스러운 한국어로 번역하세요.
-
-번역 요구사항:
-- 자연스럽고 매끄러운 한국어
-- 원문의 의미를 정확히 전달
-- 문학적이고 읽기 쉬운 문체
-
-번역만 반환하세요 (다른 텍스트 없이):
-
-${englishText}`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 800,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ API 오류:', response.status, errorText);
-      throw new Error(`API 호출 실패: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('✅ 번역 완료');
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('API 응답 형식 오류');
-    }
-    
-    return data.choices[0].message.content.trim();
-  } catch (error) {
-    console.error('❌ 번역 오류:', error);
-    throw error;
-  }
+async function translateToKorean(englishText: string, _apiKey?: string): Promise<string> {
+  // 공통 번역 함수 사용 (프록시 자동 지원)
+  const { translateToKorean: translateToKoreanCommon } = await import('../../../services/common');
+  return await translateToKoreanCommon(englishText);
 }
 
 const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGenerated }) => {
@@ -520,13 +437,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
          
                    // 영어 원본문을 한글로 번역 (단락별 개별 번역)
           try {
-            const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-            // console.log('🔑 API 키 확인:', apiKey ? '있음' : '없음'); // 보안상 제거됨
-            
-            if (!apiKey) {
-              setTranslatedText('번역을 사용하려면 .env 파일에 REACT_APP_OPENAI_API_KEY를 설정해주세요.');
-              return;
-            }
+            // 프록시 서버를 통한 번역 (API 키는 서버에서 관리)
             
             if (!quiz.originalText) {
               setTranslatedText('번역할 원본 텍스트가 없습니다.');
@@ -548,7 +459,7 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
               if (paragraph && paragraph.content) {
                 console.log(`📝 ${paragraphLabel} 단락 번역 시작...`);
                 try {
-                  const translation = await translateToKorean(paragraph.content, apiKey);
+                  const translation = await translateToKorean(paragraph.content);
                   console.log(`✅ ${paragraphLabel} 단락 번역 완료`);
                   return { index, translation, label: paragraphLabel };
                 } catch (error) {

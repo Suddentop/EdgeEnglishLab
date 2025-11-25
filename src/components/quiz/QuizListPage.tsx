@@ -298,7 +298,6 @@ const QuizListPage: React.FC = () => {
                     <th>유형명</th>
                     <th>차감</th>
                     <th>성공/실패</th>
-                    <th>환불</th>
                     <th>불러오기</th>
                   </tr>
                 </thead>
@@ -320,9 +319,6 @@ const QuizListPage: React.FC = () => {
                         <span className={`status ${item.status}`}>
                           {getStatusText(item.status)}
                         </span>
-                      </td>
-                      <td className="refund">
-                        {item.pointsRefunded > 0 ? `+${item.pointsRefunded.toLocaleString()}` : ''}
                       </td>
                       <td>
                         <button
