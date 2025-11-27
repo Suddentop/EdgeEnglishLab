@@ -211,7 +211,7 @@ export const generateBlankFillQuizWithAI = async (passage: string, retryCount: n
     `문장 ${index + 1}: "${sentence}"`
   ).join('\n\n');
   
-  const prompt = `다음 ${validSentences.length}개 문장에서 각 문장마다 핵심 단어 1개씩을 선택하세요.
+  const prompt = `다음 ${validSentences.length}개 문장을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 빈칸 채우기 문제를 만들어주세요. 각 문장마다 핵심 단어 1개씩을 선택하되, **수능 수준의 문맥 추론이 필요한 어휘**를 선택하세요.
 
 **문장 목록:**
 ${sentenceList}

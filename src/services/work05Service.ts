@@ -77,7 +77,7 @@ export async function generateWork05Quiz(passage: string): Promise<BlankQuiz> {
         .filter(s => s.length > 10) // 너무 짧은 문장 제외
         .slice(0, 20); // 최대 20개까지만 표시 (너무 많으면 프롬프트가 길어짐)
 
-      const prompt = `아래 영어 본문을 읽고, 빈칸 채우기 문제를 만들어주세요.
+      const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 빈칸 채우기 문제를 만들어주세요.
 
 **CRITICAL REQUIREMENTS (절대 필수):**
 

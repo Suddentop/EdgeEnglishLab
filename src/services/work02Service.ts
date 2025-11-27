@@ -124,12 +124,14 @@ Required JSON format:
 async function selectWordFromSentence(sentence: string, index: number, usedWords: string[] = []): Promise<{index: number, original: string}> {
   const usedWordsText = usedWords.length > 0 ? `\n\nALREADY USED WORDS (do not select these): ${usedWords.join(', ')}` : '';
   
-  const prompt = `You are selecting one important word from sentence #${index + 1} below.
+  const prompt = `You are selecting one important word from sentence #${index + 1} below for a Korean College Scholastic Ability Test (수능, CSAT) level vocabulary exercise.
 
 RULES:
 1. Only ONE word should be selected. Never more than one.
 2. Select a word that is NOT already used in previous sentences.
-3. Choose a meaningful word that would be good for vocabulary learning.
+3. Choose a word that requires contextual understanding and inference skills typical of Korean CSAT exams.
+4. Prioritize academic/literary vocabulary suitable for high school curriculum level.
+5. Avoid overly simple words, proper nouns, or basic everyday vocabulary.
 
 IMPORTANT: Return ONLY valid JSON. No explanations, no markdown, no code blocks.
 

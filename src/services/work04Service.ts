@@ -36,7 +36,7 @@ export async function generateWork04Quiz(passage: string): Promise<BlankQuiz> {
       excludedPhrases.push(match[1].trim());
     }
 
-    const prompt = `아래 영어 본문에서 글의 주제와 가장 밀접한, 의미 있는 구(phrase, 3~10단어 이내) 1개를 선정해.
+    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 빈칸 추론 문제를 만들어주세요. 글의 주제와 가장 밀접한, 의미 있는 구(phrase, 3~10단어 이내) 1개를 선정하되, **수능 수준의 문맥 추론이 필요한 학술적/문학적 구**를 선택하세요.
 
 1. 반드시 본문에 실제로 등장한 구(철자, 형태, 대소문자까지 동일)를 정답으로 선정해야 해. 변형, 대체, 동의어, 어형 변화 없이 본문에 있던 그대로 사용해야 해.
 

@@ -69,7 +69,7 @@ export async function generateWork12Quiz(passage: string, quizType: 'english-to-
  * @returns 추출된 영어 단어 배열
  */
 async function extractEnglishWords(passage: string): Promise<string[]> {
-  const prompt = `다음 영어 본문에서 중요한 단어 8-12개를 추출해주세요.
+    const prompt = `다음 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 중요한 단어 8-12개를 추출해주세요. 수능 수준의 문맥 추론이 필요한 학술적/문학적 어휘를 우선 선택하세요.
 
 추출 기준:
 - 명사, 동사, 형용사, 부사 등 의미 있는 단어

@@ -496,20 +496,21 @@ export const selectSentencesForBlanksWithAI = async (sentences: string[]): Promi
     throw new Error(`문장 수(${sentenceCount})가 필요한 빈칸 수(${blankCount})보다 적습니다.`);
   }
   
-  // AI 프롬프트 생성 (개선된 버전)
-  const prompt = `You are an English exam generator. Read the following ${sentenceCount} sentences.
+  // AI 프롬프트 생성 (개선된 버전 - 수능 수준)
+  const prompt = `You are an English exam generator for the Korean College Scholastic Ability Test (수능, CSAT) level. Read the following ${sentenceCount} sentences.
 
 Your task is to:
-1. Select ${blankCount} important sentences for blank-fill questions.
-2. These sentences should be replaced with blank lines: "(____________________A____________________)", "(____________________B____________________)", etc.
+1. Select ${blankCount} important sentences for blank-fill questions at the **Korean high school CSAT level**.
+2. These sentences will be replaced with blank lines in the format "(A___)", "(B___)", etc., where the number of underscores is determined dynamically based on each sentence's length.
 3. Return the selected sentence indices and the sentences themselves.
 
 Rules:
 - Select exactly ${blankCount} sentences.
-- Choose sentences that are educationally valuable and contextually important.
+- Choose sentences that are educationally valuable and contextually important at the **Korean CSAT level**.
+- Prioritize sentences that require contextual understanding and inference skills typical of CSAT exams.
 - Do NOT select adjacent sentences (e.g., if sentences 1,2,3,4,5,6 exist, do not select 1&2, or 2&3, etc.).
-- Prioritize sentences with clear meaning and appropriate length.
-- Choose sentences that are not too complex structurally.
+- Prioritize sentences with clear meaning and appropriate length that match CSAT difficulty.
+- Choose sentences that are not too complex structurally but require analytical thinking.
 
 Output format (JSON only, no other text):
 {

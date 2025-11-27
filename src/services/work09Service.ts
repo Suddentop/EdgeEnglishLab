@@ -78,7 +78,7 @@ export async function generateWork09Quiz(passage: string): Promise<GrammarQuiz> 
  * @returns 선택된 단어 배열
  */
 async function selectWords(passage: string): Promise<string[]> {
-  const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 5개만 선정하세요.
+  const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 어법 오류 찾기 문제를 만들어주세요. 어법(문법) 변형이 가능한 서로 다른 "단어" 5개만 선정하되, **수능에서 출제될 수 있는 어법 유형**을 선택하세요.
 
 중요한 규칙:
 - 반드시 "단어"만 선정하세요. 여러 단어로 이루어진 구(phrase)는 절대 선정하지 마세요.

@@ -668,7 +668,7 @@ const Work_07_MainIdeaInference: React.FC = () => {
 
   async function generateMainIdeaQuizWithAI(passage: string): Promise<MainIdeaQuiz> {
     const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    const prompt = `아래 영어 본문을 읽고, 글의 주제를 가장 잘 요약하는 문장/구 1개를 선정해.
+    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 주제 추론 문제를 만들어주세요. 글의 주제를 가장 잘 요약하는 문장/구 1개를 선정하되, **수능 수준의 추론 능력을 평가할 수 있는** 주제 요약을 선택하세요.
 
 단계별 작업:
 1단계: 본문을 읽고 주제를 파악
