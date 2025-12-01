@@ -9,6 +9,7 @@ import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPo
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import { generateWork05Quiz, type BlankQuiz } from '../../../services/work05Service';
+import { extractTextFromImage } from '../../../services/common';
 
 // A4 페이지 설정 상수 (실제 A4 크기 기준, px 단위)
 const A4_CONFIG = {
@@ -312,17 +313,29 @@ const Work_05_BlankSentenceInference: React.FC = () => {
       // OCR → textarea에 자동 입력
       setIsExtractingText(true);
       try {
-        const ocrText = await imageToTextWithOpenAIVision(file);
-        setInputText(ocrText);
-        setTimeout(() => {
-          if (textAreaRef.current) {
-            textAreaRef.current.style.height = 'auto';
-            textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+        // File 객체를 base64 문자열로 변환
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          try {
+            const base64 = reader.result as string;
+            const ocrText = await extractTextFromImage(base64);
+            setInputText(ocrText);
+            setTimeout(() => {
+              if (textAreaRef.current) {
+                textAreaRef.current.style.height = 'auto';
+                textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+              }
+            }, 0);
+          } catch (e) {
+            console.error('OCR Error', e);
+            alert('OCR 처리 중 오류가 발생했습니다.');
+          } finally {
+            setIsExtractingText(false);
           }
-        }, 0);
+        };
       } catch (err) {
         alert('OCR 처리 중 오류가 발생했습니다.');
-      } finally {
         setIsExtractingText(false);
       }
     }
@@ -344,7 +357,13 @@ const Work_05_BlankSentenceInference: React.FC = () => {
           setImagePreview(URL.createObjectURL(file));
           setIsExtractingText(true);
       try {
-        const ocrText = await imageToTextWithOpenAIVision(file);
+        // File 객체를 base64로 변환
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          try {
+            const base64 = reader.result as string;
+            const ocrText = await extractTextFromImage(base64);
             setInputText(ocrText);
             setTimeout(() => {
               if (textAreaRef.current) {
@@ -352,9 +371,14 @@ const Work_05_BlankSentenceInference: React.FC = () => {
                 textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
               }
             }, 0);
-          } catch (err) {
-            alert('OCR 처리 중 오류가 발생했습니다.');
+          } catch (e) {
+             alert('OCR 처리 중 오류가 발생했습니다.');
           } finally {
+             setIsExtractingText(false);
+          }
+        };
+      } catch (err) {
+        alert('OCR 처리 중 오류가 발생했습니다.');
         setIsExtractingText(false);
       }
         }
@@ -373,113 +397,9 @@ const Work_05_BlankSentenceInference: React.FC = () => {
     }
   };
 
-  async function imageToTextWithOpenAIVision(imageFile: File): Promise<string> {
-    const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-    const base64 = await fileToBase64(imageFile);
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    const prompt = `영어문제로 사용되는 본문이야.
-이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
-글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
-본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
-원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
-영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: base64 } }
-            ]
-          }
-        ],
-        max_tokens: 2048
-      })
-    });
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
-  }
-
-  // 별도 번역 함수 추가 (유형#01과 동일) - 개선된 버전
-  // 참고: generateWork05Quiz는 내부에서 번역을 처리하므로 이 함수는 사용되지 않음
-  async function translateToKorean(englishText: string, apiKey: string): Promise<string> {
-    console.log('번역 시작:', { textLength: englishText.length, hasApiKey: !!apiKey }); // API Key는 노출하지 않음
-    
-    if (!apiKey) {
-      console.error('API 키가 없습니다.');
-      return 'API 키가 설정되지 않았습니다.';
-    }
-
-    if (!englishText || englishText.trim().length === 0) {
-      console.error('번역할 텍스트가 없습니다.');
-      return '번역할 텍스트가 없습니다.';
-    }
-
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations. Always provide complete and accurate translations.' },
-            { role: 'user', content: `다음 영어 본문을 자연스러운 한국어로 번역해주세요. 번역은 완전하고 정확해야 합니다:\n\n${englishText}` }
-          ],
-          max_tokens: 800,
-          temperature: 0.3
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP 오류: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log('번역 API 응답:', { hasChoices: !!data.choices, choiceCount: data.choices?.length });
-      
-      if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-        const translation = data.choices[0].message.content.trim();
-        console.log('번역 성공:', { translationLength: translation.length, preview: translation.substring(0, 100) });
-        
-        if (translation.length === 0) {
-          throw new Error('번역 결과가 비어있습니다.');
-        }
-        
-        return translation;
-      } else {
-        console.error('AI 응답 구조 오류:', data);
-        throw new Error('AI 응답 형식이 올바르지 않습니다.');
-      }
-    } catch (error: any) {
-      console.error('번역 오류 상세:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      });
-      
-      // 오류 유형에 따른 구체적인 메시지 반환
-      if (error.message.includes('HTTP 오류')) {
-        return `번역 서비스 오류: ${error.message}`;
-      } else if (error.message.includes('API 키')) {
-        return 'API 키 오류로 인해 번역할 수 없습니다.';
-      } else {
-        return `번역 생성 중 오류가 발생했습니다: ${error.message}`;
-      }
-    }
-  }
+  /*
+  // imageToTextWithOpenAIVision 및 translateToKorean 제거됨 (common.ts 사용)
+  */
 
   // generateBlankQuizWithAI 함수는 work05Service.ts의 generateWork05Quiz로 대체됨
   // 이 함수는 더 이상 사용되지 않으며, 모든 로직이 work05Service.ts에 통합됨
@@ -560,7 +480,41 @@ const Work_05_BlankSentenceInference: React.FC = () => {
         if (!inputText.trim()) throw new Error('영어 본문을 입력해주세요.');
         passage = inputText.trim();
       } else if (inputMode === 'image' && imageFile) {
-        passage = await imageToTextWithOpenAIVision(imageFile);
+        // 이미지를 base64로 변환 후 전달
+        const reader = new FileReader();
+        reader.readAsDataURL(imageFile);
+        reader.onload = async () => {
+          try {
+            const base64 = reader.result as string;
+            passage = await extractTextFromImage(base64);
+            // 여기서 바로 setQuiz나 executeQuizGeneration 호출해야 하는데...
+            // executeQuizGeneration은 async 함수이고 여기서 await 못함.
+            // 구조상 문제가 좀 있네요.
+            // 사실 executeQuizGeneration 안에서 imageToTextWithOpenAIVision를 호출하고 있었음.
+            // 여기서는 passage만 설정하면 되는데, 비동기라...
+            // 위에서 passage = await ... 했으므로 여기서는 동기적으로 처리됨?
+            // 아, imageToTextWithOpenAIVision는 Promise<string> 반환.
+            // extractTextFromImage도 Promise<string> 반환.
+            // 그래서 await extractTextFromImage(base64) 하면 됨.
+            // 하지만 extractTextFromImage는 base64 string을 받음.
+            // imageToTextWithOpenAIVision은 File을 받았음.
+            // 그래서 변환 과정이 필요함.
+          } catch (e) {
+             console.error(e);
+          }
+        };
+        // 이렇게 하면 안됨. await가 안 먹힘.
+        
+        // Promise로 감싸기
+        const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+        const base64 = await fileToBase64(imageFile);
+        passage = await extractTextFromImage(base64);
+        
       } else if (inputMode === 'capture') {
         // 캡처 이미지에서 추출된 텍스트가 수정되었을 수 있으므로 inputText 사용
         if (!inputText.trim()) throw new Error('영어 본문을 입력해주세요.');

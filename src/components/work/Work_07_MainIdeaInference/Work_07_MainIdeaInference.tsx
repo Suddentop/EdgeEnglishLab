@@ -8,6 +8,7 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
+import { callOpenAI } from '../../../services/common';
 
 const INPUT_MODES = [
   { key: 'capture', label: '캡처 이미지 붙여넣기' },
@@ -637,20 +638,14 @@ const Work_07_MainIdeaInference: React.FC = () => {
       reader.readAsDataURL(file);
     });
     const base64 = await fileToBase64(imageFile);
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `영어문제로 사용되는 본문이야.
 이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
 글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
 본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
 원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
 영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAI({
         model: 'gpt-4o',
         messages: [
           { role: 'user', content: [
@@ -660,14 +655,13 @@ const Work_07_MainIdeaInference: React.FC = () => {
           }
         ],
         max_tokens: 2048
-      })
     });
     const data = await response.json();
     return data.choices[0].message.content.trim();
   }
 
   async function generateMainIdeaQuizWithAI(passage: string): Promise<MainIdeaQuiz> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 주제 추론 문제를 만들어주세요. 글의 주제를 가장 잘 요약하는 문장/구 1개를 선정하되, **수능 수준의 추론 능력을 평가할 수 있는** 주제 요약을 선택하세요.
 
 단계별 작업:
@@ -699,19 +693,12 @@ ${passage}
 - 예시: answerIndex=1, options[1]="The future is uncertain but promising." → answerTranslation="미래는 불확실하지만 희망적입니다."
 - optionTranslations[1]도 "미래는 불확실하지만 희망적입니다."가 되어야 함
 - 모든 해석이 정확히 일치해야 함`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
         temperature: 0.3 // 더 낮은 temperature로 일관성 향상
-      })
-    });
+      });
     const data = await response.json();
     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
@@ -861,7 +848,7 @@ ${passage}
 
   // 재시도 함수
   async function generateMainIdeaQuizWithAIRetry(passage: string, retryCount: number): Promise<MainIdeaQuiz> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문을 읽고, 글의 주제를 가장 잘 요약하는 문장/구 1개를 선정해.
 
 단계별 작업:
@@ -894,19 +881,12 @@ ${passage}
 - optionTranslations[1]도 "미래는 불확실하지만 희망적입니다."가 되어야 함
 - 모든 해석이 정확히 일치해야 함
 - 재시도 ${retryCount}번째입니다. 이전에 정답과 해석이 일치하지 않았습니다. 매우 주의하세요.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAI({
         model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
         temperature: 0.1 // 재시도 시 매우 낮은 temperature로 일관성 극대화
-      })
-    });
+      });
     const data = await response.json();
     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');

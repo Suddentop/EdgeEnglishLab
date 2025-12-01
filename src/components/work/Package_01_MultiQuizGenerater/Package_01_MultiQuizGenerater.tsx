@@ -11,14 +11,14 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { createQuiz } from '../../../utils/textProcessor';
 import { Quiz, SentenceTranslationQuiz } from '../../../types/types';
 import { generateWork02Quiz, Work02QuizData } from '../../../services/work02Service';
-import { imageToTextWithOpenAIVision, splitSentences, countWordsInSentence, filterValidSentences, generateBlankQuizWithAI, translateToKorean as work14TranslateToKorean } from '../../../services/work14Service';
+import { imageToTextWithOpenAIVision, splitSentences, countWordsInSentence, filterValidSentences, generateBlankQuizWithAI } from '../../../services/work14Service';
 import { generateWork05Quiz } from '../../../services/work05Service';
 import { generateWork09Quiz } from '../../../services/work09Service';
 import PrintFormatPackage01, { PrintFormatPackage01Work02, PrintFormatPackage01Work03, PrintFormatPackage01Work04, PrintFormatPackage01Work05, PrintFormatPackage01Work06, PrintFormatPackage01Work07, PrintFormatPackage01Work08, PrintFormatPackage01Work09, PrintFormatPackage01Work10, PrintFormatPackage01Work11, PrintFormatPackage01Work13, PrintFormatPackage01Work14 } from './PrintFormatPackage01';
 import './PrintFormatPackage01.css';
 import '../shared/PrintControls.css';
 import FileFormatSelector from '../shared/FileFormatSelector';
-import { callOpenAI } from '../../../services/common';
+import { callOpenAI, translateToKorean } from '../../../services/common';
 import { FileFormat, generateAndUploadFile } from '../../../services/pdfService';
 import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 
@@ -47,56 +47,10 @@ async function callOpenAIAPI(requestBody: any): Promise<Response> {
 }
 
 // OpenAI API를 사용하여 영어를 한글로 번역
-async function translateToKorean(englishText: string): Promise<string> {
-  try {
-    console.log('🌐 번역 시작:', englishText.substring(0, 50) + '...');
-
-    const prompt = `다음 영어 본문을 자연스러운 한국어로 번역해주세요. 번역만 출력하고 다른 설명은 하지 마세요.
-
-영어 본문:
-${englishText}`;
-
-    const response = await callOpenAIAPI({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 1000,
-      temperature: 0.3
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      console.error('❌ API 오류:', response.status, errorText);
-      
-      // 401 에러인 경우 더 명확한 메시지 제공
-      if (response.status === 401) {
-        let errorMessage = 'OpenAI API 인증 실패';
-        try {
-          const errorData = JSON.parse(errorText);
-          if (errorData.error?.message) {
-            errorMessage = errorData.error.message;
-          }
-        } catch (e) {
-          // JSON 파싱 실패 시 기본 메시지 사용
-        }
-        throw new Error(`API 인증 실패: ${errorMessage}. API 키를 확인해주세요.`);
-      }
-      
-      throw new Error(`API 호출 실패: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('✅ 번역 완료');
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('API 응답 형식 오류');
-    }
-    
-    return data.choices[0].message.content.trim();
-  } catch (error) {
-    console.error('❌ 번역 오류:', error);
-    throw error;
-  }
-}
+// 로컬 translateToKorean 함수 제거됨 (common.ts 사용)
+/* 
+async function translateToKorean(englishText: string): Promise<string> { ... } 
+*/
 
 // Work_13: 빈칸 채우기 문제 (단어-주관식) 생성
 async function generateWork13Quiz(passage: string, retryCount: number = 0): Promise<BlankFillItem> {
@@ -814,8 +768,8 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
       console.log('🌐 전체 텍스트 번역 시작...');
       let translation = '';
       try {
-        const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-        if (apiKey) {
+        // const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+        if (true) { // 프록시 서버 사용을 위해 항상 true로 설정
           const response = await callOpenAIAPI({
           model: 'gpt-3.5-turbo',
           messages: [
@@ -1250,7 +1204,7 @@ ${inputText}
   const generateWork08Quiz = async (inputText: string): Promise<TitleQuiz> => {
     console.log('🔄 Work_08 문제 생성 시작...');
     
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const prompt = `아래 영어 본문을 읽고, 글의 주제의식에 가장 적합한 제목(title) 1개를 선정해.\n1. 정답 제목(문장/구) + 오답(비슷한 길이의 제목 4개, 의미는 다름) 총 5개를 생성해.\n2. 정답의 위치는 1~5번 중 랜덤.\n3. 본문 해석도 함께 제공.\n4. 아래 JSON 형식으로, 반드시 answerTranslation(정답 제목의 한글 해석) 필드를 별도 포함해서 응답:\n{\n  \"passage\": \"...\",\n  \"options\": [\"...\", \"...\", \"...\", \"...\", \"...\"],\n  \"answerIndex\": 2,\n  \"translation\": \"...\",\n  \"answerTranslation\": \"정답 제목의 한글 해석\"\n}\n본문:\n${inputText}\n정답(제목)의 한글 해석도 반드시 포함해줘.\n정답(제목) 영어 문장과 그 한글 해석(answerTranslation)도 반드시 별도 필드로 포함해줘.`;
 
     const response = await callOpenAIAPI({
@@ -1286,7 +1240,7 @@ ${inputText}
 
   // Work_09 핵심 함수들
   const selectWords = async (passage: string): Promise<string[]> => {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 5개만 선정하세요.
 
 중요한 규칙:
@@ -1348,7 +1302,7 @@ ${passage}`;
     original: string;
     grammarType: string;
   }> => {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const grammarTypes = [
       '시제', '조동사', '수동태', '준동사', '가정법', 
       '관계사', '형/부', '수일치/관사', '비교', '도치/강조'
@@ -1549,7 +1503,7 @@ Make sure the transformed word is actually DIFFERENT and WRONG compared to the o
   };
 
   const translatePassage = async (passage: string): Promise<string> => {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const prompt = `다음 영어 본문을 자연스러운 한국어로 번역하세요.
 
 번역 요구사항:
@@ -1587,7 +1541,7 @@ ${passage}`;
     console.log('🔍 Work_10 문제 생성 시작...');
     
     try {
-      const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+      // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
       const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 8개를 선정하세요.
 이 중 3~8개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.
 
@@ -1700,7 +1654,7 @@ ${inputText}`;
     console.log('🔍 Work_11 문제 생성 시작...');
     
     try {
-      const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+      // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
       
       // 영어 텍스트를 문장 단위로 분리 (약어 보호)
       let processedText = inputText;
@@ -1804,7 +1758,7 @@ ${inputText}`;
     missingSentence: string;
     topicSentenceIndex: number;
   }> => {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const passage = sentences.join(' ');
     
     const prompt = `아래 영어 본문에서 가장 중요한 주제 문장 1개를 찾아서 제거해주세요.

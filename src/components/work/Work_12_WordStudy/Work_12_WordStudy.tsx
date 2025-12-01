@@ -5,6 +5,7 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
+import { callOpenAI } from '../../../services/common';
 import { 
   PrintHeaderWork12, 
   A4PageTemplateWork12, 
@@ -207,7 +208,7 @@ const Work_12_WordStudy: React.FC = () => {
     });
     
     const base64 = await fileToBase64(imageFile);
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
+    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     
     const prompt = `이 이미지는 영어 단어 학습용 워크시트입니다. 이미지에 표시된 모든 영어 단어와 그에 대응하는 한글 뜻을 완전히 추출해주세요.
 
@@ -230,13 +231,7 @@ const Work_12_WordStudy: React.FC = () => {
 - 모든 단어를 빠짐없이 추출해주세요
 - JSON 형식으로만 응답해주세요`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const response = await callOpenAI({
         model: 'gpt-4o',
         messages: [
           { role: 'user', content: [
@@ -246,8 +241,7 @@ const Work_12_WordStudy: React.FC = () => {
           }
         ],
         max_tokens: 4096
-      })
-    });
+      });
     
     const data = await response.json();
     const content = data.choices[0].message.content.trim();

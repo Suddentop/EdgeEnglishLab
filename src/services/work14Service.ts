@@ -1,53 +1,6 @@
-// Work14 관련 AI 서비스 함수들
+import { callOpenAI, translateToKorean } from './common';
 
-// 프록시 서버를 통한 OpenAI API 호출 헬퍼 함수 (보안상 직접 호출 제거)
-async function callOpenAIAPI(requestBody: any): Promise<Response> {
-  const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
-  
-  console.log('🔍 Work14 환경 변수 확인:', {
-    proxyUrl: proxyUrl ? `설정됨 (${proxyUrl})` : '❌ 없음'
-  });
-  
-  // 프록시 URL이 필수로 설정되어야 함 (보안상 직접 API 호출 제거)
-  if (!proxyUrl) {
-    const errorMessage = '프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.';
-    console.error('❌ [보안 오류]', errorMessage);
-    throw new Error(errorMessage);
-  }
-  
-  console.log('🤖 OpenAI 프록시 서버 호출 중...', proxyUrl);
-  const response = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-  
-  // 프록시 응답에서 401 에러인 경우 상세 정보 제공
-  if (response.status === 401) {
-    const errorText = await response.text().catch(() => '');
-    let errorMessage = 'OpenAI API 인증 실패 (401)';
-    
-    try {
-      const errorData = JSON.parse(errorText);
-      if (errorData.error?.message) {
-        errorMessage = `OpenAI API 인증 실패: ${errorData.error.message}`;
-      }
-    } catch (e) {
-      // JSON 파싱 실패 시 기본 메시지 사용
-    }
-    
-    console.error('❌ API 인증 오류:', errorMessage);
-    console.error('💡 해결 방법:');
-    console.error('   1. 프록시 서버의 OpenAI API 키가 올바른지 확인하세요.');
-    console.error('   2. API 키가 만료되지 않았는지 확인하세요.');
-    console.error('   3. 프록시 서버 설정을 확인하세요.');
-  }
-  
-  return response;
-}
-
+// 이미지를 텍스트로 변환하는 함수
 export interface BlankQuizData {
   blankedText: string;
   correctAnswers: string[];
@@ -86,7 +39,7 @@ export const imageToTextWithOpenAIVision = async (imageData: string | File): Pro
     base64Image = imageData;
   }
   
-  const response = await callOpenAIAPI({
+  const response = await callOpenAI({
     model: 'gpt-4o',
     messages: [
       {
@@ -434,48 +387,8 @@ export const generateBlankQuizWithAI = async (passage: string): Promise<BlankQui
   return result;
 };
 
-// 한국어로 번역하는 함수
-export const translateToKorean = async (text: string, _apiKey?: string): Promise<string> => {
-  try {
-    const response = await callOpenAIAPI({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: `다음 영어 텍스트를 자연스러운 한국어로 번역해주세요:\n\n${text}` }],
-      max_tokens: 2000,
-      temperature: 0.3
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      let errorMessage = `API 호출 실패: ${response.status}`;
-      
-      // 401 에러인 경우 더 명확한 메시지 제공
-      if (response.status === 401) {
-        try {
-          const errorData = JSON.parse(errorText);
-          if (errorData.error?.message) {
-            errorMessage = `API 인증 실패: ${errorData.error.message}. API 키를 확인해주세요.`;
-          }
-        } catch (e) {
-          // JSON 파싱 실패 시 기본 메시지 사용
-          errorMessage = `API 인증 실패 (401). API 키를 확인해주세요.`;
-        }
-      }
-      
-      throw new Error(errorMessage);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('API 응답 형식 오류');
-    }
-    
-    return data.choices[0].message.content.trim();
-  } catch (error) {
-    console.error('❌ 번역 오류:', error);
-    throw error;
-  }
-};
+// 한국어로 번역하는 함수 (common.ts에서 import하여 사용)
+// export const translateToKorean = ... (제거됨)
 
 // AI를 사용한 문장 선택 로직
 export const selectSentencesForBlanksWithAI = async (sentences: string[]): Promise<{ selectedIndices: number[], selectedSentences: string[] }> => {
@@ -522,7 +435,7 @@ Sentences:
 ${sentences.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
 
   try {
-    const response = await callOpenAIAPI({
+    const response = await callOpenAI({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1000,

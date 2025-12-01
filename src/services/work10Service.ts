@@ -31,14 +31,33 @@ export async function generateWork10Quiz(passage: string): Promise<MultiGrammarQ
   console.log('📝 입력 텍스트 길이:', passage.length);
 
   try {
-    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 다중 어법 오류 찾기 문제를 만들어주세요. 어법(문법) 변형이 가능한 서로 다른 "단어" 8개를 선정하되, **수능에서 출제될 수 있는 어법 유형**을 선택하세요.
-이 중 3~8개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.
+    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 다중 어법 오류 찾기 문제를 만들어주세요.
+
+**🎯 핵심 요구사항 (CSAT Level):**
+1. **단어 선정 (8개):**
+   - **⚠️ 절대 규칙: 본문에 실제로 존재하는 단어여야 합니다. (철자, 대소문자 정확히 일치)**
+   - **⚠️ 절대 규칙: 반드시 "한 단어(Single Word)" 단위로만 선정하세요. (구/절 금지)**
+     - (X) "can prey" (두 단어 금지)
+     - (O) "prey"
+   - 본문의 핵심 구조를 결정하는 중요 단어(동사, 준동사, 접속사, 관계사 등) 위주로 8개를 선정하세요.
+   - **중복 금지:** 본문 내에서 서로 다른 위치에 있는 8개의 단어를 선정하되, 가능한 서로 다른 단어를 선택하세요.
+
+2. **어법 변형 (3~8개):**
+   - 선정된 8개 단어 중 **3개에서 8개**를 랜덤하게 선택하여 **어법상 틀리게** 변형하세요.
+   - **변형 수준:** 단순한 철자 오류가 아닌, **고난도 문법 오류**를 만드세요.
+     - **수 일치:** 주어와 동사가 멀리 떨어진 경우의 수 일치 오류.
+     - **태(Voice):** 능동태를 수동태로, 수동태를 능동태로 잘못 변형.
+     - **준동사:** 동사 자리에 준동사를 쓰거나, 준동사 자리에 동사를 쓰는 오류.
+     - **관계사/접속사:** 완전한 문장 뒤에 관계대명사를 쓰거나, 불완전한 문장 뒤에 접속사를 쓰는 오류.
+     - **병렬 구조:** 등위접속사로 연결된 요소들의 형태 불일치.
+
+3. **나머지 단어:** 변형되지 않은 나머지 단어들은 반드시 **원본 그대로** 유지하세요.
 
 아래 JSON 형식으로만 응답하세요:
 {
-  "originalWords": ["...", ...], // 8개 원본 단어
-  "transformedWords": ["...", ...], // 8개 변형(틀린/정상) 단어
-  "wrongIndexes": [0,1,2,5,6,7], // 틀린 단어의 인덱스(0~7), 개수는 3~8개
+  "originalWords": ["...", ...], // 선정된 8개 원본 단어 (본문과 정확히 일치해야 함)
+  "transformedWords": ["...", ...], // 8개 단어 (틀린 것은 변형됨, 맞는 것은 원본 그대로)
+  "wrongIndexes": [0,1,2,5,6,7], // 틀린 단어의 배열 인덱스 (0~7), 개수는 3~8개 사이
   "translation": "..." // 본문 번역
 }
 
@@ -98,8 +117,40 @@ ${passage}`;
       }
     }
 
+    // 본문 존재 여부 검증 (Strict check)
+    for (const word of result.originalWords) {
+      // 특수문자 이스케이프 처리 후 정규식 생성
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+      if (!regex.test(passage)) {
+        throw new Error(`선정된 단어 '${word}'가 본문에 존재하지 않습니다.`);
+      }
+    }
+
+    // 본문 내 단어 위치 기준으로 정렬
+    const wordsInfo = result.originalWords.map((word: string, idx: number) => {
+      const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      const match = regex.exec(passage);
+      return {
+        original: word,
+        transformed: result.transformedWords[idx],
+        isWrong: result.wrongIndexes.includes(idx),
+        position: match ? match.index : 999999 // 찾지 못하면 뒤로 보냄 (오류 방지)
+      };
+    });
+
+    // position 기준 오름차순 정렬
+    wordsInfo.sort((a: any, b: any) => a.position - b.position);
+
+    // 배열 재구성
+    const sortedOriginalWords = wordsInfo.map((w: any) => w.original);
+    const sortedTransformedWords = wordsInfo.map((w: any) => w.transformed);
+    const sortedWrongIndexes = wordsInfo
+      .map((w: any, idx: number) => w.isWrong ? idx : -1)
+      .filter((idx: number) => idx !== -1);
+
     // 옵션, 정답 계산
-    const wrongCount = result.wrongIndexes.length;
+    const wrongCount = sortedWrongIndexes.length;
     const options = [3, 4, 5, 6, 7, 8];
     const answerIndex = options.indexOf(wrongCount);
 
@@ -107,12 +158,12 @@ ${passage}`;
       throw new Error('틀린 단어 개수가 유효하지 않습니다.');
     }
 
-    // 본문에 원번호/진하게 적용
+    // 본문에 원번호/진하게 적용 (정렬된 단어 리스트 사용)
     const numberedPassage = applyNumberAndUnderline(
       passage,
-      result.originalWords,
-      result.transformedWords,
-      result.wrongIndexes
+      sortedOriginalWords,
+      sortedTransformedWords,
+      sortedWrongIndexes
     );
 
     const finalResult: MultiGrammarQuiz = {
@@ -120,9 +171,9 @@ ${passage}`;
       options,
       answerIndex,
       translation: result.translation,
-      originalWords: result.originalWords,
-      transformedWords: result.transformedWords,
-      wrongIndexes: result.wrongIndexes
+      originalWords: sortedOriginalWords, // 정렬된 순서 반환
+      transformedWords: sortedTransformedWords, // 정렬된 순서 반환
+      wrongIndexes: sortedWrongIndexes // 재계산된 인덱스 반환
     };
 
     console.log('✅ Work_10 문제 생성 완료:', finalResult);

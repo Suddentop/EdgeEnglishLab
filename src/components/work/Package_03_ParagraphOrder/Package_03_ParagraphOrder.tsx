@@ -1691,7 +1691,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
                         
                         // 다양한 빈칸 패턴을 찾아서 원래 문장 길이만큼의 "_"로 교체
                         // 패턴 1: ( A _+ ) 또는 ( 공백 + A + 공백 + _+ )
-                        displayText = displayText.replace(/\(\s*([A-Z])\s*_+/g, (match, alphabet) => {
+                        displayText = displayText.replace(/\(\s*([A-Z])\s*_+/g, (_match: string, _alphabet: string) => {
                           if (sentenceIndex < selectedSentences.length) {
                             const sentence = selectedSentences[sentenceIndex];
                             const sentenceLength = sentence ? sentence.trim().length : 10; // 기본값 10
@@ -1704,7 +1704,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
                         });
                         
                         // 패턴 2: ( _+ A _+ ) 형식
-                        displayText = displayText.replace(/\(_+([A-Z])_+/g, (match, alphabet) => {
+                        displayText = displayText.replace(/\(_+([A-Z])_+/g, (_match: string, _alphabet: string) => {
                           if (sentenceIndex < selectedSentences.length) {
                             const sentence = selectedSentences[sentenceIndex];
                             const sentenceLength = sentence ? sentence.trim().length : 10;
@@ -1716,7 +1716,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
                         });
                         
                         // 패턴 3: ( 공백 + A + _+ ) 형식 (공백 없는 경우)
-                        displayText = displayText.replace(/\(([A-Z])_+/g, (match, alphabet) => {
+                        displayText = displayText.replace(/\(([A-Z])_+/g, (_match: string, _alphabet: string) => {
                           if (sentenceIndex < selectedSentences.length) {
                             const sentence = selectedSentences[sentenceIndex];
                             const sentenceLength = sentence ? sentence.trim().length : 10;
@@ -1728,7 +1728,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
                         });
                         
                         // 알파벳이 없는 빈칸 패턴도 처리 (이미 알파벳이 제거된 경우)
-                        displayText = displayText.replace(/\(_+\)/g, (match) => {
+                        displayText = displayText.replace(/\(_+\)/g, (_match: string) => {
                           if (sentenceIndex < selectedSentences.length) {
                             const sentence = selectedSentences[sentenceIndex];
                             const sentenceLength = sentence ? sentence.trim().length : 10;
@@ -1752,7 +1752,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
                       <div style={{color: '#1976d2', marginBottom: '0.5rem'}}>
                         정답 문장들:
                       </div>
-                      {quizItem.work14Data.selectedSentences?.map((sentence, idx) => {
+                      {quizItem.work14Data.selectedSentences?.map((sentence: string, idx: number) => {
                         const alphabetLabel = String.fromCharCode(65 + idx); // A=65, B=66, C=67...
                         // 정답 문장에서 빈칸 형식 제거 ( ( A ___ ) 또는 (___A___) 형식)
                         let cleanSentence = sentence || '';

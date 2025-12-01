@@ -1,52 +1,5 @@
 // Work_02 독해 문제 생성 서비스
-
-// 프록시 서버를 통한 OpenAI API 호출 헬퍼 함수 (보안상 직접 호출 제거)
-async function callOpenAIAPI(requestBody: any): Promise<Response> {
-  const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
-  
-  console.log('🔍 Work02 환경 변수 확인:', {
-    proxyUrl: proxyUrl ? '설정됨' : '❌ 없음'
-  });
-  
-  // 프록시 URL이 필수로 설정되어야 함 (보안상 직접 API 호출 제거)
-  if (!proxyUrl) {
-    const errorMessage = '프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.';
-    console.error('❌ [보안 오류]', errorMessage);
-    throw new Error(errorMessage);
-  }
-  
-  console.log('🤖 OpenAI 프록시 서버 호출 중...');
-  const response = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-  
-  // 프록시 응답에서 401 에러인 경우 상세 정보 제공
-  if (response.status === 401) {
-    const errorText = await response.text().catch(() => '');
-    let errorMessage = 'OpenAI API 인증 실패 (401)';
-    
-    try {
-      const errorData = JSON.parse(errorText);
-      if (errorData.error?.message) {
-        errorMessage = `OpenAI API 인증 실패: ${errorData.error.message}`;
-      }
-    } catch (e) {
-      // JSON 파싱 실패 시 기본 메시지 사용
-    }
-    
-    console.error('❌ API 인증 오류:', errorMessage);
-    console.error('💡 해결 방법:');
-    console.error('   1. 프록시 서버의 OpenAI API 키가 올바른지 확인하세요.');
-    console.error('   2. API 키가 만료되지 않았는지 확인하세요.');
-    console.error('   3. 프록시 서버 설정을 확인하세요.');
-  }
-  
-  return response;
-}
+import { callOpenAI } from './common';
 
 interface WordReplacement {
   original: string;           // 원본 단어/숙어
@@ -81,7 +34,7 @@ Required JSON format:
   "sentences": ["Sentence 1.", "Sentence 2?", "Sentence 3!"]
 }`;
 
-  const response = await callOpenAIAPI({
+  const response = await callOpenAI({
     model: 'gpt-4o',
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 1000,
@@ -143,7 +96,7 @@ Required JSON format:
   "original": "important"
 }`;
 
-  const response = await callOpenAIAPI({
+  const response = await callOpenAI({
     model: 'gpt-4o',
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 200,
@@ -203,7 +156,7 @@ Required JSON format:
   "replacementMeaning": "중요한, 의미있는"
 }`;
 
-  const response = await callOpenAIAPI({
+  const response = await callOpenAI({
     model: 'gpt-4o',
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 300,
@@ -288,14 +241,15 @@ function replaceWordsInTextSequentially(originalText: string, sentences: string[
 
 // Step 5: 본문 번역
 async function translatePassage(passage: string): Promise<string> {
-  const prompt = `Translate the following English passage to Korean. Provide a natural, fluent Korean translation.
+  const prompt = `Translate the following English passage into formal, academic Korean suitable for the Korean College Scholastic Ability Test (Suneung/CSAT) reading comprehension section.
+The translation should be highly sophisticated, contextually accurate, and use advanced vocabulary appropriate for high school seniors (Grade 12).
 
 Passage:
 ${passage}
 
 IMPORTANT: Return ONLY the Korean translation. No explanations, no markdown, no code blocks.`;
 
-  const response = await callOpenAIAPI({
+  const response = await callOpenAI({
     model: 'gpt-4o',
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 2000,
@@ -382,4 +336,3 @@ export async function generateWork02Quiz(passage: string): Promise<Work02QuizDat
     throw error;
   }
 }
-

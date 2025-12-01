@@ -7,6 +7,7 @@ import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
+import { extractTextFromImage, callOpenAI } from '../../../services/common';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const INPUT_MODES = [
@@ -580,7 +581,14 @@ const Work_08_TitleInference: React.FC = () => {
       // OCR → textarea에 자동 입력
       setIsExtractingText(true);
       try {
-        const ocrText = await imageToTextWithOpenAIVision(file);
+        const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+        const base64 = await fileToBase64(file);
+        const ocrText = await extractTextFromImage(base64);
         setInputText(ocrText);
         setTimeout(() => {
           if (textAreaRef.current) {
@@ -612,7 +620,14 @@ const Work_08_TitleInference: React.FC = () => {
           setImagePreview(URL.createObjectURL(file));
           setIsExtractingText(true);
           try {
-            const ocrText = await imageToTextWithOpenAIVision(file);
+            const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+            const base64 = await fileToBase64(file);
+            const ocrText = await extractTextFromImage(base64);
             setInputText(ocrText);
             setTimeout(() => {
               if (textAreaRef.current) {
@@ -643,45 +658,11 @@ const Work_08_TitleInference: React.FC = () => {
     }
   };
 
-  async function imageToTextWithOpenAIVision(imageFile: File): Promise<string> {
-    const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-    const base64 = await fileToBase64(imageFile);
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
-    const prompt = `영어문제로 사용되는 본문이야.
-이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
-글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
-본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 
-원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 
-영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'user', content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: base64 } }
-            ]
-          }
-        ],
-        max_tokens: 2048
-      })
-    });
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
-  }
+  /*
+  // imageToTextWithOpenAIVision 제거됨 (common.ts extractTextFromImage 사용)
+  */
 
   async function generateTitleQuizWithAI(passage: string): Promise<TitleQuiz> {
-    const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문을 읽고, 글의 주제의식에 가장 적합한 제목(title) 1개를 선정해.
 
 요구사항:
@@ -705,18 +686,11 @@ const Work_08_TitleInference: React.FC = () => {
 ${passage}
 
 중요: optionTranslations 배열에는 반드시 5개의 한글 해석이 순서대로 들어가야 합니다. 각 옵션의 제목을 한국어로 자연스럽게 번역해주세요.`;
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2000,
-        temperature: 0.7
-      })
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 2000,
+      temperature: 0.7
     });
     const data = await response.json();
     const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
@@ -826,7 +800,14 @@ ${passage}
         if (!inputText.trim()) throw new Error('영어 본문을 입력해주세요.');
         passage = inputText.trim();
       } else if (inputMode === 'image' && imageFile) {
-        passage = await imageToTextWithOpenAIVision(imageFile);
+        const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+        const base64 = await fileToBase64(imageFile);
+        passage = await extractTextFromImage(base64);
       } else if (inputMode === 'capture') {
         // 캡처 이미지에서 추출된 텍스트가 수정되었을 수 있으므로 inputText 사용
         if (!inputText.trim()) throw new Error('영어 본문을 입력해주세요.');

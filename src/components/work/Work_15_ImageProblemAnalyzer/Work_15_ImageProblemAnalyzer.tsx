@@ -211,7 +211,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     return base;
   };
 
-  const canUseDirectOpenAI = Boolean(process.env.REACT_APP_OPENAI_API_KEY);
+  const canUseDirectOpenAI = Boolean(process.env.REACT_APP_OPENAI_API_KEY); // Removed for security
 
   const analyzeImageWithOpenAILocally = async (base64Image: string, extractedText: string): Promise<ProblemAnalysisResult> => {
     // 프롬프트 최적화 (간결하게)

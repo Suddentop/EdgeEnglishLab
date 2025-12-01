@@ -30,78 +30,53 @@ export async function generateWork08Quiz(passage: string): Promise<TitleQuiz> {
   console.log('📝 입력 텍스트 길이:', passage.length);
 
   try {
-    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 제목 추론 문제를 만들어주세요.
+    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 수준**의 **고난도 제목 추론 문제**를 만들어주세요.
 
-**🎯 수능 제목 추론 문제의 특징:**
-- 실제 수능에서는 본문 전체의 핵심 내용, 저자의 의도, 글의 목적을 종합적으로 이해해야 적절한 제목을 선택할 수 있습니다.
-- 단순히 본문의 키워드를 나열한 제목이 아니라, **본문의 핵심 메시지를 함축적으로 표현하는 제목**을 선택해야 합니다.
-- 수능 수준의 제목은 본문의 표면적 내용이 아닌, **저자의 관점, 글의 목적, 논리적 결론**을 반영합니다.
-- 중학교 수준의 단순한 제목이 아닌, 고등학교 수준의 추상적이고 함축적인 제목을 다룹니다.
+**🎯 핵심 요구사항:**
+1. **정답의 명확성:** 5개의 선택지 중 정답은 **오직 하나**여야 하며, 본문의 핵심 내용을 가장 **함축적이고 효과적**으로 표현한 제목이어야 합니다.
+2. **제목의 특성:**
+   - 단순한 요약문이 아닌, 독자의 호기심을 자극하거나 글의 핵심을 꿰뚫는 **Short Phrase (구)** 형태나 **질문** 형태를 사용하세요.
+   - **비유적 표현(Metaphor)**이나 **상징적 어휘**를 적절히 사용하여 고난도 문제를 만드세요.
+3. **매력적인 오답 (Distractors):** 정답과 비슷해 보이지만 논리적으로 명확히 틀린 함정을 만드세요.
+   - **Too Broad:** "Science and Life" 처럼 너무 막연하고 포괄적인 제목.
+   - **Too Narrow:** 본문의 예시나 일부분에만 초점을 맞춘 제목.
+   - **Misleading:** 본문의 키워드를 사용했지만 저자의 의도와 반대되거나 다른 방향의 제목.
+   - **Vague:** 그럴듯해 보이지만 본문의 핵심 메시지와는 거리가 먼 모호한 제목.
+4. **난이도 상향:**
+   - 선택지의 어휘 수준을 **수능 1등급 수준**으로 높이세요.
+   - 정답이 너무 뻔하게 드러나지 않도록 모든 선택지의 길이와 문법 구조를 비슷하게 맞추세요.
 
-**⚠️ 절대 피해야 할 제목:**
-- ❌ 본문의 첫 문장이나 마지막 문장을 그대로 사용한 제목
-- ❌ 본문의 키워드만 나열한 제목 (예: "Technology, Education, Future")
-- ❌ 너무 구체적이고 단순한 제목 (예: "How to Make Coffee")
-- ❌ 본문 내용과 직접적으로 관련 없는 일반적인 제목
-- ❌ 본문의 부차적 내용만 다룬 제목
+**✅ 단계별 작업:**
+1단계: 본문의 핵심 메시지와 저자의 의도를 파악합니다.
+2단계: 이를 가장 잘 표현하는 **함축적이고 세련된 영어 제목(정답)**을 1개 작성합니다.
+3단계: 위 '매력적인 오답' 패턴을 활용하여 오답 4개를 작성합니다. (정답과 의미적 거리는 멀되, 형태적 유사성은 가깝게)
+4단계: 5개 선택지를 배열에 배치합니다. (정답 위치는 랜덤)
+5단계: 본문과 선택지를 정확하고 자연스러운 한국어로 번역합니다.
 
-**✅ 수능 수준의 제목 선정 기준:**
-1. **본문 전체를 정확히 분석:**
-   - 본문의 모든 문단을 읽고 각 문단의 역할을 파악하세요
-   - 저자의 주장, 근거, 결론을 명확히 구분하세요
-   - 글의 논리적 구조와 핵심 메시지를 파악하세요
-
-2. **함축적이고 포괄적인 제목 선택:**
-   - 본문의 구체적 내용을 넘어서는 **추상적 개념**을 다루는 제목
-   - 예: "The Paradox of Modern Technology" (현대 기술의 역설)
-   - 예: "Rethinking Education in the Digital Age" (디지털 시대의 교육 재고)
-   - 예: "Sustainable Development: Challenges and Solutions" (지속가능한 발전: 도전과 해결책)
-   - 수능 기출 스타일: 명확하고 간결하며, 본문의 핵심을 함축적으로 표현
-
-3. **저자의 의도와 목적을 반영:**
-   - 단순 정보 전달이 아닌, 저자가 독자에게 전달하려는 **핵심 메시지**를 담은 제목
-   - 저자의 관점, 태도, 제안을 포함하는 제목
-
-4. **정답 제목 생성:**
-   - 본문 전체를 종합적으로 분석한 후, 가장 적절한 제목을 생성
-   - 제목은 보통 명사구, 동명사구, 또는 짧은 문장 형태
-   - 수능 기출 문제 스타일: 간결하고 함축적이며, 본문의 핵심을 정확히 담고 있어야 함
-
-5. **오답 제목 생성 (수능 스타일):**
-   - 본문의 일부 내용만 반영한 제목 (부분적 이해)
-   - 본문과 관련은 있지만 너무 구체적이거나 좁은 제목
-   - 본문과 관련은 있지만 저자의 의도와 다른 제목
-   - 본문의 부차적 내용을 중심으로 한 제목
-   - 본문의 표면적 내용만 다룬 제목
-   - 본문의 키워드만 나열한 제목
-
-요구사항:
-1. 정답 제목(문장/구) + 오답(비슷한 길이의 제목 4개, 의미는 다름) 총 5개를 생성
-2. 정답의 위치는 1~5번 중 랜덤
-3. 본문 해석도 함께 제공
-4. 각 옵션(1번~5번)에 대한 한글 해석을 반드시 제공
-
-아래 JSON 형식으로 정확히 응답해줘:
-
+아래 JSON 형식으로 응답:
 {
-  "passage": "영어 본문 내용",
-  "options": ["첫번째 옵션 제목", "두번째 옵션 제목", "세번째 옵션 제목", "네번째 옵션 제목", "다섯번째 옵션 제목"],
-  "answerIndex": 2,
-  "translation": "본문의 한글 해석",
-  "answerTranslation": "정답 제목의 한글 해석",
-  "optionTranslations": ["첫번째 옵션의 한글 해석", "두번째 옵션의 한글 해석", "세번째 옵션의 한글 해석", "네번째 옵션의 한글 해석", "다섯번째 옵션의 한글 해석"]
+  "passage": "원본 영어 본문",
+  "options": ["선택지1", "선택지2", "선택지3", "선택지4", "선택지5"],
+  "answerIndex": 0,
+  "translation": "본문 전체의 한글 해석",
+  "answerTranslation": "정답 선택지의 정확한 한글 해석",
+  "optionTranslations": ["선택지1 해석", "선택지2 해석", "선택지3 해석", "선택지4 해석", "선택지5 해석"]
 }
 
 본문:
 ${passage}
 
-중요: optionTranslations 배열에는 반드시 5개의 한글 해석이 순서대로 들어가야 합니다. 각 옵션의 제목을 한국어로 자연스럽게 번역해주세요.`;
+중요 규칙:
+- answerIndex는 0~4 사이의 숫자 (배열 인덱스)
+- answerTranslation은 반드시 options[answerIndex]의 정확한 번역
+- optionTranslations는 모든 선택지의 해석 배열 (options와 동일한 순서)
+- 모든 해석이 정확히 일치해야 함`;
 
     const response = await callOpenAI({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 2000,
-      temperature: 0.7
+      temperature: 0.5
     });
 
     if (!response.ok) {
@@ -161,6 +136,125 @@ ${passage}
 
   } catch (error) {
     console.error('❌ Work_08 문제 생성 실패:', error);
+    throw error;
+  }
+}
+
+/**
+ * 유형#08: 제목 추론 문제 생성 (재시도 버전)
+ * @param passage - 영어 본문
+ * @param retryCount - 재시도 횟수
+ * @returns 제목 추론 문제 데이터
+ */
+export async function generateWork08QuizWithRetry(passage: string, retryCount: number = 1): Promise<TitleQuiz> {
+  console.log(`🔍 Work_08 문제 생성 시작 (재시도 ${retryCount}번째)...`);
+  console.log('📝 입력 텍스트 길이:', passage.length);
+
+  try {
+    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 3학년 및 수능(CSAT) 최고난도 수준**의 **제목 추론 문제**를 다시 만들어주세요.
+
+**🚨 긴급 수정 요청 (이전 시도 실패 원인):**
+- 이전 결과에서 정답 제목과 오답 제목의 구분이 모호했습니다.
+- 오답이 정답과 너무 비슷하거나, 정답이 너무 평이했습니다.
+
+**🎯 재시도 핵심 목표:**
+1. **정답의 유일성:** 정답 제목은 본문의 전체 내용을 관통하는 **가장 핵심적이고 함축적인(Implicative)** 표현이어야 합니다.
+2. **오답의 명확성:** 오답은 반드시 **"틀린 이유"**가 명확해야 합니다.
+   - **Too Broad:** 너무 광범위한 제목
+   - **Too Narrow:** 지엽적인 제목
+   - **Contradictory:** 내용 불일치
+   - **Keyword Trap:** 키워드만 나열한 함정
+3. **고급 표현:** 제목에 **비유(Metaphor), 언어유희(Pun), 의문문** 등을 활용하여 수준 높은 문제를 만드세요.
+
+**✅ 단계별 작업:**
+1단계: 본문의 주제를 한 문장으로 정의하고, 이를 가장 매력적인 제목으로 다듬습니다. (정답)
+2단계: 위 '오답 함정 패턴'을 적용하여 오답 4개를 작성합니다. 정답과 **형태는 비슷하지만 내용은 명확히 달라야** 합니다.
+3단계: 5개 선택지를 배열에 배치합니다. (정답 위치는 랜덤)
+4단계: 각 선택지와 본문을 정확히 번역합니다.
+
+아래 JSON 형식으로 응답:
+{
+  "passage": "원본 영어 본문",
+  "options": ["선택지1", "선택지2", "선택지3", "선택지4", "선택지5"],
+  "answerIndex": 0,
+  "translation": "본문 전체의 한글 해석",
+  "answerTranslation": "정답 선택지의 정확한 한글 해석",
+  "optionTranslations": ["선택지1 해석", "선택지2 해석", "선택지3 해석", "선택지4 해석", "선택지5 해석"]
+}
+
+본문:
+${passage}
+
+중요 규칙:
+- answerIndex는 0~4 사이의 숫자 (배열 인덱스)
+- answerTranslation은 반드시 options[answerIndex]의 정확한 번역
+- optionTranslations는 모든 선택지의 해석 배열 (options와 동일한 순서)
+- 재시도 ${retryCount}번째입니다. 이번에는 반드시 정답과 오답이 명확히 구분되어야 합니다.`;
+
+    const response = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 2000,
+      temperature: 0.3 // 재시도 시 더 낮은 temperature 사용
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
+    
+    let result: any;
+    try {
+      result = JSON.parse(jsonMatch[0]);
+    } catch {
+      throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
+    }
+
+    // 필수 필드 검증
+    if (!result.passage || !result.options || typeof result.answerIndex !== 'number' || !result.translation) {
+      throw new Error('AI 응답에 필수 필드가 누락되었습니다.');
+    }
+
+    // answerTranslation이 없으면 빈 문자열로 보완
+    if (!result.answerTranslation) {
+      result.answerTranslation = '';
+    }
+
+    // optionTranslations가 없으면 빈 배열로 보완
+    if (!result.optionTranslations || !Array.isArray(result.optionTranslations)) {
+      result.optionTranslations = result.options.map(() => '');
+    }
+
+    // answerIndex 범위 검증
+    if (result.answerIndex < 0 || result.answerIndex > 4) {
+      throw new Error('answerIndex는 0~4 범위여야 합니다.');
+    }
+
+    // options 배열 길이 검증
+    if (result.options.length !== 5) {
+      throw new Error('options는 정확히 5개의 선택지여야 합니다.');
+    }
+
+    // optionTranslations 배열 길이 검증 및 보완
+    if (result.optionTranslations.length !== 5) {
+      // 부족한 경우 빈 문자열로 채움
+      while (result.optionTranslations.length < 5) {
+        result.optionTranslations.push('');
+      }
+      // 초과하는 경우 자름
+      if (result.optionTranslations.length > 5) {
+        result.optionTranslations = result.optionTranslations.slice(0, 5);
+      }
+    }
+
+    console.log('✅ Work_08 문제 생성 완료 (재시도):', result);
+    return result;
+
+  } catch (error) {
+    console.error(`❌ Work_08 문제 생성 실패 (재시도 ${retryCount}번째):`, error);
     throw error;
   }
 }

@@ -10,9 +10,6 @@ if (process.env.NODE_ENV === 'development') {
   if (!process.env.REACT_APP_FIREBASE_API_KEY) {
     console.warn('⚠️ Firebase API Key가 설정되지 않았습니다.');
   }
-  if (!process.env.REACT_APP_OPENAI_API_KEY) {
-    console.warn('⚠️ OpenAI API Key가 설정되지 않았습니다.');
-  }
 }
 
 const firebaseConfig = {

@@ -10,11 +10,11 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { 
   generateBlankQuizWithAI, 
   imageToTextWithOpenAIVision, 
-  translateToKorean, 
   countBlanks, 
   createAnswerText,
   type BlankQuizData 
 } from '../../../services/work14Service';
+import { translateToKorean } from '../../../services/common';
 import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 import '../../../styles/PrintFormat.css';
 
@@ -785,7 +785,7 @@ const Work_14_FillSentence: React.FC = () => {
                 <div style={{color: '#1976d2', marginBottom: '0.5rem'}}>
                   정답 문장들:
                 </div>
-                {quiz.selectedSentences.map((sentence, idx) => {
+                {quiz.selectedSentences.map((sentence: string, idx: number) => {
                   const alphabetLabel = String.fromCharCode(65 + idx); // A=65, B=66, C=67...
                   // 정답 문장에서 빈칸 형식 제거 ( ( A ___ ) 또는 (___A___) 형식)
                   let cleanSentence = sentence || '';

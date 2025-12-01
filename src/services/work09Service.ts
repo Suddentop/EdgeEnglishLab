@@ -78,16 +78,26 @@ export async function generateWork09Quiz(passage: string): Promise<GrammarQuiz> 
  * @returns 선택된 단어 배열
  */
 async function selectWords(passage: string): Promise<string[]> {
-  const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 어법 오류 찾기 문제를 만들어주세요. 어법(문법) 변형이 가능한 서로 다른 "단어" 5개만 선정하되, **수능에서 출제될 수 있는 어법 유형**을 선택하세요.
+  const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 어법 오류 찾기 문제를 위한 단어 5개를 선정해주세요.
 
-중요한 규칙:
-- 반드시 "단어"만 선정하세요. 여러 단어로 이루어진 구(phrase)는 절대 선정하지 마세요.
-- 동일한 단어를 두 번 이상 선택하지 마세요.
-- 반드시 각기 다른 문장에서 1개씩만 단어를 선정하세요. (즉, 한 문장에 2개 이상의 단어를 선택하지 마세요.)
-- 어법(문법) 변형이 가능한 단어만 선정하세요 (동사, 명사, 형용사, 부사 등).
+**🎯 핵심 선정 기준 (수능 1등급 수준):**
+1. **복잡한 구문 구조:** 단순한 단문이 아닌, 관계사절, 분사구문, 도치 구문, 가정법 등 **복잡한 문장 구조 내에서 문법적 판단이 필요한 단어**를 우선 선정하세요.
+2. **핵심 문법 요소:**
+   - **준동사:** 부정사(to-v), 동명사(v-ing), 분사(v-ing/p.p)의 구별
+   - **동사:** 수 일치(주어가 멀리 떨어져 있는 경우), 태(능동/수동), 시제(완료시제 등)
+   - **관계사:** 관계대명사 vs 관계부사, that vs what, 계속적 용법 등
+   - **접속사:** 병렬 구조, 전치사 vs 접속사 구별
+   - **형용사/부사:** 보어 자리의 형용사 vs 수식어 자리의 부사
+3. **단순 암기 지양:** 단순한 숙어 암기나 철자 문제는 배제하고, **문맥과 구조를 파악해야만 풀 수 있는 단어**를 선택하세요.
+
+**⚠️ 규칙:**
+- 반드시 "단어" 단위로 선정하세요. (구/절 단위 X)
+- 동일한 단어 중복 선정 금지.
+- 각기 다른 문장에서 1개씩만 선정하세요.
+- 고유명사나 단순 명사는 피하고, 문법적 기능이 있는 단어를 선택하세요.
 
 결과는 아래 JSON 배열 형식으로만 반환하세요:
-["단어1", "단어2", "단어3", "단어4", "단어5"]
+["word1", "word2", "word3", "word4", "word5"]
 
 본문:
 ${passage}`;
@@ -148,31 +158,29 @@ async function transformWord(words: string[]): Promise<{
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     console.log(`어법 변형 시도 ${attempt}/${maxRetries}...`);
     
-    const prompt = `You must transform exactly ONE word from the list to create a grammar error for an English quiz.
+    const prompt = `You must transform exactly ONE word from the list to create a **High-Level Grammar Error** suitable for the Korean CSAT (Suneung).
 
 Original words: ${JSON.stringify(words)}
 Grammar types: ${grammarTypes.join(', ')}
 
-CRITICAL REQUIREMENTS:
-1. Choose exactly ONE word randomly from the 5 words
-2. Transform that word incorrectly according to one grammar rule
-3. Keep the other 4 words exactly the same
-4. The transformed word must be grammatically WRONG
-
-Examples of transformations:
-- "individual" → "individuals" (wrong number)
-- "violent" → "violently" (wrong part of speech)
-- "go" → "goes" (wrong subject-verb agreement)
-- "beautiful" → "beauty" (wrong part of speech)
-- "can" → "could" (wrong modal verb)
+**🎯 Critical Requirements for CSAT Level:**
+1. **Sophisticated Error:** Do NOT create simple errors (e.g., spelling, simple pluralization). Create errors that require analyzing the sentence structure.
+2. **Contextual Logic:** The error should look grammatically plausible at a glance but be structurally or syntactically incorrect in the specific context.
+   - *Example (Participle):* Change a correct past participle (p.p.) to present participle (v-ing) where the passive voice is required.
+   - *Example (Subject-Verb):* Change the verb number when the subject is far away or modified by a long phrase.
+   - *Example (Relative Pronoun):* Change 'which' to 'where' or 'that' to 'what' in a tricky relative clause.
+   - *Example (Adjective/Adverb):* Change an adjective complement to an adverb.
+3. **Selection:** Randomly choose ONE word to transform. Keep the other 4 words exactly the same.
 
 Return ONLY this JSON format:
 {
-  "transformedWords": ["word1", "word2", "TRANSFORMED_WORD", "word4", "word5"],
+  "transformedWords": ["word1", "word2", "actuality", "word4", "word5"],
   "answerIndex": 2,
-  "original": "original_word_before_transformation",
-  "grammarType": "grammar_rule_used"
-}`;
+  "original": "actually",
+  "grammarType": "Adverb -> Noun Error"
+}
+
+**⚠️ IMPORTANT:** In the "transformedWords" array, replace the chosen word with the **ACTUAL INCORRECT WORD** you created. Do NOT use the placeholder text "TRANSFORMED_WORD". For example, if you changed "go" to "goes", put "goes" in the array.`;
 
     const response = await callOpenAI({
       model: 'gpt-4o',

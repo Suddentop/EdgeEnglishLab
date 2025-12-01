@@ -41,7 +41,9 @@ export async function callOpenAI(requestBody: any): Promise<Response> {
   
   // 프록시 응답에서 401 에러인 경우 상세 정보 제공
   if (response.status === 401) {
-    const errorText = await response.text().catch(() => '');
+    // 응답 본문을 읽기 전에 복제하여 원본 응답의 본문을 보존 (body stream already read 오류 방지)
+    const clone = response.clone();
+    const errorText = await clone.text().catch(() => '');
     let errorMessage = 'OpenAI API 인증 실패 (401)';
     
     try {
@@ -70,7 +72,9 @@ export async function translateToKorean(englishText: string): Promise<string> {
   try {
     console.log('🌐 번역 시작:', englishText.substring(0, 50) + '...');
 
-    const prompt = `다음 영어 본문을 자연스러운 한국어로 번역해주세요. 번역만 출력하고 다른 설명은 하지 마세요.
+    const prompt = `다음 영어 본문을 대한민국 수능(CSAT) 영어 독해 지문의 고3 수준 해설에 적합한 학술적이고 정교한 한국어로 번역해주세요.
+문맥을 완벽하게 반영하여 매끄럽고 품격 있는 문장으로 번역해야 합니다.
+번역 결과만 출력하고 설명은 포함하지 마세요.
 
 영어 본문:
 ${englishText}`;
