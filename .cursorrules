@@ -1,43 +1,45 @@
-# EngQuiz 프로젝트 AI 참고 규칙
+# EngQuiz 프로젝트 AI 규칙 (.cursorrules)
 
-## 프로젝트 개요
-- 영어 퀴즈 생성 및 관리 웹 애플리케이션
-- React + TypeScript + Firebase 기반
-- 전화번호 기반 회원가입/로그인 시스템
+이 파일은 EngQuiz 프로젝트 개발 시 AI 에이전트가 따라야 할 핵심 규칙과 가이드라인을 정의합니다.
 
-## 인증 시스템
-- 카카오/구글 로그인 제거됨
-- 전화번호를 로그인 ID로 사용
-- Firebase Authentication + Firestore 사용
-- 전화번호는 `{phoneNumber}@engquiz.local` 형식으로 이메일 변환하여 저장
+## 1. 프로젝트 개요 및 기술 스택
+- **프로젝트**: EngQuiz (영어 퀴즈 생성 및 관리 웹 애플리케이션)
+- **기술 스택**: React + TypeScript + Firebase (Auth, Firestore)
+- **인증**: 전화번호 로그인 (Firebase Auth, 전화번호를 `{phone}@engquiz.local` 이메일 형식으로 변환하여 사용)
+- **배포**: Firebase Hosting 미사용. `npm run build` 후 정적 산출물 별도 배포 (Windows PowerShell 사용)
 
-## 파일 구조 규칙
-- Work 컴포넌트: `Work_(유형번호)_(문제출제대표명).tsx` 형식
-- 각 TSX 컴포넌트는 동일한 이름의 CSS 파일과 쌍으로 구성
-- 컴포넌트별 스타일 격리 유지
+## 2. 코드 작성 원칙
+- **언어**: TypeScript 사용 필수 (엄격한 타입 체크 지향)
+- **스타일**: 
+  - 가독성 우선, 함수형 컴포넌트 + Hooks 사용
+  - DRY(Don't Repeat Yourself) 원칙 준수 (중복 코드 제거)
+  - 컴포넌트 스타일은 CSS 파일 분리 원칙 준수 (`Component.tsx` + `Component.css`)
+- **안전성**:
+  - `any` 타입 사용 지양, 명시적 인터페이스/타입 정의
+  - 비동기 작업(`async/await`) 시 `try-catch` 에러 처리 필수
+  - 사용자 피드백(로딩, 성공, 에러 상태) UI 제공
 
-## 코딩 규칙
-- DRY 원칙 준수 (중복 코드 방지)
-- 가독성 우선, 성능 고려
-- TypeScript 타입 안전성 확보
-- 에러 처리 및 사용자 피드백 제공
+## 3. 파일 및 폴더 구조 규칙
+- **문제 유형별 컴포넌트**: `src/components/work/Work_(유형번호)_(이름)/` 폴더에 위치
+  - 예: `Work_02_ReadingComprehension.tsx`, `Work_02_ReadingComprehension.css`
+- **패키지 컴포넌트**: `src/components/work/Package_(번호)_(이름)/` 폴더에 위치
+- **공통 함수**: 
+  - `src/services/common.ts`: OpenAI API 호출, 번역 등 공통 로직
+  - `src/utils/`: 순수 유틸리티 함수
 
-## Firebase 설정
-- Authentication: 이메일/비밀번호 방식 (전화번호를 이메일로 변환)
-- Firestore: 사용자 정보 저장 (users 컬렉션)
-- Functions: 기본 구조만 유지 (카카오 관련 함수 제거됨)
+## 4. 문제 생성 및 AI 관련 규칙
+- **프롬프트 엔지니어링**:
+  - **고3 수능(CSAT) 수준 유지**: 번역, 문제 생성 시 "Grade 12", "CSAT", "학술적(academic)", "정교한(sophisticated)" 등의 키워드를 프롬프트에 포함하여 높은 수준의 콘텐츠 생성 유도
+  - **JSON 포맷 준수**: AI 응답은 항상 파싱 가능한 JSON 형식을 요청하고, 코드 블록(```json) 제거 로직 포함
+- **API 호출**:
+  - `callOpenAI` 헬퍼 함수 사용 (프록시 서버 경유)
+  - 직접적인 API Key 노출 금지
 
-## 환경 변수
-- Firebase 설정만 유지
-- 카카오 관련 환경 변수 제거됨
+## 5. 운영 및 배포 규칙
+- **터미널**: Windows PowerShell 기준 명령어 사용
+- **백업**: 주요 변경 사항 이후 `git add .`, `git commit`, `git push` 수행 (사용자 요청 시)
+- **응답 언어**: 한국어(Korean)로 응답
 
-## 배포
-- Firebase 호스팅은 사용하지 않음 (정적 사이트 배포)
-- 프로젝트 루트: `npm run build` 로 정적산출물 생성 (CRA 기반)
-- 정적 서버 또는 CDN에 `build/` 출력물을 업로드
-
-## 운영 시스템 규칙 (이 저장소에서의 AI 동작 규칙)
-- 명령어는 Windows PowerShell 기준으로 작성
-- 코드 변경 전후로 타입 안전성 및 빌드 상태 확인
-- 복잡한 변경은 원자적 커밋 단위로 분리
-- 사용자 제공 규칙을 우선 준수하며 설명은 간결하게 유지 
+## 6. 최근 변경/이슈 사항 (메모리)
+- **패키지#02 해석 수준 상향**: 단순 번역이 아닌 수능 해설지 스타일의 고품격 한국어 해석 적용됨 (2024-12-01)
+- **패키지#02 인쇄 버그 수정**: 과거 특정 유형이 인쇄 페이지에서 누락되는 문제가 있었으므로, 인쇄 기능 수정 시 주의 필요
