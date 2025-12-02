@@ -82,7 +82,8 @@ export const deductUserPoints = async (
   workTypeId: string, 
   workTypeName: string,
   userName: string,
-  userNickname: string
+  userNickname: string,
+  customPoints?: number
 ): Promise<{ success: boolean; deductedPoints: number; remainingPoints: number; error?: string }> => {
   try {
     // 유형별 포인트 설정 가져오기
@@ -93,7 +94,8 @@ export const deductUserPoints = async (
       throw new Error('유형별 포인트 설정을 찾을 수 없습니다.');
     }
     
-    const pointsToDeduct = workType.points;
+    // customPoints가 제공되면 그것을 사용하고, 아니면 설정된 포인트 사용
+    const pointsToDeduct = customPoints !== undefined ? customPoints : workType.points;
     
     // 사용자 문서 참조
     const userRef = doc(db, 'users', userId);

@@ -286,7 +286,7 @@ export const normalizeQuizItemForPrint = (
 
       // 유형#01의 경우 choices는 배열의 배열이므로 "→"로 join
       const choices = quizData.choices || [];
-      const options = choices.map((choice: any, idx: number) => {
+      const allOptions = choices.map((choice: any, idx: number) => {
         const choiceArray = Array.isArray(choice) ? choice : [];
         const choiceText = choiceArray.length > 0 
           ? choiceArray.join(' → ')
@@ -297,9 +297,32 @@ export const normalizeQuizItemForPrint = (
           isCorrect: isAnswerMode ? quizData.answerIndex === idx : undefined
         };
       });
+      
+      // 정답 모드일 때: 정답 항목만 필터링
+      const options = isAnswerMode 
+        ? allOptions.filter((opt: PrintOptionItem, idx: number) => quizData.answerIndex === idx)
+        : allOptions;
+      
       addOptionsSection(options);
 
-      addTranslationSection(getTranslatedText(quizItem, quizData));
+      // 정답 모드일 때: 4지선다 하단에 영어 본문 해석 추가
+      if (isAnswerMode) {
+        const translationText = getTranslatedText(quizItem, quizData);
+        if (translationText && translationText.trim()) {
+          // \n\n으로 구분된 단락별 번역을 하나의 문단으로 합치기 (줄바꿈 제거)
+          const mergedTranslation = translationText
+            .split('\n\n')
+            .map(para => para.trim())
+            .filter(para => para.length > 0)
+            .join(' '); // 공백으로 연결하여 하나의 문단으로 만듦
+          
+          pushSection({
+            type: 'translation',
+            key: `translation-01${chunkMeta ? `-chunk-${chunkMeta.chunkIndex}` : ''}`,
+            text: mergedTranslation
+          });
+        }
+      }
       break;
     }
     case '02': {

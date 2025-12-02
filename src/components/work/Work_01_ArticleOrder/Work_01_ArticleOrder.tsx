@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { createQuiz } from '../../../utils/textProcessor';
+import ReactDOM from 'react-dom/client';
+import { generateWork01Quiz } from '../../../services/work01Service';
 import { Quiz } from '../../../types/types';
 import { isAIServiceAvailable } from '../../../services/aiParagraphService';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
@@ -7,21 +8,29 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
-import PrintHeader from '../../common/PrintHeader';
-import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
-// import A4PageTemplate from '../../common/A4PageTemplate';
+import PrintFormatWork01New from './PrintFormatWork01New';
 import './Work_01_ArticleOrder.css';
 import '../../../styles/PrintFormat.css';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../../firebase/config';
 import { callOpenAI } from '../../../services/common';
 
-interface Work_11_ArticleOrderProps {
+interface Work_01_ArticleOrderProps {
   onQuizGenerated?: (quiz: Quiz) => void;
 }
 
 type InputType = 'clipboard' | 'file' | 'text';
-type PrintMode = 'none' | 'no-answer' | 'with-answer';
+
+// 입력 아이템 인터페이스 정의
+interface InputItem {
+  id: string;
+  inputType: InputType;
+  text: string;
+  pastedImageUrl: string | null;
+  isExpanded: boolean;
+  isExtracting: boolean;
+  error: string;
+}
 
 // 파일 → base64 변환
 function fileToBase64(file: File): Promise<string> {
@@ -41,12 +50,7 @@ function parseDataUrl(dataUrl: string): { mimeType: string; base64: string } {
   }
   return { mimeType: match[1], base64: match[2] };
 }
-// UTF-8 safe base64 encoder
-function base64EncodeUtf8(obj: any): string {
-  const json = typeof obj === 'string' ? obj : JSON.stringify(obj);
-  // encodeURIComponent handles UTF-8, unescape converts percent-encoding back to raw bytes for btoa
-  return btoa(unescape(encodeURIComponent(json)));
-}
+
 // OpenAI Vision API 호출 (프록시만 사용)
 async function callOpenAIVisionAPI(imageBase64: string, prompt: string): Promise<string> {
   const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
@@ -102,36 +106,19 @@ function cleanOpenAIVisionResult(text: string): string {
   return text.replace(/^(Sure!|Here is|Here are|Here's|Here's)[^\n:]*[:：]?\s*/i, '').trim();
 }
 
-// OpenAI API를 사용하여 영어를 한글로 번역
-async function translateToKorean(englishText: string, _apiKey?: string): Promise<string> {
-  // 공통 번역 함수 사용 (프록시 자동 지원)
-  const { translateToKorean: translateToKoreanCommon } = await import('../../../services/common');
-  return await translateToKoreanCommon(englishText);
-}
-
-const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGenerated }) => {
-  const [text, setText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isExtractingText, setIsExtractingText] = useState(false);
-  const [error, setError] = useState('');
-  const [useAI, setUseAI] = useState(false);
-  const [inputType, setInputType] = useState<InputType>('text');
-  const [tooltip, setTooltip] = useState('');
-  const [pastedImageUrl, setPastedImageUrl] = useState<string | null>(null);
-  const [isVisionLoading, setIsVisionLoading] = useState(false);
-  const aiAvailable = isAIServiceAvailable();
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isPasteFocused, setIsPasteFocused] = useState(false);
-  const [showScreenshotHelp, setShowScreenshotHelp] = useState(false);
-  const [printMode, setPrintMode] = useState<PrintMode>('none');
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [translatedText, setTranslatedText] = useState<string>('');
-  const [needsSecondPage, setNeedsSecondPage] = useState(false);
-  const [needsAnswerSecondPage, setNeedsAnswerSecondPage] = useState(false);
-  const [needsAnswerThirdPage, setNeedsAnswerThirdPage] = useState(false);
-  const [needsAnswerPage2Split, setNeedsAnswerPage2Split] = useState(false);
+const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGenerated }) => {
+  // 상태 관리
+  const [items, setItems] = useState<InputItem[]>([
+    { id: '1', inputType: 'clipboard', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '' }
+  ]);
   
+  const [isLoading, setIsLoading] = useState(false);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]); // 생성된 퀴즈 배열
+  const [useAI, setUseAI] = useState(false);
+  const aiAvailable = isAIServiceAvailable();
+  const [showScreenshotHelp, setShowScreenshotHelp] = useState(false);
+  
+
   // 포인트 관련 상태
   const { userData, loading } = useAuth();
   const [showPointModal, setShowPointModal] = useState(false);
@@ -150,1057 +137,532 @@ const Work_11_ArticleOrder: React.FC<Work_11_ArticleOrderProps> = ({ onQuizGener
           ]);
           
           setWorkTypePoints(workTypePointsData);
-          
           const workType = workTypePointsData.find((wt: any) => wt.id === '1');
           if (workType) {
             setPointsToDeduct(workType.points);
           }
-          
           setUserCurrentPoints(userPoints);
         } catch (error) {
           console.error('포인트 초기화 오류:', error);
         }
       }
     };
-    
     if (!loading) {
       initializePoints();
     }
   }, [loading, userData]);
 
-  // 본문 글자 수 기반 페이지 분할 결정
-  const checkContentLength = () => {
-    if (!quiz) return;
-    
-    // 본문 내용의 총 글자 수 계산 (공백 포함)
-    const totalContentLength = quiz.shuffledParagraphs.reduce((total, paragraph) => {
-      return total + paragraph.content.length;
-    }, 0);
-    
-    // 2,000자 미만이면 1페이지, 2,000자 이상이면 2페이지
-    setNeedsSecondPage(totalContentLength >= 2000);
+  // 아이템 관리 함수들
+  const addItem = () => {
+    const newItem: InputItem = {
+      id: Date.now().toString(),
+      inputType: 'clipboard',
+      text: '',
+      pastedImageUrl: null,
+      isExpanded: true,
+      isExtracting: false,
+      error: ''
+    };
+    // 기존 아이템들은 접고 새 아이템 추가
+    setItems(prev => prev.map(item => ({ ...item, isExpanded: false })).concat(newItem));
   };
 
-  // 정답 페이지용 2페이지 고정 구성 (본문+정답, 해석)
-  const checkAnswerContentLength = () => {
-    if (!quiz || !translatedText) return;
-    
-    // 2페이지 고정 구성으로 단순화
-    setNeedsAnswerSecondPage(true); // 항상 2페이지 (해석 페이지 포함)
-    setNeedsAnswerThirdPage(false); // 3페이지 구성 사용 안함
-    
-    console.log('📊 인쇄(정답) 2페이지 고정 구성:', {
-      page1: '본문 + 정답 + 선택지',
-      page2: '해석 (2,700자 기준 분할)'
-    });
-  };
-
-  // 해석 페이지 분할 결정 (2페이지 구성에서 해석 페이지 분할)
-  const checkAnswerPage2Split = () => {
-    if (!quiz || !translatedText) return;
-    
-    // 해석 페이지의 총 글자 수 계산 (영어 원문 + 한글 해석)
-    const correctOrder = quiz.choices[quiz.answerIndex];
-    const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-      ? quiz.shuffledParagraphs 
-      : (quiz.paragraphs || []);
-    
-    // 영어 원문 총 글자수
-    const totalEnglishLength = correctOrder.reduce((total, paragraphLabel) => {
-      const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-      return paragraph?.content ? total + paragraph.content.length : total;
-    }, 0);
-    
-    // 한글 해석 총 글자수
-    const totalTranslationLength = translatedText.length;
-    
-    // 해석 페이지 총 글자수 (영어 + 한글 + 레이아웃 여백 고려)
-    const totalInterpretationLength = totalEnglishLength + totalTranslationLength;
-    
-    // 해석 페이지 분할 로직 (2,700자 기준):
-    // - 2,700자 미만: 해석 1페이지 (A,B,C,D 모든 해석)
-    // - 2,700자 이상: 해석 2페이지 (A,B,C 해석 / D 해석)
-    setNeedsAnswerPage2Split(totalInterpretationLength >= 2700);
-    
-    console.log('📖 해석 페이지 분할 분석:', {
-      totalEnglishLength,
-      totalTranslationLength,
-      totalInterpretationLength,
-      needsSplit: totalInterpretationLength >= 2700,
-      splitStructure: totalInterpretationLength >= 2700 ? 'A,B,C / D 분할' : '통합 페이지'
-    });
-  };
-
-  // 퀴즈가 생성되면 내용 길이 확인
-  useEffect(() => {
-    if (quiz) {
-      checkContentLength();
-    }
-  }, [quiz]);
-
-  // 번역 텍스트가 변경되면 정답 페이지 길이 확인
-  useEffect(() => {
-    if (quiz && translatedText) {
-      checkAnswerContentLength();
-      checkAnswerPage2Split();
-    }
-  }, [quiz, translatedText]);
-
-  // 컴포넌트 마운트 시 스크롤 최상단
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  // 문제 생성 후 스크롤 최상단
-  useEffect(() => {
-    if (quiz) {
-      window.scrollTo(0, 0);
-    }
-  }, [quiz]);
-
-  // Vision API로 이미지에서 영어 본문 추출
-  const handleImageToText = async (image: File | Blob) => {
-    setIsVisionLoading(true);
-    setIsExtractingText(true);
-    setTooltip('');
-    setError('');
-    try {
-      if (image instanceof Blob) {
-        setPastedImageUrl(URL.createObjectURL(image));
-      }
-      const imageBase64 = await fileToBase64(image as File);
-      const resultText = await callOpenAIVisionAPI(imageBase64, visionPrompt);
-      setText(cleanOpenAIVisionResult(resultText));
-      setPastedImageUrl(null);
-      setTimeout(() => {
-        if (textAreaRef.current) {
-          textAreaRef.current.style.height = 'auto';
-          textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
-        }
-      }, 0);
-    } catch (err: any) {
-      setError('OpenAI Vision API 호출 실패: ' + (err?.message || err));
-      setPastedImageUrl(null);
-    } finally {
-      setIsVisionLoading(false);
-      setIsExtractingText(false);
-    }
-  };
-
-  // 붙여넣기(클립보드) 이미지 처리
-  const handlePaste = (e: React.ClipboardEvent) => {
-    // 텍스트 모드나 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
-    if (inputType !== 'clipboard') {
+  const removeItem = (id: string) => {
+    if (items.length === 1) {
+      // 마지막 하나는 삭제 대신 초기화
+      setItems([{ id: Date.now().toString(), inputType: 'clipboard', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '' }]);
       return;
     }
+    setItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateItem = (id: string, updates: Partial<InputItem>) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  const toggleExpand = (id: string) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, isExpanded: !item.isExpanded } : item));
+  };
+
+  // Vision API 핸들러 (개별 아이템용)
+  const handleImageToText = async (id: string, image: File | Blob) => {
+    updateItem(id, { isExtracting: true, error: '' });
     
-    // 클립보드 모드일 때만 이미지 처리
-    const items = e.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
-        const file = items[i].getAsFile();
+    try {
+      let previewUrl = null;
+      if (image instanceof Blob) {
+        previewUrl = URL.createObjectURL(image);
+        updateItem(id, { pastedImageUrl: previewUrl });
+      }
+      
+      const imageBase64 = await fileToBase64(image as File);
+      const resultText = await callOpenAIVisionAPI(imageBase64, visionPrompt);
+      
+      updateItem(id, { 
+        text: cleanOpenAIVisionResult(resultText),
+        pastedImageUrl: null, // 추출 후 이미지 제거 (선택사항)
+        isExtracting: false 
+      });
+    } catch (err: any) {
+      updateItem(id, { 
+        error: 'OpenAI Vision API 호출 실패: ' + (err?.message || err),
+        isExtracting: false,
+        pastedImageUrl: null
+      });
+    }
+  };
+
+  // 이벤트 핸들러들 (Wrapper)
+  const handlePaste = (id: string, e: React.ClipboardEvent) => {
+    const item = items.find(i => i.id === id);
+    if (!item || item.inputType !== 'clipboard') return;
+
+    const clipItems = e.clipboardData.items;
+    for (let i = 0; i < clipItems.length; i++) {
+      if (clipItems[i].type.indexOf('image') !== -1) {
+        const file = clipItems[i].getAsFile();
         if (file) {
-          handleImageToText(file);
-          // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
+          handleImageToText(id, file);
           e.preventDefault();
           return;
         }
       }
     }
-    
-    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
-    // setTooltip은 유지하지 않음 (사용자가 텍스트를 붙여넣으려는 것일 수 있음)
   };
 
-  // 파일 업로드 이미지 처리
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setTooltip('이미지 파일만 첨부 가능합니다.');
+      updateItem(id, { error: '이미지 파일만 첨부 가능합니다.' });
       return;
     }
-    handleImageToText(file);
-  };
-
-  // 입력방식 변경 시 상태 초기화
-  const handleInputTypeChange = (type: InputType) => {
-    setInputType(type);
-    setTooltip('');
-    setError('');
-    setText('');
-    if (type === 'file' && fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
-    if (textAreaRef.current) {
-      textAreaRef.current.style.height = 'auto';
-      textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
-    }
+    handleImageToText(id, file);
+    // 파일 인풋 초기화
+    e.target.value = '';
   };
 
   // 문제 생성 핸들러
   const handleGenerateQuiz = async () => {
-    if (!text.trim()) {
-      setError('본문을 입력해주세요.');
+    // 유효한 텍스트가 있는 아이템만 필터링
+    const validItems = items.filter(item => item.text.trim().length >= 10);
+    
+    if (validItems.length === 0) {
+      alert('문제 생성을 위해 최소 하나의 본문을 입력해주세요.');
       return;
     }
 
     // 로그인 및 포인트 확인
-    if (loading) {
-      setError('로그인 정보를 확인 중입니다. 잠시 후 다시 시도해주세요.');
-      return;
-    }
-
+    if (loading) return;
     if (!userData || !userData.uid) {
-      setError('로그인이 필요합니다.');
+      alert('로그인이 필요합니다.');
       return;
     }
 
-    if (userCurrentPoints < pointsToDeduct) {
-              setError(`포인트가 부족합니다. 현재 ${userCurrentPoints.toLocaleString()}포인트, 필요 ${pointsToDeduct.toLocaleString()}포인트`);
+    const totalPoints = pointsToDeduct * validItems.length;
+    if (userCurrentPoints < totalPoints) {
+      alert(`포인트가 부족합니다. 현재 ${userCurrentPoints.toLocaleString()}포인트, 필요 ${totalPoints.toLocaleString()}포인트 (${validItems.length}문제)`);
       return;
     }
 
-    // 포인트 차감 확인 모달 표시
     setShowPointModal(true);
   };
 
-  // 포인트 차감 확인 후 문제 생성 실행
   const handlePointDeductionConfirm = async () => {
     setShowPointModal(false);
     setIsLoading(true);
-    setError('');
+    setQuizzes([]); // 기존 퀴즈 초기화
+
+    const validItems = items.filter(item => item.text.trim().length >= 10);
+    const generatedQuizzes: Quiz[] = [];
+    let successCount = 0;
+    let failCount = 0;
 
     try {
-              // 포인트 차감
-        const deductionResult = await deductUserPoints(
-          userData!.uid, 
-          '11', 
-          '문장 순서 맞추기',
-          userData!.displayName || '사용자',
-          userData!.nickname || '사용자'
-        );
+      // 포인트 차감
+      const totalPoints = pointsToDeduct * validItems.length;
+      const deductionResult = await deductUserPoints(
+        userData!.uid, 
+        '1',
+        `문장 순서 맞추기 (${validItems.length}문제)`,
+        userData!.displayName || '사용자',
+        userData!.nickname || '사용자',
+        totalPoints // 총 포인트 전달
+      );
       
       if (deductionResult.success) {
         setUserCurrentPoints(deductionResult.remainingPoints);
         
-        // 문제 생성
-        console.log('🔍 문제 생성 시작...');
-        console.log('📝 입력 텍스트 길이:', text.length);
-        console.log('🤖 AI 사용 여부:', useAI);
-        
-        const quiz = await createQuiz(text, useAI);
-        
-        // 섞기 결과 검증
-        console.log('🔍 섞기 결과 검증...');
-        const shuffledLabels = quiz.shuffledParagraphs.map(p => p.label);
-        const correctLabels = quiz.correctOrder;
-        
-        console.log('📊 섞기 결과 분석:');
-        console.log('- 섞인 순서 (라벨):', shuffledLabels);
-        console.log('- 원본 순서 (라벨):', correctLabels);
-        
-        console.log('생성된 퀴즈 정보:', {
-          originalText: quiz.originalText,
-          shuffledParagraphs: quiz.shuffledParagraphs,
-          correctOrder: quiz.correctOrder,
-          choices: quiz.choices,
-          answerIndex: quiz.answerIndex
-        });
-        
-                 setQuiz(quiz);
-
-                   // 문제 생성 내역 저장
-          if (userData?.uid && workTypePoints.length > 0) {
-            try {
-              const workTypePoint = workTypePoints.find(wt => wt.id === '1');
-              await saveQuizWithPDF({
-                userId: userData.uid,
-                userName: userData.name || '사용자',
-                userNickname: userData.nickname || '사용자',
-                workTypeId: '01',
-                workTypeName: getWorkTypeName('01'),
-                points: workTypePoint?.points || 0,
-                inputText: text,
-                quizData: quiz,
-                status: 'success'
-              });
-              console.log('✅ Work_01 내역 저장 완료');
-            } catch (historyError) {
-              console.error('❌ Work_01 내역 저장 실패:', historyError);
-            }
-          }
-         
-                   // 영어 원본문을 한글로 번역 (단락별 개별 번역)
+        // 순차적으로 문제 생성
+        for (const item of validItems) {
           try {
-            // 프록시 서버를 통한 번역 (API 키는 서버에서 관리)
+            console.log(`🔍 문제 생성 시작 (ID: ${item.id})...`);
+            const quiz = await generateWork01Quiz(item.text, useAI);
+            generatedQuizzes.push(quiz);
+            successCount++;
             
-            if (!quiz.originalText) {
-              setTranslatedText('번역할 원본 텍스트가 없습니다.');
-              return;
-            }
-            
-            // 정답 순서대로 단락별 번역
-            const correctOrder = quiz.choices[quiz.answerIndex];
-            const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-              ? quiz.shuffledParagraphs 
-              : (quiz.paragraphs || []);
-            
-            console.log('🔄 단락별 병렬 번역 시작...');
-            
-            // 모든 단락을 병렬로 번역
-            const translationPromises = correctOrder.map(async (paragraphLabel, index) => {
-              const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-              
-              if (paragraph && paragraph.content) {
-                console.log(`📝 ${paragraphLabel} 단락 번역 시작...`);
-                try {
-                  const translation = await translateToKorean(paragraph.content);
-                  console.log(`✅ ${paragraphLabel} 단락 번역 완료`);
-                  return { index, translation, label: paragraphLabel };
-                } catch (error) {
-                  console.error(`❌ ${paragraphLabel} 단락 번역 실패:`, error);
-                  return { index, translation: `[${paragraphLabel}] 번역 실패`, label: paragraphLabel };
-                }
-              } else {
-                console.warn(`⚠️ ${paragraphLabel} 단락을 찾을 수 없음`);
-                return { index, translation: `[${paragraphLabel}] 단락 없음`, label: paragraphLabel };
-              }
+            // 내역 저장
+            await saveQuizWithPDF({
+              userId: userData!.uid,
+              userName: userData!.name || '사용자',
+              userNickname: userData!.nickname || '사용자',
+              workTypeId: '01',
+              workTypeName: getWorkTypeName('01'),
+              points: pointsToDeduct,
+              inputText: item.text,
+              quizData: quiz,
+              status: 'success'
             });
-            
-            // 모든 번역이 완료될 때까지 대기
-            const translationResults = await Promise.all(translationPromises);
-            
-            // 원래 순서대로 정렬하여 결합
-            const sortedTranslations = translationResults
-              .sort((a, b) => a.index - b.index)
-              .map(result => result.translation);
-            
-            const combinedTranslation = sortedTranslations.join('\n\n');
-            setTranslatedText(combinedTranslation);
-            console.log('✅ 모든 단락 병렬 번역 완료');
-            
-          } catch (error) {
-            console.error('❌ 번역 실패:', error);
-            const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
-            setTranslatedText(`번역 실패: ${errorMessage}`);
+          } catch (err) {
+            console.error(`❌ 문제 생성 실패 (ID: ${item.id}):`, err);
+            failCount++;
           }
-         
-         onQuizGenerated && onQuizGenerated(quiz);
-       } else {
-        throw new Error(deductionResult.error || '포인트 차감에 실패했습니다.');
+        }
+
+        setQuizzes(generatedQuizzes);
+        
+        if (failCount > 0) {
+          alert(`${validItems.length}건 중 ${successCount}건 성공, ${failCount}건 실패했습니다.`);
+          // 실패분에 대한 포인트 환불 로직이 필요하다면 여기에 추가
+        }
+        
+      } else {
+        alert('포인트 차감 실패: ' + deductionResult.error);
       }
     } catch (err) {
-      // 오류 발생 시 포인트 환불
-      try {
-        await refundUserPoints(
-          userData!.uid, 
-          pointsToDeduct,
-          '문장 순서 맞추기',
-          userData!.displayName || '사용자',
-          userData!.nickname || '사용자'
-        );
-        // 환불 후 현재 포인트 다시 가져오기
-        const updatedPoints = await getUserCurrentPoints(userData!.uid);
-        setUserCurrentPoints(updatedPoints);
-      } catch (refundError) {
-        console.error('포인트 환불 실패:', refundError);
-      }
-      setError(err instanceof Error ? err.message : '문제 생성 중 오류가 발생했습니다.');
+      console.error('처리 중 오류:', err);
+      alert('오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
+      // 스크롤 상단 이동
+      window.scrollTo(0, 0);
     }
   };
 
-  // 인쇄 함수들
-  const handlePrintNoAnswer = () => {
+  // 인쇄 핸들러 (Package_02 방식 적용)
+  const triggerPrint = (mode: 'no-answer' | 'with-answer') => {
+    if (quizzes.length === 0) return;
+    
+    console.log('🖨️ 인쇄 시작:', mode);
+    
+    // 가로 페이지 스타일 동적 추가
+    const styleId = mode === 'with-answer' ? 'print-style-work01-answer' : 'print-style-work01';
     const style = document.createElement('style');
-    style.id = 'print-style';
+    style.id = styleId;
     style.textContent = `
       @page {
         margin: 0;
-        size: A4;
+        size: A4 landscape;
       }
       @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+        body {
+          margin: 0;
+          padding: 0;
         }
       }
     `;
     document.head.appendChild(style);
     
-    setPrintMode('no-answer');
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
-        }
-        setPrintMode('none');
-      }, 1000);
-    }, 100);
-  };
+    // 인쇄용 컨테이너 생성
+    const printContainer = document.createElement('div');
+    printContainer.id = mode === 'with-answer' ? 'print-root-work01-new-answer' : 'print-root-work01-new';
+    document.body.appendChild(printContainer);
 
-  const handlePrintWithAnswer = () => {
-    const style = document.createElement('style');
-    style.id = 'print-style';
-    style.textContent = `
-      @page {
-        margin: 0;
-        size: A4;
+    // 기존 화면 숨기기
+    const appRoot = document.getElementById('root');
+    if (appRoot) {
+      appRoot.style.display = 'none';
+    }
+
+    // React 18 방식으로 렌더링
+    const root = ReactDOM.createRoot(printContainer);
+    root.render(<PrintFormatWork01New quizzes={quizzes} isAnswerMode={mode === 'with-answer'} />);
+
+    const activatePrintContainer = () => {
+      const inner = printContainer.querySelector('.print-container, .print-container-answer');
+      if (inner) {
+        inner.classList.add('pdf-generation-active');
+      } else {
+        requestAnimationFrame(activatePrintContainer);
       }
-      @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    setPrintMode('with-answer');
+    };
+    activatePrintContainer();
+
+    // 렌더링 완료 후 인쇄
     setTimeout(() => {
       window.print();
+      
+      // 인쇄 후 정리
       setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
+        root.unmount();
+        document.body.removeChild(printContainer);
+        if (appRoot) {
+          appRoot.style.display = 'block';
         }
-        setPrintMode('none');
-      }, 1000);
-    }, 100);
+        const styleElement = document.getElementById(styleId);
+        if (styleElement) {
+          document.head.removeChild(styleElement);
+        }
+        console.log('✅ 인쇄 완료');
+      }, 100);
+    }, 500);
   };
 
   // 리셋
-  const resetQuiz = () => {
-    setQuiz(null);
-    setText('');
-    setPastedImageUrl(null);
-    setIsPasteFocused(false);
-    setError('');
-    setTooltip('');
-    setTranslatedText('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+  const resetAll = () => {
+    setQuizzes([]);
+    setItems([{ id: Date.now().toString(), inputType: 'clipboard', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '' }]);
   };
 
-  // 문제가 생성된 경우 문제 표시
-  if (quiz) {
+  // 퀴즈 생성 완료 화면
+  if (quizzes.length > 0) {
     return (
-      <div>
-        <div className="quiz-display no-print">
-          <div className="quiz-header">
-            <h2 className="no-print">#01. 문장 순서 맞추기</h2>
-            <div className="quiz-header-buttons no-print">
-              <button onClick={resetQuiz} className="reset-button" style={{
-                width: '160px',
-                height: '48px',
-                padding: '0.75rem 1rem',
-                fontSize: '1rem',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: 'none',
-                borderRadius: '8px',
-                transition: 'all 0.3s ease'
-              }}>새 문제 만들기</button>
-              <button onClick={handlePrintNoAnswer} className="print-button styled-print" style={{
-                width: '160px',
-                height: '48px',
-                padding: '0.75rem 1rem',
-                fontSize: '1rem',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: 'none',
-                borderRadius: '8px',
-                transition: 'all 0.3s ease'
-              }}>
-                🖨️ 인쇄 (문제)
-              </button>
-              <button onClick={handlePrintWithAnswer} className="print-button styled-print" style={{
-                width: '160px',
-                height: '48px',
-                padding: '0.75rem 1rem',
-                fontSize: '1rem',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: 'none',
-                borderRadius: '8px',
-                transition: 'all 0.3s ease',
+      <div className="quiz-display">
+        <div className="quiz-header no-print">
+          <h2>#01. 문장 순서 맞추기 (총 {quizzes.length}문제)</h2>
+          <div className="quiz-header-buttons">
+            <button onClick={resetAll} className="reset-button">
+              새 문제 만들기
+            </button>
+            <button onClick={() => triggerPrint('no-answer')} className="print-button styled-print">
+              🖨️ 인쇄 (문제)
+            </button>
+            <button 
+              onClick={() => triggerPrint('with-answer')} 
+              className="print-button styled-print"
+              style={{
                 background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                 color: 'white',
                 boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
-              }}>
-                🖨️ 인쇄 (정답)
-              </button>
-            </div>
-          </div>
-          <div className="quiz-content">
-            <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-              <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
-              <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
-            </div>
-            
-            
-            <div className="problem-passage">
-              {quiz.shuffledParagraphs.map((paragraph, index) => (
-                <div key={paragraph.id} className="shuffled-paragraph">
-                  <strong>{paragraph.label}:</strong> {paragraph.content}
-                </div>
-              ))}
-            </div>
-            <div className="problem-options">
-              {quiz.choices.map((choice, index) => (
-                <div key={index} className="option">
-                  {['①', '②', '③', '④'][index]} {choice.join(' → ')}
-                </div>
-              ))}
-            </div>
-            <div className="screen-answer-footer" style={{color: '#1976d2', fontWeight: 700, fontSize: '1.1rem', textAlign: 'center', marginTop: '2rem', padding: '0.8rem', backgroundColor: '#f0f7ff', borderRadius: '8px'}}>
-              {['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')} (정답)
-            </div>
+              }}
+            >
+              🖨️ 인쇄 (정답)
+            </button>
           </div>
         </div>
 
-        {/* 인쇄용 문제 (정답 없음) - 동적 페이지 분할 */}
-        {printMode === 'no-answer' && (
-          <div className="only-print">
-            {needsSecondPage ? (
-              // 2페이지 분할: 문제제목+본문, 4지선다
-              <>
-                {/* 첫 번째 페이지: 문제제목 + 본문 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                        <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
-                        <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
-                      </div>
-                      <div className="problem-passage" style={{marginTop:'0.9rem', fontSize:'0.75rem'}}>
-                        {quiz.shuffledParagraphs.map((paragraph, index) => (
-                          <div key={paragraph.id} className="shuffled-paragraph">
-                            <strong>{paragraph.label}:</strong> {paragraph.content}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+        <div className="quiz-content no-print">
+          <div style={{ padding: '1rem', background: '#f0f7ff', borderRadius: '8px', marginBottom: '2rem', borderLeft: '4px solid #1976d2' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1976d2' }}>
+              총 {quizzes.length}개의 문제가 생성되었습니다.
+            </h3>
+          </div>
+          
+          {/* 생성된 문제 상세 리스트 */}
+          <div className="generated-quizzes-list">
+            {quizzes.map((quiz, idx) => (
+              <div key={quiz.id || idx} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
+                <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
+                  <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#01</span>
+                </div>
+
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.1rem', background:'#222', color:'#fff', padding:'0.7rem 0.8rem', borderRadius:'8px', marginBottom:'1rem'}}>
+                  문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요
                 </div>
                 
-                {/* 두 번째 페이지: 4지선다 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      {quiz.choices.map((choice, index) => (
-                        <div key={index} className="option" style={{fontSize:'0.75rem', marginTop:'0', paddingLeft:'0.6rem', paddingRight:'0.6rem', paddingTop:'5px', paddingBottom:'5px', marginBottom:'4px'}}>
-                          {['①', '②', '③', '④'][index]} {choice.join(' → ')}
-                        </div>
-                      ))}
+                <div className="problem-passage">
+                  {quiz.shuffledParagraphs.map((paragraph) => (
+                    <div key={paragraph.id} className="shuffled-paragraph" style={{ padding: '0.8rem 0.5rem', fontSize: '1rem', color: '#333' }}>
+                      <strong>{paragraph.label}:</strong> {paragraph.content}
                     </div>
-                  </div>
+                  ))}
                 </div>
-              </>
-            ) : (
-              // 1페이지: 모든 내용 포함
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                      문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요
+
+                <div className="problem-options">
+                  {quiz.choices.map((choice, cIdx) => (
+                    <div key={cIdx} className="option" style={{ 
+                      backgroundColor: cIdx === quiz.answerIndex ? '#e3f2fd' : 'transparent',
+                      borderColor: cIdx === quiz.answerIndex ? '#2196f3' : '#e0e0e0'
+                    }}>
+                      {['①', '②', '③', '④'][cIdx]} {choice.join(' → ')}
+                      {cIdx === quiz.answerIndex && <span style={{ marginLeft: '10px', color: '#1976d2', fontWeight: 'bold', fontSize: '0.9rem' }}>(정답)</span>}
                     </div>
-                    <div className="problem-passage" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'0.75rem'}}>
-                      {quiz.shuffledParagraphs.map((paragraph, index) => (
-                        <div key={paragraph.id} className="shuffled-paragraph">
-                          <strong>{paragraph.label}:</strong> {paragraph.content}
-                        </div>
-                      ))}
-                    </div>
-                    {quiz.choices.map((choice, index) => (
-                      <div key={index} className="option" style={{fontSize:'0.75rem', marginTop: index === 0 ? '0.3rem' : '4px', paddingTop:'5px', paddingBottom:'5px'}}>
-                        {['①', '②', '③', '④'][index]} {choice.join(' → ')}
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
-            )}
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* 인쇄용 문제 (정답 포함) - 2페이지 독립 구조 */}
-        {printMode === 'with-answer' && (
-          <div className="only-print work-01-print">
-            {/* 1페이지: 본문 + 정답 + 선택지 */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderWork01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="quiz-content">
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                    <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
-                  </div>
-                  <div className="problem-passage" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'1rem'}}>
-                    {quiz.shuffledParagraphs.map((paragraph, index) => (
-                      <div key={paragraph.id} className="shuffled-paragraph">
-                        <strong>{paragraph.label}:</strong> {paragraph.content}
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{fontWeight: 700, fontSize: '1rem', margin: '0.5rem 0 0 0', padding: '0.6rem 0.8rem', background: '#fff', border: '1px solid #ddd', borderRadius: '5px'}}>
-                    <span style={{color: '#000000'}}>{['①', '②', '③', '④'][quiz.answerIndex]} {quiz.choices[quiz.answerIndex].join(' → ')}</span> <span style={{color: '#1976d2'}}>(정답)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 2페이지: 해석 - 2,700자 기준으로 분할 */}
-            {needsAnswerPage2Split ? (
-              // 해석 2,700자 이상: A,B,C 해석 / D 해석으로 분할
-              <>
-                {/* 2-1페이지: A, B, C 해석 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'block', width:'100%'}}>
-                        본문 해석
-                      </div>
-                      
-                      {/* A, B, C 단락과 해석만 표시 */}
-                      {(() => {
-                        const correctOrder = quiz.choices[quiz.answerIndex];
-                        const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                          ? quiz.shuffledParagraphs 
-                          : (quiz.paragraphs || []);
-                        
-                        // A, B, C만 표시 (첫 3개)
-                        return correctOrder.slice(0, 3).map((paragraphLabel, index) => {
-                          const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-                          
-                          if (!paragraph || !paragraph.content) {
-                            return (
-                              <div key={paragraphLabel} style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                                단락을 찾을 수 없습니다: {paragraphLabel}
-                              </div>
-                            );
-                          }
-                          
-                          return (
-                            <div key={paragraphLabel} className="paragraph-simple" style={{marginBottom: '1.5rem'}}>
-                              <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                                <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                              </div>
-                              <div style={{
-                                width: '100%',
-                                minHeight: '60px',
-                                border: '1px solid #ccc',
-                                backgroundColor: '#F1F8E9',
-                                marginTop: '0.5rem',
-                                padding: '0.6rem',
-                                fontSize: '0.8rem',
-                                lineHeight: '1.4',
-                                color: '#333'
-                              }}>
-                                {translatedText ? (
-                                  (() => {
-                                    if (!translatedText) return '번역 중...';
-                                    // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기
-                                    const translations = translatedText.split('\n\n');
-                                    return translations[index] || '번역 없음';
-                                  })()
-                                ) : (
-                                  '번역 중...'
-                                )}
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2-2페이지: D 해석 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '3rem', display: 'block', width:'100%'}}>
-                        본문 해석 (계속)
-                      </div>
-                      
-                      {/* D 단락과 해석만 표시 */}
-                      {(() => {
-                        const correctOrder = quiz.choices[quiz.answerIndex];
-                        const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                          ? quiz.shuffledParagraphs 
-                          : (quiz.paragraphs || []);
-                        
-                        // D만 표시 (마지막 1개)
-                        const lastParagraphLabel = correctOrder[3];
-                        const paragraph = availableParagraphs.find(p => p.label === lastParagraphLabel);
-                        
-                        if (!paragraph || !paragraph.content) {
-                          return (
-                            <div style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                              단락을 찾을 수 없습니다: {lastParagraphLabel}
-                            </div>
-                          );
-                        }
-                        
-                        return (
-                          <div className="paragraph-simple" style={{marginBottom: '1.5rem', marginTop: '0rem'}}>
-                            <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                              <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                            </div>
-                            <div style={{
-                              width: '100%',
-                              minHeight: '60px',
-                              border: '1px solid #ccc',
-                              backgroundColor: '#F1F8E9',
-                              marginTop: '0.5rem',
-                              padding: '0.6rem',
-                              fontSize: '0.8rem',
-                              lineHeight: '1.4',
-                              color: '#333'
-                            }}>
-                              {translatedText ? (
-                                (() => {
-                                  if (!translatedText) return '번역 중...';
-                                  // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기 (D는 인덱스 3)
-                                  const translations = translatedText.split('\n\n');
-                                  return translations[3] || '번역 없음';
-                                })()
-                              ) : (
-                                '번역 중...'
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              // 해석 2,700자 미만: A,B,C,D 모든 해석을 1페이지에
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'block', width:'100%'}}>
-                      본문 해석
-                    </div>
-                    
-                    {/* 정답 순서대로 각 단락과 해석 표시 */}
-                    {(() => {
-                      const correctOrder = quiz.choices[quiz.answerIndex];
-                      const availableParagraphs = quiz.shuffledParagraphs && quiz.shuffledParagraphs.length > 0 && quiz.shuffledParagraphs[0].content 
-                        ? quiz.shuffledParagraphs 
-                        : (quiz.paragraphs || []);
-                      
-                      return correctOrder.map((paragraphLabel, index) => {
-                        const paragraph = availableParagraphs.find(p => p.label === paragraphLabel);
-                        
-                        if (!paragraph || !paragraph.content) {
-                          return (
-                            <div key={paragraphLabel} style={{color: 'red', padding: '1rem', border: '1px solid red'}}>
-                              단락을 찾을 수 없습니다: {paragraphLabel}
-                            </div>
-                          );
-                        }
-                        
-                        return (
-                          <div key={paragraphLabel} className="paragraph-simple" style={{marginBottom: '1.5rem'}}>
-                            <div style={{marginBottom: '0.5rem', fontSize: '1rem', paddingLeft: '0.6rem', paddingRight: '0.6rem'}}>
-                              <strong style={{fontSize: '1rem', color: '#333'}}>{paragraph.label}:</strong> {paragraph.content}
-                            </div>
-                            <div style={{
-                              width: '100%',
-                              minHeight: '60px',
-                              border: '1px solid #ccc',
-                              backgroundColor: '#F1F8E9',
-                              marginTop: '0.5rem',
-                              padding: '0.6rem',
-                              fontSize: '1rem',
-                              lineHeight: '1.4',
-                              color: '#333'
-                            }}>
-                              {translatedText ? (
-                                (() => {
-                                  if (!translatedText) return '번역 중...';
-                                  // 단락별로 분리된 번역 텍스트에서 해당 인덱스의 번역 가져오기
-                                  const translations = translatedText.split('\n\n');
-                                  return translations[index] || '번역 없음';
-                                })()
-                              ) : (
-                                '번역 중...'
-                              )}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     );
   }
 
   return (
-    <div className="quiz-generator">
+    <div className="quiz-generator no-print">
       <div className="generator-header">
         <h2>[유형#01] 문장 순서 맞추기</h2>
-        <p>본문을 4개로 분할하고 섞어서 올바른 순서를 찾는 문제를 생성합니다.</p>
+        <p>여러 개의 본문을 입력하여 한 번에 여러 문제를 생성할 수 있습니다.</p>
       </div>
 
-      {/* 입력 방식 선택 */}
-      <div className="input-type-section">
-        <label>
-          <input
-            type="radio"
-            name="inputType"
-            checked={inputType === 'clipboard'}
-            onChange={() => handleInputTypeChange('clipboard')}
-          />
-          <span>📸 캡처화면 붙여넣기</span>
-          <button
-            type="button"
-            className="screenshot-help-btn"
-            onClick={(e) => {
-              e.preventDefault();
-              setShowScreenshotHelp(true);
-            }}
-            title="화면 캡처 방법 보기"
-          >
-            ?
-          </button>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputType"
-            checked={inputType === 'file'}
-            onChange={() => handleInputTypeChange('file')}
-          />
-          <span>🖼️ 이미지 파일 첨부</span>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputType"
-            checked={inputType === 'text'}
-            onChange={() => handleInputTypeChange('text')}
-          />
-          <span>✍️ 영어 본문 직접 붙여넣기</span>
-        </label>
-      </div>
-
-      {/* 입력 방식별 안내 및 입력 UI */}
-      {inputType === 'clipboard' && (
-        <div
-          className={`input-guide${isPasteFocused ? ' paste-focused' : ''}`}
-          tabIndex={0}
-          onClick={() => setIsPasteFocused(true)}
-          onFocus={() => setIsPasteFocused(true)}
-          onBlur={() => setIsPasteFocused(false)}
-          onPaste={handlePaste}
-        >
-          <div className="drop-icon">📋</div>
-          <div className="drop-text">여기에 이미지를 붙여넣으세요</div>
-          <div className="drop-desc">클릭 또는 Tab 후 <b>Ctrl+V</b>로 캡처 이미지를 붙여넣을 수 있습니다.</div>
-          {pastedImageUrl && (
-            <div className="preview-row">
-              <img src={pastedImageUrl} alt="붙여넣은 이미지 미리보기" className="preview-img" />
-              {isVisionLoading && <span className="loading-text">OpenAI Vision 처리 중...</span>}
+      <div className="input-items-list">
+        {items.map((item, index) => (
+          <div key={item.id} className={`input-item ${item.isExpanded ? 'expanded' : ''}`}>
+            <div className="input-item-header" onClick={() => toggleExpand(item.id)}>
+              <div className="input-item-title">
+                <span>#{index + 1}</span>
+                <span className={`input-item-status ${item.text.length > 0 ? 'has-text' : ''}`}>
+                  {item.text.length > 0 ? `텍스트 ${item.text.length}자` : '입력 대기'}
+                </span>
+              </div>
+              <div className="input-item-controls">
+                <button 
+                  className="icon-btn delete" 
+                  onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
+                  title="삭제"
+                >
+                  🗑️
+                </button>
+                <span className="expand-icon">{item.isExpanded ? '🔼' : '🔽'}</span>
+              </div>
             </div>
-          )}
-          {isVisionLoading && !pastedImageUrl && (
-            <div className="loading-text">OpenAI Vision 처리 중...</div>
-          )}
-          {tooltip && <div className="error-text">{tooltip}</div>}
-        </div>
-      )}
-      {inputType === 'file' && (
-        <div className="input-guide">
-          <div className="file-upload-row">
-            <label htmlFor="file-upload" className="file-upload-btn">
-              파일 선택
-              <input
-                id="file-upload"
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                disabled={isLoading}
-                style={{ display: 'none' }}
-              />
-            </label>
-            <span className="file-upload-status">
-              {fileInputRef.current && fileInputRef.current.files && fileInputRef.current.files.length > 0
-                ? fileInputRef.current.files[0].name
-                : '선택된 파일 없음'}
-            </span>
+
+            {item.isExpanded && (
+              <div className="input-item-content">
+                {/* 입력 방식 선택 */}
+                <div className="input-type-section" style={{ marginBottom: '15px' }}>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'clipboard'}
+                      onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })}
+                    />
+                    <span>📸 캡처화면 붙여넣기</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'file'}
+                      onChange={() => updateItem(item.id, { inputType: 'file', error: '' })}
+                    />
+                    <span>🖼️ 이미지 파일 첨부</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'text'}
+                      onChange={() => updateItem(item.id, { inputType: 'text', error: '' })}
+                    />
+                    <span>✍️ 직접 붙여넣기</span>
+                  </label>
+                </div>
+
+                {/* 입력 UI */}
+                {item.inputType === 'clipboard' && (
+                  <div
+                    className="input-guide"
+                    tabIndex={0}
+                    onPaste={(e) => handlePaste(item.id, e)}
+                    style={{ minHeight: '120px' }}
+                  >
+                    <div className="drop-icon">📋</div>
+                    <div className="drop-text">여기에 이미지를 붙여넣으세요 (Ctrl+V)</div>
+                    {item.pastedImageUrl && (
+                      <div className="preview-row">
+                        <img src={item.pastedImageUrl} alt="Preview" className="preview-img" />
+                      </div>
+                    )}
+                    {item.isExtracting && <div className="loading-text">텍스트 추출 중...</div>}
+                  </div>
+                )}
+
+                {item.inputType === 'file' && (
+                  <div className="input-guide" style={{ minHeight: '80px' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(item.id, e)}
+                      disabled={item.isExtracting}
+                    />
+                    {item.isExtracting && <span className="loading-text">추출 중...</span>}
+                  </div>
+                )}
+
+                <textarea
+                  value={item.text}
+                  onChange={(e) => updateItem(item.id, { text: e.target.value })}
+                  placeholder="영어 본문이 여기에 표시됩니다. 직접 입력하거나 수정할 수 있습니다."
+                  className="text-input"
+                  rows={6}
+                  style={{ marginTop: '10px', width: '100%' }}
+                />
+                
+                {item.error && <div className="error-message">❌ {item.error}</div>}
+              </div>
+            )}
           </div>
-        </div>
-      )}
-      {/* OCR/입력 결과 textarea */}
-      <div className="input-section">
-        <div className="input-label-row">
-          <label htmlFor="text-input" className="input-label">
-            영어 본문 직접 붙여넣기:
-          </label>
-          {text.length < 100 && (
-            <span className="warning">⚠️ 더 긴 본문을 입력하면 더 좋은 결과를 얻을 수 있습니다.</span>
-          )}
-        </div>
-        <textarea
-          id="text-input"
-          ref={textAreaRef}
-          value={text}
-          onChange={handleTextChange}
-          placeholder="영어 본문을 직접 붙여넣어 주세요. 최소 100자 이상 권장합니다."
-          className="text-input"
-          rows={8}
-          style={{overflow: 'hidden', resize: 'none'}}
-          disabled={inputType === 'file' && !text}
-        />
-        <div className="text-info">
-          <span>글자 수: {text.length}자</span>
-          {inputType === 'clipboard' && text && (
-            <span className="edit-hint">✏️ 추출된 텍스트를 키보드로 수정할 수 있습니다</span>
-          )}
-        </div>
-        {tooltip && <div className="tooltip">{tooltip}</div>}
-        {isVisionLoading && <div style={{color:'#6a5acd', fontWeight:600, marginTop:'0.5rem'}}>OpenAI Vision 처리 중...</div>}
+        ))}
       </div>
 
-      {error && (
-        <div className="error-message">
-          ❌ {error}
-        </div>
-      )}
+      <button onClick={addItem} className="add-item-button">
+        ➕ 본문 추가하기
+      </button>
 
-      {/* 분할 방식 선택 (문제 생성 버튼 위로 이동) */}
-      <div className="ai-option-section">
+      <div className="ai-option-section" style={{ marginTop: '30px' }}>
         <div className="option-group">
           <label className="option-label">
             <input
               type="radio"
-              name="splitMethod"
               checked={!useAI}
               onChange={() => setUseAI(false)}
             />
             <span className="option-text">📋 규칙 기반 분할 (기본)</span>
           </label>
-          <p className="option-description">전환어와 문장 수를 기준으로 단락을 분할합니다.</p>
         </div>
         <div className="option-group">
           <label className="option-label">
             <input
               type="radio"
-              name="splitMethod"
               checked={useAI}
               onChange={() => setUseAI(true)}
               disabled={!aiAvailable}
             />
             <span className="option-text">🤖 AI 기반 의미 분할 (고급)</span>
           </label>
-          <p className="option-description">
-            {aiAvailable
-              ? 'OpenAI GPT-4가 의미와 주제를 분석하여 자연스럽게 단락을 분할하고, 적절하게 섞어서 문제를 생성합니다.'
-              : 'AI 서비스가 현재 이용할 수 없습니다. 규칙 기반 분할을 사용해주세요.'}
-          </p>
-          {!aiAvailable && (
-            <div className="service-unavailable">⚠️ AI 기능이 일시적으로 이용할 수 없습니다.</div>
-          )}
         </div>
       </div>
 
-
       <button
         onClick={handleGenerateQuiz}
-        disabled={isLoading || !text.trim()}
+        disabled={isLoading}
         className="generate-button"
+        style={{ marginTop: '20px' }}
       >
-        {useAI ? '🤖 AI로 문제 생성' : '📋 문제 생성'}
+        {items.length > 1 
+          ? `📋 ${items.filter(i => i.text.length > 0).length}개 문제 일괄 생성` 
+          : '📋 문제 생성'}
       </button>
 
-      {/* 화면 중앙 모래시계 로딩 스피너 */}
-      {(isLoading || isExtractingText) && (
+      {/* 로딩 오버레이 */}
+      {isLoading && (
         <div className="centered-hourglass-overlay">
           <div className="centered-hourglass-content">
             <span className="centered-hourglass-spinner">⏳</span>
             <div className="loading-text">
-              {isExtractingText ? '📄 텍스트 추출 중...' : (useAI ? '🤖 AI 분석 중...' : '📋 문제 생성 중...')}
+              문제를 생성하고 있습니다...<br/>
+              잠시만 기다려주세요.
             </div>
           </div>
         </div>
       )}
-      
-      {/* 화면 캡처 도움말 모달 */}
+
       <ScreenshotHelpModal
         isOpen={showScreenshotHelp}
         onClose={() => setShowScreenshotHelp(false)}
       />
 
-      {/* 포인트 차감 확인 모달 */}
       <PointDeductionModal
         isOpen={showPointModal}
         onClose={() => setShowPointModal(false)}
         onConfirm={handlePointDeductionConfirm}
-        pointsToDeduct={pointsToDeduct}
+        pointsToDeduct={pointsToDeduct * items.filter(i => i.text.length >= 10).length}
         userCurrentPoints={userCurrentPoints}
-        remainingPoints={userCurrentPoints - pointsToDeduct}
-        workTypeName="문장 순서 맞추기"
+        remainingPoints={userCurrentPoints - (pointsToDeduct * items.filter(i => i.text.length >= 10).length)}
+        workTypeName={`문장 순서 맞추기 (${items.filter(i => i.text.length >= 10).length}문제)`}
       />
     </div>
   );
 };
 
-export default Work_11_ArticleOrder;
+export default Work_01_ArticleOrder;

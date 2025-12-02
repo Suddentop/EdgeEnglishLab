@@ -32,22 +32,53 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
   // 본문에서 교체된 단어에 밑줄 표시 - Work_02 전용
   const renderTextWithHighlight = (text: string, replacements: any[]) => {
     if (!replacements || replacements.length === 0) return text;
+    if (!text) return '';
     
-    const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
-    let result = '';
+    let result = text;
     
-    sentences.forEach((sentence, index) => {
-      const replacement = replacements[index];
-      if (replacement) {
-        const word = replacement.replacement;
-        const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        result += sentence.replace(regex, `<span class="print-word-highlight">${word}</span>`) + ' ';
-      } else {
-        result += sentence + ' ';
-      }
+    // 모든 교체된 단어를 본문에서 찾아 강조 (문장별 매칭이 아닌 전체 본문에서 찾기)
+    // 각 교체된 단어를 순서대로 찾아서 강조 (나중에 교체된 단어가 이전 교체된 단어를 포함할 수 있으므로 역순으로 처리)
+    // 먼저 모든 교체된 단어를 정렬: 긴 단어를 먼저 처리하여 짧은 단어가 긴 단어의 일부를 교체하는 것을 방지
+    const sortedReplacements = [...replacements].sort((a, b) => {
+      const aLength = (a.replacement || '').length;
+      const bLength = (b.replacement || '').length;
+      return bLength - aLength; // 긴 단어 먼저
     });
     
-    return result.trim();
+    sortedReplacements.forEach((replacement) => {
+      if (!replacement || !replacement.replacement) return;
+      
+      const word = replacement.replacement;
+      // 단어 경계를 포함한 정규식 (대소문자 구분 없음)
+      const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+      
+      // 글로벌 검색으로 모든 매칭 찾기
+      const matches: Array<{ index: number; length: number; match: string }> = [];
+      let match;
+      while ((match = regex.exec(result)) !== null) {
+        // 이미 <span> 태그로 감싸져 있는지 확인
+        const beforeMatch = result.substring(Math.max(0, match.index - 50), match.index);
+        const isAlreadyWrapped = beforeMatch.includes('<span class="print-word-highlight">') || 
+                                  beforeMatch.includes(`<span class="print-word-highlight">${match[0]}`);
+        
+        if (!isAlreadyWrapped) {
+          matches.push({
+            index: match.index,
+            length: match[0].length,
+            match: match[0]
+          });
+        }
+      }
+      
+      // 역순으로 교체 (인덱스가 변경되지 않도록)
+      matches.reverse().forEach(({ index, match: matchedText }) => {
+        const before = result.substring(0, index);
+        const after = result.substring(index + matchedText.length);
+        result = before + `<span class="print-word-highlight">${matchedText}</span>` + after;
+      });
+    });
+    
+    return result;
   };
 
   // 페이지 분할 로직: 2단 레이아웃에 맞는 동적 페이지 분할

@@ -196,9 +196,10 @@ Required JSON format:
 }
 
 // Step 4: 본문에서 단어 교체 (순차 처리)
-function replaceWordsInTextSequentially(originalText: string, sentences: string[], replacements: WordReplacement[]): string {
+function replaceWordsInTextSequentially(originalText: string, sentences: string[], replacements: WordReplacement[]): { modifiedText: string, successfulReplacements: WordReplacement[] } {
   let modifiedText = originalText;
   let currentPosition = 0;
+  const successfulReplacements: WordReplacement[] = [];
   
   // 각 문장별로 순차적으로 처리
   for (let i = 0; i < sentences.length; i++) {
@@ -228,6 +229,8 @@ function replaceWordsInTextSequentially(originalText: string, sentences: string[
       console.log(`문장 ${i + 1} 교체 성공: "${replacement.original}" → "${replacement.replacement}"`);
       // 전체 텍스트에서 해당 문장 부분만 교체
       modifiedText = modifiedText.substring(0, sentenceStart) + modifiedSentence + modifiedText.substring(sentenceEnd);
+      // 교체 성공한 단어만 목록에 추가
+      successfulReplacements.push(replacement);
     } else {
       console.warn(`문장 ${i + 1} 교체 실패: "${replacement.original}"를 찾을 수 없음`);
     }
@@ -236,7 +239,7 @@ function replaceWordsInTextSequentially(originalText: string, sentences: string[
     currentPosition = sentenceStart + modifiedSentence.length;
   }
   
-  return modifiedText;
+  return { modifiedText, successfulReplacements };
 }
 
 // Step 5: 본문 번역
@@ -313,7 +316,8 @@ export async function generateWork02Quiz(passage: string): Promise<Work02QuizDat
 
     // Step 4: 본문에서 단어 교체 (순차 처리)
     console.log('🔄 Step 4: 본문에서 단어 교체 중...');
-    const modifiedText = replaceWordsInTextSequentially(passage, sentences, replacements);
+    // 수정됨: 교체된 텍스트와 성공한 replacement 목록을 받아옴
+    const { modifiedText, successfulReplacements } = replaceWordsInTextSequentially(passage, sentences, replacements);
 
     // Step 5: 본문 번역
     console.log('🌐 Step 5: 본문 번역 중...');
@@ -324,7 +328,7 @@ export async function generateWork02Quiz(passage: string): Promise<Work02QuizDat
       title: '독해 문제',
       originalText: passage,
       modifiedText: modifiedText,
-      replacements: replacements,
+      replacements: successfulReplacements, // 성공한 교체 목록만 저장
       translation: translation
     };
 
