@@ -2391,15 +2391,52 @@ export const distributeNormalizedItemsToPages = (
     lastWorkTypeId = currentWorkTypeId; // 현재 아이템의 workTypeId 기록
   });
 
+  // 마지막 currentPage가 비어있지 않은 경우에만 추가
   if (currentPage[0].length > 0 || currentPage[1].length > 0) {
     pages.push(currentPage);
+  }
+  
+  // 빈 페이지 필터링 (안전장치) - 더 엄격한 체크
+  const finalPages = pages.filter((page, pageIndex) => {
+    const leftColumnItems = page[0] || [];
+    const rightColumnItems = page[1] || [];
+    const leftColumnEmpty = leftColumnItems.length === 0;
+    const rightColumnEmpty = rightColumnItems.length === 0;
+    const isEmpty = leftColumnEmpty && rightColumnEmpty;
+    
+    if (isEmpty) {
+      console.warn(`⚠️ distributeNormalizedItemsToPages: 빈 페이지 감지 및 제거 (페이지 ${pageIndex + 1})`, {
+        leftColumnItems: leftColumnItems.length,
+        rightColumnItems: rightColumnItems.length,
+        page: page
+      });
+      return false;
+    }
+    
+    // 추가 검증: 각 컬럼의 아이템이 실제로 섹션을 가지고 있는지 확인
+    const leftHasContent = leftColumnItems.some(item => item.sections && item.sections.length > 0);
+    const rightHasContent = rightColumnItems.some(item => item.sections && item.sections.length > 0);
+    
+    if (!leftHasContent && !rightHasContent) {
+      console.warn(`⚠️ distributeNormalizedItemsToPages: 빈 섹션 페이지 감지 및 제거 (페이지 ${pageIndex + 1})`, {
+        leftColumnItems: leftColumnItems.length,
+        rightColumnItems: rightColumnItems.length
+      });
+      return false;
+    }
+    
+    return true;
+  });
+  
+  if (finalPages.length !== pages.length) {
+    console.log(`📄 distributeNormalizedItemsToPages: 빈 페이지 필터링 결과: ${pages.length}개 → ${finalPages.length}개 (${pages.length - finalPages.length}개 제거)`);
   }
   
   // 디버깅: 유형#11의 경우 최종 페이지 상태 확인
   if (process.env.NODE_ENV === 'development' && normalizedItems.length > 0 && normalizedItems[0].workTypeId === '11') {
     console.log('🔍 유형#11 최종 페이지 상태:', {
-      totalPages: pages.length,
-      pages: pages.map((page, pageIdx) => ({
+      totalPages: finalPages.length,
+      pages: finalPages.map((page, pageIdx) => ({
         pageIndex: pageIdx + 1,
         leftColumnItems: page[0].length,
         rightColumnItems: page[1].length,
@@ -2409,7 +2446,7 @@ export const distributeNormalizedItemsToPages = (
     });
   }
 
-  return pages;
+  return finalPages;
 };
 
 

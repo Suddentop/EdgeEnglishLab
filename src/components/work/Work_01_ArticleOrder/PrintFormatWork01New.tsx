@@ -78,12 +78,73 @@ const PrintFormatWork01New: React.FC<PrintFormatWork01NewProps> = ({ quizzes, is
     };
  
     const distributedPages = distributeNormalizedItemsToPages(expandedNormalizedItems);
+    console.log(`📄 PrintFormatWork01New: 총 ${distributedPages.length}개 페이지 생성 중...`);
 
-    distributedPages.forEach((pageColumns: NormalizedQuizItem[][], pageIndex: number) => {
+    // 빈 페이지 필터링 (양쪽 컬럼이 모두 비어있는 페이지 제거)
+    const filteredPages = distributedPages.filter((pageColumns: NormalizedQuizItem[][], pageIndex: number) => {
+      const leftColumnItems = pageColumns[0] || [];
+      const rightColumnItems = pageColumns[1] || [];
+      const leftColumnEmpty = leftColumnItems.length === 0;
+      const rightColumnEmpty = rightColumnItems.length === 0;
+      const isEmpty = leftColumnEmpty && rightColumnEmpty;
+      
+      if (isEmpty) {
+        console.warn(`⚠️ PrintFormatWork01New: 빈 페이지 감지 및 제거: 페이지 ${pageIndex + 1}`, {
+          leftColumnItems: leftColumnItems.length,
+          rightColumnItems: rightColumnItems.length
+        });
+        return false;
+      }
+      
+      // 추가 검증: 각 컬럼의 아이템이 실제로 섹션을 가지고 있는지 확인
+      const leftHasContent = leftColumnItems.some(item => item.sections && item.sections.length > 0);
+      const rightHasContent = rightColumnItems.some(item => item.sections && item.sections.length > 0);
+      
+      if (!leftHasContent && !rightHasContent) {
+        console.warn(`⚠️ PrintFormatWork01New: 빈 섹션 페이지 감지 및 제거: 페이지 ${pageIndex + 1}`);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    console.log(`📄 PrintFormatWork01New: 페이지 필터링 결과: ${distributedPages.length}개 → ${filteredPages.length}개 (빈 페이지 ${distributedPages.length - filteredPages.length}개 제거)`);
+
+    filteredPages.forEach((pageColumns: NormalizedQuizItem[][], pageIndex: number) => {
+      // 빈 페이지 재확인 (이중 안전장치)
+      const leftColumnItems = pageColumns[0] || [];
+      const rightColumnItems = pageColumns[1] || [];
+      const leftColumnEmpty = leftColumnItems.length === 0;
+      const rightColumnEmpty = rightColumnItems.length === 0;
+      
+      if (leftColumnEmpty && rightColumnEmpty) {
+        console.warn(`⚠️ PrintFormatWork01New: 렌더링 단계에서 빈 페이지 감지 및 건너뜀: 페이지 ${pageIndex + 1}`);
+        return;
+      }
+      
+      // 추가 검증: 각 컬럼의 아이템이 실제로 섹션을 가지고 있는지 확인
+      const leftHasContent = leftColumnItems.some(item => item.sections && item.sections.length > 0);
+      const rightHasContent = rightColumnItems.some(item => item.sections && item.sections.length > 0);
+      
+      if (!leftHasContent && !rightHasContent) {
+        console.warn(`⚠️ PrintFormatWork01New: 렌더링 단계에서 빈 섹션 페이지 감지 및 건너뜀: 페이지 ${pageIndex + 1}`);
+        return;
+      }
+
+      // 마지막 페이지인지 확인
+      const isLastPage = pageIndex === filteredPages.length - 1;
+
       pages.push(
         <div
           key={`page-${pageIndex}`}
-          className="print-page a4-landscape-page-template"
+          id={`print-page-${pageIndex}`}
+          className={`print-page a4-landscape-page-template ${isLastPage ? 'last-page' : ''}`}
+          style={isLastPage ? { 
+            pageBreakAfter: 'avoid',
+            breakAfter: 'avoid',
+            marginBottom: 0,
+            paddingBottom: 0
+          } : undefined}
         >
           <div className="a4-landscape-page-header">
             <PrintHeaderWork01 />

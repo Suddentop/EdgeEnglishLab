@@ -385,10 +385,26 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
  
     const distributedPages = distributeNormalizedItemsToPages(expandedNormalizedItems);
     console.log(`📄 총 ${distributedPages.length}개 페이지 생성 중...`);
+    
+    // 디버깅: 유형#01의 경우 페이지 상태 확인
+    if (packageQuiz.some(item => item.workTypeId === '01' || (item.quiz && item.quiz.shuffledParagraphs))) {
+      console.log('🔍 유형#01 페이지 상태 확인:', {
+        totalPages: distributedPages.length,
+        pages: distributedPages.map((page, idx) => ({
+          pageIndex: idx + 1,
+          leftColumnItems: page[0]?.length || 0,
+          rightColumnItems: page[1]?.length || 0,
+          isEmpty: (page[0]?.length || 0) === 0 && (page[1]?.length || 0) === 0
+        }))
+      });
+    }
 
     // 마지막 유형의 한글해석만 수집 (인쇄 정답 모드일 때만)
+    // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 마지막에 전체 translation을 추가하지 않음
+    const hasWork01 = packageQuiz.some(item => item.workTypeId === '01' || (item.quiz && item.quiz.shuffledParagraphs));
+    
     let lastTranslation: string | null = null;
-    if (isAnswerMode && packageQuiz.length > 0) {
+    if (isAnswerMode && packageQuiz.length > 0 && !hasWork01) {
       // 마지막 유형의 translation만 가져오기
       const lastItem = packageQuiz[packageQuiz.length - 1];
       const translation = getTranslatedText(lastItem, lastItem.quiz || lastItem.data || {});
@@ -399,7 +415,8 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
 
     // 마지막 유형 다음 단에 translation 섹션 추가
     // 마지막 유형이 있는 페이지의 다음 단(오른쪽 단)에 추가
-    if (isAnswerMode && lastTranslation) {
+    // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 추가하지 않음
+    if (isAnswerMode && lastTranslation && !hasWork01) {
       // 마지막 유형의 translation 섹션 생성
       const translationText = lastTranslation;
       const translationSection: PrintSection = {
@@ -508,7 +525,64 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       }
     }
 
-    distributedPages.forEach((pageColumns: NormalizedQuizItem[][], pageIndex: number) => {
+    // 빈 페이지 필터링 (양쪽 컬럼이 모두 비어있는 페이지 제거) - 강화된 버전
+    const filteredPages = distributedPages.filter((pageColumns: NormalizedQuizItem[][], pageIndex: number) => {
+      // 더 엄격한 체크: 배열이 존재하고, 각 컬럼이 존재하며, 각 컬럼에 실제 아이템이 있는지 확인
+      const leftColumnItems = pageColumns[0] || [];
+      const rightColumnItems = pageColumns[1] || [];
+      const leftColumnEmpty = leftColumnItems.length === 0;
+      const rightColumnEmpty = rightColumnItems.length === 0;
+      const isEmpty = leftColumnEmpty && rightColumnEmpty;
+      
+      if (isEmpty) {
+        console.warn(`⚠️ 빈 페이지 감지 및 제거: 페이지 ${pageIndex + 1}`, {
+          leftColumnItems: leftColumnItems.length,
+          rightColumnItems: rightColumnItems.length,
+          hasWork01: hasWork01,
+          pageColumns: pageColumns
+        });
+        return false; // 빈 페이지는 제거
+      }
+      
+      // 추가 검증: 각 컬럼의 아이템이 실제로 섹션을 가지고 있는지 확인
+      const leftHasContent = leftColumnItems.some(item => item.sections && item.sections.length > 0);
+      const rightHasContent = rightColumnItems.some(item => item.sections && item.sections.length > 0);
+      
+      if (!leftHasContent && !rightHasContent) {
+        console.warn(`⚠️ 빈 섹션 페이지 감지 및 제거: 페이지 ${pageIndex + 1}`, {
+          leftColumnItems: leftColumnItems.length,
+          rightColumnItems: rightColumnItems.length,
+          hasWork01: hasWork01
+        });
+        return false; // 섹션이 없는 페이지도 제거
+      }
+      
+      return true; // 유효한 페이지
+    });
+    
+    console.log(`📄 페이지 필터링 결과: ${distributedPages.length}개 → ${filteredPages.length}개 (빈 페이지 ${distributedPages.length - filteredPages.length}개 제거)`);
+
+    filteredPages.forEach((pageColumns: NormalizedQuizItem[][], pageIndex: number) => {
+      // 빈 페이지 재확인 (이중 안전장치) - 더 엄격한 체크
+      const leftColumnItems = pageColumns[0] || [];
+      const rightColumnItems = pageColumns[1] || [];
+      const leftColumnEmpty = leftColumnItems.length === 0;
+      const rightColumnEmpty = rightColumnItems.length === 0;
+      
+      if (leftColumnEmpty && rightColumnEmpty) {
+        console.warn(`⚠️ 렌더링 단계에서 빈 페이지 감지 및 건너뜀: 페이지 ${pageIndex + 1}`);
+        return; // 빈 페이지는 렌더링하지 않음
+      }
+      
+      // 추가 검증: 각 컬럼의 아이템이 실제로 섹션을 가지고 있는지 확인
+      const leftHasContent = leftColumnItems.some(item => item.sections && item.sections.length > 0);
+      const rightHasContent = rightColumnItems.some(item => item.sections && item.sections.length > 0);
+      
+      if (!leftHasContent && !rightHasContent) {
+        console.warn(`⚠️ 렌더링 단계에서 빈 섹션 페이지 감지 및 건너뜀: 페이지 ${pageIndex + 1}`);
+        return; // 섹션이 없는 페이지도 렌더링하지 않음
+      }
+      
       console.log(
         `📦 페이지 ${pageIndex + 1} 컬럼별 카드 수:`,
         pageColumns.map((columnItems) => columnItems.length)
@@ -522,11 +596,20 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
             }
       });
 
+      // 마지막 페이지인지 확인
+      const isLastPage = pageIndex === filteredPages.length - 1;
+      
       pages.push(
         <div
           key={`page-${pageIndex}`}
           id={`print-page-${pageIndex}`}
-          className="print-page a4-landscape-page-template"
+          className={`print-page a4-landscape-page-template ${isLastPage ? 'last-page' : ''}`}
+          style={isLastPage ? { 
+            pageBreakAfter: 'avoid',
+            breakAfter: 'avoid',
+            marginBottom: 0,
+            paddingBottom: 0
+          } : undefined}
         >
           <div className="a4-landscape-page-header">
             <PrintHeaderPackage02 />

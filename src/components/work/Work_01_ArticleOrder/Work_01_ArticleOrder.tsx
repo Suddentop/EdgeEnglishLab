@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { generateWork01Quiz } from '../../../services/work01Service';
 import { Quiz } from '../../../types/types';
-import { isAIServiceAvailable } from '../../../services/aiParagraphService';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
@@ -11,8 +10,6 @@ import { useAuth } from '../../../contexts/AuthContext';
 import PrintFormatWork01New from './PrintFormatWork01New';
 import './Work_01_ArticleOrder.css';
 import '../../../styles/PrintFormat.css';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../../firebase/config';
 import { callOpenAI } from '../../../services/common';
 
 interface Work_01_ArticleOrderProps {
@@ -42,15 +39,6 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-// data URL -> { mimeType, base64 } 분리
-function parseDataUrl(dataUrl: string): { mimeType: string; base64: string } {
-  const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
-  if (!match) {
-    return { mimeType: 'image/png', base64: dataUrl };
-  }
-  return { mimeType: match[1], base64: match[2] };
-}
-
 // OpenAI Vision API 호출 (프록시만 사용)
 async function callOpenAIVisionAPI(imageBase64: string, prompt: string): Promise<string> {
   const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
@@ -59,19 +47,18 @@ async function callOpenAIVisionAPI(imageBase64: string, prompt: string): Promise
     throw new Error('프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.');
   }
 
-  // 웹방화벽 회피: data URL이면 Firebase Storage에 업로드 후 공개 URL로 교체
+  // base64 데이터를 직접 사용 (Firebase Storage 업로드 제거로 타임아웃 문제 해결)
+  // OpenAI Vision API는 data URL 형식을 직접 지원합니다
   let imageUrl = imageBase64;
-  if (imageBase64.startsWith('data:')) {
-    const { mimeType, base64 } = parseDataUrl(imageBase64);
-    const binary = atob(base64);
-    const len = binary.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-    const blob = new Blob([bytes], { type: mimeType || 'image/png' });
-    const filePath = `vision-uploads/${Date.now()}.png`;
-    const ref = storageRef(storage, filePath);
-    await uploadBytes(ref, blob);
-    imageUrl = await getDownloadURL(ref);
+  
+  // data URL이 아닌 경우에만 Firebase Storage 업로드 시도 (fallback)
+  if (!imageBase64.startsWith('data:')) {
+    try {
+      // 이미 URL인 경우 그대로 사용
+      imageUrl = imageBase64;
+    } catch (error) {
+      console.warn('⚠️ 이미지 URL 처리 실패, base64 직접 사용:', error);
+    }
   }
 
   const proxyRequest = {
@@ -88,14 +75,34 @@ async function callOpenAIVisionAPI(imageBase64: string, prompt: string): Promise
     max_tokens: 2048
   };
 
-  // 공통 헬퍼로 프록시 호출
-  const response = await callOpenAI(proxyRequest);
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error('OpenAI Vision API 호출 실패: ' + errText);
+  // 공통 헬퍼로 프록시 호출 (재시도 로직 포함)
+  let lastError: Error | null = null;
+  const maxRetries = 3;
+  const retryDelay = 1000; // 1초
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await callOpenAI(proxyRequest);
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error('OpenAI Vision API 호출 실패: ' + errText);
+      }
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`⚠️ Vision API 호출 실패 (시도 ${attempt}/${maxRetries}):`, lastError.message);
+      
+      // 마지막 시도가 아니면 재시도
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        continue;
+      }
+    }
   }
-  const data = await response.json();
-  return data.choices[0].message.content;
+  
+  // 모든 재시도 실패
+  throw lastError || new Error('OpenAI Vision API 호출 실패: 알 수 없는 오류');
 }
 
 const visionPrompt = `영어문제로 사용되는 본문이야.\n이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.\n글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
@@ -114,8 +121,7 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
   
   const [isLoading, setIsLoading] = useState(false);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]); // 생성된 퀴즈 배열
-  const [useAI, setUseAI] = useState(false);
-  const aiAvailable = isAIServiceAvailable();
+  // 항상 규칙 기반 분할 사용 (AI 기반 분할 옵션 제거)
   const [showScreenshotHelp, setShowScreenshotHelp] = useState(false);
   
 
@@ -294,25 +300,14 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
         setUserCurrentPoints(deductionResult.remainingPoints);
         
         // 순차적으로 문제 생성
+        const allInputTexts: string[] = [];
         for (const item of validItems) {
           try {
             console.log(`🔍 문제 생성 시작 (ID: ${item.id})...`);
-            const quiz = await generateWork01Quiz(item.text, useAI);
+            const quiz = await generateWork01Quiz(item.text, false); // 항상 규칙 기반 분할 사용
             generatedQuizzes.push(quiz);
+            allInputTexts.push(item.text);
             successCount++;
-            
-            // 내역 저장
-            await saveQuizWithPDF({
-              userId: userData!.uid,
-              userName: userData!.name || '사용자',
-              userNickname: userData!.nickname || '사용자',
-              workTypeId: '01',
-              workTypeName: getWorkTypeName('01'),
-              points: pointsToDeduct,
-              inputText: item.text,
-              quizData: quiz,
-              status: 'success'
-            });
           } catch (err) {
             console.error(`❌ 문제 생성 실패 (ID: ${item.id}):`, err);
             failCount++;
@@ -320,6 +315,27 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
         }
 
         setQuizzes(generatedQuizzes);
+        
+        // 모든 문제를 하나의 내역으로 저장 (나의문제생성 목록에 추가)
+        if (generatedQuizzes.length > 0 && userData!.uid) {
+          try {
+            const combinedInputText = allInputTexts.join('\n\n---\n\n');
+            await saveQuizWithPDF({
+              userId: userData!.uid,
+              userName: userData!.name || '사용자',
+              userNickname: userData!.nickname || '사용자',
+              workTypeId: '01',
+              workTypeName: `${getWorkTypeName('01')} (${generatedQuizzes.length}문제)`,
+              points: totalPoints,
+              inputText: combinedInputText,
+              quizData: generatedQuizzes, // 여러 문제를 배열로 저장
+              status: 'success'
+            });
+            console.log(`✅ 유형#01 내역 저장 완료 (${generatedQuizzes.length}문제)`);
+          } catch (historyError) {
+            console.error('❌ 유형#01 내역 저장 실패:', historyError);
+          }
+        }
         
         if (failCount > 0) {
           alert(`${validItems.length}건 중 ${successCount}건 성공, ${failCount}건 실패했습니다.`);
@@ -421,18 +437,55 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
         <div className="quiz-header no-print">
           <h2>#01. 문장 순서 맞추기 (총 {quizzes.length}문제)</h2>
           <div className="quiz-header-buttons">
-            <button onClick={resetAll} className="reset-button">
-              새 문제 만들기
+            <button 
+              onClick={resetAll} 
+              style={{
+                width: '130px',
+                height: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '11pt',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #bef264 0%, #a3e635 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(190, 242, 100, 0.25)'
+              }}
+            >
+              새문제
             </button>
-            <button onClick={() => triggerPrint('no-answer')} className="print-button styled-print">
+            <button 
+              onClick={() => triggerPrint('no-answer')} 
+              style={{
+                width: '130px',
+                height: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '11pt',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)'
+              }}
+            >
               🖨️ 인쇄 (문제)
             </button>
             <button 
               onClick={() => triggerPrint('with-answer')} 
-              className="print-button styled-print"
               style={{
+                width: '130px',
+                height: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '11pt',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '8px',
                 background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                 color: 'white',
+                cursor: 'pointer',
                 boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
               }}
             >
@@ -599,29 +652,6 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
         ➕ 본문 추가하기
       </button>
 
-      <div className="ai-option-section" style={{ marginTop: '30px' }}>
-        <div className="option-group">
-          <label className="option-label">
-            <input
-              type="radio"
-              checked={!useAI}
-              onChange={() => setUseAI(false)}
-            />
-            <span className="option-text">📋 규칙 기반 분할 (기본)</span>
-          </label>
-        </div>
-        <div className="option-group">
-          <label className="option-label">
-            <input
-              type="radio"
-              checked={useAI}
-              onChange={() => setUseAI(true)}
-              disabled={!aiAvailable}
-            />
-            <span className="option-text">🤖 AI 기반 의미 분할 (고급)</span>
-          </label>
-        </div>
-      </div>
 
       <button
         onClick={handleGenerateQuiz}

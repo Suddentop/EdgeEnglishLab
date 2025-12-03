@@ -135,7 +135,29 @@ const QuizListPage: React.FC = () => {
           // 선행 0을 보존해 work02Data, work03Data 형태로 맞춤
           const nestedKey = `work${numId}Data`;
           if (numId === '01') {
-            quizItem.quiz = parsed?.quiz || parsed;
+            // 유형#01은 여러 문제를 배열로 저장할 수 있음
+            if (Array.isArray(parsed)) {
+              // 배열인 경우: 각 항목을 quiz 필드로 변환하여 패키지 형태로 처리
+              const quizzes = parsed.map((quiz, index) => ({
+                workTypeId: '01',
+                workTypeName: historyItem.workTypeName,
+                quiz: quiz
+              }));
+              
+              const wrapped = {
+                ...historyItem,
+                generatedData: {
+                  isPackage: true,
+                  quizzes: quizzes
+                }
+              } as any;
+
+              navigate('/quiz-display', { state: { quizData: wrapped } });
+              return;
+            } else {
+              // 단일 문제인 경우
+              quizItem.quiz = parsed?.quiz || parsed;
+            }
           } else {
             // work02Data, work03Data ... work14Data 로 매핑
             // 저장된 구조가 { work10Data: {...} } 형태인 경우 추출

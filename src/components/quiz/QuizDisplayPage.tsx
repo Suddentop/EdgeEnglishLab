@@ -6,6 +6,7 @@ import PrintFormatPackage02 from '../work/Package_02_TwoStepQuiz/PrintFormatPack
 import SimplePrintFormatPackage02 from '../work/Package_02_TwoStepQuiz/SimplePrintFormatPackage02';
 import PrintFormatPackage03 from '../work/Package_03_ParagraphOrder/PrintFormatPackage03';
 import PrintFormatPackage01 from '../work/Package_01_MultiQuizGenerater/PrintFormatPackage01';
+import PrintFormatWork01New from '../work/Work_01_ArticleOrder/PrintFormatWork01New';
 import HistoryPrintWork12 from '../work/Work_12_WordStudy/HistoryPrintWork12';
 import SimpleQuizDisplay from './SimpleQuizDisplay';
 import FileFormatSelector from '../work/shared/FileFormatSelector';
@@ -125,7 +126,9 @@ const QuizDisplayPage: React.FC = () => {
         ? 'print-root-package02' 
         : packageType === 'P03'
           ? 'print-root-package03'
-          : 'print-root-package02';
+          : packageType === '01'
+            ? 'print-root-work01'
+            : 'print-root-package02';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
 
@@ -159,6 +162,9 @@ const QuizDisplayPage: React.FC = () => {
       root.render(<PrintFormatPackage02 packageQuiz={packageQuiz} />);
     } else if (packageType === 'P03') {
       root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} />);
+    } else if (packageType === '01') {
+      const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
+      root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={false} />);
     } else {
       root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
     }
@@ -272,8 +278,17 @@ const QuizDisplayPage: React.FC = () => {
           padding: 0 !important;
           background: white !important;
           box-sizing: border-box !important;
-          page-break-after: auto !important;
-          break-after: auto !important;
+        }
+        .print-container-answer .a4-landscape-page-template:not(:last-child):not(.last-page) {
+          page-break-after: always !important;
+          break-after: page !important;
+        }
+        .print-container-answer .a4-landscape-page-template:last-child,
+        .print-container-answer .a4-landscape-page-template.last-page {
+          page-break-after: avoid !important;
+          break-after: avoid !important;
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
         }
         .print-container-answer .a4-landscape-page-content {
           display: block !important;
@@ -374,15 +389,43 @@ const QuizDisplayPage: React.FC = () => {
       root.render(<PrintFormatPackage02 packageQuiz={packageQuiz} isAnswerMode={true} />);
     } else if (packageType === 'P03') {
       root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} isAnswerMode={true} />);
+    } else if (packageType === '01') {
+      const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
+      root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={true} />);
     } else {
       root.render(<PrintFormatPackage02 packageQuiz={packageQuiz} isAnswerMode={true} />);
     }
 
     // 렌더링 완료 후 인쇄 및 파일 생성
     setTimeout(async () => {
+      // 디버깅: 실제 DOM에 렌더링된 페이지 요소 확인
+      const element = document.getElementById(containerId);
+      if (element) {
+        const pageElements = element.querySelectorAll('.a4-landscape-page-template');
+        console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 정답):', {
+          totalPages: pageElements.length,
+          containerId: containerId,
+          pages: Array.from(pageElements).map((page, idx) => {
+            const rect = page.getBoundingClientRect();
+            const computedStyle = window.getComputedStyle(page);
+            return {
+              index: idx,
+              id: page.id,
+              className: page.className,
+              height: rect.height,
+              computedHeight: computedStyle.height,
+              pageBreakAfter: computedStyle.pageBreakAfter,
+              breakAfter: computedStyle.breakAfter,
+              isLastPage: page.classList.contains('last-page'),
+              marginBottom: computedStyle.marginBottom,
+              paddingBottom: computedStyle.paddingBottom
+            };
+          })
+        });
+      }
+      
       // 파일 생성 및 Firebase Storage 업로드
       try {
-        const element = document.getElementById(containerId);
         if (element && userData?.uid) {
           const workTypeName = packageType === 'P01' ? '패키지#01_정답' :
                               packageType === 'P02' ? '패키지#02_정답' :

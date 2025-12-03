@@ -870,8 +870,12 @@ ${englishText}`;
                 justifyContent: 'center',
                 border: 'none',
                 borderRadius: '8px',
+                background: 'linear-gradient(135deg, #bef264 0%, #a3e635 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(190, 242, 100, 0.25)',
                 transition: 'all 0.3s ease'
-              }}>새 문제 만들기</button>
+              }}>새문제</button>
               <button onClick={handlePrintNoAnswer} className="print-button styled-print" style={{
                 width: '160px',
                 height: '48px',

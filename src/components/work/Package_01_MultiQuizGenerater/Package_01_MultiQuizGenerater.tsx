@@ -2906,9 +2906,10 @@ ${inputText}`;
                   fontWeight: '600',
                   border: 'none',
                   borderRadius: '8px',
-                  background: '#e2e8f0',
-                  color: '#475569',
-                  cursor: 'pointer'
+                  background: 'linear-gradient(135deg, #bef264 0%, #a3e635 100%)',
+                  color: 'white',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 6px rgba(190, 242, 100, 0.25)'
                 }}
               >
                 새문제

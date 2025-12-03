@@ -226,14 +226,28 @@
   font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
 }
 
-.a4-landscape-page-template:not(:last-child) {
+.a4-landscape-page-template:not(:last-child):not(.last-page) {
   page-break-after: always;
   break-after: page;
 }
 
-.a4-landscape-page-template:last-child {
-  page-break-after: avoid;
-  break-after: avoid;
+.a4-landscape-page-template:last-child,
+.a4-landscape-page-template.last-page {
+  page-break-after: avoid !important;
+  break-after: avoid !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* 정답 모드에서 마지막 페이지 다음 빈 페이지 방지 */
+.print-container-answer .a4-landscape-page-template:last-child,
+.print-container-answer .a4-landscape-page-template.last-page {
+  page-break-after: avoid !important;
+  break-after: avoid !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  height: 21cm !important;
+  max-height: 21cm !important;
 }
 
 .a4-landscape-page-header {
@@ -275,8 +289,6 @@
     opacity: 1 !important;
     width: 100% !important;
     height: auto !important;
-    /* 정답 모드: 페이지들이 세로로 배치되도록 보장 */
-    flex-direction: column !important;
   }
 
   .print-container.pdf-generation-active,
@@ -288,15 +300,15 @@
     min-width: 100% !important;
     height: auto !important;
     min-height: auto !important;
-    /* 정답 모드: 페이지들이 세로로 배치되도록 보장 */
-    flex-direction: column !important;
   }
-
-  /* 정답 모드: 페이지 요소들이 세로로 배치되도록 강제 */
-  .print-container-answer {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
+  
+  /* 정답 모드: 마지막 페이지 다음 빈 페이지 방지 */
+  .print-container-answer .a4-landscape-page-template:last-child,
+  .print-container-answer .a4-landscape-page-template.last-page {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   /* 페이지 템플릿 크기 강제 */
