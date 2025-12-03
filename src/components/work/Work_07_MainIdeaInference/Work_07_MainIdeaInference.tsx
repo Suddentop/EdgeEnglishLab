@@ -638,7 +638,6 @@ const Work_07_MainIdeaInference: React.FC = () => {
       reader.readAsDataURL(file);
     });
     const base64 = await fileToBase64(imageFile);
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `영어문제로 사용되는 본문이야.
 이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.
 글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 
@@ -661,7 +660,6 @@ const Work_07_MainIdeaInference: React.FC = () => {
   }
 
   async function generateMainIdeaQuizWithAI(passage: string): Promise<MainIdeaQuiz> {
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 주제 추론 문제를 만들어주세요. 글의 주제를 가장 잘 요약하는 문장/구 1개를 선정하되, **수능 수준의 추론 능력을 평가할 수 있는** 주제 요약을 선택하세요.
 
 단계별 작업:
@@ -848,7 +846,6 @@ ${passage}
 
   // 재시도 함수
   async function generateMainIdeaQuizWithAIRetry(passage: string, retryCount: number): Promise<MainIdeaQuiz> {
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     const prompt = `아래 영어 본문을 읽고, 글의 주제를 가장 잘 요약하는 문장/구 1개를 선정해.
 
 단계별 작업:

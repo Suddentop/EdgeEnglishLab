@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import './Package_01_MultiQuizGenerater.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
-import ApiKeyCheck from '../../common/ApiKeyCheck';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { savePackageQuizHistory } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -692,7 +691,6 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
           try {
             console.log('🔄 OCR 처리 시작...');
             console.log('📁 파일 정보:', { name: file.name, size: file.size, type: file.type });
-            // console.log('🔑 API 키 확인:', process.env.REACT_APP_OPENAI_API_KEY ? '설정됨' : '설정되지 않음'); // 보안상 제거됨
             
             const ocrText = await imageToTextWithOpenAIVision(file);
             console.log('✅ OCR 처리 완료:', ocrText.substring(0, 100) + '...');
@@ -768,7 +766,6 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
       console.log('🌐 전체 텍스트 번역 시작...');
       let translation = '';
       try {
-        // const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
         if (true) { // 프록시 서버 사용을 위해 항상 true로 설정
           const response = await callOpenAIAPI({
           model: 'gpt-3.5-turbo',
@@ -1204,7 +1201,6 @@ ${inputText}
   const generateWork08Quiz = async (inputText: string): Promise<TitleQuiz> => {
     console.log('🔄 Work_08 문제 생성 시작...');
     
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const prompt = `아래 영어 본문을 읽고, 글의 주제의식에 가장 적합한 제목(title) 1개를 선정해.\n1. 정답 제목(문장/구) + 오답(비슷한 길이의 제목 4개, 의미는 다름) 총 5개를 생성해.\n2. 정답의 위치는 1~5번 중 랜덤.\n3. 본문 해석도 함께 제공.\n4. 아래 JSON 형식으로, 반드시 answerTranslation(정답 제목의 한글 해석) 필드를 별도 포함해서 응답:\n{\n  \"passage\": \"...\",\n  \"options\": [\"...\", \"...\", \"...\", \"...\", \"...\"],\n  \"answerIndex\": 2,\n  \"translation\": \"...\",\n  \"answerTranslation\": \"정답 제목의 한글 해석\"\n}\n본문:\n${inputText}\n정답(제목)의 한글 해석도 반드시 포함해줘.\n정답(제목) 영어 문장과 그 한글 해석(answerTranslation)도 반드시 별도 필드로 포함해줘.`;
 
     const response = await callOpenAIAPI({
@@ -1240,7 +1236,6 @@ ${inputText}
 
   // Work_09 핵심 함수들
   const selectWords = async (passage: string): Promise<string[]> => {
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 5개만 선정하세요.
 
 중요한 규칙:
@@ -1302,7 +1297,6 @@ ${passage}`;
     original: string;
     grammarType: string;
   }> => {
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const grammarTypes = [
       '시제', '조동사', '수동태', '준동사', '가정법', 
       '관계사', '형/부', '수일치/관사', '비교', '도치/강조'
@@ -1503,7 +1497,6 @@ Make sure the transformed word is actually DIFFERENT and WRONG compared to the o
   };
 
   const translatePassage = async (passage: string): Promise<string> => {
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const prompt = `다음 영어 본문을 자연스러운 한국어로 번역하세요.
 
 번역 요구사항:
@@ -1541,7 +1534,6 @@ ${passage}`;
     console.log('🔍 Work_10 문제 생성 시작...');
     
     try {
-      // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
       const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 8개를 선정하세요.
 이 중 3~8개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.
 
@@ -1654,7 +1646,6 @@ ${inputText}`;
     console.log('🔍 Work_11 문제 생성 시작...');
     
     try {
-      // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
       
       // 영어 텍스트를 문장 단위로 분리 (약어 보호)
       let processedText = inputText;
@@ -1758,7 +1749,6 @@ ${inputText}`;
     missingSentence: string;
     topicSentenceIndex: number;
   }> => {
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string; // Removed for security
     const passage = sentences.join(' ');
     
     const prompt = `아래 영어 본문에서 가장 중요한 주제 문장 1개를 찾아서 제거해주세요.

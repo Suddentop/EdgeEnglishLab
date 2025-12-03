@@ -208,7 +208,6 @@ const Work_12_WordStudy: React.FC = () => {
     });
     
     const base64 = await fileToBase64(imageFile);
-    // const apiKey = process.env.REACT_APP_OPENAI_API_KEY as string;
     
     const prompt = `이 이미지는 영어 단어 학습용 워크시트입니다. 이미지에 표시된 모든 영어 단어와 그에 대응하는 한글 뜻을 완전히 추출해주세요.
 

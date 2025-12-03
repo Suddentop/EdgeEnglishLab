@@ -1,36 +1,7 @@
 // AI 기반 의미 단락 분할 및 섞기 서비스
-// 서비스 제공자의 OpenAI API 키를 사용하여 모든 사용자에게 AI 기능 제공
+// 프록시 서버를 통해서만 OpenAI API 호출 (보안)
 
-// 프록시 서버 또는 직접 OpenAI API 호출 헬퍼 함수
-async function callOpenAIAPI(requestBody: any): Promise<Response> {
-  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
-  const directApiKey = process.env.REACT_APP_OPENAI_API_KEY;
-  
-  if (proxyUrl) {
-    // 프록시 서버 사용 (프로덕션)
-    console.log('🤖 OpenAI 프록시 서버 호출 중...');
-    return await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-  } else if (directApiKey) {
-    // 개발 환경: 직접 API 호출
-    console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
-    return await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${directApiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-  } else {
-    throw new Error('API 설정이 없습니다. .env.local 파일을 확인해주세요.');
-  }
-}
+import { callOpenAI } from './common';
 
 export interface AIParagraphResponse {
   success: boolean;
@@ -40,20 +11,14 @@ export interface AIParagraphResponse {
   originalText?: string;
 }
 
-// 서비스 제공자의 OpenAI API 키 확인
-const getOpenAIKey = (): string | null => {
-  // 환경변수에서 서비스 제공자의 API 키 가져오기
-  return process.env.REACT_APP_OPENAI_API_KEY || null;
-};
-
 // AI 기반 의미 단락 분할 및 섞기
 export async function divideParagraphsWithAI(text: string, title?: string): Promise<AIParagraphResponse> {
-  const apiKey = getOpenAIKey();
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL;
   
-  if (!apiKey) {
+  if (!proxyUrl) {
     return {
       success: false,
-      error: 'AI 서비스가 현재 이용할 수 없습니다. 잠시 후 다시 시도해주세요.'
+      error: 'AI 서비스가 현재 이용할 수 없습니다. 프록시 서버가 설정되지 않았습니다.'
     };
   }
 
@@ -68,7 +33,7 @@ export async function divideParagraphsWithAI(text: string, title?: string): Prom
   try {
     console.log('🤖 AI 기반 단락 분할 및 섞기 시작...');
     
-    const response = await callOpenAIAPI({
+    const response = await callOpenAI({
       model: "gpt-4",
       messages: [
           {
@@ -335,5 +300,5 @@ function divideParagraphsWithFallback(text: string): AIParagraphResponse {
 
 // AI 서비스 이용 가능 여부 확인
 export function isAIServiceAvailable(): boolean {
-  return getOpenAIKey() !== null;
+  return !!process.env.REACT_APP_API_PROXY_URL;
 } 

@@ -63,22 +63,8 @@ class OpenAIProxyService {
           signal: controller.signal
         });
       } else {
-        // 프록시 URL이 없으면 직접 호출 (개발 환경)
-        const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-        if (!apiKey) {
-          throw new Error('API Key가 설정되지 않았습니다. .env.local 파일에 REACT_APP_OPENAI_API_KEY를 설정해주세요.');
-        }
-        
-        console.log('🤖 OpenAI API 직접 호출 중... (개발 환경)');
-        response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify(request),
-          signal: controller.signal
-        });
+        // 프록시 URL이 없으면 에러 발생 (보안상 직접 호출 제거)
+        throw new Error('프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.');
       }
 
       clearTimeout(timeoutId);
