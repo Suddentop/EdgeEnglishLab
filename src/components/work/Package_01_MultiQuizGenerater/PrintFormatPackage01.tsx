@@ -267,11 +267,20 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                     {/* 4지선다 선택지 */}
                     {quiz01.choices && quiz01.choices.length > 0 ? (
                       <>
-                        {quiz01.choices.map((choice: any, cIndex: number) => (
-                          <div key={`choice-${cIndex}`} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
-                            {['①', '②', '③', '④'][cIndex]} {Array.isArray(choice) ? choice.join(' → ') : choice}
-                          </div>
-                        ))}
+                        {(isAnswerMode 
+                          ? [quiz01.choices[quiz01.answerIndex]].filter(Boolean) // 정답 모드: 정답 항목만
+                          : quiz01.choices // 문제 모드: 모든 선택지
+                        ).map((choice: any, cIndex: number) => {
+                          const actualIndex = isAnswerMode ? quiz01.answerIndex : cIndex;
+                          return (
+                            <div key={`choice-${actualIndex}`} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
+                              {['①', '②', '③', '④'][actualIndex]} {Array.isArray(choice) ? choice.join(' → ') : choice}
+                              {isAnswerMode && (
+                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </>
                     ) : (
                       <div style={{marginTop:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', border:'1px solid #ffc107', color:'#856404'}}>
@@ -279,20 +288,12 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                       </div>
                     )}
                     
-                    {isAnswerMode && (
-                      <div style={{marginTop:'1rem', padding:'1rem', background:'#e3f2fd', borderRadius:'8px'}}>
-                        <div style={{fontWeight:800, color:'#1976d2'}}>
-                          정답: {['①', '②', '③', '④'][quiz01.answerIndex]} {quiz01.choices?.[quiz01.answerIndex]?.join(' → ')}
+                    {/* 정답 모드일 때: 전체 본문 해석 추가 */}
+                    {isAnswerMode && computedTranslatedText && (
+                      <div style={{marginTop:'1rem', padding:'0.8rem', background:'#f8f9fa', borderRadius:'6px', border:'1px solid #dee2e6'}}>
+                        <div className="korean-translation" style={{fontSize:'0.5rem !important', lineHeight:'1.4', color:'#1976d2'}}>
+                          {computedTranslatedText}
                         </div>
-                        
-                        {/* 전체 본문 해석 추가 */}
-                        {computedTranslatedText && (
-                          <div style={{marginTop:'1rem', padding:'0.8rem', background:'#f8f9fa', borderRadius:'6px', border:'1px solid #dee2e6'}}>
-                            <div className="korean-translation" style={{fontSize:'0.5rem !important', lineHeight:'1.4', color:'#1976d2'}}>
-                              {computedTranslatedText}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>

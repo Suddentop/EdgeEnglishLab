@@ -86,9 +86,12 @@ const QuizDisplayPage: React.FC = () => {
       packageType || !packageType.startsWith('P')
     ) && Array.isArray(packageQuiz) && packageQuiz.length === 1);
     
-    // 단일 유형이면 세로, 패키지#01도 세로
-    if (packageType === 'P01' || isSingleWork) {
-      // Package#01: A4 세로
+    // 유형#01은 가로, 단일 유형이면 세로, 패키지#01도 세로
+    const first = packageQuiz[0] || {};
+    const typeId = first.workTypeId;
+    const isType01Single = isSingleWork && typeId === '01';
+    if (packageType === 'P01' || (isSingleWork && !isType01Single)) {
+      // Package#01 또는 단일 유형(유형#01 제외): A4 세로
       style.textContent = `
         @page {
           margin: 0;
@@ -102,7 +105,7 @@ const QuizDisplayPage: React.FC = () => {
         }
       `;
     } else {
-      // Package#02, #03: A4 가로
+      // Package#02, #03, 유형#01: A4 가로
       style.textContent = `
         @page {
           margin: 0;
@@ -120,14 +123,15 @@ const QuizDisplayPage: React.FC = () => {
     
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
-    const containerId = packageType === 'P01' || isSingleWork 
+    // first, typeId, isType01Single은 위에서 이미 선언됨
+    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single)
       ? 'print-root-package01' 
       : packageType === 'P02' 
         ? 'print-root-package02' 
         : packageType === 'P03'
           ? 'print-root-package03'
-          : packageType === '01'
-            ? 'print-root-work01'
+          : packageType === '01' || isType01Single
+            ? 'print-root-work01-new'
             : 'print-root-package02';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
@@ -142,8 +146,7 @@ const QuizDisplayPage: React.FC = () => {
     const root = ReactDOM.createRoot(printContainer);
     if (isSingleWork) {
       // 단일 유형: 유형에 따라 최적 포맷 선택
-      const first = packageQuiz[0] || {};
-      const typeId = first.workTypeId;
+      // first와 typeId는 위에서 이미 선언됨
       // 번역 텍스트 계산 (전역 전달용 - 포맷 컴포넌트에서 우선 사용)
       const d: any = first.quiz || first.data || first[`work${first.workTypeId?.toString().padStart(2,'0')}Data`] || {};
       const globalTranslatedText =
@@ -153,6 +156,10 @@ const QuizDisplayPage: React.FC = () => {
       if (typeId === '12') {
         const data: any = first.work12Data || first.data?.work12Data || first.data || first;
         root.render(<HistoryPrintWork12 data={data} />);
+      } else if (typeId === '01') {
+        // 유형#01은 PrintFormatWork01New 사용
+        const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
+        root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={false} />);
       } else {
         root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} translatedText={globalTranslatedText} />);
       }
@@ -173,11 +180,25 @@ const QuizDisplayPage: React.FC = () => {
     setTimeout(async () => {
       // 파일 생성 및 Firebase Storage 업로드
       try {
-        const element = document.getElementById(containerId);
+        // 유형#01의 경우 실제 렌더링된 컨테이너 ID 사용
+        let elementId = containerId;
+        if (packageType === '01' || isType01Single) {
+          elementId = 'print-root-work01-new';
+        }
+        const element = document.getElementById(elementId);
+        if (!element) {
+          console.error(`❌ 인쇄 컨테이너를 찾을 수 없습니다: ${elementId}`);
+          // 대체 시도: 내부 컨테이너 찾기
+          const innerElement = document.querySelector('.work01-new-print');
+          if (innerElement) {
+            console.log('✅ 대체 컨테이너 찾음:', innerElement);
+          }
+        }
         if (element && userData?.uid) {
           const workTypeName = packageType === 'P01' ? '패키지#01_문제' :
                               packageType === 'P02' ? '패키지#02_문제' :
                               packageType === 'P03' ? '패키지#03_문제' :
+                              packageType === '01' ? '유형#01_문제' :
                               '문제';
           
           const result = await generateAndUploadFile(
@@ -187,7 +208,7 @@ const QuizDisplayPage: React.FC = () => {
             workTypeName,
             { 
               isAnswerMode: false, 
-              orientation: (packageType === 'P01' || isSingleWork) ? 'portrait' : 'landscape',
+              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single)) ? 'portrait' : 'landscape',
               fileFormat 
             }
           );
@@ -217,7 +238,7 @@ const QuizDisplayPage: React.FC = () => {
         }
         console.log('✅ 인쇄(문제) 완료');
       }, fileFormat === 'pdf' ? 100 : 500);
-    }, 500);
+    }, (packageType === '01' || isType01Single) ? 1000 : 500); // 유형#01은 렌더링 시간이 더 필요할 수 있음
   };
 
   // 인쇄(정답) 핸들러
@@ -236,8 +257,13 @@ const QuizDisplayPage: React.FC = () => {
       packageType || !packageType.startsWith('P')
     ) && Array.isArray(packageQuiz) && packageQuiz.length === 1);
     
-    if (packageType === 'P01' || isSingleWork) {
-      // Package#01: A4 세로
+    // 유형#01은 가로, 단일 유형이면 세로, 패키지#01도 세로
+    const first = packageQuiz[0] || {} as any;
+    const typeId = first.workTypeId;
+    const isType01Single = isSingleWork && typeId === '01';
+    
+    if (packageType === 'P01' || (isSingleWork && !isType01Single)) {
+      // Package#01 또는 단일 유형(유형#01 제외): A4 세로
       style.textContent = `
         @page {
           margin: 0;
@@ -251,7 +277,7 @@ const QuizDisplayPage: React.FC = () => {
         }
       `;
     } else {
-      // Package#02, #03: A4 가로
+      // Package#02, #03, 유형#01: A4 가로
       style.textContent = `
         @page {
           margin: 0;
@@ -343,13 +369,16 @@ const QuizDisplayPage: React.FC = () => {
     
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
-    const containerId = packageType === 'P01' || isSingleWork 
+    // first, typeId, isType01Single은 위에서 이미 선언됨
+    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single)
       ? 'print-root-package01-answer' 
       : packageType === 'P02' 
         ? 'print-root-package02-answer' 
         : packageType === 'P03'
           ? 'print-root-package03-answer'
-          : 'print-root-package02-answer';
+          : packageType === '01' || isType01Single
+            ? 'print-root-work01-new-answer'
+            : 'print-root-package02-answer';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
 
@@ -362,8 +391,7 @@ const QuizDisplayPage: React.FC = () => {
     // React 18 방식으로 렌더링 (정답 모드, 패키지/단일 유형에 따라)
     const root = ReactDOM.createRoot(printContainer);
     if (isSingleWork) {
-      const first = packageQuiz[0] || {} as any;
-      const typeId = first.workTypeId;
+      // typeId는 위에서 이미 선언됨
       // 전역 번역 텍스트 산출
       let globalTranslatedText = first.translatedText || '';
       if (!globalTranslatedText && typeId === '03') {
@@ -380,6 +408,10 @@ const QuizDisplayPage: React.FC = () => {
       if (typeId === '12') {
         const data: any = first.work12Data || first.data?.work12Data || first.data || first;
         root.render(<HistoryPrintWork12 data={data} isAnswerMode={true} />);
+      } else if (typeId === '01') {
+        // 유형#01은 PrintFormatWork01New 사용
+        const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
+        root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={true} />);
       } else {
         root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={true} translatedText={globalTranslatedText} />);
       }
@@ -398,38 +430,51 @@ const QuizDisplayPage: React.FC = () => {
 
     // 렌더링 완료 후 인쇄 및 파일 생성
     setTimeout(async () => {
-      // 디버깅: 실제 DOM에 렌더링된 페이지 요소 확인
-      const element = document.getElementById(containerId);
-      if (element) {
-        const pageElements = element.querySelectorAll('.a4-landscape-page-template');
-        console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 정답):', {
-          totalPages: pageElements.length,
-          containerId: containerId,
-          pages: Array.from(pageElements).map((page, idx) => {
-            const rect = page.getBoundingClientRect();
-            const computedStyle = window.getComputedStyle(page);
-            return {
-              index: idx,
-              id: page.id,
-              className: page.className,
-              height: rect.height,
-              computedHeight: computedStyle.height,
-              pageBreakAfter: computedStyle.pageBreakAfter,
-              breakAfter: computedStyle.breakAfter,
-              isLastPage: page.classList.contains('last-page'),
-              marginBottom: computedStyle.marginBottom,
-              paddingBottom: computedStyle.paddingBottom
-            };
-          })
-        });
-      }
-      
       // 파일 생성 및 Firebase Storage 업로드
       try {
+        // 유형#01의 경우 실제 렌더링된 컨테이너 ID 사용
+        let elementId = containerId;
+        if (packageType === '01' || isType01Single) {
+          elementId = 'print-root-work01-new-answer';
+        }
+        const element = document.getElementById(elementId);
+        if (element) {
+          // 디버깅: 실제 DOM에 렌더링된 페이지 요소 확인
+          const pageElements = element.querySelectorAll('.a4-landscape-page-template');
+          console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 정답):', {
+            totalPages: pageElements.length,
+            containerId: elementId,
+            pages: Array.from(pageElements).map((page, idx) => {
+              const rect = page.getBoundingClientRect();
+              const computedStyle = window.getComputedStyle(page);
+              return {
+                index: idx,
+                id: page.id,
+                className: page.className,
+                height: rect.height,
+                computedHeight: computedStyle.height,
+                pageBreakAfter: computedStyle.pageBreakAfter,
+                breakAfter: computedStyle.breakAfter,
+                isLastPage: page.classList.contains('last-page'),
+                marginBottom: computedStyle.marginBottom,
+                paddingBottom: computedStyle.paddingBottom
+              };
+            })
+          });
+        }
+        if (!element) {
+          console.error(`❌ 인쇄 컨테이너를 찾을 수 없습니다: ${elementId}`);
+          // 대체 시도: 내부 컨테이너 찾기
+          const innerElement = document.querySelector('.work01-new-print');
+          if (innerElement) {
+            console.log('✅ 대체 컨테이너 찾음:', innerElement);
+          }
+        }
         if (element && userData?.uid) {
           const workTypeName = packageType === 'P01' ? '패키지#01_정답' :
                               packageType === 'P02' ? '패키지#02_정답' :
                               packageType === 'P03' ? '패키지#03_정답' :
+                              packageType === '01' || isType01Single ? '유형#01_정답' :
                               '정답';
           
           const result = await generateAndUploadFile(
@@ -439,7 +484,7 @@ const QuizDisplayPage: React.FC = () => {
             workTypeName,
             { 
               isAnswerMode: true, 
-              orientation: (packageType === 'P01' || isSingleWork) ? 'portrait' : 'landscape',
+              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single)) ? 'portrait' : 'landscape',
               fileFormat 
             }
           );
@@ -469,7 +514,7 @@ const QuizDisplayPage: React.FC = () => {
         }
         console.log('✅ 인쇄(정답) 완료');
       }, fileFormat === 'pdf' ? 100 : 500);
-    }, 500);
+    }, (packageType === '01' || isType01Single) ? 1000 : 500); // 유형#01은 렌더링 시간이 더 필요할 수 있음
   };
 
   // 목록보기 버튼

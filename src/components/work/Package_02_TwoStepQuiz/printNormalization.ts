@@ -273,17 +273,6 @@ export const normalizeQuizItemForPrint = (
         });
       });
 
-      // 정답 모드일 때: 영어 단락과 본문해석 사이에 정답 추가
-      if (isAnswerMode) {
-        const answerChoice = Array.isArray(quizData.choices) && quizData.choices[quizData.answerIndex]
-          ? quizData.choices[quizData.answerIndex]
-          : [];
-        const answerText = answerChoice.length > 0
-          ? `${OPTION_LABELS[quizData.answerIndex] || ''} ${answerChoice.join(' → ')}`
-          : `${OPTION_LABELS[quizData.answerIndex] || '-'}`;
-        addAnswerSection([`정답: ${answerText}`]);
-      }
-
       // 유형#01의 경우 choices는 배열의 배열이므로 "→"로 join
       const choices = quizData.choices || [];
       const allOptions = choices.map((choice: any, idx: number) => {
