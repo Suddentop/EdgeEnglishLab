@@ -830,11 +830,11 @@
 
 .shuffled-paragraph {
   margin-bottom: 0.3rem;
-  padding: 0 1rem;
+  padding: 0.8rem 1.2rem;
   background: #ffffff;
   border-radius: 6px;
   border: 1px solid #e9ecef;
-  line-height: 1;
+  line-height: 1.5;
   color: #333;
 }
 

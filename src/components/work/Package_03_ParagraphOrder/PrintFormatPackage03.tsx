@@ -145,8 +145,11 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
     }
     
     // 마지막 유형의 translation 수집 (인쇄 정답 모드일 때만)
+    // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 마지막에 전체 translation을 추가하지 않음
+    const hasWork01 = packageQuiz.some(item => item.workTypeId === '01');
+    
     let lastTranslation: string | null = null;
-    if (isAnswerMode && packageQuiz.length > 0) {
+    if (isAnswerMode && packageQuiz.length > 0 && !hasWork01) {
       const lastQuizItem = packageQuiz[packageQuiz.length - 1];
       let lastQuizData: any;
       if (lastQuizItem.workTypeId === '01') {
@@ -172,7 +175,8 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
     }
     
     // 마지막 유형 다음 단에 translation 섹션 추가
-    if (isAnswerMode && lastTranslation && distributedItems.length > 0) {
+    // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 추가하지 않음
+    if (isAnswerMode && lastTranslation && !hasWork01 && distributedItems.length > 0) {
       const lastPage = distributedItems[distributedItems.length - 1];
       const lastPageItemCount = lastPage.length;
       

@@ -994,6 +994,20 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           margin: 0;
           padding: 0;
         }
+        body * {
+          visibility: hidden;
+        }
+        .print-container, .print-container * {
+          visibility: visible;
+        }
+        .print-container {
+          display: block !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          background: white !important;
+        }
       }
     `;
     document.head.appendChild(style);
@@ -1076,7 +1090,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         }
         console.log('✅ 인쇄(문제) 완료');
             }, 100);
-    }, 500);
+    }, 1000);
   };
 
   const handlePrintAnswer = async () => {
@@ -1100,13 +1114,19 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           margin: 0;
           padding: 0;
         }
+        body * {
+          visibility: hidden;
+        }
+        .print-container-answer, .print-container-answer * {
+          visibility: visible;
+        }
         .print-container-answer {
           display: block !important;
-          width: 29.7cm;
-          min-height: 21cm;
-          background: white;
-          padding: 0;
-          box-sizing: border-box;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          background: white !important;
         }
         .no-print {
           display: none !important;
@@ -1219,7 +1239,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
         console.log('✅ 인쇄(정답) 완료');
             }, 100);
-    }, 500);
+    }, 1000);
   };
 
   // 문제 생성 후 화면
