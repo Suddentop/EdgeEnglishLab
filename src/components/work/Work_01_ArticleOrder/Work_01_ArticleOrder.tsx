@@ -635,7 +635,11 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
                 <textarea
                   value={item.text}
                   onChange={(e) => updateItem(item.id, { text: e.target.value })}
-                  placeholder="영어 본문이 여기에 표시됩니다. 직접 입력하거나 수정할 수 있습니다."
+                  placeholder="추출된 영어 본문이 여기에 표시됩니다. 
+
+캡처이미지 붙여넣기를 한 경우 '텍스트 추출 중...'이 완료된 후 '본문 추가하기'를 누르시거나 '일괄생성' 버튼을 눌러주세요.
+
+직접 본문을 입력하거나 추출된 텍스트를 수정할 수 있습니다."
                   className="text-input"
                   rows={6}
                   style={{ marginTop: '10px', width: '100%' }}
