@@ -818,7 +818,7 @@
   background-color: #FFF3CD !important;
   border: 1.5px solid #e3e6f0;
   border-radius: 8px;
-  padding: 1.2rem;
+  padding: 0.75rem !important;
   margin: 1.5rem 0;
 }
 
@@ -830,7 +830,7 @@
 
 .shuffled-paragraph {
   margin-bottom: 0.3rem;
-  padding: 0.8rem 1.2rem;
+  padding: 0.75rem 1.25rem !important;
   background: #ffffff;
   border-radius: 6px;
   border: 1px solid #e9ecef;

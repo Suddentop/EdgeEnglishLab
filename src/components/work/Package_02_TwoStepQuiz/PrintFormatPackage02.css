@@ -396,7 +396,7 @@
     width: 100%;
     padding: 0.2cm 0;
     margin-bottom: 0.25cm;
-    border-bottom: 2px solid #000;
+    border-bottom: 2px solid #000 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
