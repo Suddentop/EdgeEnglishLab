@@ -1136,6 +1136,17 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         .print-container-answer {
           display: none !important;
         }
+        .print-container-answer.pdf-generation-active {
+          display: block !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 9999 !important;
+          background: white !important;
+          overflow: auto !important;
+        }
       }
     `;
     document.head.appendChild(style);

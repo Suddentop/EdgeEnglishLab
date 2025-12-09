@@ -147,8 +147,21 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
       >
         {packageQuiz.map((quizItem, index) => {
           // 각 Work 유형별 렌더링 로직
-          // Package#01의 경우 데이터가 quizItem.data에 있을 가능성이 높음
-          const quizData = quizItem.quiz || quizItem.data;
+          // Package#01의 경우 각 유형별로 workXXData 필드에 데이터가 저장됨
+          // 유형#01만 quiz 필드 사용, 나머지는 workXXData 필드 사용
+          const quizData = quizItem.quiz || 
+                          quizItem.work02Data || 
+                          quizItem.work03Data || 
+                          quizItem.work04Data || 
+                          quizItem.work05Data || 
+                          quizItem.work06Data || 
+                          quizItem.work07Data || 
+                          quizItem.work08Data || 
+                          quizItem.work09Data || 
+                          quizItem.work10Data || 
+                          quizItem.work11Data || 
+                          quizItem.work13Data || 
+                          quizItem.work14Data;
           
           // translatedText를 여러 소스에서 찾기 (보강)
           // 다양한 저장 키를 폭넓게 지원
@@ -207,7 +220,10 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
             hasFinalTranslatedText: !!translatedText
           });
           
-          if (quizItem.workTypeId === '01' && quizData) {
+          // workTypeId가 문자열인 경우 숫자로 변환 (예: '1' -> '01')
+          const normalizedWorkTypeId = quizItem.workTypeId?.toString().padStart(2, '0') || '';
+          
+          if ((normalizedWorkTypeId === '01' || quizItem.workTypeId === '1' || quizItem.workTypeId === 1) && quizItem.quiz) {
             // Work_01: 직접 렌더링 (재귀 호출 방지)
             const quiz01 = quizData;
             
@@ -264,19 +280,15 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                       </div>
                     )}
                     
-                    {/* 4지선다 선택지 */}
+                    {/* 4지선다 선택지 - 모든 항목 표시 */}
                     {quiz01.choices && quiz01.choices.length > 0 ? (
                       <>
-                        {(isAnswerMode 
-                          ? [quiz01.choices[quiz01.answerIndex]].filter(Boolean) // 정답 모드: 정답 항목만
-                          : quiz01.choices // 문제 모드: 모든 선택지
-                        ).map((choice: any, cIndex: number) => {
-                          const actualIndex = isAnswerMode ? quiz01.answerIndex : cIndex;
+                        {quiz01.choices.map((choice: any, cIndex: number) => {
                           return (
-                            <div key={`choice-${actualIndex}`} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
-                              {['①', '②', '③', '④'][actualIndex]} {Array.isArray(choice) ? choice.join(' → ') : choice}
-                              {isAnswerMode && (
-                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                            <div key={`choice-${cIndex}`} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
+                              {['①', '②', '③', '④'][cIndex]} {Array.isArray(choice) ? choice.join(' → ') : choice}
+                              {isAnswerMode && quiz01.answerIndex === cIndex && (
+                                <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                               )}
                             </div>
                           );
@@ -287,31 +299,22 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                         ⚠️ 4지선다 선택지 데이터가 없습니다.
                       </div>
                     )}
-                    
-                    {/* 정답 모드일 때: 전체 본문 해석 추가 */}
-                    {isAnswerMode && computedTranslatedText && (
-                      <div style={{marginTop:'1rem', padding:'0.8rem', background:'#f8f9fa', borderRadius:'6px', border:'1px solid #dee2e6'}}>
-                        <div className="korean-translation" style={{fontSize:'0.5rem !important', lineHeight:'1.4', color:'#1976d2'}}>
-                          {computedTranslatedText}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
             );
-          } else if (quizItem.workTypeId === '02' && (quizItem.work02Data || quizData)) {
+          } else if ((normalizedWorkTypeId === '02' || quizItem.workTypeId === '2' || quizItem.workTypeId === 2) && quizItem.work02Data) {
               return (
                 <div key={`work-02-wrapper-${index}`} data-work-type="02">
                   <PrintFormatPackage01Work02 
-                    work02Data={quizItem.work02Data || quizData}
+                    work02Data={quizItem.work02Data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '03' && (quizItem.work03Data || quizData)) {
-              const w3 = (quizItem.work03Data || quizData || {}) as any;
+            } else if ((normalizedWorkTypeId === '03' || quizItem.workTypeId === '3' || quizItem.workTypeId === 3) && quizItem.work03Data) {
+              const w3 = quizItem.work03Data as any;
               console.log('🧩 Work03 인쇄 데이터 확인:', {
                 keys: Object.keys(w3),
                 sample: w3,
@@ -329,111 +332,142 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
               return (
                 <div key={`work-03-wrapper-${index}`} data-work-type="03">
                   <PrintFormatPackage01Work03 
-                    work03Data={quizItem.work03Data || quizData}
+                    work03Data={quizItem.work03Data}
                     translatedText={computedTranslatedText}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '04' && (quizItem.work04Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '04' || quizItem.workTypeId === '4' || quizItem.workTypeId === 4) && quizItem.work04Data) {
               return (
                 <div key={`work-04-wrapper-${index}`} data-work-type="04">
                   <PrintFormatPackage01Work04 
-                    work04Data={quizItem.work04Data || quizData}
+                    work04Data={quizItem.work04Data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '05' && (quizItem.work05Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '05' || quizItem.workTypeId === '5' || quizItem.workTypeId === 5) && quizItem.work05Data) {
               return (
                 <div key={`work-05-wrapper-${index}`} data-work-type="05">
                   <PrintFormatPackage01Work05 
-                    work05Data={quizItem.work05Data || quizData}
+                    work05Data={quizItem.work05Data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '06' && (quizItem.work06Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '06' || quizItem.workTypeId === '6' || quizItem.workTypeId === 6) && quizItem.work06Data) {
               return (
                 <div key={`work-06-wrapper-${index}`} data-work-type="06">
                   <PrintFormatPackage01Work06 
-                    work06Data={quizItem.work06Data || quizData}
+                    work06Data={quizItem.work06Data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '07' && (quizItem.work07Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '07' || quizItem.workTypeId === '7' || quizItem.workTypeId === 7) && quizItem.work07Data) {
               return (
                 <div key={`work-07-wrapper-${index}`} data-work-type="07">
                   <PrintFormatPackage01Work07 
-                    work07Data={quizItem.work07Data || quizData}
+                    work07Data={quizItem.work07Data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '08' && (quizItem.work08Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '08' || quizItem.workTypeId === '8' || quizItem.workTypeId === 8) && quizItem.work08Data) {
               return (
                 <div key={`work-08-wrapper-${index}`} data-work-type="08">
                   <PrintFormatPackage01Work08 
-                    work08Data={quizItem.work08Data || quizData}
+                    work08Data={quizItem.work08Data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '09' && (quizItem.work09Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '09' || quizItem.workTypeId === '9' || quizItem.workTypeId === 9) && quizItem.work09Data) {
               return (
                 <div key={`work-09-wrapper-${index}`} data-work-type="09">
                   <PrintFormatPackage01Work09 
-                    work09Data={quizItem.work09Data || quizData}
+                    work09Data={quizItem.work09Data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '10' && (quizItem.work10Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '10' || quizItem.workTypeId === '10') && quizItem.work10Data) {
               return (
                 <div key={`work-10-wrapper-${index}`} data-work-type="10">
                   <PrintFormatPackage01Work10 
-                    work10Data={quizItem.work10Data || quizData}
+                    work10Data={quizItem.work10Data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '11' && (quizItem.work11Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '11' || quizItem.workTypeId === '11') && quizItem.work11Data) {
               return (
                 <div key={`work-11-wrapper-${index}`} data-work-type="11">
                   <PrintFormatPackage01Work11 
-                    work11Data={quizItem.work11Data || quizData}
+                    work11Data={quizItem.work11Data}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '13' && (quizItem.work13Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '13' || quizItem.workTypeId === '13') && quizItem.work13Data) {
               return (
                 <div key={`work-13-wrapper-${index}`} data-work-type="13">
                   <PrintFormatPackage01Work13 
-                    work13Data={quizItem.work13Data || quizData}
+                    work13Data={quizItem.work13Data}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if (quizItem.workTypeId === '14' && (quizItem.work14Data || quizData)) {
+            } else if ((normalizedWorkTypeId === '14' || quizItem.workTypeId === '14') && quizItem.work14Data) {
               return (
                 <div key={`work-14-wrapper-${index}`} data-work-type="14">
                   <PrintFormatPackage01Work14 
-                    work14Data={quizItem.work14Data || quizData}
+                    work14Data={quizItem.work14Data}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
             }
-            return null;
+            
+            // 매칭되지 않는 유형에 대한 경고 및 디버깅 정보
+            console.warn(`⚠️ Package#01 렌더링 실패: 유형#${quizItem.workTypeId || 'unknown'}`, {
+              index,
+              workTypeId: quizItem.workTypeId,
+              hasQuiz: !!quizItem.quiz,
+              hasData: !!quizItem.data,
+              hasWork02Data: !!quizItem.work02Data,
+              hasWork03Data: !!quizItem.work03Data,
+              hasWork04Data: !!quizItem.work04Data,
+              hasWork05Data: !!quizItem.work05Data,
+              hasWork06Data: !!quizItem.work06Data,
+              hasWork07Data: !!quizItem.work07Data,
+              hasWork08Data: !!quizItem.work08Data,
+              hasWork09Data: !!quizItem.work09Data,
+              hasWork10Data: !!quizItem.work10Data,
+              hasWork11Data: !!quizItem.work11Data,
+              hasWork13Data: !!quizItem.work13Data,
+              hasWork14Data: !!quizItem.work14Data,
+              quizData,
+              allKeys: Object.keys(quizItem)
+            });
+            
+            // 마지막에 null 반환 대신 빈 div 반환하여 디버깅 정보 표시
+            return (
+              <div key={`unknown-work-${index}`} style={{padding: '1rem', background: '#ffebee', border: '2px solid #f44336', margin: '1rem 0'}}>
+                <strong>⚠️ 렌더링 실패: 유형#{quizItem.workTypeId || 'unknown'}</strong>
+                <pre style={{fontSize: '0.8rem', marginTop: '0.5rem', overflow: 'auto'}}>
+                  {JSON.stringify({workTypeId: quizItem.workTypeId, keys: Object.keys(quizItem)}, null, 2)}
+                </pre>
+              </div>
+            );
           })}
         {/* 마지막 문제 다음 단에 본문해석 추가 (정답 모드일 때만) */}
         {isAnswerMode && packageQuiz.length > 0 && (() => {
@@ -455,10 +489,8 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
             (lastQuizData as any)?.korean_passage ||
             '';
           
-          // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 추가하지 않음
-          const hasWork01 = packageQuiz.some(item => item.workTypeId === '01');
-          
-          if (lastTranslatedText && lastTranslatedText.trim() && !hasWork01) {
+          // 모든 유형의 본문해석을 맨 마지막 페이지에 통합 표시
+          if (lastTranslatedText && lastTranslatedText.trim()) {
             return (
               <div key="package01-last-translation" className="only-print">
                 <div className="a4-page-template">
@@ -475,14 +507,14 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                     }}>
                       <div className="print-translation-title" style={{
                         fontWeight: 800,
-                        fontSize: '1rem',
+                        fontSize: '1.5rem',
                         color: '#1976d2',
                         marginBottom: '0.8rem'
                       }}>
                         본문해석 :
                       </div>
                       <div className="print-translation-content" style={{
-                        fontSize: '0.9rem',
+                        fontSize: '1.5rem',
                         lineHeight: '1.7',
                         color: '#222',
                         fontFamily: 'inherit'
@@ -964,34 +996,38 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                                 <tr key={rowIndex}>
                                   <td>
                                     {leftReplacement && (
-                                      <>
+                                      <div>
                                         <span className="original-word">{leftReplacement.original}</span>
-                                        <span className="original-meaning"> ({leftReplacement.originalMeaning})</span>
-                                      </>
+                                        <br />
+                                        <span className="original-meaning">({leftReplacement.originalMeaning})</span>
+                                      </div>
                                     )}
                                   </td>
                                   <td>
                                     {leftReplacement && (
-                                      <>
+                                      <div>
                                         <span className="replacement-word">{leftReplacement.replacement}</span>
-                                        <span className="replacement-meaning"> ({leftReplacement.replacementMeaning})</span>
-                                      </>
+                                        <br />
+                                        <span className="replacement-meaning">({leftReplacement.replacementMeaning})</span>
+                                      </div>
                                     )}
                                   </td>
                                   <td>
                                     {rightReplacement && (
-                                      <>
+                                      <div>
                                         <span className="original-word">{rightReplacement.original}</span>
-                                        <span className="original-meaning"> ({rightReplacement.originalMeaning})</span>
-                                      </>
+                                        <br />
+                                        <span className="original-meaning">({rightReplacement.originalMeaning})</span>
+                                      </div>
                                     )}
                                   </td>
                                   <td>
                                     {rightReplacement && (
-                                      <>
+                                      <div>
                                         <span className="replacement-word">{rightReplacement.replacement}</span>
-                                        <span className="replacement-meaning"> ({rightReplacement.replacementMeaning})</span>
-                                      </>
+                                        <br />
+                                        <span className="replacement-meaning">({rightReplacement.replacementMeaning})</span>
+                                      </div>
                                     )}
                                   </td>
                                 </tr>
@@ -1007,9 +1043,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                     교체된 단어가 없습니다.
                   </div>
                 )}
-                <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                  {work02Data.translation || '번역을 생성하는 중...'}
-                </div>
+                {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
               </div>
             </div>
           </div>
@@ -1102,18 +1136,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                 )}
               </div>
             </div>
-
-            {/* 2페이지: 본문 해석 */}
-            <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {work02Data.translation || '번역을 생성하는 중...'}
-              </div>
-            </div>
-          </div>
+            {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
         </div>
       );
     } else {
@@ -1210,9 +1233,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                     교체된 단어가 없습니다.
                   </div>
                 )}
-                  <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                    {work02Data.translation || '번역을 생성하는 중...'}
-                  </div>
+                  {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
                 </div>
               </div>
             </div>
@@ -1270,34 +1291,38 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                                 <tr key={rowIndex}>
                                   <td>
                                     {leftReplacement && (
-                                      <>
+                                      <div>
                                         <span className="original-word">{leftReplacement.original}</span>
-                                        <span className="original-meaning"> ({leftReplacement.originalMeaning})</span>
-                                      </>
+                                        <br />
+                                        <span className="original-meaning">({leftReplacement.originalMeaning})</span>
+                                      </div>
                                     )}
                                   </td>
                                   <td>
                                     {leftReplacement && (
-                                      <>
+                                      <div>
                                         <span className="replacement-word">{leftReplacement.replacement}</span>
-                                        <span className="replacement-meaning"> ({leftReplacement.replacementMeaning})</span>
-                                      </>
+                                        <br />
+                                        <span className="replacement-meaning">({leftReplacement.replacementMeaning})</span>
+                                      </div>
                                     )}
                                   </td>
                                   <td>
                                     {rightReplacement && (
-                                      <>
+                                      <div>
                                         <span className="original-word">{rightReplacement.original}</span>
-                                        <span className="original-meaning"> ({rightReplacement.originalMeaning})</span>
-                                      </>
+                                        <br />
+                                        <span className="original-meaning">({rightReplacement.originalMeaning})</span>
+                                      </div>
                                     )}
                                   </td>
                                   <td>
                                     {rightReplacement && (
-                                      <>
+                                      <div>
                                         <span className="replacement-word">{rightReplacement.replacement}</span>
-                                        <span className="replacement-meaning"> ({rightReplacement.replacementMeaning})</span>
-                                      </>
+                                        <br />
+                                        <span className="replacement-meaning">({rightReplacement.replacementMeaning})</span>
+                                      </div>
                                     )}
                                   </td>
                                 </tr>
@@ -1315,18 +1340,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                 )}
             </div>
           </div>
-
-          {/* 3페이지: 본문 해석 */}
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="problem-passage translation" style={{marginTop:'0.63rem', fontSize:'1rem !important', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {work02Data.translation || '번역을 생성하는 중...'}
-              </div>
-            </div>
-          </div>
+          {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
         </div>
       );
     }
@@ -1529,22 +1543,17 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
               </>
             )}
             
-            {/* B. 정답만 표시 */}
+            {/* B. 모든 4지선다 항목 표시 */}
             {(pageLayoutInfo.page1Content.includes('B') || pageLayoutInfo.page1Content === 'B') && (
-              <div className="problem-options package01-work03-options" style={{marginTop:'0', marginBottom:'0.5rem'}}>
-                <div style={{fontSize:'1rem !important', margin:'0.1rem 0', fontFamily:'inherit', color:'#222'}}>
-                  {`①②③④⑤`[work03Data.answerIndex] || `${work03Data.answerIndex+1}.`} {work03Data.options[work03Data.answerIndex]}
-                  <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                </div>
-              </div>
-            )}
-            
-            {/* C. 본문해석 제목 컨테이너 + 한글 해석 컨테이너 */}
-            {(pageLayoutInfo.page1Content.includes('C') || pageLayoutInfo.page1Content === 'C') && (
               <>
-                <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'0.5rem'}}>
-                  {finalTranslatedText}
+                {work03Data.options.map((option: string, index: number) => (
+                  <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
+                    {`①②③④⑤`[index] || `${index+1}.`} {option}
+                    {work03Data.answerIndex === index && (
+                      <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                    )}
                 </div>
+                ))}
               </>
             )}
           </div>
@@ -1557,22 +1566,17 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
               <PrintHeaderPackage01 />
             </div>
             <div className="a4-page-content">
-              {/* B. 정답만 표시 */}
+              {/* B. 모든 4지선다 항목 표시 */}
               {(pageLayoutInfo.page2Content.includes('B') || pageLayoutInfo.page2Content === 'B') && (
-                <div className="problem-options" style={{marginTop:'0.05rem', marginBottom:'0.5rem'}}>
-                  <div style={{fontSize:'1rem !important', margin:'0.1rem 0', fontFamily:'inherit', color:'#222'}}>
-                    {`①②③④⑤`[work03Data.answerIndex] || `${work03Data.answerIndex+1}.`} {work03Data.options[work03Data.answerIndex]}
-                    <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                  </div>
-                </div>
-              )}
-              
-              {/* C. 본문해석 제목 컨테이너 + 한글 해석 컨테이너 */}
-              {(pageLayoutInfo.page2Content.includes('C') || pageLayoutInfo.page2Content === 'C') && (
                 <>
-                  <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'0.5rem'}}>
-                    {finalTranslatedText}
+                  {work03Data.options.map((option: string, index: number) => (
+                    <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem'}}>
+                      {`①②③④⑤`[index] || `${index+1}.`} {option}
+                      {work03Data.answerIndex === index && (
+                        <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                      )}
                   </div>
+                  ))}
                 </>
               )}
             </div>
@@ -1586,14 +1590,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
               <PrintHeaderPackage01 />
             </div>
             <div className="a4-page-content">
-              {/* C. 본문해석 제목 컨테이너 + 한글 해석 컨테이너 */}
-              {(pageLayoutInfo.page3Content.includes('C') || pageLayoutInfo.page3Content === 'C') && (
-                <>
-                  <div className="translation-container" style={{fontSize:'1rem', lineHeight:'1.7', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', fontFamily:'inherit', color:'#222', marginBottom:'0.5rem'}}>
-                    {finalTranslatedText}
-                  </div>
-                </>
-              )}
+              {/* C. 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         )}
@@ -1793,22 +1790,14 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
               <div className="problem-passage package01-work04-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work04Data.blankedText}
               </div>
-              <div className="option option-print package01-work04-options" style={{fontSize:'1rem !important', marginTop:'0', marginBottom:'3.5rem !important', paddingLeft:'0.6rem', paddingRight:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                <span>{['①', '②', '③', '④', '⑤'][work04Data.answerIndex]} {work04Data.options[work04Data.answerIndex]}</span>
-                <span style={{color:'#1976d2', fontWeight:800, marginLeft:'8px'}}>(정답)</span>
+              {work04Data.options.map((option: string, index: number) => (
+                <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: index === work04Data.options.length - 1 ? '3.5rem' : '0'}}>
+                  {['①', '②', '③', '④', '⑤'][index]} {option}
+                  {work04Data.answerIndex === index && (
+                    <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                  )}
               </div>
-            </div>
-          </div>
-
-          {/* 2페이지: 본문 해석 */}
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="problem-passage translation" style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {translatedText || '번역을 생성하는 중...'}
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1829,15 +1818,14 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
               <div className="problem-passage package01-work04-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work04Data.blankedText}
               </div>
-              <div className="problem-options package01-work04-options" style={{margin:'0 0 1rem'}}>
-                <div style={{fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'}}>
-                  {`①②③④⑤`[work04Data.answerIndex] || `${work04Data.answerIndex+1}.`} {work04Data.options[work04Data.answerIndex]}
-                  <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+              {work04Data.options.map((option: string, index: number) => (
+                <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: index === work04Data.options.length - 1 ? '1rem' : '0'}}>
+                  {`①②③④⑤`[index] || `${index+1}.`} {option}
+                  {work04Data.answerIndex === index && (
+                    <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                  )}
                 </div>
-              </div>
-              <div className="problem-passage translation" style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {translatedText || '번역을 생성하는 중...'}
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -2023,26 +2011,23 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
               <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work05Data.blankedText}
               </div>
-              <div className="problem-options package01-work05-options" style={{margin:'0 0 1rem'}}>
                 {work05Data.options.map((option, index) => (
-                  <div key={index} style={{margin:'0.8rem 0', fontFamily:'inherit'}}>
-                    <div className="option-english" style={{fontSize:'0.9rem', color:'#222', lineHeight:'1.3', margin:'0', padding:'0'}}>
+                <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: index === work05Data.options.length - 1 ? '1rem' : '0', display:'block', width:'100%', clear:'both'}}>
                       {['①', '②', '③', '④', '⑤'][index]} {option}
                       {work05Data.answerIndex === index && (
-                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                    <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                       )}
-                    </div>
                     {work05Data.optionTranslations && work05Data.optionTranslations[index] && (
-                      <div className="option-translation" style={{fontSize:'1rem', color:'#666', marginTop:'0.2rem', marginLeft:'1rem', fontStyle:'italic', lineHeight:'1.2', padding:'0'}}>
+                    <>
+                      <br />
+                      <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
                         {work05Data.optionTranslations[index]}
-                      </div>
+                      </span>
+                    </>
                     )}
                   </div>
                 ))}
-              </div>
-              <div className="problem-passage translation work05-print-translation" style={{marginTop:'1rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {translatedText || '번역을 생성하는 중...'}
-              </div>
+              {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         ) : needsAnswerSecondPage ? (
@@ -2054,48 +2039,36 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                 <PrintHeaderPackage01 />
               </div>
               <div className="a4-page-content">
-                <div className="quiz-content">
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
+                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
                   </div>
                   <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {work05Data.blankedText}
                   </div>
-                  <div className="problem-options package01-work05-options" style={{margin:'0 0 1rem'}}>
                     {work05Data.options.map((option, index) => (
-                      <div key={index} style={{margin:'0.8rem 0', fontFamily:'inherit'}}>
-                        <div className="option-english" style={{fontSize:'0.9rem', color:'#222', lineHeight:'1.3', margin:'0', padding:'0'}}>
+                  <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: index === work05Data.options.length - 1 ? '1rem' : '0', display:'block', width:'100%', clear:'both'}}>
                           {['①', '②', '③', '④', '⑤'][index]} {option}
                           {work05Data.answerIndex === index && (
-                            <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                      <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                           )}
-                        </div>
                         {work05Data.optionTranslations && work05Data.optionTranslations[index] && (
-                          <div className="option-translation" style={{fontSize:'1rem', color:'#666', marginTop:'0.2rem', marginLeft:'1rem', fontStyle:'italic', lineHeight:'1.2', padding:'0'}}>
+                      <>
+                        <br />
+                        <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
                             {work05Data.optionTranslations[index]}
-                          </div>
+                        </span>
+                      </>
                         )}
                       </div>
                     ))}
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* 2페이지: 본문 해석 */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="problem-passage translation work05-print-translation" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                  {translatedText || '번역을 생성하는 중...'}
-                </div>
-              </div>
-            </div>
+            {/* 2페이지: 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
           </>
         ) : (
-          // 2페이지: 문제+정답, 본문해석
+          // 2페이지: 문제+정답 (본문해석 제거)
           <>
             {/* 1페이지: 문제 + 정답 */}
             <div className="a4-page-template">
@@ -2103,45 +2076,33 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                 <PrintHeaderPackage01 />
               </div>
               <div className="a4-page-content">
-                <div className="quiz-content">
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'0.9rem', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0.8rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
+                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
                   </div>
                   <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'0.9rem', padding:'1rem', background:'#f7f8fc', borderRadius:'8px', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {work05Data.blankedText}
                   </div>
-                  <div className="problem-options package01-work05-options" style={{margin:'0 0 1rem'}}>
                     {work05Data.options.map((option, index) => (
-                      <div key={index} style={{margin:'0.8rem 0', fontFamily:'inherit'}}>
-                        <div className="option-english" style={{fontSize:'0.9rem', color:'#222', lineHeight:'1.3', margin:'0', padding:'0'}}>
+                  <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: index === work05Data.options.length - 1 ? '1rem' : '0', display:'block', width:'100%', clear:'both'}}>
                           {['①', '②', '③', '④', '⑤'][index]} {option}
                           {work05Data.answerIndex === index && (
-                            <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                      <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                           )}
-                        </div>
                         {work05Data.optionTranslations && work05Data.optionTranslations[index] && (
-                          <div className="option-translation" style={{fontSize:'1rem', color:'#666', marginTop:'0.2rem', marginLeft:'1rem', fontStyle:'italic', lineHeight:'1.2', padding:'0'}}>
+                      <>
+                        <br />
+                        <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
                             {work05Data.optionTranslations[index]}
-                          </div>
+                        </span>
+                      </>
                         )}
                       </div>
                     ))}
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* 2페이지: 본문 해석 */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="problem-passage translation work05-print-translation" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                  {translatedText || '번역을 생성하는 중...'}
-                </div>
-              </div>
-            </div>
+            {/* 2페이지: 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
           </>
         )}
       </div>
@@ -2321,19 +2282,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
             </div>
           </div>
 
-          {/* 2페이지: 본문 해석 */}
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="quiz-content">
-                <div className="problem-passage translation package01-work06-translation" style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                  {work06Data.translation || translatedText || '번역을 생성하는 중...'}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* 2페이지: 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
         </div>
       );
     } else {
@@ -2358,9 +2307,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
               <div className="problem-answer package01-work06-answer" style={{marginTop:'0.3rem', marginBottom:'0.3rem', color:'#1976d2', fontWeight:700, fontSize:'1rem !important'}}>
                 정답: {`①②③④⑤`[work06Data.answerIndex] || work06Data.answerIndex + 1}
               </div>
-              <div className="problem-passage translation package01-work06-translation" style={{marginTop:'0.3rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {work06Data.translation || translatedText || '번역을 생성하는 중...'}
-              </div>
+              {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         </div>
@@ -2642,8 +2589,8 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
       instruction: {fontWeight:800, fontSize:'0.9rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'},
       passage: {marginTop:'0.1rem', fontSize:'0.9rem', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'},
       options: {margin:'1rem 0'},
-      option: {fontSize:'1rem !important', margin:'0.3rem 0', fontFamily:'inherit', color:'#222'},
-      optionTranslation: {fontSize:'1rem', marginTop:'0.2rem', color:'#333', fontWeight:500, paddingLeft:'1.5rem'},
+      option: {fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', display:'block', width:'100%', clear:'both' as const},
+      optionTranslation: {fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block'},
       translation: {marginTop:'0.1rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}
     };
 
@@ -2667,26 +2614,24 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
               </div>
 
               {/* B. 4지선다 선택항목 */}
-              <div className="problem-options" style={commonStyles.options}>
                 {work07Data.options.map((opt, i) => (
-                  <div key={i} style={commonStyles.option}>
-                    <div>
+                <div key={i} className="option" style={commonStyles.option}>
                       {`①②③④⑤`[i] || `${i+1}.`} {opt}
                       {work07Data.answerIndex === i && (
-                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                    <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                       )}
-                    </div>
-                    <div style={commonStyles.optionTranslation}>
-                      {work07Data.optionTranslations && work07Data.optionTranslations[i] ? work07Data.optionTranslations[i] : '해석 없음'}
-                    </div>
+                  {work07Data.optionTranslations && work07Data.optionTranslations[i] && (
+                    <>
+                      <br />
+                      <span style={commonStyles.optionTranslation}>
+                        {work07Data.optionTranslations[i]}
+                      </span>
+                    </>
+                  )}
                   </div>
                 ))}
-              </div>
 
-              {/* C. 본문해석 제목 + 한글 해석 */}
-              <div className="problem-passage translation" style={commonStyles.translation}>
-                {translatedText}
-              </div>
+              {/* C. 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         </div>
@@ -2711,35 +2656,26 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
               </div>
 
               {/* B. 4지선다 선택항목 */}
-              <div className="problem-options" style={commonStyles.options}>
                 {work07Data.options.map((opt, i) => (
-                  <div key={i} style={commonStyles.option}>
-                    <div>
+                <div key={i} className="option" style={commonStyles.option}>
                       {`①②③④⑤`[i] || `${i+1}.`} {opt}
                       {work07Data.answerIndex === i && (
-                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                    <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                       )}
-                    </div>
-                    <div style={commonStyles.optionTranslation}>
-                      {work07Data.optionTranslations && work07Data.optionTranslations[i] ? work07Data.optionTranslations[i] : '해석 없음'}
-                    </div>
+                  {work07Data.optionTranslations && work07Data.optionTranslations[i] && (
+                    <>
+                      <br />
+                      <span style={commonStyles.optionTranslation}>
+                        {work07Data.optionTranslations[i]}
+                      </span>
+                    </>
+                  )}
                   </div>
                 ))}
-              </div>
             </div>
           </div>
 
-          {/* 2페이지: C */}
-          <div className="a4-page-template">
-            <div className="a4-page-header">
-              <PrintHeaderPackage01 />
-            </div>
-            <div className="a4-page-content">
-              <div className="problem-passage translation" style={commonStyles.translation}>
-                {translatedText}
-              </div>
-            </div>
-          </div>
+          {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
         </div>
       );
     } else if (pageLayoutInfo.page1Content === 'A') {
@@ -2771,26 +2707,21 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
               </div>
               <div className="a4-page-content">
                 {/* B. 4지선다 선택항목 */}
-                <div className="problem-options" style={commonStyles.options}>
                   {work07Data.options.map((opt, i) => (
-                    <div key={i} style={commonStyles.option}>
-                      <div>
+                  <div key={i} className="option" style={commonStyles.option}>
                         {`①②③④⑤`[i] || `${i+1}.`} {opt}
                         {work07Data.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                      <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
-                      </div>
+                    {work07Data.optionTranslations && work07Data.optionTranslations[i] && (
                       <div style={commonStyles.optionTranslation}>
-                        {work07Data.optionTranslations && work07Data.optionTranslations[i] ? work07Data.optionTranslations[i] : '해석 없음'}
+                        {work07Data.optionTranslations[i]}
                       </div>
+                    )}
                     </div>
                   ))}
-                </div>
 
-                {/* C. 본문해석 제목 + 한글 해석 */}
-                <div className="problem-passage translation" style={commonStyles.translation}>
-                  {translatedText}
-                </div>
+                {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
               </div>
             </div>
           </div>
@@ -2822,35 +2753,23 @@ const PrintFormatPackage01Work07: React.FC<PrintFormatPackage01Work07Props> = ({
                 <PrintHeaderPackage01 />
               </div>
               <div className="a4-page-content">
-                <div className="problem-options" style={commonStyles.options}>
                   {work07Data.options.map((opt, i) => (
-                    <div key={i} style={commonStyles.option}>
-                      <div>
+                  <div key={i} className="option" style={commonStyles.option}>
                         {`①②③④⑤`[i] || `${i+1}.`} {opt}
                         {work07Data.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                      <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
-                      </div>
+                    {work07Data.optionTranslations && work07Data.optionTranslations[i] && (
                       <div style={commonStyles.optionTranslation}>
-                        {work07Data.optionTranslations && work07Data.optionTranslations[i] ? work07Data.optionTranslations[i] : '해석 없음'}
+                        {work07Data.optionTranslations[i]}
                       </div>
+                    )}
                     </div>
                   ))}
-                </div>
               </div>
             </div>
 
-            {/* 3페이지: C */}
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="problem-passage translation" data-work-type="08" style={commonStyles.translation}>
-                  {translatedText}
-                </div>
-              </div>
-            </div>
+            {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
           </div>
         );
       }
@@ -3105,20 +3024,17 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
                 {work08Data.passage}
               </div>
 
-              {/* B. 정답만 표시 */}
-              <div className="problem-options" style={commonStyles.options}>
-                <div style={commonStyles.option}>
-                  <div>
-                    {`①②③④⑤`[work08Data.answerIndex] || `${work08Data.answerIndex+1}.`} {work08Data.options[work08Data.answerIndex]}
-                    <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+              {/* B. 모든 4지선다 항목 표시 */}
+              {work08Data.options.map((option: string, index: number) => (
+                <div key={index} className="option" style={commonStyles.option}>
+                  {`①②③④⑤`[index] || `${index+1}.`} {option}
+                  {work08Data.answerIndex === index && (
+                    <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                  )}
                   </div>
-                </div>
-              </div>
+              ))}
 
-              {/* C. 본문해석 제목 + 한글 해석 */}
-              <div className="problem-passage translation" style={commonStyles.translation}>
-                {translatedText}
-              </div>
+              {/* C. 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         </div>
@@ -3142,15 +3058,15 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
                 {work08Data.passage}
               </div>
 
-              {/* B. 정답만 표시 */}
-              <div className="problem-options" style={commonStyles.options}>
-                <div style={commonStyles.option}>
-                  <div>
-                    {`①②③④⑤`[work08Data.answerIndex] || `${work08Data.answerIndex+1}.`} {work08Data.options[work08Data.answerIndex]}
-                    <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+              {/* B. 모든 4지선다 항목 표시 */}
+              {work08Data.options.map((option: string, index: number) => (
+                <div key={index} className="option" style={commonStyles.option}>
+                  {`①②③④⑤`[index] || `${index+1}.`} {option}
+                  {work08Data.answerIndex === index && (
+                    <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                  )}
                   </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -3197,15 +3113,15 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  {/* B. 정답만 표시 */}
-                  <div className="problem-options" style={commonStyles.options}>
-                    <div style={commonStyles.option}>
-                      <div>
-                        {`①②③④⑤`[work08Data.answerIndex] || `${work08Data.answerIndex+1}.`} {work08Data.options[work08Data.answerIndex]}
-                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                  {/* B. 모든 4지선다 항목 표시 */}
+                  {work08Data.options.map((option: string, index: number) => (
+                    <div key={index} className="option" style={commonStyles.option}>
+                      {`①②③④⑤`[index] || `${index+1}.`} {option}
+                      {work08Data.answerIndex === index && (
+                        <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                      )}
                       </div>
-                    </div>
-                  </div>
+                  ))}
 
                   {/* C. 본문해석 제목 + 한글 해석 */}
                   <div className="problem-passage translation" style={commonStyles.translation}>
@@ -3245,14 +3161,14 @@ const PrintFormatPackage01Work08: React.FC<PrintFormatPackage01Work08Props> = ({
               </div>
               <div className="a4-page-content">
                 <div className="quiz-content">
-                  <div className="problem-options" style={commonStyles.options}>
-                    <div style={commonStyles.option}>
-                      <div>
-                        {`①②③④⑤`[work08Data.answerIndex] || `${work08Data.answerIndex+1}.`} {work08Data.options[work08Data.answerIndex]}
-                        <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
+                  {work08Data.options.map((option: string, index: number) => (
+                    <div key={index} className="option" style={commonStyles.option}>
+                      {`①②③④⑤`[index] || `${index+1}.`} {option}
+                      {work08Data.answerIndex === index && (
+                        <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                      )}
                       </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -3486,12 +3402,14 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                   <div style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
                     <span dangerouslySetInnerHTML={{__html: (work09Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
-                  <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
-                    <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>
-                      {`①②③④⑤`[work09Data.answerIndex] || `${work09Data.answerIndex+1}.`} {work09Data.options[work09Data.answerIndex]}
+                  {work09Data.options.map((opt: string, i: number) => (
+                    <div key={i} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: i === work09Data.options.length - 1 ? '1rem' : '0'}}>
+                      {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                      {work09Data.answerIndex === i && (
                       <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답: 원래/정상 단어 : {work09Data.original})</span>
+                      )}
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -3530,18 +3448,17 @@ const PrintFormatPackage01Work09: React.FC<PrintFormatPackage01Work09Props> = ({
                 <span dangerouslySetInnerHTML={{__html: (work09Data.passage || '').replace(/\n/g, '<br/>')}} />
               </div>
 
-              {/* B. 4지선다 선택항목 컨테이너 (정답 항목만) */}
-              <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
-                <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>
-                  {`①②③④⑤`[work09Data.answerIndex] || `${work09Data.answerIndex+1}.`} {work09Data.options[work09Data.answerIndex]}
+              {/* B. 모든 4지선다 항목 표시 */}
+              {work09Data.options.map((opt: string, i: number) => (
+                <div key={i} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: i === work09Data.options.length - 1 ? '1rem' : '0'}}>
+                  {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                  {work09Data.answerIndex === i && (
                   <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답: 원래/정상 단어 : {work09Data.original})</span>
+                  )}
                 </div>
-              </div>
+              ))}
 
-              {/* C. 본문해석 제목 + 한글 해석 컨테이너 */}
-              <div className="problem-passage translation" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {translatedText || '번역을 생성하는 중...'}
-              </div>
+              {/* C. 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         </div>
@@ -3764,32 +3681,27 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                   <div style={{marginTop:'0.1rem', fontSize:'0.2rem', padding:'0.5rem 1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.5'}}>
                     <span dangerouslySetInnerHTML={{__html: (work10Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
-                  <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
-                    <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>
-                      {`①②③④⑤⑥`[work10Data.wrongIndexes.length - 1] || `${work10Data.wrongIndexes.length}.`} {work10Data.wrongIndexes.length}개
-                      <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span> 어법상 틀린 단어: {work10Data.wrongIndexes.map(index => 
-                        `${'①②③④⑤⑥⑦⑧'[index]}${work10Data.transformedWords[index]} → ${work10Data.originalWords[index]}`
+                  {work10Data.options.map((option, index) => (
+                    <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: index === work10Data.options.length - 1 ? '1rem' : '0', display:'block', width:'100%', clear:'both' as const}}>
+                      {`①②③④⑤⑥`[index] || `${index + 1}`} {option}개
+                      {printMode === 'with-answer' && work10Data.answerIndex === index && (
+                        <>
+                          <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                          <div style={{fontSize:'0.85rem', color:'#666', marginTop:'0.2rem', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block', width:'100%'}}>
+                            어법상 틀린 단어 : {work10Data.wrongIndexes.map(idx => 
+                              `${'①②③④⑤⑥⑦⑧'[idx]}${work10Data.transformedWords[idx]} → ${work10Data.originalWords[idx]}`
                       ).join(', ')}
                     </div>
+                        </>
+                      )}
                   </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 2페이지: 한글 해석 */}
-          <div className="only-print work-10-print">
-            <div className="a4-page-template">
-              <div className="a4-page-header">
-                <PrintHeaderPackage01 />
-              </div>
-              <div className="a4-page-content">
-                <div className="problem-passage translation" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                  {translatedText || '번역을 생성하는 중...'}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* 2페이지: 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
         </>
       );
     } else {
@@ -3808,17 +3720,22 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
               <div style={{marginTop:'0.1rem', fontSize:'0.2rem', padding:'1rem', background:'#FFF3CD', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 <span dangerouslySetInnerHTML={{__html: convertMarkdownUnderlineToU(work10Data.passage).replace(/\n/g, '<br/>')}} />
               </div>
-              <div className="problem-options" style={{marginTop:'0.5rem', marginBottom:'1rem'}}>
-                <div style={{fontSize:'0.9rem', marginTop:'0.5rem', fontFamily:'inherit', color:'#222'}}>
-                  {`①②③④⑤⑥`[work10Data.wrongIndexes.length - 1] || `${work10Data.wrongIndexes.length}.`} {work10Data.wrongIndexes.length}개
-                  <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span> 어법상 틀린 단어: {work10Data.wrongIndexes.map(index => 
-                    `${'①②③④⑤⑥⑦⑧'[index]}${work10Data.transformedWords[index]} → ${work10Data.originalWords[index]}`
+              {work10Data.options.map((option, index) => (
+                <div key={index} className="option" style={{fontSize:'0.9rem', marginTop:'0.5rem', paddingLeft:'0.6rem', paddingRight:'0.6rem', marginBottom: index === work10Data.options.length - 1 ? '1rem' : '0', display:'block', width:'100%', clear:'both' as const}}>
+                  {`①②③④⑤⑥`[index] || `${index + 1}`} {option}개
+                  {printMode === 'with-answer' && work10Data.answerIndex === index && (
+                    <>
+                      <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                      <div style={{fontSize:'0.85rem', color:'#666', marginTop:'0.2rem', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block', width:'100%'}}>
+                        어법상 틀린 단어 : {work10Data.wrongIndexes.map(idx => 
+                          `${'①②③④⑤⑥⑦⑧'[idx]}${work10Data.transformedWords[idx]} → ${work10Data.originalWords[idx]}`
                   ).join(', ')}
                 </div>
+                    </>
+                  )}
               </div>
-              <div className="problem-passage translation" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem', background:'#F1F8E9', borderRadius:'8px', border:'1.5px solid #c8e6c9', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                {translatedText || '번역을 생성하는 중...'}
-              </div>
+              ))}
+              {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         </div>
@@ -4062,18 +3979,7 @@ const PrintFormatPackage01Work13: React.FC<{
                   work13Data.correctAnswers || []
                 )}}>
                 </div>
-                <div className="package01-work13-translation package01-work13-translation-container" style={{
-                  fontSize: '0.8rem !important', 
-                  padding: '0.5rem 1rem', 
-                  borderRadius: '8px', 
-                  fontFamily: 'inherit', 
-                  color: '#222', 
-                  lineHeight: '1.5', 
-                  border: '2px solid #e3e6f0', 
-                  marginTop: '0.5rem'
-                }}>
-                  {work13Data.translation}
-                </div>
+                {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
               </div>
             </div>
           </div>
@@ -4144,18 +4050,7 @@ const PrintFormatPackage01Work13: React.FC<{
                   });
                 })()}
               </div>
-              <div className="package01-work13-translation package01-work13-translation-container" style={{
-                fontSize: '0.8rem !important', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '8px', 
-                fontFamily: 'inherit', 
-                color: '#222', 
-                lineHeight: '1.5', 
-                border: '2px solid #e3e6f0', 
-                marginTop: '0.5rem'
-              }}>
-                {work13Data.translation}
-              </div>
+              {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         </div>
@@ -4452,7 +4347,6 @@ const PrintFormatPackage01Work14: React.FC<{
                 <PrintHeaderPackage01 />
               </div>
               <div className="a4-page-content">
-                <div className="quiz-content">
                   <div className="problem-instruction" style={{
                     fontWeight: 800, 
                     fontSize: '0.9rem', 
@@ -4498,7 +4392,6 @@ const PrintFormatPackage01Work14: React.FC<{
                     })()
                   }}
                   />
-                </div>
               </div>
             </div>
           </div>
@@ -4510,18 +4403,7 @@ const PrintFormatPackage01Work14: React.FC<{
                 <PrintHeaderPackage01 />
               </div>
               <div className="a4-page-content">
-                <div className="package01-work14-translation package01-work14-translation-container" style={{
-                  fontSize: '0.8rem !important', 
-                  padding: '0.5rem 1rem', 
-                  borderRadius: '8px', 
-                  fontFamily: 'inherit', 
-                  color: '#222', 
-                  lineHeight: '1.5', 
-                  border: '2px solid #e3e6f0', 
-                  marginTop: '0.5rem'
-                }}>
-                  {work14Data.translation}
-                </div>
+                {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
               </div>
             </div>
           </div>
@@ -4577,18 +4459,7 @@ const PrintFormatPackage01Work14: React.FC<{
                 })()
               }}
               />
-              <div className="package01-work14-translation package01-work14-translation-container" style={{
-                fontSize: '0.8rem !important', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '8px', 
-                fontFamily: 'inherit', 
-                color: '#222', 
-                lineHeight: '1.5', 
-                border: '2px solid #e3e6f0', 
-                marginTop: '0.5rem'
-              }}>
-                {work14Data.translation}
-              </div>
+              {/* 본문해석은 제거됨 (맨 마지막 페이지에 통합 표시) */}
             </div>
           </div>
         </div>

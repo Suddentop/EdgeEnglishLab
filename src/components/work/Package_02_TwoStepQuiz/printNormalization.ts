@@ -275,7 +275,7 @@ export const normalizeQuizItemForPrint = (
 
       // 유형#01의 경우 choices는 배열의 배열이므로 "→"로 join
       const choices = quizData.choices || [];
-      const allOptions = choices.map((choice: any, idx: number) => {
+      const options = choices.map((choice: any, idx: number) => {
         const choiceArray = Array.isArray(choice) ? choice : [];
         const choiceText = choiceArray.length > 0 
           ? choiceArray.join(' → ')
@@ -287,11 +287,7 @@ export const normalizeQuizItemForPrint = (
         };
       });
       
-      // 정답 모드일 때: 정답 항목만 필터링
-      const options = isAnswerMode 
-        ? allOptions.filter((opt: PrintOptionItem, idx: number) => quizData.answerIndex === idx)
-        : allOptions;
-      
+      // 모든 옵션 표시 (정답 모드에서도 모든 4지선다 항목 표시)
       addOptionsSection(options);
 
       // 정답 모드일 때: 4지선다 하단에 영어 본문 해석 추가

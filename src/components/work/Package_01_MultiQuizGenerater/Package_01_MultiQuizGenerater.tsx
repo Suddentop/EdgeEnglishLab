@@ -2686,11 +2686,29 @@ ${inputText}`;
     activatePrintContainer();
 
     // 렌더링 완료 후 인쇄 및 파일 생성
+    const waitForRender = async (maxAttempts = 20): Promise<HTMLElement | null> => {
+      for (let i = 0; i < maxAttempts; i++) {
+        const element = document.getElementById('print-root-package01');
+        if (element) {
+          const printContainer = element.querySelector('.print-container');
+          const hasContent = printContainer && printContainer.children.length > 0;
+          if (hasContent) {
+            console.log(`✅ 렌더링 완료 확인 (시도 ${i + 1}/${maxAttempts})`);
+            return element;
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      console.warn('⚠️ 렌더링 완료 확인 실패, 최대 시도 횟수 초과');
+      return document.getElementById('print-root-package01');
+    };
+
     setTimeout(async () => {
       // 파일 생성 및 Firebase Storage 업로드
       try {
-        const element = document.getElementById('print-root-package01');
+        const element = await waitForRender();
         if (element && userData?.uid) {
+          console.log('📄 파일 생성 시작:', { elementId: element.id, hasContent: element.children.length > 0 });
           const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
           
           const result = await generateAndUploadFile(
@@ -2711,9 +2729,17 @@ ${inputText}`;
             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
             console.log(`📁 패키지#01 문제 ${formatName} 저장 완료:`, result.fileName);
           }
+        } else {
+          console.error('❌ 인쇄 컨테이너를 찾을 수 없거나 사용자 정보가 없습니다.', {
+            hasElement: !!element,
+            hasUid: !!userData?.uid,
+            elementId: element?.id
+          });
+          alert('파일 생성에 실패했습니다. 다시 시도해주세요.');
         }
       } catch (error) {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+        alert(`파일 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`);
       }
 
       // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
@@ -2789,11 +2815,29 @@ ${inputText}`;
     activateAnswerContainer();
 
     // 렌더링 완료 후 인쇄 및 파일 생성
+    const waitForRender = async (maxAttempts = 20): Promise<HTMLElement | null> => {
+      for (let i = 0; i < maxAttempts; i++) {
+        const element = document.getElementById('print-root-package01-answer');
+        if (element) {
+          const printContainer = element.querySelector('.print-container');
+          const hasContent = printContainer && printContainer.children.length > 0;
+          if (hasContent) {
+            console.log(`✅ 렌더링 완료 확인 (시도 ${i + 1}/${maxAttempts})`);
+            return element;
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      console.warn('⚠️ 렌더링 완료 확인 실패, 최대 시도 횟수 초과');
+      return document.getElementById('print-root-package01-answer');
+    };
+
     setTimeout(async () => {
       // 파일 생성 및 Firebase Storage 업로드
       try {
-        const element = document.getElementById('print-root-package01-answer');
+        const element = await waitForRender();
         if (element && userData?.uid) {
+          console.log('📄 파일 생성 시작:', { elementId: element.id, hasContent: element.children.length > 0 });
           const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
           
           const result = await generateAndUploadFile(
@@ -2829,9 +2873,17 @@ ${inputText}`;
               console.error('문제 내역 조회 실패:', historyError);
             }
           }
+        } else {
+          console.error('❌ 인쇄 컨테이너를 찾을 수 없거나 사용자 정보가 없습니다.', {
+            hasElement: !!element,
+            hasUid: !!userData?.uid,
+            elementId: element?.id
+          });
+          alert('파일 생성에 실패했습니다. 다시 시도해주세요.');
         }
       } catch (error) {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+        alert(`파일 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`);
       }
 
       // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
@@ -3279,25 +3331,12 @@ ${inputText}`;
                           style={{ marginRight: '0.5rem' }}
                         />
                         {option}
+                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work03Data && quizItem.work03Data.answerIndex === optionIndex && (
+                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                        )}
                       </label>
                     ))}
                   </div>
-
-                  {/* 정답 표시 (정답 모드일 때만) */}
-                  {printMode === 'with-answer' && (
-                    <div className="problem-answer work-03-problem-answer" style={{
-                      background: '#e8f5e8',
-                      border: '2px solid #4caf50',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      marginBottom: '1rem',
-                      color: '#1976d2',
-                      fontWeight: '700',
-                      fontSize: '1.1rem'
-                    }}>
-                      정답: {quizItem.work03Data.options[quizItem.work03Data.answerIndex]}
-                    </div>
-                  )}
 
                   {/* 번역 */}
                   <div className="translation-section no-print">
@@ -3390,25 +3429,12 @@ ${inputText}`;
                           style={{ marginRight: '0.8rem' }}
                         />
                         {['①', '②', '③', '④', '⑤'][optionIndex]} {option}
+                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work04Data && quizItem.work04Data.answerIndex === optionIndex && (
+                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                        )}
                       </label>
                     ))}
                   </div>
-
-                  {/* 정답 표시 */}
-                  {printMode === 'with-answer' && (
-                    <div className="answer-section" style={{
-                      background: '#e8f5e8',
-                      border: '2px solid #4caf50',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      marginBottom: '1rem',
-                      color: '#1976d2',
-                      fontWeight: '700',
-                      fontSize: '1.1rem'
-                    }}>
-                      정답: {quizItem.work04Data.options[quizItem.work04Data.answerIndex]}
-                    </div>
-                  )}
 
                   {/* 번역 */}
                   <div className="translation-section no-print">
@@ -3502,25 +3528,12 @@ ${inputText}`;
                           style={{ marginRight: '0.5rem' }}
                         />
                         {option}
+                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work05Data && quizItem.work05Data.answerIndex === optionIndex && (
+                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                        )}
                       </label>
                     ))}
                   </div>
-
-                  {/* 정답 표시 */}
-                  {printMode === 'with-answer' && (
-                    <div className="answer-section" style={{
-                      background: '#e8f5e8',
-                      border: '2px solid #4caf50',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      marginBottom: '1rem',
-                      color: '#1976d2',
-                      fontWeight: '700',
-                      fontSize: '1.1rem'
-                    }}>
-                      정답: {quizItem.work05Data.options[quizItem.work05Data.answerIndex]}
-                    </div>
-                  )}
 
                   {/* 번역 */}
                   <div className="translation-section no-print">
@@ -3708,6 +3721,9 @@ ${inputText}`;
                           <div>
                             <div style={{fontWeight: '500'}}>
                               {String.fromCharCode(65 + optionIndex)}. {option}
+                              {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work07Data && quizItem.work07Data.answerIndex === optionIndex && (
+                                <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                              )}
                             </div>
                             {quizItem.work07Data?.optionTranslations && quizItem.work07Data?.optionTranslations[optionIndex] && (
                               <div style={{fontSize:'0.85rem', color:'#666', marginTop:'0.3rem'}}>
@@ -3719,22 +3735,6 @@ ${inputText}`;
                       </label>
                     ))}
                   </div>
-
-                  {/* 정답 표시 */}
-                  {printMode === 'with-answer' && (
-                    <div className="work-07-answer" style={{
-                      background: '#e8f5e8',
-                      border: '2px solid #4caf50',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      marginBottom: '1rem',
-                      color: '#1976d2',
-                      fontWeight: '700',
-                      fontSize: '1.1rem'
-                    }}>
-                      정답: {quizItem.work07Data.options[quizItem.work07Data.answerIndex]}
-                    </div>
-                  )}
 
                   {/* 번역 */}
                   <div className="translation-section no-print">
@@ -3812,25 +3812,12 @@ ${inputText}`;
                         lineHeight: '1.5'
                       }}>
                         {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}
+                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work08Data && quizItem.work08Data.answerIndex === optionIndex && (
+                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                        )}
                       </div>
                     ))}
                   </div>
-
-                  {/* 정답 (with-answer 모드에서만 표시) */}
-                  {printMode === 'with-answer' && (
-                    <div className="work-08-answer" style={{
-                      background: '#e8f5e8',
-                      border: '2px solid #4caf50',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      marginBottom: '1rem',
-                      color: '#1976d2',
-                      fontWeight: '700',
-                      fontSize: '1.1rem'
-                    }}>
-                      정답: {`①②③④⑤`[quizItem.work08Data.answerIndex] || `${quizItem.work08Data.answerIndex+1}.`} {quizItem.work08Data.options[quizItem.work08Data.answerIndex]}
-                    </div>
-                  )}
 
                   {/* 번역 */}
                   <div className="translation-section no-print">
@@ -3909,7 +3896,7 @@ ${inputText}`;
                     {quizItem.work10Data.options.map((option, optionIndex) => (
                       <div key={optionIndex} style={{
                         display: 'flex',
-                        alignItems: 'center',
+                        flexDirection: 'column',
                         padding: '0.8rem 1rem',
                         border: '2px solid #e0e0e0',
                         borderRadius: '8px',
@@ -3918,43 +3905,41 @@ ${inputText}`;
                         transition: 'all 0.2s ease',
                         fontSize: '1.05rem'
                       }}>
-                        <span style={{
-                          marginRight: '1rem',
-                          fontWeight: '700',
-                          color: '#333'
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center'
                         }}>
-                          {optionIndex + 1}.
-                        </span>
-                        <span style={{fontWeight: '600'}}>{option}개</span>
+                          <span style={{
+                            marginRight: '1rem',
+                            fontWeight: '700',
+                            color: '#333'
+                          }}>
+                            {optionIndex + 1}.
+                          </span>
+                          <span style={{fontWeight: '600'}}>{option}개</span>
+                          {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work10Data && quizItem.work10Data.answerIndex === optionIndex && (
+                            <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                          )}
+                        </div>
+                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work10Data && quizItem.work10Data.answerIndex === optionIndex && (
+                          <div style={{
+                            fontSize: '0.85rem',
+                            color: '#666',
+                            marginTop: '0.2rem',
+                            marginLeft: '0',
+                            paddingLeft: '0',
+                            fontStyle: 'italic',
+                            lineHeight: '1.2',
+                            display: 'block',
+                            width: '100%'
+                          }}>
+                            어법상 틀린 단어 : {quizItem.work10Data?.wrongIndexes.map(idx => 
+                              `${'①②③④⑤⑥⑦⑧'[idx]}${quizItem.work10Data?.transformedWords[idx]} → ${quizItem.work10Data?.originalWords[idx]}`
+                            ).join(', ')}
+                          </div>
+                        )}
                       </div>
                     ))}
-                  </div>
-
-                  {/* 정답 표시 */}
-                  <div className="work-10-answer" style={{
-                    marginTop: '1.5rem',
-                    padding: '1rem',
-                    backgroundColor: '#e8f5e8',
-                    borderRadius: '8px',
-                    border: '2px solid #4caf50'
-                  }}>
-                    <div style={{
-                      fontSize: '1.1rem',
-                      fontWeight: '700',
-                      color: '#1976d2',
-                      marginBottom: '0.5rem'
-                    }}>
-                      정답: {quizItem.work10Data.options[quizItem.work10Data.answerIndex]}개
-                    </div>
-                    <div style={{
-                      fontSize: '0.95rem',
-                      color: '#666',
-                      lineHeight: 1.5
-                    }}>
-                      어법상 틀린 단어: {quizItem.work10Data?.wrongIndexes.map(index => 
-                        `${'①②③④⑤⑥⑦⑧'[index]}${quizItem.work10Data?.transformedWords[index]} → ${quizItem.work10Data?.originalWords[index]}`
-                      ).join(', ')}
-                    </div>
                   </div>
 
                   {/* 번역 */}
@@ -4446,6 +4431,9 @@ ${inputText}`;
                           {`①②③④⑤⑥`[optionIndex] || `${optionIndex + 1}.`}
                         </span>
                         <span>{option}</span>
+                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work09Data && quizItem.work09Data.answerIndex === optionIndex && (
+                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                        )}
                       </div>
                     ))}
                   </div>

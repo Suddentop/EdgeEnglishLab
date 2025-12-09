@@ -372,7 +372,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
     });
 
     const expandedNormalizedItems = normalizedItems.flatMap((item) =>
-      splitNormalizedItemByHeight(item)
+      splitNormalizedItemByHeight(item, { isPackage02: true })
     );
     console.log('🧮 분할된 카드 수:', expandedNormalizedItems.length);
 
@@ -399,15 +399,13 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       });
     }
 
-    // 마지막 유형의 한글해석만 수집 (인쇄 정답 모드일 때만)
-    // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 마지막에 전체 translation을 추가하지 않음
-    const hasWork01 = packageQuiz.some(item => item.workTypeId === '01' || (item.quiz && item.quiz.shuffledParagraphs));
-    
+    // 패키지#02: 마지막 단에 본문해석 추가 (인쇄 정답 모드일 때만)
+    // 모든 유형이 공유하는 하나의 영어본문의 해석을 맨 마지막 단에 추가
     let lastTranslation: string | null = null;
-    if (isAnswerMode && packageQuiz.length > 0 && !hasWork01) {
-      // 마지막 유형의 translation만 가져오기
-      const lastItem = packageQuiz[packageQuiz.length - 1];
-      const translation = getTranslatedText(lastItem, lastItem.quiz || lastItem.data || {});
+    if (isAnswerMode && packageQuiz.length > 0) {
+      // 첫 번째 유형의 translation을 가져오기 (모든 유형이 같은 본문을 공유하므로)
+      const firstItem = packageQuiz[0];
+      const translation = getTranslatedText(firstItem, firstItem.quiz || firstItem.data || {});
       if (translation && translation.trim()) {
         lastTranslation = translation;
       }
@@ -415,8 +413,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
 
     // 마지막 유형 다음 단에 translation 섹션 추가
     // 마지막 유형이 있는 페이지의 다음 단(오른쪽 단)에 추가
-    // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 추가하지 않음
-    if (isAnswerMode && lastTranslation && !hasWork01) {
+    if (isAnswerMode && lastTranslation) {
       // 마지막 유형의 translation 섹션 생성
       const translationText = lastTranslation;
       const translationSection: PrintSection = {
@@ -538,7 +535,6 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
         console.warn(`⚠️ 빈 페이지 감지 및 제거: 페이지 ${pageIndex + 1}`, {
           leftColumnItems: leftColumnItems.length,
           rightColumnItems: rightColumnItems.length,
-          hasWork01: hasWork01,
           pageColumns: pageColumns
         });
         return false; // 빈 페이지는 제거
@@ -551,8 +547,7 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
       if (!leftHasContent && !rightHasContent) {
         console.warn(`⚠️ 빈 섹션 페이지 감지 및 제거: 페이지 ${pageIndex + 1}`, {
           leftColumnItems: leftColumnItems.length,
-          rightColumnItems: rightColumnItems.length,
-          hasWork01: hasWork01
+          rightColumnItems: rightColumnItems.length
         });
         return false; // 섹션이 없는 페이지도 제거
       }

@@ -471,7 +471,8 @@ export const cloneSectionForChunk = (
 });
 
 export const splitNormalizedItemByHeight = (
-  normalizedItem: NormalizedQuizItem
+  normalizedItem: NormalizedQuizItem,
+  options?: { isPackage02?: boolean }
 ): NormalizedQuizItem[] => {
   // 단 높이 기준으로 계산: 영어단락 + 4지선다 + 한글해석이 하나의 단에 배치되어야 함
   // 유형#01의 경우: paragraph + answer + options + translation을 하나의 단에 배치
@@ -2139,6 +2140,8 @@ export const splitNormalizedItemByHeight = (
 
   const totalChunks = chunkSectionsList.length;
 
+  const isPackage02 = options?.isPackage02 ?? false;
+
   return chunkSectionsList.map((sections, index) => {
     // 패키지#02 PDF 인쇄(정답) 페이지에서 정답 섹션 제거
     // 단, 유형#01의 경우 첫 번째 청크에서 options 다음, translation 이전에 있는 정답 섹션만 유지
@@ -2150,14 +2153,15 @@ export const splitNormalizedItemByHeight = (
     // 유형#01의 경우: 첫 번째 청크에서 options 다음, translation 이전에 있는 정답 섹션만 유지
     // 다른 위치(특히 translation 이후)에 있는 정답 섹션은 모두 제거 (페이지 하단의 빨간색 박스)
     // 유형#06의 경우: 모든 청크에서 정답 섹션 유지
+    // 패키지#02의 경우: 유형#01의 translation 섹션을 제거 (맨 마지막 단에 통합 translation 추가)
     let filteredSections: PrintSection[] = [];
     if (isWork06) {
       // 유형#06의 경우 정답 섹션을 유지
       filteredSections = sections;
     } else if (isWork01 && isFirstChunk) {
       // 첫 번째 청크: options 다음, translation 이전에 있는 정답 섹션만 유지
+      // 패키지#02의 경우: translation 섹션 제거
       let foundOptions = false;
-      let foundTranslation = false;
       
       // 디버깅: 유형#01 첫 번째 청크의 섹션 확인
       if (process.env.NODE_ENV === 'development') {
@@ -2165,7 +2169,8 @@ export const splitNormalizedItemByHeight = (
           sectionsCount: sections.length,
           sectionTypes: sections.map(s => s.type),
           hasOptions: sections.some(s => s.type === 'options'),
-          optionsIndex: sections.findIndex(s => s.type === 'options')
+          optionsIndex: sections.findIndex(s => s.type === 'options'),
+          isPackage02: isPackage02
         });
       }
       
@@ -2176,14 +2181,16 @@ export const splitNormalizedItemByHeight = (
           foundOptions = true;
           filteredSections.push(section);
         } else if (section.type === 'translation') {
-          foundTranslation = true;
+          // 패키지#02의 경우: translation 섹션 제거 (맨 마지막 단에 통합 translation 추가)
+          if (!isPackage02) {
           filteredSections.push(section);
+          }
+          // 패키지#02에서는 translation 섹션을 추가하지 않음
         } else if (section.type === 'answer') {
-          // 정답 섹션: options 다음이고 translation 이전인 경우만 유지
-          if (foundOptions && !foundTranslation) {
+          // 정답 섹션: options 다음인 경우만 유지 (패키지#02에서는 translation이 없으므로)
+          if (foundOptions) {
             filteredSections.push(section);
           }
-          // translation 이후에 있는 정답 섹션은 제거 (페이지 하단의 빨간색 박스)
         } else {
           // 다른 섹션들(paragraph, instruction 등)은 모두 유지
           filteredSections.push(section);
@@ -2196,12 +2203,18 @@ export const splitNormalizedItemByHeight = (
           filteredSectionsCount: filteredSections.length,
           filteredSectionTypes: filteredSections.map(s => s.type),
           hasOptions: filteredSections.some(s => s.type === 'options'),
-          optionsIndex: filteredSections.findIndex(s => s.type === 'options')
+          optionsIndex: filteredSections.findIndex(s => s.type === 'options'),
+          isPackage02: isPackage02
         });
       }
     } else {
       // 첫 번째 청크가 아닌 경우: 모든 정답 섹션 제거 (페이지 하단의 빨간색 박스)
+      // 패키지#02의 경우: translation 섹션도 제거
+      if (isPackage02) {
+        filteredSections = sections.filter(section => section.type !== 'answer' && section.type !== 'translation');
+      } else {
       filteredSections = sections.filter(section => section.type !== 'answer');
+      }
     }
     
     const chunkMeta = createChunkMeta(normalizedItem.chunkMeta, index, totalChunks, normalizedItem.workTypeId);

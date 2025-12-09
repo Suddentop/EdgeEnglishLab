@@ -1065,7 +1065,43 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   // 문제 카드들을 찾아서 각각 처리
   // 유형#15는 .quiz-content를 사용하지만 특수 구조이므로 별도로 처리됨
   // 패키지#01 유형#11: .work-11-print도 포함
-  const questionCards = element.querySelectorAll('.print-question-card, .quiz-content, .work-11-print');
+  // 패키지#01: .a4-page-template을 우선으로 찾고, wrapper div는 제외 (중복 방지)
+  // 패키지#02: .print-question-card 사용
+  const allCards = element.querySelectorAll('.print-question-card, .quiz-content, .work-11-print, .a4-page-template, [data-work-type]');
+  
+  // 중복 제거: .a4-page-template이 있으면 그것을 우선하고, wrapper div는 제외
+  const questionCards: Element[] = [];
+  const processedTemplates: Element[] = [];
+  
+  allCards.forEach((card) => {
+    // .a4-page-template인 경우 우선 처리
+    if (card.classList.contains('a4-page-template')) {
+      // 이미 처리된 template의 자식인지 확인
+      let isChildOfProcessed = false;
+      for (let i = 0; i < processedTemplates.length; i++) {
+        const processed = processedTemplates[i];
+        if (processed.contains(card)) {
+          isChildOfProcessed = true;
+          break;
+        }
+      }
+      if (!isChildOfProcessed) {
+        questionCards.push(card);
+        processedTemplates.push(card);
+      }
+    } else if (card.classList.contains('print-question-card') || 
+               card.classList.contains('quiz-content') || 
+               card.classList.contains('work-11-print')) {
+      // 패키지#02나 유형#11은 그대로 추가
+      questionCards.push(card);
+    } else if (card.hasAttribute('data-work-type')) {
+      // wrapper div인 경우, 내부에 .a4-page-template이 없을 때만 추가
+      const hasTemplate = card.querySelector('.a4-page-template') !== null;
+      if (!hasTemplate) {
+        questionCards.push(card);
+      }
+    }
+  });
   
   // 패키지#02인지 확인 (헤더 또는 .print-question-card 존재 여부)
   const isPackage02 = element.querySelector('.print-header-package02') !== null || 
@@ -1188,29 +1224,54 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   
   if (questionCards.length > 0) {
     questionCards.forEach((card, cardIndex) => {
-      // 유형#15는 별도로 처리되므로 건너뛰기
-      if (isWork15) {
-        const cardElement = card as HTMLElement;
-        if (cardElement.classList.contains('quiz-content') && 
-            cardElement.querySelector('.print-content-section') !== null) {
-          return; // 유형#15는 나중에 별도로 처리
+      // .a4-page-template인 경우 내부의 .a4-page-content를 찾아서 처리
+      let actualCard = card as HTMLElement;
+      let pageContentForWorkType: HTMLElement | null = null;
+      if (card.classList.contains('a4-page-template')) {
+        const pageContent = card.querySelector('.a4-page-content');
+        if (pageContent) {
+          // actualCard는 항상 .a4-page-content로 설정 (내부 요소를 찾기 위해)
+          actualCard = pageContent as HTMLElement;
+          pageContentForWorkType = pageContent as HTMLElement;
         }
       }
       
       // data-work-type 속성 확인 (카드 자체 또는 부모 요소에서)
-      let workType = (card as HTMLElement).getAttribute('data-work-type');
+      let workType = actualCard.getAttribute('data-work-type');
       if (!workType) {
-        // 부모 요소에서 찾기 (패키지#01의 경우 wrapper div에 있을 수 있음)
-        let parent = (card as HTMLElement).parentElement;
+        // .a4-page-content인 경우 내부의 .problem-instruction에서 찾기
+        if (pageContentForWorkType) {
+          const instruction = pageContentForWorkType.querySelector('.problem-instruction[data-work-type]');
+          if (instruction) {
+            workType = instruction.getAttribute('data-work-type') || '';
+          }
+        }
+        
+        // 여전히 없으면 부모 요소에서 찾기 (패키지#01의 경우 wrapper div에 있을 수 있음)
+        if (!workType) {
+          let parent = actualCard.parentElement;
         while (parent && !workType) {
           workType = parent.getAttribute('data-work-type') || '';
           parent = parent.parentElement;
         }
       }
+      }
+      
+      // .a4-page-template인 경우 내부에서 workType 찾기 (백업)
+      if (!workType && card.classList.contains('a4-page-template')) {
+        const pageContent = card.querySelector('.a4-page-content');
+        if (pageContent) {
+          const instruction = pageContent.querySelector('.problem-instruction[data-work-type]');
+          if (instruction) {
+            workType = instruction.getAttribute('data-work-type') || '';
+          }
+        }
+      }
+      
       const isWork11 = workType === '11' || workType === '011';
       
       // 타입 뱃지 텍스트 확인
-      const typeBadge = card.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
+      const typeBadge = actualCard.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
       const rawTypeLabel = typeBadge?.textContent?.trim() || '';
       let typeLabel = rawTypeLabel ? rawTypeLabel.replace(/\s+/g, '') : '';
       
@@ -1220,7 +1281,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 제목에서도 확인
-      const title = card.querySelector('.print-question-title, .question-title');
+      const title = actualCard.querySelector('.print-question-title, .question-title');
       const titleText = title?.textContent?.trim() || '';
       
       const isWork11ByText = typeLabel.includes('11') || 
@@ -1439,10 +1500,10 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         return;
       }
       
-      const titleSpan = card.querySelector('.print-question-title span, .question-title');
+      const titleSpan = actualCard.querySelector('.print-question-title span, .question-title');
       const titleSpanText = titleSpan?.textContent?.trim() || '';
       
-      const instruction = card.querySelector('.print-instruction, .problem-instruction');
+      const instruction = actualCard.querySelector('.print-instruction, .problem-instruction');
       let instructionText = instruction?.textContent?.trim() || '';
       let instructionHandled = false;
       
@@ -1602,7 +1663,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // Work_06 등: 주요 문장 표시
-      const missingSentence = card.querySelector('.print-missing-sentence, .missing-sentence, .missing-sentence-box');
+      const missingSentence = actualCard.querySelector('.print-missing-sentence, .missing-sentence, .missing-sentence-box');
       if (missingSentence) {
         const missingSentenceText = missingSentence.textContent?.trim() || '';
         if (missingSentenceText) {
@@ -1642,7 +1703,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // 각 셀렉터를 순서대로 시도하여 본문 찾기
       let passage: HTMLElement | null = null;
       for (const selector of passageSelectors) {
-        const found = card.querySelector(selector) as HTMLElement | null;
+        const found = actualCard.querySelector(selector) as HTMLElement | null;
         if (found) {
           passage = found;
           break;
@@ -1652,7 +1713,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // 본문이 여러 개 있을 수 있으므로 모든 본문 요소 찾기
       if (!passage) {
         // 모든 본문 요소 찾기
-        const allPassages = card.querySelectorAll(passageSelectors.join(', '));
+        const allPassages = actualCard.querySelectorAll(passageSelectors.join(', '));
         if (allPassages.length > 0) {
           passage = allPassages[0] as HTMLElement;
         }
@@ -1661,7 +1722,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // 패키지#01: 클래스가 없는 본문 요소 찾기 (유형#06, #08, #09, #10, #11, #13, #14)
       // problem-instruction 다음에 오는 요소 중에서 본문으로 보이는 요소 찾기
       if (!passage) {
-        const instruction = card.querySelector('.problem-instruction');
+        const instruction = actualCard.querySelector('.problem-instruction');
         if (instruction) {
           // instruction 다음에 오는 모든 div 요소 확인
           let nextSibling = instruction.nextElementSibling;
@@ -1693,7 +1754,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       
       // 유형#06: missing-sentence-box 다음에 오는 본문 찾기
       if (!passage) {
-        const missingSentenceBox = card.querySelector('.missing-sentence-box');
+        const missingSentenceBox = actualCard.querySelector('.missing-sentence-box');
         if (missingSentenceBox) {
           let nextSibling = missingSentenceBox.nextElementSibling;
           while (nextSibling) {
@@ -1716,7 +1777,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // 유형#01인 경우 무조건 .shuffled-paragraph를 찾기 (passage 조건 무시)
       const isWork01 = workType === '01' || workType === '1';
       if (isWork01 || !passage) {
-        const shuffledParagraphs = card.querySelectorAll('.shuffled-paragraph');
+        const shuffledParagraphs = actualCard.querySelectorAll('.shuffled-paragraph');
         if (shuffledParagraphs.length > 0) {
           shuffledParagraphsProcessed = true;
           
@@ -1946,7 +2007,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // workType 변수는 이미 위에서 선언되었으므로 재사용
       const isWork06 = workType === '6' || workType === '06';
       if (isWork06) {
-        const work06Answer = card.querySelector('.print-work06-info-container') as HTMLElement | null;
+        const work06Answer = actualCard.querySelector('.print-work06-info-container') as HTMLElement | null;
         if (work06Answer) {
           const answerText = work06Answer.textContent?.trim() || '';
           if (answerText && answerText !== '\u00A0') { // non-breaking space가 아닌 경우만
@@ -1976,7 +2037,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // 단, .shuffled-paragraph는 이미 처리했으므로 제외
       // 유형#01의 경우 .shuffled-paragraph를 제외하고 다른 본문 요소만 처리
       if (!shuffledParagraphsProcessed) {
-        const allPassages = card.querySelectorAll('.print-html-block, .print-paragraph-item, .print-shuffled-paragraphs, .shuffled-paragraph');
+        const allPassages = actualCard.querySelectorAll('.print-html-block, .print-paragraph-item, .print-shuffled-paragraphs, .shuffled-paragraph');
         if (allPassages.length > 1) {
           // 첫 번째 본문은 이미 처리되었으므로 나머지 처리
           Array.from(allPassages).slice(1).forEach((additionalPassage) => {
@@ -2045,7 +2106,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // Work_11: 문장별 해석
-      const sentenceItems = card.querySelectorAll('.print-sentence-item, .sentence-item');
+      const sentenceItems = actualCard.querySelectorAll('.print-sentence-item, .sentence-item');
       if (sentenceItems.length > 0) {
         const sentenceBlocks = Array.from(sentenceItems).map((item) => {
           const englishElement = item.querySelector('.print-sentence-english, .sentence-english') as HTMLElement | null;
@@ -2162,7 +2223,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 본문 (Work_02용 - 밑줄이 있는 텍스트) - 박스 테두리 포함
-      const passageWithUnderline = card.querySelector('.print-passage-with-underline') as HTMLElement | null;
+      const passageWithUnderline = actualCard.querySelector('.print-passage-with-underline') as HTMLElement | null;
       if (passageWithUnderline) {
         const lineRuns = extractTextRunsByLine(passageWithUnderline);
         if (lineRuns.length > 0) {
@@ -2223,9 +2284,9 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 선택지
-      const options = card.querySelectorAll('.print-option, .option, .quiz-option');
+      const options = actualCard.querySelectorAll('.print-option, .option, .quiz-option');
       if (options.length > 0) {
-        const answerMarkElement = card.querySelector('.print-answer-mark');
+        const answerMarkElement = actualCard.querySelector('.print-answer-mark');
         const answerIndexAttr = answerMarkElement?.getAttribute('data-answer-index');
         const answerIndex = answerIndexAttr ? parseInt(answerIndexAttr, 10) : -1;
         
@@ -2236,8 +2297,14 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         
         // 유형#01 확인
         const isWork01 = workType === '01' || workType === '1';
+        // 유형#10 확인
+        const isWork10 = workType === '10' || workType === '010';
         
         options.forEach((option, optionIndex) => {
+          if (process.env.NODE_ENV === 'development' && isWork10) {
+            console.log(`🔍 유형#10 옵션 ${optionIndex} HTML 구조:`, option.outerHTML.substring(0, 200));
+          }
+          
           // 각 옵션 내에서 .print-answer-mark 요소 찾기
           const optionAnswerMark = option.querySelector('.print-answer-mark');
           const hasAnswerMarkInOption = optionAnswerMark && optionAnswerMark.textContent?.trim();
@@ -2246,6 +2313,39 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
           const optionTranslation = needsTranslationLineBreak 
             ? option.querySelector('.print-option-translation') 
             : null;
+          
+          // 유형#10: "어법상 틀린 단어" 정보를 별도로 찾기
+          let grammarErrorText = '';
+          if (isWork10) {
+            // 옵션 내부의 모든 div를 확인하여 "어법상 틀린 단어"가 포함된 div 찾기
+            const optionDivs = option.querySelectorAll('div');
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`🔍 유형#10 옵션 ${optionIndex} div 개수:`, optionDivs.length);
+            }
+            optionDivs.forEach((div) => {
+              const divText = div.textContent?.trim() || '';
+              if (divText.includes('어법상 틀린 단어')) {
+                grammarErrorText = divText;
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`✅ 유형#10 옵션 ${optionIndex}에서 "어법상 틀린 단어" 정보 발견:`, grammarErrorText);
+                }
+              }
+            });
+            // div에서 찾지 못한 경우, 옵션 전체 텍스트에서 확인
+            if (!grammarErrorText) {
+              const optionFullText = option.textContent || '';
+              if (optionFullText.includes('어법상 틀린 단어')) {
+                // "어법상 틀린 단어" 이후의 텍스트 추출
+                const match = optionFullText.match(/어법상 틀린 단어\s*[:：]\s*(.+)/);
+                if (match && match[1]) {
+                  grammarErrorText = `어법상 틀린 단어 : ${match[1].trim()}`;
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log(`✅ 유형#10 옵션 ${optionIndex} 전체 텍스트에서 "어법상 틀린 단어" 정보 발견:`, grammarErrorText);
+                  }
+                }
+              }
+            }
+          }
           
           let optionText = '';
           let answerMarkText = '';
@@ -2266,6 +2366,16 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
                 translationClone.remove();
               }
             }
+            // 유형#10: "어법상 틀린 단어" 정보가 포함된 div 제거
+            if (isWork10 && grammarErrorText) {
+              const grammarErrorDivs = optionClone.querySelectorAll('div');
+              grammarErrorDivs.forEach((div) => {
+                const divText = div.textContent?.trim() || '';
+                if (divText.includes('어법상 틀린 단어')) {
+                  div.remove();
+                }
+              });
+            }
             optionText = optionClone.textContent?.trim() || '';
             answerMarkText = answerMarkTextContent;
           } else {
@@ -2278,9 +2388,32 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
                 translationText = translationClone.textContent?.trim() || '';
                 translationClone.remove();
               }
+              // 유형#10: "어법상 틀린 단어" 정보가 포함된 div 제거
+              if (isWork10 && grammarErrorText) {
+                const grammarErrorDivs = optionClone.querySelectorAll('div');
+                grammarErrorDivs.forEach((div) => {
+                  const divText = div.textContent?.trim() || '';
+                  if (divText.includes('어법상 틀린 단어')) {
+                    div.remove();
+                  }
+                });
+              }
               optionText = optionClone.textContent?.trim() || '';
             } else {
-              optionText = option.textContent?.trim() || '';
+              // 유형#10: "어법상 틀린 단어" 정보가 포함된 div 제거
+              if (isWork10 && grammarErrorText) {
+                const optionClone = option.cloneNode(true) as HTMLElement;
+                const grammarErrorDivs = optionClone.querySelectorAll('div');
+                grammarErrorDivs.forEach((div) => {
+                  const divText = div.textContent?.trim() || '';
+                  if (divText.includes('어법상 틀린 단어')) {
+                    div.remove();
+                  }
+                });
+                optionText = optionClone.textContent?.trim() || '';
+              } else {
+                optionText = option.textContent?.trim() || '';
+              }
             }
           }
           
@@ -2289,7 +2422,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
             translationText = optionTranslation.textContent?.trim() || '';
           }
           
-          if (optionText || answerMarkText || translationText) {
+          if (optionText || answerMarkText || translationText || grammarErrorText) {
             const children: TextRun[] = [];
             
             // 옵션 텍스트 추가
@@ -2310,7 +2443,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
                 new TextRun({
                   text: formattedAnswerText,
                   bold: true,
-                  color: 'FF0000',
+                  color: '1976D2',
                   font: 'Noto Sans KR'
                 })
               );
@@ -2319,7 +2452,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
                 new TextRun({
                   text: '  (정답)',
                   bold: true,
-                  color: 'FF0000',
+                  color: '1976D2',
                   font: 'Noto Sans KR'
                 })
               );
@@ -2328,7 +2461,10 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
             // 옵션 텍스트 Paragraph 추가
             const isLastOption = optionIndex === options.length - 1;
             // 유형#01의 마지막 옵션인 경우 after spacing을 줄임 (한 줄만 띄기)
-            const optionAfterSpacing = isWork01 && isLastOption ? 0 : (needsTranslationLineBreak && translationText ? 0 : 100);
+            // 유형#10의 경우 "어법상 틀린 단어" 정보가 있으면 after spacing을 0으로 설정
+            const optionAfterSpacing = isWork01 && isLastOption ? 0 : 
+              (needsTranslationLineBreak && translationText ? 0 : 
+              (isWork10 && grammarErrorText ? 0 : 100));
             
             paragraphs.push(
               new Paragraph({
@@ -2358,6 +2494,64 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
                 })
               );
             }
+            
+            // 유형#10: "어법상 틀린 단어" 정보를 별도 Paragraph로 추가
+            if (isWork10 && grammarErrorText) {
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`📝 유형#10 옵션 ${optionIndex} "어법상 틀린 단어" Paragraph 추가:`, grammarErrorText);
+              }
+              
+              // "어법상 틀린 단어 :" 부분과 나머지 부분을 분리
+              let grammarErrorLabel = '어법상 틀린 단어 :';
+              let grammarErrorContent = grammarErrorText;
+              
+              if (grammarErrorText.includes('어법상 틀린 단어 :')) {
+                const parts = grammarErrorText.split('어법상 틀린 단어 :');
+                if (parts.length === 2) {
+                  grammarErrorContent = parts[1].trim();
+                }
+              } else if (grammarErrorText.includes('어법상 틀린 단어:')) {
+                const parts = grammarErrorText.split('어법상 틀린 단어:');
+                if (parts.length === 2) {
+                  grammarErrorContent = parts[1].trim();
+                }
+              } else if (grammarErrorText.startsWith('어법상 틀린 단어')) {
+                // 이미 "어법상 틀린 단어"로 시작하는 경우
+                const match = grammarErrorText.match(/어법상 틀린 단어\s*[:：]\s*(.+)/);
+                if (match && match[1]) {
+                  grammarErrorContent = match[1].trim();
+                } else {
+                  // 레이블이 없는 경우 그대로 사용
+                  grammarErrorContent = grammarErrorText.replace(/^어법상 틀린 단어\s*[:：]\s*/, '').trim();
+                }
+              }
+              
+              const isLastOptionForGrammar = isLastOption;
+              const grammarAfterSpacing = isLastOptionForGrammar ? 100 : 100;
+              
+              paragraphs.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: grammarErrorLabel,
+                      font: 'Noto Sans KR',
+                      italics: true,
+                      color: '666666'
+                    }),
+                    new TextRun({
+                      text: ` ${grammarErrorContent}`,
+                      font: 'Noto Sans KR',
+                      italics: true,
+                      color: '666666'
+                    })
+                  ],
+                  indent: { left: 600 }, // 옵션보다 더 들여쓰기
+                  spacing: { before: 40, after: grammarAfterSpacing }
+                })
+              );
+            } else if (isWork10 && process.env.NODE_ENV === 'development') {
+              console.log(`⚠️ 유형#10 옵션 ${optionIndex}에서 "어법상 틀린 단어" 정보를 찾지 못했습니다.`);
+            }
           }
         });
       }
@@ -2365,7 +2559,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // 유형#10 어법 오류 정보 텍스트 블록 (4지선다 아래)
       const isWork10 = workType === '10' || workType === '010';
       if (isWork10) {
-        const textBlock = card.querySelector('.print-text-block-work10, .print-text-block') as HTMLElement | null;
+        const textBlock = actualCard.querySelector('.print-text-block-work10, .print-text-block') as HTMLElement | null;
         if (textBlock) {
           const textContent = textBlock.textContent?.trim() || '';
           if (textContent && textContent !== '\u00A0') {
@@ -2428,7 +2622,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 유형#02 교체된 단어 테이블 (정답 모드)
-      const replacementsTable = card.querySelector('.print-replacements-table') as HTMLTableElement | null;
+      const replacementsTable = actualCard.querySelector('.print-replacements-table') as HTMLTableElement | null;
       if (replacementsTable && replacementsTable.tagName === 'TABLE') {
         if (process.env.NODE_ENV === 'development') {
           console.log('🔍 유형#02 교체된 단어 테이블 발견');
@@ -2496,7 +2690,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
 
       // 정답 섹션
-      const answerSection = card.querySelector('.print-answer-section');
+      const answerSection = actualCard.querySelector('.print-answer-section');
       if (answerSection) {
         const answerLabel = answerSection.querySelector('.print-answer-label');
         const answerContents = Array.from(answerSection.querySelectorAll('.print-answer-content'));
@@ -2568,7 +2762,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 해석 섹션
-      const translation = card.querySelector('.print-translation-section, .translation');
+      const translation = actualCard.querySelector('.print-translation-section, .translation');
       if (translation) {
         // 마지막 본문해석(print-translation-last)인 경우, 이전 유형과의 간격 추가
         const isLastTranslation = translation.classList.contains('print-translation-last');
@@ -2690,8 +2884,8 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
 
       if (
         options.length > 0 &&
-        !card.querySelector('.print-answer-mark') &&
-        !card.querySelector('.print-translation-section, .translation') &&
+        !actualCard.querySelector('.print-answer-mark') &&
+        !actualCard.querySelector('.print-translation-section, .translation') &&
         sentenceItems.length === 0
       ) {
         paragraphs.push(

@@ -334,6 +334,57 @@
     margin-bottom: 1rem !important;
   }
   
+  /* 유형#05의 4지선다 항목을 1행으로만 배치 */
+  .only-print.print-answer-mode.work-05-print .a4-page-content .option,
+  .only-print.print-answer-mode.work-05-print .option {
+    display: block !important;
+    width: 100% !important;
+    float: none !important;
+    clear: both !important;
+    flex: none !important;
+    column-span: none !important;
+  }
+  
+  /* 유형#10의 4지선다 항목을 1행으로만 배치 */
+  .only-print.print-answer-mode.work-10-print .a4-page-content .option,
+  .only-print.print-answer-mode.work-10-print .option,
+  .only-print.work-10-print .a4-page-content .option,
+  .only-print.work-10-print .option {
+    display: block !important;
+    width: 100% !important;
+    float: none !important;
+    clear: both !important;
+    flex: none !important;
+    column-span: none !important;
+    flex-direction: column !important;
+  }
+  
+  /* 유형#10의 quiz-content 컨테이너가 3열 배치를 방지 */
+  .only-print.print-answer-mode.work-10-print .quiz-content,
+  .only-print.work-10-print .quiz-content {
+    display: block !important;
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+  
+  .only-print.print-answer-mode.work-10-print .quiz-content .option,
+  .only-print.work-10-print .quiz-content .option {
+    display: block !important;
+    width: 100% !important;
+    float: none !important;
+    clear: both !important;
+    flex: none !important;
+    column-span: none !important;
+    flex-direction: column !important;
+  }
+  
+  /* 유형#10의 option 내부 div도 블록 레벨로 강제 */
+  .only-print.print-answer-mode.work-10-print .option > div,
+  .only-print.work-10-print .option > div {
+    display: block !important;
+    width: 100% !important;
+  }
+  
   /* 최고 우선순위 오버라이드 - 모든 다른 규칙보다 우선 */
   .only-print.print-answer-mode.work-05-print .a4-page-template .a4-page-content .problem-passage.package01-work05-passage[style],
   .only-print.print-answer-mode .a4-page-template .a4-page-content .problem-passage.package01-work05-passage[style] {

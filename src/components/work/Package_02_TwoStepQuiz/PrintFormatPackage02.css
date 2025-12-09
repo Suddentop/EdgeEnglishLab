@@ -119,6 +119,18 @@
   padding: 0.3cm !important;
 }
 
+/* 유형#01 인쇄(정답) 모드: 정답 섹션이 항상 보이도록 보장 */
+.print-container-answer .print-question-card[data-work-type="01"] .print-answer-section {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 0.5cm !important;
+  background: #e3f2fd !important;
+  border-radius: 0.2cm !important;
+  margin-top: 0.2cm !important;
+  padding: 0.3cm !important;
+}
+
 .print-answer-label {
   font-weight: bold;
   color: #1976d2;
@@ -668,6 +680,16 @@
     overflow: visible !important;
   }
 
+  /* 유형#01 인쇄(정답) 모드: 선택지와 본문해석 사이 여백 제거 */
+  .print-container-answer .print-question-card[data-work-type="01"] .print-options {
+    margin-bottom: 0 !important;
+  }
+
+  .print-container-answer .print-question-card[data-work-type="01"] ~ .print-question-card[data-work-type="01"] .print-options,
+  .print-container-answer .print-question-card[data-work-type="01"] .print-options {
+    margin-bottom: 0 !important;
+  }
+
   .print-option {
     font-size: 9.0pt !important; /* 인쇄(문제) 모드: 모든 유형 통일 */
     line-height: 1.3;
@@ -737,6 +759,11 @@
     overflow: visible !important;
     box-sizing: border-box !important;
     padding: 0.1cm !important;
+  }
+
+  /* 유형#01 인쇄(정답) 모드: 선택지와 본문해석 사이 여백 제거 */
+  .print-container-answer .print-question-card[data-work-type="01"] .print-translation-section {
+    margin-top: 0 !important;
   }
 
   .print-answer-before-translation {
@@ -1636,4 +1663,5 @@
     font-size: 9.35pt !important; /* 선택지와 동일한 크기 */
   }
 }
+
 
