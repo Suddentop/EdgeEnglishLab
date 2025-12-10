@@ -92,7 +92,21 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
         // Work_02: 유사단어 독해
         if (quizItem.workTypeId === '02') {
           const work02Data = (quizItem.work02Data || quizItem.quiz || quizItem.data?.work02Data || quizItem.data?.quiz || quizItem.data) as any;
-          const baseText = work02Data?.modifiedText || work02Data?.modifiedHtml || work02Data?.html || work02Data?.text || work02Data?.passage || work02Data?.content || work02Data?.originalText || work02Data?.questionText || work02Data?.body || '';
+          let baseText = work02Data?.modifiedText || work02Data?.modifiedHtml || work02Data?.html || work02Data?.text || work02Data?.passage || work02Data?.content || work02Data?.originalText || work02Data?.questionText || work02Data?.body || '';
+          
+          // 교체된 단어를 진하게 표시
+          const replacements = work02Data?.replacements || [];
+          if (replacements.length > 0 && typeof baseText === 'string') {
+            replacements.forEach((rep: any) => {
+              if (rep.replacement) {
+                // 교체된 단어를 찾아서 진하게 표시 (단어 경계 고려)
+                const escapedWord = rep.replacement.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+                baseText = baseText.replace(regex, '<strong>$&</strong>');
+              }
+            });
+          }
+          
           const normalizedHtml = (typeof baseText === 'string' ? baseText : '')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br />');

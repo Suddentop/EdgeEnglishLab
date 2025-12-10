@@ -158,17 +158,37 @@ const QuizListPage: React.FC = () => {
               // 단일 문제인 경우
               quizItem.quiz = parsed?.quiz || parsed;
             }
-          } else {
-            // work02Data, work03Data ... work14Data 로 매핑
-            // 저장된 구조가 { work10Data: {...} } 형태인 경우 추출
-            if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
-              quizItem[nestedKey] = parsed[nestedKey];
-            } else {
-              quizItem[nestedKey] = parsed;
-            }
+          } else if (numId === '02') {
+            // 유형#02는 여러 문제를 배열로 저장할 수 있음
+            if (Array.isArray(parsed)) {
+              // 배열인 경우: 각 항목을 work02Data 필드로 변환하여 패키지 형태로 처리
+              const quizzes = parsed.map((quiz, index) => ({
+                workTypeId: '02',
+                workTypeName: historyItem.workTypeName,
+                work02Data: quiz
+              }));
+              
+              const wrapped = {
+                ...historyItem,
+                generatedData: {
+                  isPackage: true,
+                  quizzes: quizzes
+                }
+              } as any;
 
-            // 유형별 데이터 정규화 (특히 #02)
-            if (numId === '02') {
+              navigate('/quiz-display', { state: { quizData: wrapped } });
+              return;
+            } else {
+              // 단일 문제인 경우
+              // work02Data, work03Data ... work14Data 로 매핑
+              // 저장된 구조가 { work10Data: {...} } 형태인 경우 추출
+              if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
+                quizItem[nestedKey] = parsed[nestedKey];
+              } else {
+                quizItem[nestedKey] = parsed;
+              }
+
+              // 유형별 데이터 정규화 (특히 #02)
               const d: any = quizItem[nestedKey] || {};
               // 저장이 { quiz: {...} } 로 된 케이스 흡수
               const quizInner = parsed?.quiz || parsed?.data?.quiz;
@@ -181,6 +201,14 @@ const QuizListPage: React.FC = () => {
                 merged.replacements = merged.replacements || [];
               }
               quizItem[nestedKey] = merged;
+            }
+          } else {
+            // work02Data, work03Data ... work14Data 로 매핑
+            // 저장된 구조가 { work10Data: {...} } 형태인 경우 추출
+            if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
+              quizItem[nestedKey] = parsed[nestedKey];
+            } else {
+              quizItem[nestedKey] = parsed;
             }
           }
           // 번역 필드 추정치 적용 (여러 필드 후보 지원)

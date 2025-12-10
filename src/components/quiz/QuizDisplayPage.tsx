@@ -7,6 +7,7 @@ import SimplePrintFormatPackage02 from '../work/Package_02_TwoStepQuiz/SimplePri
 import PrintFormatPackage03 from '../work/Package_03_ParagraphOrder/PrintFormatPackage03';
 import PrintFormatPackage01 from '../work/Package_01_MultiQuizGenerater/PrintFormatPackage01';
 import PrintFormatWork01New from '../work/Work_01_ArticleOrder/PrintFormatWork01New';
+import PrintFormatWork02New from '../work/Work_02_ReadingComprehension/PrintFormatWork02New';
 import HistoryPrintWork12 from '../work/Work_12_WordStudy/HistoryPrintWork12';
 import SimpleQuizDisplay from './SimpleQuizDisplay';
 import FileFormatSelector from '../work/shared/FileFormatSelector';
@@ -124,7 +125,7 @@ const QuizDisplayPage: React.FC = () => {
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
     // first, typeId, isType01Single은 위에서 이미 선언됨
-    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single)
+    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02')
       ? 'print-root-package01' 
       : packageType === 'P02' 
         ? 'print-root-package02' 
@@ -132,7 +133,9 @@ const QuizDisplayPage: React.FC = () => {
           ? 'print-root-package03'
           : packageType === '01' || isType01Single
             ? 'print-root-work01-new'
-            : 'print-root-package02';
+            : packageType === '02' || (isSingleWork && typeId === '02')
+              ? 'print-root-work02-new'
+              : 'print-root-package02';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
 
@@ -160,6 +163,20 @@ const QuizDisplayPage: React.FC = () => {
         // 유형#01은 PrintFormatWork01New 사용
         const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
         root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={false} />);
+      } else if (typeId === '02') {
+        // 유형#02는 PrintFormatWork02New 사용
+        const rawQuizzes = packageQuiz.map((item: any) => {
+          const work02Data = item.work02Data || item.quiz || item.data?.work02Data || item.data || item;
+          return {
+            id: item.id || work02Data.id,
+            title: work02Data.title || '독해 문제',
+            originalText: work02Data.originalText || '',
+            modifiedText: work02Data.modifiedText || '',
+            replacements: work02Data.replacements || [],
+            translation: work02Data.translation || ''
+          };
+        });
+        root.render(<PrintFormatWork02New quizzes={rawQuizzes} isAnswerMode={false} />);
       } else {
         root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} translatedText={globalTranslatedText} />);
       }
@@ -172,6 +189,20 @@ const QuizDisplayPage: React.FC = () => {
     } else if (packageType === '01') {
       const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
       root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={false} />);
+    } else if (packageType === '02') {
+      // 유형#02는 PrintFormatWork02New 사용
+      const rawQuizzes = packageQuiz.map((item: any) => {
+        const work02Data = item.work02Data || item.quiz || item.data?.work02Data || item.data || item;
+        return {
+          id: item.id || work02Data.id,
+          title: work02Data.title || '독해 문제',
+          originalText: work02Data.originalText || '',
+          modifiedText: work02Data.modifiedText || '',
+          replacements: work02Data.replacements || [],
+          translation: work02Data.translation || ''
+        };
+      });
+      root.render(<PrintFormatWork02New quizzes={rawQuizzes} isAnswerMode={false} />);
     } else {
       root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
     }
@@ -412,6 +443,20 @@ const QuizDisplayPage: React.FC = () => {
         // 유형#01은 PrintFormatWork01New 사용
         const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
         root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={true} />);
+      } else if (typeId === '02') {
+        // 유형#02는 PrintFormatWork02New 사용
+        const rawQuizzes = packageQuiz.map((item: any) => {
+          const work02Data = item.work02Data || item.quiz || item.data?.work02Data || item.data || item;
+          return {
+            id: item.id || work02Data.id,
+            title: work02Data.title || '독해 문제',
+            originalText: work02Data.originalText || '',
+            modifiedText: work02Data.modifiedText || '',
+            replacements: work02Data.replacements || [],
+            translation: work02Data.translation || ''
+          };
+        });
+        root.render(<PrintFormatWork02New quizzes={rawQuizzes} isAnswerMode={true} />);
       } else {
         root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={true} translatedText={globalTranslatedText} />);
       }
@@ -424,6 +469,20 @@ const QuizDisplayPage: React.FC = () => {
     } else if (packageType === '01') {
       const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
       root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={true} />);
+    } else if (packageType === '02') {
+      // 유형#02는 PrintFormatWork02New 사용
+      const rawQuizzes = packageQuiz.map((item: any) => {
+        const work02Data = item.work02Data || item.quiz || item.data?.work02Data || item.data || item;
+        return {
+          id: item.id || work02Data.id,
+          title: work02Data.title || '독해 문제',
+          originalText: work02Data.originalText || '',
+          modifiedText: work02Data.modifiedText || '',
+          replacements: work02Data.replacements || [],
+          translation: work02Data.translation || ''
+        };
+      });
+      root.render(<PrintFormatWork02New quizzes={rawQuizzes} isAnswerMode={true} />);
     } else {
       root.render(<PrintFormatPackage02 packageQuiz={packageQuiz} isAnswerMode={true} />);
     }
