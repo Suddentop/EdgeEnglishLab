@@ -266,17 +266,17 @@ const QuizListPage: React.FC = () => {
 
               navigate('/quiz-display', { state: { quizData: wrapped } });
               return;
-            } else {
+          } else {
               // 단일 문제인 경우
-              // work02Data, work03Data ... work14Data 로 매핑
-              // 저장된 구조가 { work10Data: {...} } 형태인 경우 추출
-              if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
-                quizItem[nestedKey] = parsed[nestedKey];
-              } else {
-                quizItem[nestedKey] = parsed;
-              }
+            // work02Data, work03Data ... work14Data 로 매핑
+            // 저장된 구조가 { work10Data: {...} } 형태인 경우 추출
+            if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
+              quizItem[nestedKey] = parsed[nestedKey];
+            } else {
+              quizItem[nestedKey] = parsed;
+            }
 
-              // 유형별 데이터 정규화 (특히 #02)
+            // 유형별 데이터 정규화 (특히 #02)
               const d: any = quizItem[nestedKey] || {};
               // 저장이 { quiz: {...} } 로 된 케이스 흡수
               const quizInner = parsed?.quiz || parsed?.data?.quiz;
@@ -298,6 +298,43 @@ const QuizListPage: React.FC = () => {
                 workTypeId: '05',
                 workTypeName: historyItem.workTypeName,
                 work05Data: quiz
+              }));
+              
+              const wrapped = {
+                ...historyItem,
+                generatedData: {
+                  isPackage: true,
+                  quizzes: quizzes
+                }
+              } as any;
+
+              navigate('/quiz-display', { state: { quizData: wrapped } });
+              return;
+            } else {
+              // 단일 문제인 경우
+              // work02Data, work03Data ... work14Data 로 매핑
+              // 저장된 구조가 { work10Data: {...} } 형태인 경우 추출
+              if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
+                quizItem[nestedKey] = parsed[nestedKey];
+              } else {
+                quizItem[nestedKey] = parsed;
+              }
+
+              // 유형별 데이터 정규화
+              const d: any = quizItem[nestedKey] || {};
+              // 저장이 { quiz: {...} } 로 된 케이스 흡수
+              const quizInner = parsed?.quiz || parsed?.data?.quiz;
+              const merged = { ...d, ...(quizInner || {}) };
+              quizItem[nestedKey] = merged;
+            }
+          } else if (numId === '06') {
+            // 유형#06은 여러 문제를 배열로 저장할 수 있음
+            if (Array.isArray(parsed)) {
+              // 배열인 경우: 각 항목을 work06Data 필드로 변환하여 패키지 형태로 처리
+              const quizzes = parsed.map((quiz, index) => ({
+                workTypeId: '06',
+                workTypeName: historyItem.workTypeName,
+                work06Data: quiz
               }));
               
               const wrapped = {

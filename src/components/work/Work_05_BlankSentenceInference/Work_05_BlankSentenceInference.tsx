@@ -255,7 +255,7 @@ const Work_05_BlankSentenceInference: React.FC = () => {
 
 영어 본문:
 ${englishText}`;
-
+    
     // 공통 헬퍼 함수 사용 (프록시 자동 지원)
     const response = await callOpenAI({
       model: 'gpt-4o',
@@ -267,7 +267,7 @@ ${englishText}`;
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
-    }
+      }
     
     const data = await response.json();
     return data.choices[0].message.content.trim();
@@ -281,7 +281,7 @@ ${englishText}`;
       alert('문제 생성을 위해 최소 하나의 본문을 입력해주세요.');
       return;
     }
-
+    
     // 로딩 중이면 대기
     if (loading) {
       alert('로그인 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
@@ -381,7 +381,7 @@ ${englishText}`;
           console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
           // 개별 아이템 실패 시 경고만 표시하고 계속 진행
           alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
-        }
+      }
       }
 
       if (generatedQuizzes.length === 0) {
@@ -434,7 +434,7 @@ ${englishText}`;
       alert(err.message || '문제 생성 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
-    }
+      }
   };
 
   // 리셋
@@ -493,7 +493,7 @@ ${englishText}`;
         inner.classList.add('pdf-generation-active');
       } else {
         requestAnimationFrame(activatePrintContainer);
-      }
+        }
     };
     activatePrintContainer();
 
@@ -510,7 +510,7 @@ ${englishText}`;
           document.head.removeChild(styleElement);
         }
         console.log('✅ 인쇄 완료');
-      }, 100);
+    }, 100);
     }, 500);
   };
 
@@ -599,46 +599,46 @@ ${englishText}`;
                   </div>
                   
                   <div style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-                    {displayBlankedText}
-                  </div>
+              {displayBlankedText}
+            </div>
                   
-                  <div className="problem-options" style={{margin:'1.2rem 0'}}>
-                    {quiz.options.map((opt, i) => (
+            <div className="problem-options" style={{margin:'1.2rem 0'}}>
+              {quiz.options.map((opt, i) => (
                       <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
-                        <input
-                          type="radio"
+                  <input
+                    type="radio"
                           name={`blank-quiz-${quizId}`}
-                          checked={selected === i}
+                    checked={selected === i}
                           onChange={() => setSelectedAnswers({ ...selectedAnswers, [quizId]: i })}
-                          style={{marginRight:'0.7rem'}}
-                        />
-                        {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                        {selected !== null && quiz.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                  
-                  {selected !== null && (
-                    <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
-                      정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
-                    </div>
+                    style={{marginRight:'0.7rem'}}
+                  />
+                  {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                  {selected !== null && quiz.answerIndex === i && (
+                    <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                   )}
+                </label>
+              ))}
+            </div>
+                  
+            {selected !== null && (
+              <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
+                정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
+              </div>
+            )}
 
                   {quiz.translation && (
                     <div className="translation-section" style={{marginTop:'2rem'}}>
                       <h3>본문 해석:</h3>
                       <div className="translation-content" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px'}}>
                         {quiz.translation}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                            </div>
+                              </div>
+                            )}
+                          </div>
               );
             })}
-          </div>
-        </div>
+                      </div>
+                    </div>
       </div>
     );
   }
@@ -660,11 +660,11 @@ ${englishText}`;
                 <span className={`input-item-status ${item.text.length > 0 ? 'has-text' : ''}`}>
                   {item.text.length > 0 ? `텍스트 ${item.text.length}자` : '입력 대기'}
                 </span>
-              </div>
+      </div>
               <div className="input-item-controls">
                 <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); removeItem(item.id); }} title="삭제">🗑️</button>
                 <span className="expand-icon">{item.isExpanded ? '🔼' : '🔽'}</span>
-              </div>
+            </div>
             </div>
 
             {item.isExpanded && (
@@ -673,7 +673,7 @@ ${englishText}`;
                   <label><input type="radio" checked={item.inputType === 'clipboard'} onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })} /><span>📸 캡처화면 붙여넣기</span></label>
                   <label><input type="radio" checked={item.inputType === 'file'} onChange={() => updateItem(item.id, { inputType: 'file', error: '' })} /><span>🖼️ 이미지 파일 첨부</span></label>
                   <label><input type="radio" checked={item.inputType === 'text'} onChange={() => updateItem(item.id, { inputType: 'text', error: '' })} /><span>✍️ 직접 붙여넣기</span></label>
-                </div>
+        </div>
                    
                 {item.inputType === 'clipboard' && (
                   <div className="input-guide" tabIndex={0} onPaste={(e) => handlePaste(item.id, e)} style={{ minHeight: '120px' }}>
@@ -681,32 +681,32 @@ ${englishText}`;
                     <div className="drop-text">여기에 이미지를 붙여넣으세요 (Ctrl+V)</div>
                     {item.pastedImageUrl && <div className="preview-row"><img src={item.pastedImageUrl} alt="Preview" className="preview-img" /></div>}
                     {item.isExtracting && <div className="loading-text">텍스트 추출 중...</div>}
-                  </div>
-                )}
+              </div>
+            )}
                 {item.inputType === 'file' && (
                   <div className="input-guide" style={{ minHeight: '80px' }}>
                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(item.id, e)} disabled={item.isExtracting} />
                     {item.isExtracting && <span className="loading-text">추출 중...</span>}
-                  </div>
-                )}
+        </div>
+      )}
 
-                <textarea
+        <textarea
                   value={item.text}
                   onChange={(e) => updateItem(item.id, { text: e.target.value })}
                   placeholder="영어 본문이 여기에 표시됩니다. 직접 입력하거나 수정할 수 있습니다."
-                  className="text-input"
+          className="text-input"
                   rows={6}
                   style={{ marginTop: '10px', width: '100%' }}
-                />
+        />
                 {item.error && <div className="error-message">❌ {item.error}</div>}
-              </div>
+        </div>
             )}
           </div>
         ))}
       </div>
-
+      
       <button onClick={addItem} className="add-item-button">➕ 본문 추가하기</button>
-
+      
       <button onClick={handleGenerateQuiz} disabled={isLoading} className="generate-button" style={{ marginTop: '20px' }}>
         {items.filter(i => i.text.length >= 10).length > 1 ? `📋 ${items.filter(i => i.text.length >= 10).length}개 문제 일괄 생성` : '📋 빈칸(문장) 문제 생성'}
       </button>
@@ -720,7 +720,7 @@ ${englishText}`;
           </div>
         </div>
       )}
-
+      
       <ScreenshotHelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
       <PointDeductionModal
         isOpen={showPointModal}

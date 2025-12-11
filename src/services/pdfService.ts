@@ -1067,15 +1067,16 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   // 패키지#01 유형#11: .work-11-print도 포함
   // 패키지#01: .a4-page-template을 우선으로 찾고, wrapper div는 제외 (중복 방지)
   // 패키지#02: .print-question-card 사용
-  const allCards = element.querySelectorAll('.print-question-card, .quiz-content, .work-11-print, .a4-page-template, [data-work-type]');
+  // 유형#05, #06: .a4-landscape-page-template 사용
+  const allCards = element.querySelectorAll('.print-question-card, .quiz-content, .work-11-print, .a4-page-template, .a4-landscape-page-template, [data-work-type]');
   
   // 중복 제거: .a4-page-template이 있으면 그것을 우선하고, wrapper div는 제외
   const questionCards: Element[] = [];
   const processedTemplates: Element[] = [];
   
   allCards.forEach((card) => {
-    // .a4-page-template인 경우 우선 처리
-    if (card.classList.contains('a4-page-template')) {
+    // .a4-page-template 또는 .a4-landscape-page-template인 경우 우선 처리
+    if (card.classList.contains('a4-page-template') || card.classList.contains('a4-landscape-page-template')) {
       // 이미 처리된 template의 자식인지 확인
       let isChildOfProcessed = false;
       for (let i = 0; i < processedTemplates.length; i++) {
@@ -1095,8 +1096,8 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       // 패키지#02나 유형#11은 그대로 추가
       questionCards.push(card);
     } else if (card.hasAttribute('data-work-type')) {
-      // wrapper div인 경우, 내부에 .a4-page-template이 없을 때만 추가
-      const hasTemplate = card.querySelector('.a4-page-template') !== null;
+      // wrapper div인 경우, 내부에 .a4-page-template 또는 .a4-landscape-page-template이 없을 때만 추가
+      const hasTemplate = card.querySelector('.a4-page-template, .a4-landscape-page-template') !== null;
       if (!hasTemplate) {
         questionCards.push(card);
       }

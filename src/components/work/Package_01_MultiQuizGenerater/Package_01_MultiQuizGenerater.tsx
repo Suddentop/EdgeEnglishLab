@@ -4710,3 +4710,4 @@ ${inputText}`;
 };
 
 export default Package_01_MultiQuizGenerater;
+

@@ -119,7 +119,7 @@ const Work_02_ReadingComprehension: React.FC = () => {
   const toggleExpand = (id: string) => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, isExpanded: !item.isExpanded } : item));
   };
-
+      
   // 이미지 -> 텍스트 (개별 아이템용)
   const handleImageToText = async (id: string, image: File | Blob) => {
     updateItem(id, { isExtracting: true, error: '' });
@@ -129,8 +129,8 @@ const Work_02_ReadingComprehension: React.FC = () => {
       if (image instanceof Blob) {
         previewUrl = URL.createObjectURL(image);
         updateItem(id, { pastedImageUrl: previewUrl });
-      }
-      
+          }
+          
       const imageBase64 = await fileToBase64(image as File);
       // 공통 헬퍼 extractTextFromImage 사용
       const resultText = await extractTextFromImage(imageBase64);
@@ -159,7 +159,7 @@ const Work_02_ReadingComprehension: React.FC = () => {
           handleImageToText(id, file);
           e.preventDefault();
           return;
-        }
+    }
       }
     }
   };
@@ -225,7 +225,7 @@ Required JSON format:
     
     const cleanJson = jsonMatch[0].replace(/```json/g, '').replace(/```/g, '').replace(/\n/g, ' ').trim();
     return JSON.parse(cleanJson).sentences;
-  }
+      }
 
   async function selectWordFromSentence(sentence: string, index: number, usedWords: string[] = []): Promise<{index: number, original: string}> {
     const usedWordsText = usedWords.length > 0 ? `\n\nALREADY USED WORDS (do not select these): ${usedWords.join(', ')}` : '';
@@ -335,7 +335,7 @@ Korean translation:`;
     const data = await response.json();
     return data.choices[0].message.content.trim();
   }
-
+    
   // AI 문제 생성 메인 함수
   async function generateReadingComprehensionWithAI(passage: string): Promise<Work_02_ReadingComprehensionData> {
     try {
@@ -465,7 +465,7 @@ Korean translation:`;
 
       // 내역 저장
       if (generatedQuizzes.length > 0 && userData!.uid) {
-         try {
+        try {
            const combinedInputText = validItems.map(i => i.text).join('\n\n---\n\n');
           await saveQuizWithPDF({
              userId: userData!.uid,
@@ -481,13 +481,13 @@ Korean translation:`;
            console.log('✅ 내역 저장 완료');
          } catch (e) {
            console.error('내역 저장 실패:', e);
-         }
+        }
       }
 
       if (failCount > 0) {
         alert(`${validItems.length}건 중 ${successCount}건 성공, ${failCount}건 실패했습니다.`);
       }
-
+      
     } catch (err: any) {
       console.error(err);
       if (deductedPoints > 0) {
@@ -566,7 +566,7 @@ Korean translation:`;
         document.body.removeChild(printContainer);
         if (appRoot) {
           appRoot.style.display = 'block';
-        }
+      }
         const styleElement = document.getElementById(styleId);
         if (styleElement) {
           document.head.removeChild(styleElement);

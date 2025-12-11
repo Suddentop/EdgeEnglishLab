@@ -377,13 +377,13 @@ const Work_03_VocabularyWord: React.FC = () => {
 
   // 본문 → 빈칸 문제/객관식 생성 (AI) - 번역은 별도 함수로 처리
   async function generateBlankQuizWithAI(passage: string): Promise<BlankQuiz> {
-    // 본문에서 이미 ()로 묶인 단어나 구 추출
-    const excludedWords: string[] = [];
-    const bracketRegex = /\(([^)]+)\)/g;
-    let match;
+  // 본문에서 이미 ()로 묶인 단어나 구 추출
+  const excludedWords: string[] = [];
+  const bracketRegex = /\(([^)]+)\)/g;
+  let match;
     while ((match = bracketRegex.exec(passage)) !== null) {
-      excludedWords.push(match[1].trim());
-    }
+    excludedWords.push(match[1].trim());
+  }
 
     const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 빈칸 추론 문제를 만들어주세요.
 
@@ -576,7 +576,7 @@ ${englishText}`;
       alert('문제 생성을 위해 최소 하나의 본문을 입력해주세요.');
       return;
     }
-
+    
     // 로딩 중이면 대기
     if (loading) {
       alert('로그인 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
@@ -654,13 +654,13 @@ ${englishText}`;
         if (!passage) continue;
 
         try {
-          // 1) 문제 생성
-          const quizData = await generateBlankQuizWithAI(passage);
-          console.log('생성된 퀴즈 데이터:', quizData);
+      // 1) 문제 생성
+      const quizData = await generateBlankQuizWithAI(passage);
+      console.log('생성된 퀴즈 데이터:', quizData);
 
           // 2) 번역 생성
-          const translation = await translateToKorean(passage);
-          console.log('번역된 텍스트:', translation);
+      const translation = await translateToKorean(passage);
+      console.log('번역된 텍스트:', translation);
 
           // 3) 번역을 포함한 데이터로 저장
           const quizDataWithTranslation: BlankQuiz = { 
@@ -880,52 +880,52 @@ ${englishText}`;
                     <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#03</span>
                   </div>
 
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.18rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                    <span>다음 빈칸에 들어갈 단어로 가장 적절한 것을 고르시오.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
-                  </div>
+            <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.18rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+              <span>다음 빈칸에 들어갈 단어로 가장 적절한 것을 고르시오.</span>
+              <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
+            </div>
                   
                   <div style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-                    {displayBlankedText}
-                  </div>
+              {displayBlankedText}
+            </div>
                   
-                  <div className="problem-options" style={{margin:'1.2rem 0'}}>
-                    {quiz.options.map((opt, i) => (
-                      <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
-                        <input
-                          type="radio"
+            <div className="problem-options" style={{margin:'1.2rem 0'}}>
+              {quiz.options.map((opt, i) => (
+                <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
+                  <input
+                    type="radio"
                           name={`blank-quiz-${quizId}`}
-                          checked={selected === i}
+                    checked={selected === i}
                           onChange={() => setSelectedAnswers({ ...selectedAnswers, [quizId]: i })}
-                          style={{marginRight:'0.7rem'}}
-                        />
-                        {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                        {selected !== null && quiz.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                  
-                  {selected !== null && (
-                    <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
-                      정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
-                    </div>
+                    style={{marginRight:'0.7rem'}}
+                  />
+                  {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                  {selected !== null && quiz.answerIndex === i && (
+                    <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                   )}
+                </label>
+              ))}
+            </div>
+                  
+            {selected !== null && (
+              <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
+                정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
+              </div>
+            )}
 
                   {quiz.translation && (
                     <div className="translation-section" style={{marginTop:'2rem'}}>
                       <h3>본문 해석:</h3>
                       <div className="translation-content" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px'}}>
                         {quiz.translation}
-                      </div>
+                        </div>
                     </div>
                   )}
-                </div>
+                      </div>
               );
             })}
-          </div>
-        </div>
+                      </div>
+                </div>
         {/* 인쇄 기능은 추후 구현 예정 */}
       </div>
     );
@@ -948,11 +948,11 @@ ${englishText}`;
                 <span className={`input-item-status ${item.text.length > 0 ? 'has-text' : ''}`}>
                   {item.text.length > 0 ? `텍스트 ${item.text.length}자` : '입력 대기'}
                 </span>
-              </div>
+      </div>
               <div className="input-item-controls">
                 <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); removeItem(item.id); }} title="삭제">🗑️</button>
                 <span className="expand-icon">{item.isExpanded ? '🔼' : '🔽'}</span>
-              </div>
+            </div>
             </div>
 
             {item.isExpanded && (
@@ -961,7 +961,7 @@ ${englishText}`;
                   <label><input type="radio" checked={item.inputType === 'clipboard'} onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })} /><span>📸 캡처화면 붙여넣기</span></label>
                   <label><input type="radio" checked={item.inputType === 'file'} onChange={() => updateItem(item.id, { inputType: 'file', error: '' })} /><span>🖼️ 이미지 파일 첨부</span></label>
                   <label><input type="radio" checked={item.inputType === 'text'} onChange={() => updateItem(item.id, { inputType: 'text', error: '' })} /><span>✍️ 직접 붙여넣기</span></label>
-                </div>
+        </div>
                    
                 {item.inputType === 'clipboard' && (
                   <div className="input-guide" tabIndex={0} onPaste={(e) => handlePaste(item.id, e)} style={{ minHeight: '120px' }}>
@@ -969,32 +969,32 @@ ${englishText}`;
                     <div className="drop-text">여기에 이미지를 붙여넣으세요 (Ctrl+V)</div>
                     {item.pastedImageUrl && <div className="preview-row"><img src={item.pastedImageUrl} alt="Preview" className="preview-img" /></div>}
                     {item.isExtracting && <div className="loading-text">텍스트 추출 중...</div>}
-                  </div>
-                )}
+              </div>
+            )}
                 {item.inputType === 'file' && (
                   <div className="input-guide" style={{ minHeight: '80px' }}>
                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(item.id, e)} disabled={item.isExtracting} />
                     {item.isExtracting && <span className="loading-text">추출 중...</span>}
-                  </div>
-                )}
+        </div>
+      )}
 
-                <textarea
+        <textarea
                   value={item.text}
                   onChange={(e) => updateItem(item.id, { text: e.target.value })}
                   placeholder="영어 본문이 여기에 표시됩니다. 직접 입력하거나 수정할 수 있습니다."
-                  className="text-input"
+          className="text-input"
                   rows={6}
                   style={{ marginTop: '10px', width: '100%' }}
-                />
+        />
                 {item.error && <div className="error-message">❌ {item.error}</div>}
-              </div>
+        </div>
             )}
           </div>
         ))}
       </div>
-
+      
       <button onClick={addItem} className="add-item-button">➕ 본문 추가하기</button>
-
+      
       <button onClick={handleGenerateQuiz} disabled={isLoading} className="generate-button" style={{ marginTop: '20px' }}>
         {items.filter(i => i.text.length >= 10).length > 1 ? `📋 ${items.filter(i => i.text.length >= 10).length}개 문제 일괄 생성` : '📋 어휘(빈칸) 문제 생성'}
       </button>
@@ -1008,7 +1008,7 @@ ${englishText}`;
           </div>
         </div>
       )}
-
+      
       <ScreenshotHelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
       <PointDeductionModal
         isOpen={showPointModal}

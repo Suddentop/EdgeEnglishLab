@@ -156,9 +156,9 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
               </div>
               {isAnswerMode && (
                 <>
-                  <div className="answer">
-                    <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work03Data?.answerIndex]} {work03Data?.options?.[work03Data?.answerIndex]}
-                  </div>
+                <div className="answer">
+                  <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work03Data?.answerIndex]} {work03Data?.options?.[work03Data?.answerIndex]}
+                </div>
                   {work03Data?.translation && (
                     <div className="translation-section" style={{marginTop:'1rem'}}>
                       <h4>본문 해석:</h4>
@@ -192,9 +192,9 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
               </div>
               {isAnswerMode && (
                 <>
-                  <div className="answer">
-                    <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work04Data?.answerIndex]} {work04Data?.options?.[work04Data?.answerIndex]}
-                  </div>
+                <div className="answer">
+                  <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work04Data?.answerIndex]} {work04Data?.options?.[work04Data?.answerIndex]}
+                </div>
                   {work04Data?.translation && (
                     <div className="translation-section" style={{marginTop:'1rem'}}>
                       <h4>본문 해석:</h4>
@@ -239,9 +239,9 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
               </div>
               {isAnswerMode && (
                 <>
-                  <div className="answer">
-                    <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work05Data?.answerIndex]} {work05Data?.options?.[work05Data?.answerIndex]}
-                  </div>
+                <div className="answer">
+                  <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work05Data?.answerIndex]} {work05Data?.options?.[work05Data?.answerIndex]}
+                </div>
                   {work05Data?.translation && (
                     <div className="translation-section" style={{marginTop:'1rem'}}>
                       <h4>본문 해석:</h4>
@@ -262,25 +262,27 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           return (
             <div key={`quiz-06-${index}`} className="quiz-item">
               <h3>#06. 문장 위치 찾기</h3>
-              <div className="instruction">다음 문장이 들어갈 가장 적절한 위치를 고르세요</div>
-              <div className="passage">
+              <div className="instruction">다음 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</div>
+              <div className="passage" style={{fontWeight: 700, fontSize: '1.08rem', marginBottom: '1rem'}}>
                 <strong>주요 문장:</strong> {work06Data?.missingSentence}
               </div>
-              <div className="passage">
-                <strong>본문:</strong><br />
+              <div className="passage" style={{fontSize: '1.08rem', lineHeight: 1.7, whiteSpace: 'pre-line'}}>
                 {work06Data?.numberedPassage}
               </div>
-              <div className="options">
-                {work06Data?.options?.map((option: string, oIndex: number) => (
-                  <div key={oIndex} className="option">
-                    {['①', '②', '③', '④', '⑤'][oIndex]} {option}
-                  </div>
-                ))}
-              </div>
               {isAnswerMode && (
-                <div className="answer">
-                  <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work06Data?.answerIndex]} {work06Data?.options?.[work06Data?.answerIndex]}
-                </div>
+                <>
+                  <div className="answer" style={{marginTop: '1rem'}}>
+                    <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work06Data?.answerIndex]}
+                  </div>
+                  {work06Data?.translation && (
+                    <div className="translation-section" style={{marginTop: '1rem'}}>
+                      <h4>본문 해석:</h4>
+                      <div className="translation-content" style={{background: '#f1f8e9', padding: '1rem', borderRadius: '8px', marginTop: '0.5rem'}}>
+                        {work06Data.translation}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );

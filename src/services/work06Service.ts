@@ -12,6 +12,7 @@ import { callOpenAI, translateToKorean } from './common';
  * 문장 위치 찾기 문제 타입 정의
  */
 export interface SentencePositionQuiz {
+  id?: string; // 다중 입력 처리를 위한 ID
   missingSentence: string;
   numberedPassage: string;
   answerIndex: number; // 0~4 (①~⑤)
@@ -45,18 +46,28 @@ export async function generateWork06Quiz(passage: string): Promise<SentencePosit
 12. **절대 금지**: 원문자 중복 사용 금지 (①, ②, ③, ④, ⑤ 각각 한 번씩만 사용)
 
 **작업 순서:**
-1. 본문에서 가장 중요한 주제 문장 1개를 선정하여 제거
+1. 본문에서 가장 중요한 주제 문장 1개를 선정하여 제거 (이것이 missingSentence)
 2. 남은 본문을 문장 단위로 분할 (마침표, 느낌표, 물음표 기준)
-3. 처음 5개 문장 앞에 ①~⑤를 순서대로 삽입 (중복 없이)
-4. 빠진 문장이 들어갈 위치를 1~5 중 하나로 결정
-5. 본문 해석 제공
+3. 처음 5개 문장 앞에 ①~⑤를 순서대로 삽입 (중복 없이) (이것이 numberedPassage)
+4. 빠진 문장이 들어갈 위치를 1~5 중 하나로 결정 (answerIndex: 0~4)
+5. **중요**: translation 필드에는 원본 본문(주요문장이 빠지기 전 원본 본문)의 한국어 해석을 제공해야 합니다.
+
+**translation 필드 규칙 (절대 필수, 위반 시 오류):**
+- ⚠️ translation은 반드시 원본 본문(주요문장을 원래의 위치에 포함한 전체 영어 본문)의 한국어 해석이어야 합니다.
+- ⚠️ 절대로 원문자(①, ②, ③, ④, ⑤)를 포함하면 안 됩니다.
+- ⚠️ 절대로 numberedPassage의 번역이 아닙니다. 원본 본문(passage)의 번역입니다.
+- ⚠️ missingSentence가 원래 위치에 포함된 상태의 전체 본문을 한국어로 번역한 것입니다.
+- ⚠️ 각 본문마다 원본이 다르므로, translation도 각 본문의 원본에 맞는 고유한 해석이어야 합니다.
 
 **정확한 예시:**
+원본 본문이 다음과 같다면:
+"The main topic sentence that was removed. First sentence. Second sentence. Third sentence. Fourth sentence. Fifth sentence. Additional sentences."
+
 {
   "missingSentence": "The main topic sentence that was removed.",
-  "numberedPassage": "① First sentence. ② Second sentence. ③ Third sentence. ④ Fourth sentence. ⑤ Fifth sentence. Additional sentences without numbers.",
+  "numberedPassage": "① First sentence. ② Second sentence. ③ Third sentence. ④ Fourth sentence. ⑤ Fifth sentence. Additional sentences.",
   "answerIndex": 2,
-  "translation": "본문 해석"
+  "translation": "제거된 주제 문장이 여기에 있습니다. 첫 번째 문장. 두 번째 문장. 세 번째 문장. 네 번째 문장. 다섯 번째 문장. 추가 문장들."
 }
 
 **절대 금지사항 (위반 시 오류):**
