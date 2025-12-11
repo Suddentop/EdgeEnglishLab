@@ -34,6 +34,7 @@ function splitSentences(input: string): string[] {
  * 빈칸 문제 타입 정의 (유형#05 전용)
  */
 export interface BlankQuiz {
+  id?: string; // 컴포넌트에서 사용할 ID (optional)
   blankedText: string;
   options: string[];
   answerIndex: number;

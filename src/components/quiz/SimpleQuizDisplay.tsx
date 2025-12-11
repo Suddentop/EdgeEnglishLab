@@ -212,12 +212,23 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
         // Work_05: 빈칸(문장) 찾기
         if (quizItem.workTypeId === '05') {
           const work05Data = quizItem.work05Data || quizItem.data?.work05Data || quizItem.data;
+          // 정답 문장 단어 수 × 5만큼 밑줄로 빈칸 생성, 최대 30자로 제한
+          const answer = work05Data?.options?.[work05Data?.answerIndex] || '';
+          const wordCount = answer.trim().split(/\s+/).length;
+          const blankLength = Math.max(answer.length, wordCount * 5);
+          const maxBlankLength = 30;
+          const blankStr = '(' + '_'.repeat(Math.min(blankLength, maxBlankLength)) + ')';
+          // 괄호 안에 어떤 내용이 있든 첫 번째만 밑줄로 치환 (blankedText가 있을 때만)
+          const displayBlankedText = work05Data?.blankedText 
+            ? work05Data.blankedText.replace(/\([^)]*\)/, blankStr)
+            : (work05Data?.blankedText || '');
+          
           return (
             <div key={`quiz-05-${index}`} className="quiz-item">
-              <h3>#05. 빈칸(문장) 찾기</h3>
-              <div className="instruction">다음 빈칸에 들어갈 문장으로 가장 적절한 것을 고르시오</div>
+              <h3>#05. 빈칸(문장) 추론</h3>
+              <div className="instruction">다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.</div>
               <div className="passage">
-                {work05Data?.blankedText}
+                {displayBlankedText}
               </div>
               <div className="options">
                 {work05Data?.options?.map((option: string, oIndex: number) => (
@@ -227,9 +238,19 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
                 ))}
               </div>
               {isAnswerMode && (
-                <div className="answer">
-                  <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work05Data?.answerIndex]} {work05Data?.options?.[work05Data?.answerIndex]}
-                </div>
+                <>
+                  <div className="answer">
+                    <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work05Data?.answerIndex]} {work05Data?.options?.[work05Data?.answerIndex]}
+                  </div>
+                  {work05Data?.translation && (
+                    <div className="translation-section" style={{marginTop:'1rem'}}>
+                      <h4>본문 해석:</h4>
+                      <div className="translation-content" style={{background: '#f1f8e9', padding: '1rem', borderRadius: '8px', marginTop: '0.5rem'}}>
+                        {work05Data.translation}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );
