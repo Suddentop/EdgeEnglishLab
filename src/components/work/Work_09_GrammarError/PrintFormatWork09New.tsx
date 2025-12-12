@@ -329,7 +329,7 @@ const PrintFormatWork09New: React.FC<PrintFormatWork09NewProps> = ({ quizzes, is
         .work09-print .print-column .print-text-block {
              margin-top: 0.2cm;
              margin-bottom: 0.5cm;
-             color: #1976d2;
+             color: #1976d2 !important;
              font-weight: 700;
              font-size: 10pt;
         }
