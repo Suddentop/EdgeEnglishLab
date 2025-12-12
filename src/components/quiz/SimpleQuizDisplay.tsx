@@ -353,12 +353,20 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
         // Work_09: 어법 오류 찾기
         if (quizItem.workTypeId === '09') {
           const work09Data = quizItem.work09Data || quizItem.data?.work09Data || quizItem.data;
+          
+          // HTML 태그 제거 및 스타일 적용 (passage에 HTML이 포함될 수 있음)
+          const isHtml = !!work09Data?.passage && (work09Data.passage.includes('<span') || work09Data.passage.includes('<u>'));
+          
           return (
             <div key={`quiz-09-${index}`} className="quiz-item">
               <h3>#09. 어법 오류 찾기</h3>
               <div className="instruction">다음 글에서 어법상 어색한 부분을 찾아 고르세요</div>
               <div className="passage">
-                {work09Data?.passage}
+                {isHtml ? (
+                   <div dangerouslySetInnerHTML={{ __html: work09Data.passage }} style={{ lineHeight: '1.7' }} />
+                ) : (
+                   work09Data?.passage
+                )}
               </div>
               <div className="options">
                 {work09Data?.options?.map((option: string, oIndex: number) => (
