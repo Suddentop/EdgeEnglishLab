@@ -333,6 +333,18 @@ const PrintFormatWork09New: React.FC<PrintFormatWork09NewProps> = ({ quizzes, is
              font-weight: 700;
              font-size: 10pt;
         }
+        /* 들여쓰기 제거 */
+        .work09-print .print-passage {
+             padding-left: 0 !important;
+             padding-right: 0 !important;
+        }
+        .work09-print .print-options {
+             padding-left: 0 !important;
+             padding-right: 0 !important;
+        }
+        .work09-print .print-option {
+             padding-left: 0 !important;
+        }
       `}</style>
 
       {distributedPages.map((pageColumns, pageIndex) => (
