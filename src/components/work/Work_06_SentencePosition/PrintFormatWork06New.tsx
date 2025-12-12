@@ -48,19 +48,46 @@ const PrintFormatWork06New: React.FC<PrintFormatWork06NewProps> = ({ quizzes, is
     });
 
     // 3. 주요 문장 (missingSentence) - 하단 간격 최소화 (글자 크기는 CSS 기본 규칙 사용, 왼쪽 들여쓰기 제거)
-    const missingSentenceHtml = `<div class="print-passage print-passage-work01-11 work06-missing-sentence" style="border-radius: 6px; background: #f7f8fc; padding: 0.8em 0 !important; padding-top: 0.8em !important; padding-bottom: 0.8em !important; padding-left: 0 !important; padding-right: 0 !important; margin-bottom: 0 !important; margin-left: 0 !important; font-weight: 700; box-sizing: border-box;">
-      <span style="color: #222;">주요 문장:</span> <span style="color: #6a5acd;">${quiz.missingSentence}</span>
-    </div>`;
-    sections.push({
-      type: 'html',
-      key: `html-missing-sentence-${index}`,
-      html: missingSentenceHtml
-    });
+    // 정답 모드에서는 주요 문장을 별도로 표시하지 않고 본문에 통합하므로 렌더링하지 않음
+    if (!isAnswerMode) {
+      const missingSentenceHtml = `<div class="print-passage print-passage-work01-11 work06-missing-sentence" style="border-radius: 6px; background: #f7f8fc; padding: 0.8em 0 !important; padding-top: 0.8em !important; padding-bottom: 0.8em !important; padding-left: 0 !important; padding-right: 0 !important; margin-bottom: 0 !important; margin-left: 0 !important; font-weight: 700; box-sizing: border-box;">
+        <span style="color: #222;">주요 문장:</span> <span style="color: #6a5acd;">${quiz.missingSentence}</span>
+      </div>`;
+      sections.push({
+        type: 'html',
+        key: `html-missing-sentence-${index}`,
+        html: missingSentenceHtml
+      });
+    }
 
     // 4. 번호가 매겨진 본문 (numberedPassage) - 컨테이너 없이 배치, 상단 간격 최소화, 내부 상하 여백 완전 제거, 크기 자동 조정 (글자 크기는 CSS 기본 규칙 사용)
     // 텍스트 앞뒤 공백 제거하고 span으로 감싸서 line-height 여백 제거
-    const trimmedPassage = quiz.numberedPassage.trim();
-    const numberedPassageHtml = `<div class="print-passage print-passage-work01-11 work06-numbered-passage" style="line-height: 0 !important; margin: 0 0 0.15rem 0 !important; padding: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-left: 0 !important; padding-right: 0 !important; font-family: inherit; white-space: pre-line; box-sizing: border-box; display: block; width: auto !important; height: auto !important; min-width: 0 !important; max-width: 100% !important; min-height: 0 !important; max-height: none !important; vertical-align: top !important; overflow: visible !important;"><span style="line-height: 1.7 !important; display: block !important; margin: 0 !important; padding: 0 !important; vertical-align: top !important;">${trimmedPassage}</span></div>`;
+    let passageContent = quiz.numberedPassage.trim();
+
+    // 정답 모드일 경우: 번호(①~⑤)를 그대로 유지하고, 정답 위치의 번호 뒤에 주요 문장 삽입
+    if (isAnswerMode) {
+      const markers = ['①', '②', '③', '④', '⑤'];
+      const targetMarker = markers[quiz.answerIndex];
+      // 정답 문장 강조 (파란색 + 굵게)
+      // 마커 뒤에 한 칸 띄우고 문장 삽입
+      const replacement = `${targetMarker} <span style="color: #1976d2; font-weight: 700;">${quiz.missingSentence}</span>`;
+
+      if (passageContent.includes(targetMarker)) {
+        // ①~⑤ 마커가 있는 경우 해당 마커 뒤에 문장 추가 (마커 유지)
+        passageContent = passageContent.replace(targetMarker, replacement);
+      } else {
+        // (1)~(5) 형식 마커 폴백 확인
+        const targetParen = `(${quiz.answerIndex + 1})`;
+        if (passageContent.includes(targetParen)) {
+          const parenReplacement = `${targetParen} <span style="color: #1976d2; font-weight: 700;">${quiz.missingSentence}</span>`;
+          passageContent = passageContent.replace(targetParen, parenReplacement);
+        }
+      }
+      
+      // 마커 유지 및 문장 삽입
+    }
+
+    const numberedPassageHtml = `<div class="print-passage print-passage-work01-11 work06-numbered-passage" style="line-height: 0 !important; margin: 0 0 0.15rem 0 !important; padding: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-left: 0 !important; padding-right: 0 !important; font-family: inherit; white-space: pre-line; box-sizing: border-box; display: block; width: auto !important; height: auto !important; min-width: 0 !important; max-width: 100% !important; min-height: 0 !important; max-height: none !important; vertical-align: top !important; overflow: visible !important;"><span style="line-height: 1.7 !important; display: block !important; margin: 0 !important; padding: 0 !important; vertical-align: top !important;">${passageContent}</span></div>`;
     sections.push({
       type: 'html',
       key: `html-numbered-passage-${index}`,
@@ -73,6 +100,7 @@ const PrintFormatWork06New: React.FC<PrintFormatWork06NewProps> = ({ quizzes, is
         type: 'translation',
         key: `translation-${index}`,
         text: quiz.translation
+        // 정답이 본문에 통합되었으므로 별도의 정답 표시는 하지 않음
       });
     }
 
