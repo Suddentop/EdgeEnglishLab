@@ -148,9 +148,18 @@ async function transformWord(words: string[]): Promise<{
   original: string;
   grammarType: string;
 }> {
+  // 수능 고난도 어법 유형 리스트 (2024학년도 수능 트렌드 반영)
   const grammarTypes = [
-    '시제', '조동사', '수동태', '준동사', '가정법', 
-    '관계사', '형/부', '수일치/관사', '비교', '도치/강조'
+    'Subject-Verb Agreement (Far Subject)', // 주어-동사 수 일치 (수식어구로 멀어진 주어)
+    'Relative Pronoun vs Relative Adverb', // 관계대명사 vs 관계부사 (불완전/완전 문장)
+    'Participle (Present vs Past)', // 현재분사 vs 과거분사 (능동/수동 관계)
+    'Gerund vs Infinitive', // 동명사 vs 부정사 (목적어, 보어 자리)
+    'Parallel Structure', // 병렬 구조 (등위접속사 앞뒤 형태)
+    'Adjective vs Adverb', // 형용사 vs 부사 (보어 자리 vs 수식어)
+    'Voice (Active vs Passive)', // 능동태 vs 수동태 (목적어 유무 등)
+    'Preposition + Relative Pronoun', // 전치사+관계대명사 (완전한 문장)
+    'Indirect Question Word Order', // 간접의문문 어순
+    'Subjunctive Mood' // 가정법 (과거, 과거완료, 혼합)
   ];
   
   const maxRetries = 3;
@@ -158,34 +167,42 @@ async function transformWord(words: string[]): Promise<{
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     console.log(`어법 변형 시도 ${attempt}/${maxRetries}...`);
     
-    const prompt = `You must transform exactly ONE word from the list to create a **High-Level Grammar Error** suitable for the Korean CSAT (Suneung).
+    const prompt = `You must transform exactly ONE word from the list to create a **High-Level Grammar Error** suitable for the Korean CSAT (Suneung - College Scholastic Ability Test).
 
 Original words: ${JSON.stringify(words)}
 Grammar types: ${grammarTypes.join(', ')}
 
-**🎯 Critical Requirements for CSAT Level:**
-1. **Sophisticated Error:** Do NOT create simple errors (e.g., spelling, simple pluralization). Create errors that require analyzing the sentence structure.
-2. **Contextual Logic:** The error should look grammatically plausible at a glance but be structurally or syntactically incorrect in the specific context.
-   - *Example (Participle):* Change a correct past participle (p.p.) to present participle (v-ing) where the passive voice is required.
-   - *Example (Subject-Verb):* Change the verb number when the subject is far away or modified by a long phrase.
-   - *Example (Relative Pronoun):* Change 'which' to 'where' or 'that' to 'what' in a tricky relative clause.
-   - *Example (Adjective/Adverb):* Change an adjective complement to an adverb.
-3. **Selection:** Randomly choose ONE word to transform. Keep the other 4 words exactly the same.
+**🎯 Critical Requirements for CSAT Level (High Difficulty):**
+1.  **Do NOT create trivial errors** like spelling, simple pluralization (e.g. apple->apples), or obvious tense changes (e.g. go->went) unless the context makes it very tricky.
+2.  **Focus on Structural Syntax:** The error must require analyzing the sentence structure (clauses, modifiers, subject location) to detect.
+3.  **Contextual Logic:** The error should look grammatically plausible at a glance (e.g., using a past participle that looks like a past tense verb) but be structurally incorrect.
+
+**🔥 Examples of High-Quality CSAT Errors:**
+- **(Participle):** Changing a correct past participle (p.p.) to a present participle (v-ing) where the passive meaning is required, or vice versa. *Example: "The data [collected -> collecting] by the sensors..."*
+- **(Subject-Verb):** Changing the verb number when the subject is separated by a long modifier clause. *Example: "The detailed analysis of the samples [show -> shows] that..."*
+- **(Relative Clause):** Changing 'which' to 'where' or 'what' to 'that' in complex relative clauses. *Example: "The house [in which -> which] he lived..." (if 'lived' is intransitive here it might need 'where' or 'in which')*
+- **(Adjective/Adverb):** Changing an adjective complement to an adverb. *Example: "It remains [possible -> possibly]..."*
+- **(Parallelism):** Breaking the parallel structure in a list or comparison.
+
+**Selection:** Randomly choose ONE word to transform. Keep the other 4 words exactly the same.
 
 Return ONLY this JSON format:
 {
-  "transformedWords": ["word1", "word2", "actuality", "word4", "word5"],
+  "transformedWords": ["word1", "word2", "WRONG_WORD", "word4", "word5"],
   "answerIndex": 2,
-  "original": "actually",
-  "grammarType": "Adverb -> Noun Error"
+  "original": "CORRECT_WORD",
+  "grammarType": "Selected Grammar Type"
 }
 
-**⚠️ IMPORTANT:** In the "transformedWords" array, replace the chosen word with the **ACTUAL INCORRECT WORD** you created. Do NOT use the placeholder text "TRANSFORMED_WORD". For example, if you changed "go" to "goes", put "goes" in the array.`;
+**⚠️ IMPORTANT:**
+- In the "transformedWords" array, replace the chosen word with the **ACTUAL INCORRECT WORD** you created.
+- The transformed word must be **grammatically INCORRECT** in the context of the original sentence.
+- Do NOT transform proper nouns or simple nouns unless it's a specific countable/uncountable trick.`;
 
     const response = await callOpenAI({
       model: 'gpt-4o',
       messages: [
-        { role: 'system', content: 'You are a grammar expert that creates educational grammar errors.' },
+        { role: 'system', content: 'You are a grammar expert specializing in the Korean CSAT (Suneung) English section. You create challenging syntax errors.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,

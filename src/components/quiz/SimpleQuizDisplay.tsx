@@ -379,23 +379,38 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
         // Work_10: 다중 어법 오류 찾기
         if (quizItem.workTypeId === '10') {
           const work10Data = quizItem.work10Data || quizItem.data?.work10Data || quizItem.data;
+          const isHtml = !!work10Data?.numberedPassage;
+          const options = work10Data?.options || [];
+          
+          // 정답 표시 로직 개선 (구버전/신버전 호환)
+          let answerText = '';
+          if (work10Data?.correctAnswers) {
+            answerText = work10Data.correctAnswers.join(', ');
+          } else if (work10Data?.answerIndex !== undefined && options[work10Data.answerIndex]) {
+            answerText = `${options[work10Data.answerIndex]}개`;
+          }
+
           return (
             <div key={`quiz-10-${index}`} className="quiz-item">
               <h3>#10. 다중 어법 오류 찾기</h3>
               <div className="instruction">다음 글에서 어법상 어색한 부분을 모두 찾아 고르세요</div>
               <div className="passage">
-                {work10Data?.passage}
+                {isHtml ? (
+                   <div dangerouslySetInnerHTML={{ __html: work10Data.numberedPassage }} style={{ lineHeight: '1.7' }} />
+                ) : (
+                   work10Data?.passage
+                )}
               </div>
               <div className="options">
-                {work10Data?.options?.map((option: string, oIndex: number) => (
+                {options.map((option: any, oIndex: number) => (
                   <div key={oIndex} className="option">
-                    {['①', '②', '③', '④', '⑤', '⑥'][oIndex]} {option}
+                    {['①', '②', '③', '④', '⑤', '⑥'][oIndex]} {option}{typeof option === 'number' ? '개' : ''}
                   </div>
                 ))}
               </div>
               {isAnswerMode && (
                 <div className="answer">
-                  <strong>정답:</strong> {work10Data?.correctAnswers?.join(', ')}
+                  <strong>정답:</strong> {answerText}
                 </div>
               )}
             </div>

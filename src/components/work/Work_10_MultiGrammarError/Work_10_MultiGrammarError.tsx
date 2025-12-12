@@ -8,20 +8,11 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
-import { extractTextFromImage, callOpenAI } from '../../../services/common';
+import { extractTextFromImage } from '../../../services/common';
+import { generateWork10Quiz, MultiGrammarQuiz } from '../../../services/work10Service';
 
 type InputMode = 'capture' | 'image' | 'text';
 type PrintMode = 'none' | 'no-answer' | 'with-answer';
-
-interface MultiGrammarQuiz {
-  passage: string; // 번호/밑줄 적용된 본문
-  options: number[]; // [1,2,3,4,5]
-  answerIndex: number; // 정답(틀린 단어 개수-1)
-  translation: string;
-  originalWords: string[];
-  transformedWords: string[];
-  wrongIndexes: number[];
-}
 
 const Work_10_MultiGrammarError: React.FC = () => {
   const { userData, loading } = useAuth();
@@ -284,70 +275,6 @@ const Work_10_MultiGrammarError: React.FC = () => {
     return await extractTextFromImage(base64);
   }
 
-  async function generateMultiGrammarQuizWithAI(passage: string): Promise<MultiGrammarQuiz> {
-    const prompt = `아래 영어 본문에서 어법(문법) 변형이 가능한 서로 다른 "단어" 8개를 선정하세요.\n이 중 3~8개(랜덤)만 어법상 틀리게 변형하고, 나머지는 원형을 유지하세요.\n\n아래 JSON 형식으로만 응답하세요:\n{\n  \"originalWords\": [\"...\", ...], // 8개 원본 단어\n  \"transformedWords\": [\"...\", ...], // 8개 변형(틀린/정상) 단어\n  \"wrongIndexes\": [0,1,2,5,6,7], // 틀린 단어의 인덱스(0~7), 개수는 3~8개\n  \"translation\": \"...\" // 본문 번역\n}\n본문:\n${passage}`;
-    
-    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
-    const response = await callOpenAI({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 2000,
-      temperature: 0.7
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
-    let result;
-    try {
-      result = JSON.parse(jsonMatch[0]);
-    } catch {
-      throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
-    }
-    if (!result.originalWords || !result.transformedWords || !Array.isArray(result.wrongIndexes) || !result.translation) {
-      throw new Error('AI 응답에 필수 필드가 누락되었습니다.');
-    }
-    // 옵션, 정답 계산
-    const wrongCount = result.wrongIndexes.length;
-    const options = [3,4,5,6,7,8];
-    const answerIndex = options.indexOf(wrongCount);
-    return {
-      passage, // 원본 본문을 그대로 저장
-      options,
-      answerIndex,
-      translation: result.translation,
-      originalWords: result.originalWords,
-      transformedWords: result.transformedWords,
-      wrongIndexes: result.wrongIndexes
-    };
-  }
-
-  // 본문 내 8개 단어에 번호/밑줄을 정확히 한 번씩 적용하는 함수
-  function applyNumberAndUnderline(
-    passage: string,
-    originalWords: string[],
-    transformedWords: string[],
-    wrongIndexes: number[]
-  ): string {
-    let result = passage;
-    const used: boolean[] = Array(originalWords.length).fill(false);
-    originalWords.forEach((word, i) => {
-      if (used[i]) return;
-      const displayWord = wrongIndexes.includes(i) ? transformedWords[i] : word;
-      const numbered = `${'①②③④⑤⑥⑦⑧'[i]}<u>${displayWord}</u>`;
-      // 첫 번째 등장만 치환
-      const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
-      result = result.replace(regex, numbered);
-      used[i] = true;
-    });
-    return result;
-  }
-
   // 문제 생성 (포인트 차감 포함)
   const handleGenerateQuiz = async () => {
     console.log('로그인 상태 확인:', { userData, uid: userData?.uid, loading });
@@ -434,7 +361,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
       }
       if (!passage.trim()) throw new Error('추출된 텍스트가 없습니다.');
       
-      const quizData = await generateMultiGrammarQuizWithAI(passage);
+      const quizData = await generateWork10Quiz(passage);
       setQuiz(quizData);
 
       // 문제 생성 내역 저장
@@ -481,6 +408,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
       alert(err.message || '문제 생성 중 오류가 발생했습니다.');
     } finally {
         setIsExtractingText(false);
+        setIsLoading(false);
       }
   };
 
@@ -577,9 +505,6 @@ const Work_10_MultiGrammarError: React.FC = () => {
     });
   };
 
-  // 본문 내 <u>...</u>와 번호(①~⑧)는 AI가 반환한 passage 그대로 사용
-  // 렌더링 시 dangerouslySetInnerHTML로 출력
-
   if (quiz) {
     const numberSymbols = ['①','②','③','④','⑤','⑥','⑦','⑧'];
     return (
@@ -648,7 +573,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
               <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
             </div>
             <div className="problem-passage" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#f7f8fc', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-              <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
+              <span dangerouslySetInnerHTML={{__html: quiz.numberedPassage}} />
             </div>
             <div className="problem-options" style={{margin:'1.2rem 0'}}>
               {quiz.options.map((opt, i) => (
@@ -700,7 +625,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                       </div>
                       <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
+                        <span dangerouslySetInnerHTML={{__html: quiz.numberedPassage}} />
                       </div>
                     </div>
                   </div>
@@ -739,7 +664,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                       다음 글의 밑줄 친 부분 중, 어법상 틀린 단어가 총 몇 개인지 고르시오.
                     </div>
                     <div style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                      <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
+                      <span dangerouslySetInnerHTML={{__html: quiz.numberedPassage}} />
                     </div>
                     <div className="problem-options" style={{margin:'1rem 0'}}>
                       {quiz.options.map((opt, i) => (
@@ -771,7 +696,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                         <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                       </div>
                       <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
+                        <span dangerouslySetInnerHTML={{__html: quiz.numberedPassage}} />
                       </div>
                     </>
                   )}
@@ -818,7 +743,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                           <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                         </div>
                         <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                          <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
+                          <span dangerouslySetInnerHTML={{__html: quiz.numberedPassage}} />
                         </div>
                       </>
                     )}
@@ -866,7 +791,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                           <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#10</span>
                         </div>
                         <div style={{marginTop:'0.1rem', fontSize:'1rem !important', padding:'0.5rem 1rem', background:'#fff3cd', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                          <span dangerouslySetInnerHTML={{__html: applyNumberAndUnderline(quiz.passage, quiz.originalWords, quiz.transformedWords, quiz.wrongIndexes).replace(/\n/g, '<br/>')}} />
+                          <span dangerouslySetInnerHTML={{__html: quiz.numberedPassage}} />
                         </div>
                       </>
                     )}
@@ -1065,4 +990,5 @@ const Work_10_MultiGrammarError: React.FC = () => {
   );
 };
 
-export default Work_10_MultiGrammarError; 
+export default Work_10_MultiGrammarError;
+
