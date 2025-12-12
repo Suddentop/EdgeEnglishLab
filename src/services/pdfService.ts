@@ -1070,39 +1070,76 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   // 유형#05, #06: .a4-landscape-page-template 사용
   const allCards = element.querySelectorAll('.print-question-card, .quiz-content, .work-11-print, .a4-page-template, .a4-landscape-page-template, [data-work-type]');
   
-  // 중복 제거: .a4-page-template이 있으면 그것을 우선하고, wrapper div는 제외
-  const questionCards: Element[] = [];
-  const processedTemplates: Element[] = [];
-  
+  // 중복 제거 및 필터링 강화
+  const uniqueCards: Element[] = [];
+  const processedSet = new Set<Element>();
+
+  // 1. 템플릿 클래스 우선 수집 (가장 확실한 페이지 단위)
+  const templates: Element[] = [];
   allCards.forEach((card) => {
-    // .a4-page-template 또는 .a4-landscape-page-template인 경우 우선 처리
     if (card.classList.contains('a4-page-template') || card.classList.contains('a4-landscape-page-template')) {
-      // 이미 처리된 template의 자식인지 확인
-      let isChildOfProcessed = false;
-      for (let i = 0; i < processedTemplates.length; i++) {
-        const processed = processedTemplates[i];
-        if (processed.contains(card)) {
-          isChildOfProcessed = true;
-          break;
-        }
+      // 내부에 print-question-card가 있으면 템플릿 수집 제외 (카드 단위로 처리하기 위해)
+      // 이렇게 해야 다단 컬럼 등의 복잡한 레이아웃에서 카드별로 정확히 분리됨
+      if (card.querySelector('.print-question-card')) {
+        return;
       }
-      if (!isChildOfProcessed) {
-        questionCards.push(card);
-        processedTemplates.push(card);
-      }
-    } else if (card.classList.contains('print-question-card') || 
-               card.classList.contains('quiz-content') || 
-               card.classList.contains('work-11-print')) {
-      // 패키지#02나 유형#11은 그대로 추가
-      questionCards.push(card);
-    } else if (card.hasAttribute('data-work-type')) {
-      // wrapper div인 경우, 내부에 .a4-page-template 또는 .a4-landscape-page-template이 없을 때만 추가
-      const hasTemplate = card.querySelector('.a4-page-template, .a4-landscape-page-template') !== null;
-      if (!hasTemplate) {
-        questionCards.push(card);
-      }
+      templates.push(card);
     }
   });
+
+  // 템플릿들 간의 중복(포함 관계) 제거
+  templates.forEach(template => {
+    let isChild = false;
+    for (const other of templates) {
+      if (template !== other && other.contains(template)) {
+        isChild = true;
+        break;
+      }
+    }
+    if (!isChild) {
+      uniqueCards.push(template);
+      processedSet.add(template);
+    }
+  });
+
+  // 2. 나머지 요소 처리 (독립적인 카드이거나 컨텐츠인 경우)
+  allCards.forEach((card) => {
+    // 템플릿 클래스는 이미 위에서 처리했거나 제외되었으므로 스킵
+    if (card.classList.contains('a4-page-template') || card.classList.contains('a4-landscape-page-template')) {
+      return;
+    }
+
+    // 이미 처리된 요소의 자손인지 확인 (템플릿 내부에 있는 요소면 제외)
+    let isInsideProcessed = false;
+    for (const processed of uniqueCards) {
+      if (processed.contains(card)) {
+        isInsideProcessed = true;
+        break;
+      }
+    }
+    if (isInsideProcessed) return;
+
+    // 이미 처리된 요소가 이 요소의 내부에 있는지 확인 (Wrapper인 경우 제외)
+    let containsProcessed = false;
+    for (const processed of uniqueCards) {
+      if (card.contains(processed)) {
+        containsProcessed = true;
+        break;
+      }
+    }
+    if (containsProcessed) return;
+
+    // 유효한 요소만 추가
+    if (card.classList.contains('print-question-card') || 
+        card.classList.contains('quiz-content') || 
+        card.classList.contains('work-11-print') ||
+        card.hasAttribute('data-work-type')) {
+      uniqueCards.push(card);
+      processedSet.add(card);
+    }
+  });
+  
+  const questionCards = uniqueCards;
   
   // 패키지#02인지 확인 (헤더 또는 .print-question-card 존재 여부)
   const isPackage02 = element.querySelector('.print-header-package02') !== null || 

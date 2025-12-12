@@ -12,6 +12,7 @@ import PrintFormatWork03New from '../work/Work_03_VocabularyWord/PrintFormatWork
 import PrintFormatWork04New from '../work/Work_04_BlankPhraseInference/PrintFormatWork04New';
 import PrintFormatWork05New from '../work/Work_05_BlankSentenceInference/PrintFormatWork05New';
 import PrintFormatWork06New from '../work/Work_06_SentencePosition/PrintFormatWork06New';
+import PrintFormatWork07New from '../work/Work_07_MainIdeaInference/PrintFormatWork07New';
 import HistoryPrintWork12 from '../work/Work_12_WordStudy/HistoryPrintWork12';
 import SimpleQuizDisplay from './SimpleQuizDisplay';
 import FileFormatSelector from '../work/shared/FileFormatSelector';
@@ -92,11 +93,13 @@ const QuizDisplayPage: React.FC = () => {
     ) && Array.isArray(packageQuiz) && packageQuiz.length === 1);
     
     // 유형#01은 가로, 단일 유형이면 세로, 패키지#01도 세로
+    // 유형#06, #07은 가로로 표시
     const first = packageQuiz[0] || {};
     const typeId = first.workTypeId;
     const isType01Single = isSingleWork && typeId === '01';
-    if (packageType === 'P01' || (isSingleWork && !isType01Single)) {
-      // Package#01 또는 단일 유형(유형#01 제외): A4 세로
+    const isLandscapeType = isSingleWork && (typeId === '01' || typeId === '02' || typeId === '03' || typeId === '04' || typeId === '05' || typeId === '06' || typeId === '07');
+    if (packageType === 'P01' || (isSingleWork && !isLandscapeType)) {
+      // Package#01 또는 단일 유형(가로 유형 제외): A4 세로
       style.textContent = `
         @page {
           margin: 0;
@@ -110,26 +113,123 @@ const QuizDisplayPage: React.FC = () => {
         }
       `;
     } else {
-      // Package#02, #03, 유형#01: A4 가로
-      style.textContent = `
-        @page {
-          margin: 0;
-          size: A4 landscape;
-        }
-        @media print {
-          body {
-            margin: 0;
-            padding: 0;
+      // Package#02, #03, 유형#01, #02, #03, #04, #05, #06, #07: A4 가로
+      // 유형#07은 PrintFormatWork07New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
+      if (isSingleWork && typeId === '07') {
+        // 유형#07: 원래 인쇄 방식과 동일하게 간단한 스타일만 적용
+        style.textContent = `
+          @page {
+            size: A4 landscape !important;
+            margin: 0 !important;
           }
-        }
-      `;
+          @media print {
+            html, body {
+              width: 29.7cm !important;
+              height: 21cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            #root {
+              display: none !important;
+            }
+          }
+        `;
+      } else {
+        // 다른 유형들: 상세한 스타일 적용
+        style.textContent = `
+          @page {
+            margin: 0;
+            size: A4 landscape;
+          }
+          @media print {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+            .print-container {
+              display: block !important;
+              width: 29.7cm;
+              min-height: 21cm;
+              background: white;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            .print-container .a4-landscape-page-template {
+              display: block !important;
+              width: 29.7cm !important;
+              height: 21cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
+              box-sizing: border-box !important;
+            }
+            .print-container .a4-landscape-page-template:not(:last-child):not(.last-page) {
+              page-break-after: always !important;
+              break-after: page !important;
+            }
+            .print-container .a4-landscape-page-template:last-child,
+            .print-container .a4-landscape-page-template.last-page {
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+              margin-bottom: 0 !important;
+              padding-bottom: 0 !important;
+            }
+            .print-container .a4-landscape-page-content {
+              display: block !important;
+              width: 100% !important;
+              height: 100% !important;
+            }
+            .print-container .print-two-column-container {
+              display: flex !important;
+              flex-wrap: wrap !important;
+              gap: 0.6cm !important;
+              width: 100% !important;
+              justify-content: space-between !important;
+              height: 100% !important;
+              flex-direction: row !important;
+              position: relative !important;
+            }
+            .print-container .print-two-column-container::before {
+              content: '' !important;
+              position: absolute !important;
+              top: 0 !important;
+              left: 50% !important;
+              width: 2px !important;
+              height: 100% !important;
+              background-color: #ddd !important;
+              transform: translateX(-50%) !important;
+              z-index: 1 !important;
+            }
+            .print-container .print-column {
+              width: calc(50% - 0.3cm) !important;
+              max-width: calc(50% - 0.3cm) !important;
+              min-width: calc(50% - 0.3cm) !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              -webkit-column-break-inside: avoid !important;
+              margin-bottom: 0.3cm !important;
+              border: none !important;
+              padding: 0.5cm !important;
+              box-sizing: border-box !important;
+              display: block !important;
+              float: left !important;
+            }
+            .print-container .print-column:nth-child(odd) {
+              clear: left !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+          }
+        `;
+      }
+      document.head.appendChild(style);
     }
-    document.head.appendChild(style);
     
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
     // first, typeId, isType01Single은 위에서 이미 선언됨
-    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06')
+    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07')
       ? 'print-root-package01' 
       : packageType === 'P02' 
         ? 'print-root-package02' 
@@ -147,6 +247,8 @@ const QuizDisplayPage: React.FC = () => {
                     ? 'print-root-work05-new'
                     : packageType === '06' || (isSingleWork && typeId === '06')
                       ? 'print-root-work06-new'
+                      : packageType === '07' || (isSingleWork && typeId === '07')
+                        ? 'print-root-work07-new'
             : 'print-root-package02';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
@@ -242,6 +344,21 @@ const QuizDisplayPage: React.FC = () => {
           };
         });
         root.render(<PrintFormatWork06New quizzes={rawQuizzes} isAnswerMode={false} />);
+      } else if (typeId === '07') {
+        // 유형#07은 PrintFormatWork07New 사용
+        const rawQuizzes = packageQuiz.map((item: any) => {
+          const work07Data = item.work07Data || item.quiz || item.data?.work07Data || item.data || item;
+          return {
+            id: item.id || work07Data.id,
+            passage: work07Data.passage || '',
+            options: work07Data.options || [],
+            answerIndex: work07Data.answerIndex !== undefined ? work07Data.answerIndex : 0,
+            translation: work07Data.translation || '',
+            answerTranslation: work07Data.answerTranslation || '',
+            optionTranslations: work07Data.optionTranslations || []
+          };
+        });
+        root.render(<PrintFormatWork07New quizzes={rawQuizzes} isAnswerMode={false} />);
       } else {
         root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} translatedText={globalTranslatedText} />);
       }
@@ -321,8 +438,57 @@ const QuizDisplayPage: React.FC = () => {
         };
       });
       root.render(<PrintFormatWork06New quizzes={rawQuizzes} isAnswerMode={false} />);
+    } else if (packageType === '07') {
+      // 유형#07은 PrintFormatWork07New 사용
+      const rawQuizzes = packageQuiz.map((item: any) => {
+        const work07Data = item.work07Data || item.quiz || item.data?.work07Data || item.data || item;
+        return {
+          id: item.id || work07Data.id,
+          passage: work07Data.passage || '',
+          options: work07Data.options || [],
+          answerIndex: work07Data.answerIndex !== undefined ? work07Data.answerIndex : 0,
+          translation: work07Data.translation || '',
+          answerTranslation: work07Data.answerTranslation || '',
+          optionTranslations: work07Data.optionTranslations || []
+        };
+      });
+      root.render(<PrintFormatWork07New quizzes={rawQuizzes} isAnswerMode={false} />);
     } else {
       root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
+    }
+
+    // 유형#07은 원래 인쇄 방식과 동일하게 처리
+    if (isSingleWork && typeId === '07') {
+      // 원래 방식: activatePrintContainer 후 바로 인쇄
+      const activatePrintContainer = () => {
+        const inner = printContainer.querySelector('.print-container, .print-container-answer');
+        if (inner) {
+          inner.classList.add('pdf-generation-active');
+        } else {
+          requestAnimationFrame(activatePrintContainer);
+        }
+      };
+      activatePrintContainer();
+
+      setTimeout(() => {
+        window.print();
+        
+        setTimeout(() => {
+          root.unmount();
+          if (printContainer.parentNode) {
+            printContainer.parentNode.removeChild(printContainer);
+          }
+          if (appRoot) {
+            appRoot.style.display = '';
+          }
+          const styleElement = document.getElementById('print-style-work07-landscape');
+          if (styleElement) {
+            styleElement.remove();
+          }
+          console.log('✅ 인쇄(문제) 완료');
+        }, 100);
+      }, 500);
+      return; // 유형#07은 여기서 종료
     }
 
     // 렌더링 완료 후 인쇄 및 파일 생성
@@ -348,6 +514,8 @@ const QuizDisplayPage: React.FC = () => {
           elementId = 'print-root-work05-new';
         } else if (packageType === '06' || (isSingleWork && typeId === '06')) {
           elementId = 'print-root-work06-new';
+        } else if (packageType === '07' || (isSingleWork && typeId === '07')) {
+          elementId = 'print-root-work07-new';
         }
         const element = document.getElementById(elementId);
         if (!element) {
@@ -397,9 +565,11 @@ const QuizDisplayPage: React.FC = () => {
                               packageType === '01' ? '유형#01_문제' :
                               packageType === '02' ? '유형#02_문제' :
                               packageType === '03' ? '유형#03_문제' :
+                              packageType === '07' ? '유형#07_문제' :
                               packageType === '04' ? '유형#04_문제' :
                               packageType === '05' ? '유형#05_문제' :
                               packageType === '06' ? '유형#06_문제' :
+                              packageType === '07' ? '유형#07_문제' :
                               '문제';
           
           const result = await generateAndUploadFile(
@@ -409,7 +579,7 @@ const QuizDisplayPage: React.FC = () => {
             workTypeName,
             { 
               isAnswerMode: false, 
-              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06')) ? 'portrait' : 'landscape',
+              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07')) ? 'portrait' : 'landscape',
               fileFormat 
             }
           );
@@ -459,12 +629,14 @@ const QuizDisplayPage: React.FC = () => {
     ) && Array.isArray(packageQuiz) && packageQuiz.length === 1);
     
     // 유형#01은 가로, 단일 유형이면 세로, 패키지#01도 세로
+    // 유형#06, #07은 가로로 표시
     const first = packageQuiz[0] || {} as any;
     const typeId = first.workTypeId;
     const isType01Single = isSingleWork && typeId === '01';
+    const isLandscapeType = isSingleWork && (typeId === '01' || typeId === '02' || typeId === '03' || typeId === '04' || typeId === '05' || typeId === '06' || typeId === '07');
     
-    if (packageType === 'P01' || (isSingleWork && !isType01Single)) {
-      // Package#01 또는 단일 유형(유형#01 제외): A4 세로
+    if (packageType === 'P01' || (isSingleWork && !isLandscapeType)) {
+      // Package#01 또는 단일 유형(가로 유형 제외): A4 세로
       style.textContent = `
         @page {
           margin: 0;
@@ -479,6 +651,28 @@ const QuizDisplayPage: React.FC = () => {
       `;
     } else {
       // Package#02, #03, 유형#01: A4 가로
+      // 유형#07은 PrintFormatWork07New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
+      if (isSingleWork && typeId === '07') {
+        // 유형#07: 원래 인쇄 방식과 동일하게 간단한 스타일만 적용
+        style.textContent = `
+          @page {
+            size: A4 landscape !important;
+            margin: 0 !important;
+          }
+          @media print {
+            html, body {
+              width: 29.7cm !important;
+              height: 21cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            #root {
+              display: none !important;
+            }
+          }
+        `;
+      } else {
+      // 다른 유형들: 상세한 스타일 적용
       style.textContent = `
         @page {
           margin: 0;
@@ -565,13 +759,14 @@ const QuizDisplayPage: React.FC = () => {
         }
       }
     `;
+      }
     }
     document.head.appendChild(style);
     
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
     // first, typeId, isType01Single은 위에서 이미 선언됨
-    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06')
+    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07')
       ? 'print-root-package01-answer' 
       : packageType === 'P02' 
         ? 'print-root-package02-answer' 
@@ -589,6 +784,8 @@ const QuizDisplayPage: React.FC = () => {
                     ? 'print-root-work05-new-answer'
                     : packageType === '06' || (isSingleWork && typeId === '06')
                       ? 'print-root-work06-new-answer'
+                      : packageType === '07' || (isSingleWork && typeId === '07')
+                        ? 'print-root-work07-new-answer'
             : 'print-root-package02-answer';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
@@ -690,6 +887,21 @@ const QuizDisplayPage: React.FC = () => {
           };
         });
         root.render(<PrintFormatWork06New quizzes={rawQuizzes} isAnswerMode={true} />);
+      } else if (typeId === '07') {
+        // 유형#07은 PrintFormatWork07New 사용
+        const rawQuizzes = packageQuiz.map((item: any) => {
+          const work07Data = item.work07Data || item.quiz || item.data?.work07Data || item.data || item;
+          return {
+            id: item.id || work07Data.id,
+            passage: work07Data.passage || '',
+            options: work07Data.options || [],
+            answerIndex: work07Data.answerIndex !== undefined ? work07Data.answerIndex : 0,
+            translation: work07Data.translation || '',
+            answerTranslation: work07Data.answerTranslation || '',
+            optionTranslations: work07Data.optionTranslations || []
+          };
+        });
+        root.render(<PrintFormatWork07New quizzes={rawQuizzes} isAnswerMode={true} />);
       } else {
         root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={true} translatedText={globalTranslatedText} />);
       }
@@ -769,8 +981,57 @@ const QuizDisplayPage: React.FC = () => {
         };
       });
       root.render(<PrintFormatWork06New quizzes={rawQuizzes} isAnswerMode={true} />);
+    } else if (packageType === '07') {
+      // 유형#07은 PrintFormatWork07New 사용
+      const rawQuizzes = packageQuiz.map((item: any) => {
+        const work07Data = item.work07Data || item.quiz || item.data?.work07Data || item.data || item;
+        return {
+          id: item.id || work07Data.id,
+          passage: work07Data.passage || '',
+          options: work07Data.options || [],
+          answerIndex: work07Data.answerIndex !== undefined ? work07Data.answerIndex : 0,
+          translation: work07Data.translation || '',
+          answerTranslation: work07Data.answerTranslation || '',
+          optionTranslations: work07Data.optionTranslations || []
+        };
+      });
+      root.render(<PrintFormatWork07New quizzes={rawQuizzes} isAnswerMode={true} />);
     } else {
-      root.render(<PrintFormatPackage02 packageQuiz={packageQuiz} isAnswerMode={true} />);
+      root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
+    }
+
+    // 유형#07은 원래 인쇄 방식과 동일하게 처리
+    if (isSingleWork && typeId === '07') {
+      // 원래 방식: activatePrintContainer 후 바로 인쇄
+      const activatePrintContainer = () => {
+        const inner = printContainer.querySelector('.print-container, .print-container-answer');
+        if (inner) {
+          inner.classList.add('pdf-generation-active');
+        } else {
+          requestAnimationFrame(activatePrintContainer);
+        }
+      };
+      activatePrintContainer();
+
+      setTimeout(() => {
+        window.print();
+        
+        setTimeout(() => {
+          root.unmount();
+          if (printContainer.parentNode) {
+            printContainer.parentNode.removeChild(printContainer);
+          }
+          if (appRoot) {
+            appRoot.style.display = '';
+          }
+          const styleElement = document.getElementById('print-style-work07-landscape');
+          if (styleElement) {
+            styleElement.remove();
+          }
+          console.log('✅ 인쇄(정답) 완료');
+        }, 100);
+      }, 500);
+      return; // 유형#07은 여기서 종료
     }
 
     // 렌더링 완료 후 인쇄 및 파일 생성
@@ -796,6 +1057,8 @@ const QuizDisplayPage: React.FC = () => {
           elementId = 'print-root-work05-new-answer';
         } else if (packageType === '06' || (isSingleWork && typeId === '06')) {
           elementId = 'print-root-work06-new-answer';
+        } else if (packageType === '07' || (isSingleWork && typeId === '07')) {
+          elementId = 'print-root-work07-new-answer';
         }
         const element = document.getElementById(elementId);
         if (element) {
@@ -872,6 +1135,7 @@ const QuizDisplayPage: React.FC = () => {
                               packageType === '04' ? '유형#04_정답' :
                               packageType === '05' ? '유형#05_정답' :
                               packageType === '06' ? '유형#06_정답' :
+                              packageType === '07' ? '유형#07_정답' :
                               '정답';
           
           const result = await generateAndUploadFile(
@@ -881,7 +1145,7 @@ const QuizDisplayPage: React.FC = () => {
             workTypeName,
             { 
               isAnswerMode: true, 
-              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06')) ? 'portrait' : 'landscape',
+              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07')) ? 'portrait' : 'landscape',
               fileFormat 
             }
           );

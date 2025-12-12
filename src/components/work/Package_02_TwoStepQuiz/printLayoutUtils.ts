@@ -639,7 +639,8 @@ export const splitNormalizedItemByHeight = (
     const isLongPassageSection = isLongPassageType && (section.type === 'paragraph' || section.type === 'html');
     
     // 유형#07, #09, #10의 경우 본문과 options를 함께 묶어야 함
-    const isWork07Passage = normalizedItem.workTypeId === '07' && section.type === 'paragraph';
+    // 유형#07은 html 타입으로 본문을 추가하므로 html 타입도 체크
+    const isWork07Passage = normalizedItem.workTypeId === '07' && (section.type === 'paragraph' || section.type === 'html');
     const isWork09Passage = normalizedItem.workTypeId === '09' && section.type === 'html';
     const isWork10Passage = normalizedItem.workTypeId === '10' && section.type === 'html';
     const isWork09Options = normalizedItem.workTypeId === '09' && section.type === 'options';
@@ -1346,38 +1347,84 @@ export const splitNormalizedItemByHeight = (
         }
       }
       
-      // 1. paragraph + options + translation이 모두 들어갈 수 있으면 모두 현재 청크에
-      if (allThreeHeight <= availableHeightWithMargin) {
-        // paragraph만 추가하고 options와 translation은 다음 반복에서 처리
-        currentSections.push(clonedSection);
-        currentHeight += sectionHeight;
-        continue;
-      }
-      // 2. paragraph + options만 들어갈 수 있으면 paragraph와 options는 현재 청크에, translation은 다음 청크로
-      if (paragraphOptionsHeight <= availableHeightWithMargin) {
-        // paragraph와 options를 모두 추가하고, options 섹션을 건너뛰기 위해 인덱스 증가
-        currentSections.push(clonedSection);
-        currentHeight += sectionHeight;
-        
-        // options 섹션도 함께 추가
-        const clonedOptionsSection = cloneSectionForChunk(nextSection, chunkIndex, currentSections.length);
-        const optionsSectionHeight = estimateSectionHeight(clonedOptionsSection);
-        currentSections.push(clonedOptionsSection);
-        currentHeight += optionsSectionHeight;
-        
-        // options 섹션을 건너뛰기 위해 인덱스 증가
-        sectionIndex++;
-        continue;
-      }
-      // 3. paragraph만 들어갈 수 있으면 paragraph는 현재 청크에, options와 translation은 다음 청크로
-      // 단, 유형#07의 경우: 본문과 options를 함께 묶으려고 시도
-      if (isWork07Passage && nextIsOptions) {
-        // 유형#07: 본문과 options를 함께 넣을 수 있으면 함께 묶기 (10% 여유)
+      // 유형#07의 경우: paragraph/html + options는 함께 묶고, translation은 별도로 처리
+      if (isWork07Passage && nextIsOptions && nextNextIsTranslation) {
+        // 유형#07: 본문 + options + translation 높이 계산
         const optionsHeight = estimateSectionHeight(nextSection);
+        const translationHeight = estimateSectionHeight(nextNextSection);
         const passageOptionsHeight = currentHeight + sectionHeight + optionsHeight;
+        const allThreeHeight = passageOptionsHeight + translationHeight;
         
-        if (passageOptionsHeight <= availableHeight * 1.1) {
-          // 유형#07: 본문과 options를 함께 현재 청크에 추가
+        // 높이 계산에 여유를 줘서 과대평가 방지 (15% 여유)
+        const availableHeightWithMargin = availableHeight * 0.85;
+        
+        // 디버깅: 유형#07 페이지 분할 로직 확인
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 유형#07 페이지 분할 로직:', {
+            workTypeId: normalizedItem.workTypeId,
+            sectionType: section.type,
+            nextSectionType: nextSection?.type,
+            nextNextSectionType: nextNextSection?.type,
+            currentHeight: currentHeight.toFixed(2) + 'cm',
+            sectionHeight: sectionHeight.toFixed(2) + 'cm',
+            optionsHeight: optionsHeight.toFixed(2) + 'cm',
+            translationHeight: translationHeight.toFixed(2) + 'cm',
+            passageOptionsHeight: passageOptionsHeight.toFixed(2) + 'cm',
+            allThreeHeight: allThreeHeight.toFixed(2) + 'cm',
+            availableHeight: availableHeight.toFixed(2) + 'cm',
+            availableHeightWithMargin: availableHeightWithMargin.toFixed(2) + 'cm',
+            canFitAllThree: allThreeHeight <= availableHeightWithMargin,
+            canFitPassageOptions: passageOptionsHeight <= availableHeightWithMargin
+          });
+        }
+        
+        // 1. paragraph/html + options + translation이 모두 들어갈 수 있으면 모두 현재 청크에
+        if (allThreeHeight <= availableHeightWithMargin) {
+          // paragraph/html만 추가하고 options와 translation은 다음 반복에서 처리
+          currentSections.push(clonedSection);
+          currentHeight += sectionHeight;
+          continue;
+        }
+        
+        // 2. paragraph/html + options만 들어갈 수 있으면 paragraph/html과 options는 현재 청크에, translation은 다음 청크로
+        if (passageOptionsHeight <= availableHeightWithMargin) {
+          // paragraph/html과 options를 모두 추가하고, options 섹션을 건너뛰기 위해 인덱스 증가
+          currentSections.push(clonedSection);
+          currentHeight += sectionHeight;
+          
+          // options 섹션도 함께 추가
+          const clonedOptionsSection = cloneSectionForChunk(nextSection, chunkIndex, currentSections.length);
+          const optionsSectionHeight = estimateSectionHeight(clonedOptionsSection);
+          currentSections.push(clonedOptionsSection);
+          currentHeight += optionsSectionHeight;
+          
+          // options 섹션을 건너뛰기 위해 인덱스 증가 (translation은 다음 청크로)
+          sectionIndex++;
+          continue;
+        }
+        
+        // 3. paragraph/html만 들어갈 수 있으면 paragraph/html은 현재 청크에, options와 translation은 다음 청크로
+        if (currentHeight + sectionHeight <= availableHeightWithMargin) {
+          // paragraph/html만 추가하고 options와 translation은 다음 반복에서 처리
+          currentSections.push(clonedSection);
+          currentHeight += sectionHeight;
+          continue;
+        }
+        
+        // 4. paragraph/html도 들어갈 수 없으면 본문을 다음 청크로 이동
+        // (아래 로직으로 처리)
+      } else {
+        // 유형#07이 아닌 경우 기존 로직 유지
+        // 1. paragraph + options + translation이 모두 들어갈 수 있으면 모두 현재 청크에
+        if (allThreeHeight <= availableHeightWithMargin) {
+          // paragraph만 추가하고 options와 translation은 다음 반복에서 처리
+          currentSections.push(clonedSection);
+          currentHeight += sectionHeight;
+          continue;
+        }
+        // 2. paragraph + options만 들어갈 수 있으면 paragraph와 options는 현재 청크에, translation은 다음 청크로
+        if (paragraphOptionsHeight <= availableHeightWithMargin) {
+          // paragraph와 options를 모두 추가하고, options 섹션을 건너뛰기 위해 인덱스 증가
           currentSections.push(clonedSection);
           currentHeight += sectionHeight;
           
@@ -1390,6 +1437,29 @@ export const splitNormalizedItemByHeight = (
           // options 섹션을 건너뛰기 위해 인덱스 증가
           sectionIndex++;
           continue;
+        }
+        // 3. paragraph만 들어갈 수 있으면 paragraph는 현재 청크에, options와 translation은 다음 청크로
+        // 단, 유형#07의 경우: 본문과 options를 함께 묶으려고 시도
+        if (isWork07Passage && nextIsOptions) {
+          // 유형#07: 본문과 options를 함께 넣을 수 있으면 함께 묶기 (10% 여유)
+          const optionsHeight = estimateSectionHeight(nextSection);
+          const passageOptionsHeight = currentHeight + sectionHeight + optionsHeight;
+          
+          if (passageOptionsHeight <= availableHeight * 1.1) {
+            // 유형#07: 본문과 options를 함께 현재 청크에 추가
+            currentSections.push(clonedSection);
+            currentHeight += sectionHeight;
+            
+            // options 섹션도 함께 추가
+            const clonedOptionsSection = cloneSectionForChunk(nextSection, chunkIndex, currentSections.length);
+            const optionsSectionHeight = estimateSectionHeight(clonedOptionsSection);
+            currentSections.push(clonedOptionsSection);
+            currentHeight += optionsSectionHeight;
+            
+            // options 섹션을 건너뛰기 위해 인덱스 증가
+            sectionIndex++;
+            continue;
+          }
         }
       }
       // paragraph만 들어갈 수 있으면 paragraph는 현재 청크에, options와 translation은 다음 청크로
@@ -2255,7 +2325,9 @@ export const splitNormalizedItemByHeight = (
         ...chunkMeta,
         // 유형#01의 경우 첫 번째 청크에만 정답 섹션을 표시
         // 유형#06의 경우 모든 청크에서 정답 섹션 표시
-        showAnswer: (isWork01 && isFirstChunk) || isWork06 ? true : false
+        showAnswer: (isWork01 && isFirstChunk) || isWork06 ? true : false,
+        // problemIndex를 원본에서 전달 (유형#07용)
+        problemIndex: normalizedItem.chunkMeta?.problemIndex
       }
     };
   });
@@ -2312,19 +2384,28 @@ export const distributeNormalizedItemsToPages = (
   }
 
   let lastWorkTypeId: string | null = null; // 이전 아이템의 workTypeId 추적
+  let lastProblemIndex: number | null = null; // 이전 아이템의 문제 번호 추적 (유형#07용)
   
   normalizedItems.forEach((item, itemIndex) => {
     const itemHeight = estimateNormalizedItemHeight(item);
     const currentWorkTypeId = item.workTypeId;
+    const currentProblemIndex = item.chunkMeta?.problemIndex; // 문제 번호 추출
     
     // 같은 유형의 연속 청크인지 확인
+    // 유형#07의 경우: 같은 문제 번호이고 분할된 청크인 경우만 같은 문제의 연속 청크로 인식
     const isSameTypeChunk = 
       itemIndex > 0 && 
       lastWorkTypeId === currentWorkTypeId &&
-      item.chunkMeta?.isSplitChunk; // 분할된 청크인지 확인
+      item.chunkMeta?.isSplitChunk && // 분할된 청크인지 확인
+      (currentWorkTypeId !== '07' || (currentProblemIndex !== undefined && lastProblemIndex === currentProblemIndex)); // 유형#07의 경우 문제 번호도 확인
     
-    // 다른 유형이 시작되는 경우
+    // 다른 유형이 시작되는 경우 또는 유형#07의 경우 다른 문제가 시작되는 경우
     const isNewType = lastWorkTypeId !== null && lastWorkTypeId !== currentWorkTypeId;
+    const isNewProblem = 
+      currentWorkTypeId === '07' && 
+      currentProblemIndex !== undefined && 
+      lastProblemIndex !== null && 
+      lastProblemIndex !== currentProblemIndex;
     
     let targetColumn: number;
     
@@ -2359,12 +2440,13 @@ export const distributeNormalizedItemsToPages = (
           targetColumn = 0; // 새 페이지는 왼쪽 컬럼부터 시작
         }
       }
-    } else if (isNewType && lastItemColumn !== null) {
-      // 다른 유형이 시작되는 경우: 이전 유형의 마지막 청크가 배치된 컬럼의 다음 컬럼에 배치
-      // 이전 유형이 왼쪽 단(0)에 있었으면 오른쪽 단(1)에 배치
-      // 이전 유형이 오른쪽 단(1)에 있었으면 다음 페이지 왼쪽 단(0)에 배치
+    } else if ((isNewType || isNewProblem) && lastItemColumn !== null) {
+      // 다른 유형이 시작되는 경우 또는 유형#07의 경우 다른 문제가 시작되는 경우
+      // 이전 유형/문제의 마지막 청크가 배치된 컬럼의 다음 컬럼에 배치
+      // 이전 유형/문제가 왼쪽 단(0)에 있었으면 오른쪽 단(1)에 배치
+      // 이전 유형/문제가 오른쪽 단(1)에 있었으면 다음 페이지 왼쪽 단(0)에 배치
       if (lastItemColumn === 0) {
-        // 이전 유형이 왼쪽 단에 있었으면 오른쪽 단에 배치
+        // 이전 유형/문제가 왼쪽 단에 있었으면 오른쪽 단에 배치
         // 높이 계산의 과대평가를 보정하기 위해 여유를 둠 (15% 여유)
         const heightMargin = availableHeight * 0.15; // 15% 여유 (과대평가 보정)
         const rightColumnAvailableSpace = availableHeight - columnHeights[1];
@@ -2379,7 +2461,7 @@ export const distributeNormalizedItemsToPages = (
           targetColumn = 0; // 새 페이지는 왼쪽 컬럼부터 시작
         }
       } else {
-        // 이전 유형이 오른쪽 단에 있었으면 다음 페이지 왼쪽 단에 배치
+        // 이전 유형/문제가 오른쪽 단에 있었으면 다음 페이지 왼쪽 단에 배치
         startNewPage();
         targetColumn = 0; // 새 페이지는 왼쪽 컬럼부터 시작
       }
@@ -2402,6 +2484,9 @@ export const distributeNormalizedItemsToPages = (
     columnHeights[targetColumn] += itemHeight;
     lastItemColumn = targetColumn; // 현재 아이템이 배치된 컬럼 기록
     lastWorkTypeId = currentWorkTypeId; // 현재 아이템의 workTypeId 기록
+    if (currentProblemIndex !== undefined) {
+      lastProblemIndex = currentProblemIndex; // 현재 아이템의 문제 번호 기록 (유형#07용)
+    }
   });
 
   // 마지막 currentPage가 비어있지 않은 경우에만 추가

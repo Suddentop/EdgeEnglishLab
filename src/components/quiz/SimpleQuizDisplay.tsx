@@ -306,9 +306,19 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
                 ))}
               </div>
               {isAnswerMode && (
-                <div className="answer">
-                  <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work07Data?.answerIndex]} {work07Data?.options?.[work07Data?.answerIndex]}
-                </div>
+                <>
+                  <div className="answer">
+                    <strong>정답:</strong> {['①', '②', '③', '④', '⑤'][work07Data?.answerIndex]} {work07Data?.options?.[work07Data?.answerIndex]}
+                  </div>
+                  {work07Data?.translation && (
+                    <div className="translation-section" style={{marginTop:'1rem'}}>
+                      <h4>본문 해석:</h4>
+                      <div className="translation-content" style={{background: '#f1f8e9', padding: '1rem', borderRadius: '8px', marginTop: '0.5rem'}}>
+                        {work07Data.translation}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );
