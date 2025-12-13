@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getUserCurrentPoints, getWorkTypePoints, deductUserPoints, refundUserPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
@@ -6,7 +7,7 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PrintHeader from '../../common/PrintHeader';
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
-import Work11DynamicPrintPages from './Work11DynamicPrintPages';
+import PrintFormatWork11New from './PrintFormatWork11New';
 import { extractTextFromImage, translateToKorean as translateToKoreanCommon } from '../../../services/common';
 import './Work_11_SentenceTranslation.css';
 import '../../../styles/PrintFormat.css';
@@ -15,8 +16,37 @@ interface Work_11_SentenceTranslationProps {
   onQuizGenerated?: (quiz: any) => void; // Quiz 타입을 사용하지 않으므로 any로 변경
 }
 
-type InputMode = 'capture' | 'file' | 'text';
+const INPUT_MODES = [
+  { key: 'capture', label: '캡처 이미지 붙여넣기' },
+  { key: 'image', label: '이미지 파일 업로드' },
+  { key: 'text', label: '본문 직접 붙여넣기' }
+] as const;
+type InputMode = typeof INPUT_MODES[number]['key'];
 type PrintMode = 'none' | 'no-answer' | 'with-answer';
+
+// 입력 아이템 인터페이스 (Work_10과 동일)
+type InputType = 'clipboard' | 'file' | 'text';
+
+interface InputItem {
+  id: string;
+  inputType: InputType;
+  text: string;
+  pastedImageUrl: string | null;
+  isExpanded: boolean;
+  isExtracting: boolean;
+  error: string;
+  imageFile: File | null;
+}
+
+interface SentenceTranslationQuiz {
+  sentences: string[];
+  translations: string[];
+  quizText: string;
+}
+
+interface SentenceTranslationQuizWithId extends SentenceTranslationQuiz {
+  id?: string; // 다중 입력 처리를 위한 ID
+}
 
 // 파일 → base64 변환
 function fileToBase64(file: File): Promise<string> {
@@ -190,266 +220,274 @@ async function generateSentenceTranslationQuiz(englishText: string): Promise<{
 }
 
 const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = ({ onQuizGenerated }) => {
-  const { user } = useAuth();
+  const { userData, loading } = useAuth();
+  
+  // 상태 관리: 여러 아이템 지원
+  const [items, setItems] = useState<InputItem[]>([
+    { id: '1', inputType: 'text', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '', imageFile: null }
+  ]);
   const [inputMode, setInputMode] = useState<InputMode>('text');
-  const [inputText, setInputText] = useState<string>('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false); // 문제생성 중 모래시계 상태
+  
+  const [quizzes, setQuizzes] = useState<SentenceTranslationQuizWithId[]>([]);
+  
+  const [isLoading, setIsLoading] = useState(false);
   const [isExtractingText, setIsExtractingText] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [printMode, setPrintMode] = useState<PrintMode>('none');
-  const [needsSecondPage, setNeedsSecondPage] = useState(false);
-  const [quizData, setQuizData] = useState<{
-    sentences: string[];
-    translations: string[];
-    quizText: string;
-  } | null>(null);
-  const [userData, setUserData] = useState<any>(null);
-  const [showPointDeductionModal, setShowPointDeductionModal] = useState(false);
-  const [workTypePoints, setWorkTypePoints] = useState<any[]>([]);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  
+  // 포인트 관련 상태
+  const [showPointModal, setShowPointModal] = useState(false);
+  const [pointsToDeduct, setPointsToDeduct] = useState(0);
   const [userCurrentPoints, setUserCurrentPoints] = useState(0);
-  const [isPointDeducted, setIsPointDeducted] = useState(false);
-  const [isPointRefunded, setIsPointRefunded] = useState(false);
-  const [isPasteFocused, setIsPasteFocused] = useState(false);
-  const [showScreenshotHelp, setShowScreenshotHelp] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const [workTypePoints, setWorkTypePoints] = useState<any[]>([]);
 
-  // 사용자 정보 및 포인트 정보 로드
+  // 포인트 관련 초기화
   useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          console.log('🔍 사용자 정보 로드 시작:', user.uid);
-          
-          const points = await getUserCurrentPoints(user.uid);
-          console.log('💰 사용자 현재 포인트:', points);
-          setUserCurrentPoints(points);
-          
-          console.log('📋 getWorkTypePoints 함수 호출 시작');
-          const workPoints = await getWorkTypePoints();
-          console.log('📋 전체 유형별 포인트:', workPoints);
-          console.log('📋 workPoints 타입:', typeof workPoints);
-          console.log('📋 workPoints 길이:', Array.isArray(workPoints) ? workPoints.length : '배열이 아님');
-          
-          if (Array.isArray(workPoints)) {
-            const workType11 = workPoints.find(wt => wt.id === '11');
-            console.log('🎯 유형#11 포인트 설정:', workType11);
-            
-            if (workType11) {
-              setWorkTypePoints(workPoints);
-              console.log('✅ 유형#11 포인트 설정 완료:', workType11.points);
-            } else {
-              console.error('❌ 유형#11 포인트 설정을 찾을 수 없음');
-              console.log('🔍 사용 가능한 유형들:', workPoints.map(wt => ({ id: wt.id, name: wt.name })));
-              setWorkTypePoints([]); // 기본값 설정
-            }
-          } else {
-            console.error('❌ workPoints가 배열이 아님:', workPoints);
-            setWorkTypePoints([]); // 기본값 설정
-          }
-          
-          setUserData({ uid: user.uid, points, workPoints });
-        } catch (error) {
-          console.error('사용자 정보 로드 실패:', error);
-          console.error('에러 상세:', error);
-          // 기본값 설정
-          setWorkTypePoints([]);
+    const initializePoints = async () => {
+      try {
+        const points = await getWorkTypePoints();
+        setWorkTypePoints(points);
+        
+        // 유형#11의 포인트 설정
+        const workType11Points = points.find(wt => wt.id === '11')?.points || 0;
+        setPointsToDeduct(workType11Points);
+        
+        // 로딩이 완료되고 userData가 있을 때만 포인트 조회
+        if (!loading && userData && userData.uid) {
+          const currentPoints = await getUserCurrentPoints(userData.uid);
+          setUserCurrentPoints(currentPoints);
         }
-      } else {
-        console.log('❌ 사용자 정보가 없음');
+      } catch (error) {
+        console.error('포인트 초기화 오류:', error);
       }
     };
     
-    loadUserData();
-  }, [user]);
+    // 로딩이 완료된 후에만 포인트 초기화
+    if (!loading) {
+      initializePoints();
+    }
+  }, [userData?.uid, loading]);
 
-  // 컴포넌트 마운트 시 스크롤 최상단
-  // 본문 길이에 따른 페이지 분할 결정
+  // 첫 번째 아이템의 inputType과 inputMode 동기화
   useEffect(() => {
-    setNeedsSecondPage(inputText.length >= 2000);
-  }, [inputText]);
-
-  // 텍스트 영역 높이 자동 조정
-  useEffect(() => {
-    if (textAreaRef.current) {
-      const textarea = textAreaRef.current;
-      textarea.style.height = 'auto';
-      const scrollHeight = textarea.scrollHeight;
-      const newHeight = Math.max(120, Math.min(800, scrollHeight));
-      textarea.style.height = newHeight + 'px';
-      // 스크롤바가 생기지 않도록 overflow hidden 유지
-      if (scrollHeight <= 800) {
-        textarea.style.overflow = 'hidden';
-      } else {
-        textarea.style.overflow = 'auto';
+    if (items.length > 0) {
+      const firstItem = items[0];
+      const modeMap: { [key in InputType]: InputMode } = {
+        'clipboard': 'capture',
+        'file': 'image',
+        'text': 'text'
+      };
+      if (modeMap[firstItem.inputType] !== inputMode) {
+        setInputMode(modeMap[firstItem.inputType]);
       }
     }
-  }, [inputText]);
+  }, [items]);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  // 아이템 관리 함수들
+  const addItem = () => {
+    const newItem: InputItem = {
+      id: Date.now().toString(),
+      inputType: 'text', 
+      text: '',
+      pastedImageUrl: null,
+      isExpanded: true,
+      isExtracting: false,
+      error: '',
+      imageFile: null
+    };
+    setItems(prev => prev.map(item => ({ ...item, isExpanded: false })).concat(newItem));
+  };
 
-  // 문제 생성 후 스크롤 최상단
-  useEffect(() => {
-    if (quizData) {
-      window.scrollTo(0, 0);
+  const removeItem = (id: string) => {
+    if (items.length === 1) {
+      setItems([{ id: Date.now().toString(), inputType: 'text', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '', imageFile: null }]);
+      return;
     }
-  }, [quizData]);
+    setItems(prev => prev.filter(item => item.id !== id));
+  };
 
-  // 이미지 파일 선택 처리
-  const handleImageFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      // OCR → textarea에 자동 입력
-      setIsExtractingText(true);
-      try {
-        const extractedText = await extractTextFromImage(file);
-        setInputText(extractedText);
-        setTimeout(() => {
-          if (textAreaRef.current) {
-            textAreaRef.current.style.height = 'auto';
-            textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
-          }
-        }, 0);
-      } catch (err) {
-        console.error('OCR 처리 중 오류가 발생했습니다:', err);
-        setError('OCR 처리 중 오류가 발생했습니다.');
-      } finally {
-        setIsExtractingText(false);
-      }
+  const updateItem = (id: string, updates: Partial<InputItem>) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  const toggleExpand = (id: string) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, isExpanded: !item.isExpanded } : item));
+  };
+
+  const handleInputModeChange = (mode: InputMode) => {
+    setInputMode(mode);
+    if (items.length > 0) {
+      const firstItem = items[0];
+      const inputTypeMap: { [key in InputMode]: InputType } = {
+        'capture': 'clipboard',
+        'image': 'file',
+        'text': 'text'
+      };
+      updateItem(firstItem.id, { inputType: inputTypeMap[mode] });
     }
   };
 
-  // 이미지에서 텍스트 추출
-  const extractTextFromImage = async (file: File): Promise<string> => {
+  // 컴포넌트 마운트 및 퀴즈 생성 시 스크롤
+  useEffect(() => {
+    if (quizzes.length > 0) {
+      window.scrollTo(0, 0);
+    }
+  }, [quizzes]);
+
+  // 파일 → base64 변환
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 이미지 -> 텍스트 (개별 아이템용)
+  const handleImageToText = async (id: string, image: File | Blob) => {
+    updateItem(id, { isExtracting: true, error: '' });
+    
     try {
-      const base64 = await fileToBase64(file);
+      let previewUrl = null;
+      if (image instanceof Blob) {
+        previewUrl = URL.createObjectURL(image);
+        updateItem(id, { pastedImageUrl: previewUrl });
+      }
+      
+      const imageBase64 = await fileToBase64(image as File);
+      const base64 = await fileToBase64(image as File);
       const extractedText = await callOpenAIVisionAPI(base64, visionPrompt, '');
       const cleanedText = cleanOpenAIVisionResult(extractedText);
       
-      return cleanedText;
-    } catch (error) {
-      console.error('이미지 텍스트 추출 실패:', error);
-      throw error;
+      updateItem(id, { 
+        text: cleanedText,
+        isExtracting: false,
+        imageFile: image instanceof File ? image : null
+      });
+    } catch (err: any) {
+      updateItem(id, { 
+        error: '이미지 텍스트 추출 실패: ' + (err?.message || err),
+        isExtracting: false
+      });
     }
   };
 
-  // 클립보드에서 이미지 붙여넣기
-  const handlePaste = async (event: React.ClipboardEvent) => {
-    // 텍스트 모드나 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
-    if (inputMode !== 'capture') {
-      return;
-    }
-    
-    // 캡처 모드일 때만 이미지 처리
-    const items = event.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
-        const file = items[i].getAsFile();
-        if (file) {
-          setImageFile(file);
-          setImagePreview(URL.createObjectURL(file));
-          setIsExtractingText(true);
-          try {
-            const extractedText = await extractTextFromImage(file);
-            setInputText(extractedText);
-            console.log('📸 캡처 이미지에서 텍스트 추출 완료:', extractedText.substring(0, 100) + '...');
-          } catch (err) {
-            console.error('OCR 처리 중 오류가 발생했습니다:', err);
-            setError('OCR 처리 중 오류가 발생했습니다.');
-          } finally {
-            setIsExtractingText(false);
-          }
-          // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
-          event.preventDefault();
-          return;
-        }
-      }
-    }
-    
-    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
-  };
+  // imageToTextWithOpenAIVision - 파일 업로드 시 사용
+  async function imageToTextWithOpenAIVision(imageFile: File): Promise<string> {
+    const base64 = await fileToBase64(imageFile);
+    const extractedText = await callOpenAIVisionAPI(base64, visionPrompt, '');
+    return cleanOpenAIVisionResult(extractedText);
+  }
 
-  // 문장별 해석 문제 생성
+  // 문제 생성 (포인트 차감 포함)
   const handleGenerateQuiz = async () => {
-    if (!inputText.trim()) {
-      setError('텍스트를 입력해주세요.');
+    if (loading) {
+      alert('로그인 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
       return;
     }
     
-    if (!user) {
-      setError('로그인이 필요합니다.');
+    if (!userData || !userData.uid) {
+      alert('로그인이 필요합니다. 다시 로그인해주세요.');
       return;
     }
+
+    const validItems = items.filter(item => item.text.trim().length >= 10);
     
-    console.log('🚀 문제 생성 시작');
-    console.log('💰 현재 포인트:', userCurrentPoints);
-    
-    // 항상 포인트 차감 확인 모달을 먼저 표시 (유형#10과 동일)
-    setShowPointDeductionModal(true);
+    if (validItems.length === 0) {
+      alert('문제 생성을 위해 최소 하나의 본문을 입력해주세요.');
+      return;
+    }
+
+    const workType = workTypePoints.find(wt => wt.id === '11'); // 유형#11
+    if (!workType) {
+      alert('포인트 설정을 불러올 수 없습니다.');
+      return;
+    }
+
+    const requiredPoints = workType.points * validItems.length;
+    if (userCurrentPoints < requiredPoints) {
+      alert(`포인트가 부족합니다. 현재 ${userCurrentPoints.toLocaleString()}P, 필요 ${requiredPoints.toLocaleString()}P (${workType.points.toLocaleString()}P × ${validItems.length}개)`);
+      return;
+    }
+
+    setPointsToDeduct(requiredPoints);
+    setShowPointModal(true);
   };
 
-  // 포인트 차감 모달에서 확인 시 실제 문제 생성 진행
-  const handleGenerateQuizWithPointDeduction = async () => {
-    if (!inputText.trim()) {
-      setError('텍스트를 입력해주세요.');
-      return;
-    }
-    
-    if (!user) {
-      setError('로그인이 필요합니다.');
-      return;
-    }
-    
-    console.log('🚀 문제 생성 시작');
-    console.log('💰 현재 포인트:', userCurrentPoints);
-    
-    // 유형#11 포인트
-    const requiredPoints = workTypePoints.find(wt => wt.id === '11')?.points || 0;
-    console.log('🎯 필요 포인트:', requiredPoints);
-    
-    // 포인트 부족 확인
-    if (userCurrentPoints < requiredPoints) {
-      setError('포인트가 부족합니다. 포인트를 충전해주세요.');
-      return;
-    }
-    
-    // 모달 닫기 및 모래시계 표시
-    setShowPointDeductionModal(false);
-    setIsGenerating(true);
-    setError('');
+  const handlePointDeductionConfirm = () => {
+    setShowPointModal(false);
+    executeQuizGeneration();
+  };
+
+  const executeQuizGeneration = async () => {
+    if (!userData?.uid) return;
+
+    const validItems = items.filter(item => item.text.trim().length >= 10);
+    if (validItems.length === 0) return;
+
+    setIsLoading(true);
+    setQuizzes([]);
+    setIsExtractingText(false);
+    let deductedPoints = 0;
     
     try {
-      console.log('💳 포인트 차감 시작:', requiredPoints);
-      
       // 포인트 차감
+      const workType = workTypePoints.find(wt => wt.id === '11');
+      if (!workType) throw new Error('포인트 설정을 찾을 수 없습니다.');
+
       const deductionResult = await deductUserPoints(
-        user.uid, 
-        '11', 
-        '본문 문장별 해석',
-        user.displayName || '사용자',
-        user.displayName || '사용자'
+        userData.uid,
+        '11',
+        workType.name,
+        userData.name || '사용자',
+        userData.nickname || '사용자'
       );
-      
-      if (deductionResult.success) {
-        setIsPointDeducted(true);
-        setUserCurrentPoints(deductionResult.remainingPoints);
-        console.log('✅ Firebase 포인트 차감 완료');
-      } else {
+
+      if (!deductionResult.success) {
         throw new Error(deductionResult.error || '포인트 차감에 실패했습니다.');
       }
-      
-      // 문장별 해석 문제 생성
-      const quizData = await generateSentenceTranslationQuiz(inputText);
-      setQuizData(quizData);
 
-      // 문제 생성 내역 저장
+      deductedPoints = deductionResult.deductedPoints;
+      setUserCurrentPoints(deductionResult.remainingPoints);
+
+      const generatedQuizzes: SentenceTranslationQuizWithId[] = [];
+      
+      for (const item of validItems) {
+        let passage = '';
+        
+        if (item.inputType === 'text') {
+          passage = item.text.trim();
+        } else if (item.inputType === 'file' && item.imageFile) {
+          passage = await imageToTextWithOpenAIVision(item.imageFile);
+        } else if (item.inputType === 'clipboard') {
+          passage = item.text.trim();
+        }
+        
+        if (!passage.trim()) {
+          console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
+          continue;
+        }
+
+        try {
+          const quizData = await generateSentenceTranslationQuiz(passage);
+          const quizDataWithId: SentenceTranslationQuizWithId = { 
+            ...quizData, 
+            id: item.id
+          };
+          generatedQuizzes.push(quizDataWithId);
+        } catch (itemError: any) {
+          console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
+          alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+        }
+      }
+
+      if (generatedQuizzes.length === 0) {
+        throw new Error('생성된 문제가 없습니다.');
+      }
+
+      setQuizzes(generatedQuizzes);
+
+      // 문제 생성 내역 저장 (배열로)
       if (userData?.uid && workTypePoints.length > 0) {
         try {
           const workTypePoint = workTypePoints.find(wt => wt.id === '11');
@@ -460,8 +498,8 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
             workTypeId: '11',
             workTypeName: getWorkTypeName('11'),
             points: workTypePoint?.points || 0,
-            inputText: inputText,
-            quizData: quizData,
+            inputText: validItems.map(item => item.text.trim()).join('\n\n---\n\n'),
+            quizData: generatedQuizzes,
             status: 'success'
           });
           console.log('✅ Work_11 내역 저장 완료');
@@ -470,159 +508,128 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
         }
       }
       
-      console.log('✅ 문장별 해석 문제 생성 완료');
-    } catch (error) {
-      console.error('문제 생성 실패:', error);
-      setError('문제 생성에 실패했습니다: ' + (error as Error).message);
+    } catch (err: any) {
+      console.error('문장별 해석 문제 생성 오류:', err);
       
       // 포인트 환불
-      if (isPointDeducted) {
+      if (deductedPoints > 0 && userData?.uid) {
         try {
-          console.log('🔄 포인트 환불 시작');
           await refundUserPoints(
-            user.uid, 
-            requiredPoints, 
-            '본문 문장별 해석',
-            user.displayName || '사용자',
-            user.displayName || '사용자',
+            userData.uid,
+            deductedPoints,
+            '본문 문장별 해석 문제 생성',
+            userData.name || '사용자',
+            userData.nickname || '사용자',
             '문제 생성 실패로 인한 포인트 환불'
           );
-          setIsPointRefunded(true);
-          setUserCurrentPoints(prev => prev + requiredPoints);
-          console.log('✅ 포인트 환불 완료');
+          setUserCurrentPoints(prev => prev + deductedPoints);
         } catch (refundError) {
-          console.error('포인트 환불 실패:', refundError);
+          console.error('포인트 환불 오류:', refundError);
         }
       }
+      
+      alert(err.message || '문제 생성 중 오류가 발생했습니다.');
     } finally {
-      setIsGenerating(false);
+      setIsExtractingText(false);
+      setIsLoading(false);
     }
   };
 
-  // 포인트 차감 모달 닫기
-  const handleClosePointDeductionModal = () => {
-    setShowPointDeductionModal(false);
-  };
-
-  // 인쇄 모드 변경
-  const handlePrintModeChange = (mode: PrintMode) => {
-    setPrintMode(mode);
+  const triggerPrint = (mode: PrintMode) => {
+    if (quizzes.length === 0) return;
     
-    // 인쇄 모드 변경 후 자동으로 인쇄 실행
-    if (mode !== 'none') {
+    console.log('🖨️ 인쇄 시작:', mode);
+    
+    const styleId = 'print-style-work11-landscape';
+    const existingStyle = document.getElementById(styleId);
+    if (existingStyle) existingStyle.remove();
+
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.innerHTML = `
+      @page {
+        size: A4 landscape !important;
+        margin: 0 !important;
+      }
+      @media print {
+        html, body {
+          width: 29.7cm !important;
+          height: 21cm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #root {
+          display: none !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    const printContainer = document.createElement('div');
+    printContainer.id = mode === 'with-answer' ? 'print-root-work11-new-answer' : 'print-root-work11-new';
+    document.body.appendChild(printContainer);
+
+    const appRoot = document.getElementById('root');
+    if (appRoot) {
+      appRoot.style.display = 'none';
+    }
+
+    const root = ReactDOM.createRoot(printContainer);
+    root.render(<PrintFormatWork11New quizzes={quizzes} isAnswerMode={mode === 'with-answer'} />);
+
+    const activatePrintContainer = () => {
+      const inner = printContainer.querySelector('.print-container, .print-container-answer');
+      if (inner) {
+        inner.classList.add('pdf-generation-active');
+      } else {
+        requestAnimationFrame(activatePrintContainer);
+      }
+    };
+    activatePrintContainer();
+
+    setTimeout(() => {
+      window.print();
+      
       setTimeout(() => {
-        window.print();
-        // 인쇄 후 printMode를 'none'으로 리셋
-        setTimeout(() => {
-          setPrintMode('none');
-        }, 100);
+        root.unmount();
+        if (printContainer.parentNode) {
+          printContainer.parentNode.removeChild(printContainer);
+        }
+        if (appRoot) {
+          appRoot.style.display = '';
+        }
+        const styleEl = document.getElementById(styleId);
+        if (styleEl) {
+          styleEl.remove();
+        }
+        console.log('✅ 인쇄 완료');
       }, 100);
-    }
+    }, 500);
   };
 
-  // 인쇄 핸들러 - 브라우저 기본 헤더/푸터 숨기기
   const handlePrintNoAnswer = () => {
-    // 인쇄 전에 브라우저 기본 헤더/푸터 숨기기
-    const style = document.createElement('style');
-    style.id = 'print-style';
-    style.textContent = `
-      @page {
-        margin: 0;
-        size: A4;
-      }
-      @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    setPrintMode('no-answer');
-    setTimeout(() => {
-      window.print();
-      // 인쇄 후 스타일 제거
-      setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
-        }
-        setPrintMode('none');
-      }, 1000);
-    }, 100);
+    triggerPrint('no-answer');
   };
-
+  
   const handlePrintWithAnswer = () => {
-    // 인쇄 전에 브라우저 기본 헤더/푸터 숨기기
-    const style = document.createElement('style');
-    style.id = 'print-style';
-    style.textContent = `
-      @page {
-        margin: 0;
-        size: A4;
-      }
-      @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    setPrintMode('with-answer');
-    setTimeout(() => {
-      window.print();
-      // 인쇄 후 스타일 제거
-      setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
-        }
-        setPrintMode('none');
-      }, 1000);
-    }, 100);
+    triggerPrint('with-answer');
   };
 
-  // 인쇄
-  const handlePrint = () => {
-    window.print();
+  const resetQuiz = () => {
+    setQuizzes([]);
+    setItems([{ id: Date.now().toString(), inputType: 'text', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '', imageFile: null }]);
+    setIsLoading(false);
+    setIsExtractingText(false);
   };
 
-  // 새로 시작
-  const handleReset = () => {
-    setInputText('');
-    setImageFile(null);
-    setImagePreview('');
-    setQuizData(null);
-    setPrintMode('none');
-    setError('');
-    setIsPointDeducted(false);
-    setIsPointRefunded(false);
-  };
-
-  // 문제가 생성된 경우 문제 표시
-  if (quizData) {
+  if (quizzes.length > 0) {
     return (
       <div>
         <div className="quiz-display no-print">
           <div className="quiz-header">
             <h2 className="no-print">#11. 본문 문장별 해석 문제</h2>
             <div className="quiz-header-buttons no-print">
-              <button onClick={handleReset} className="reset-button" style={{
+              <button onClick={resetQuiz} className="reset-button" style={{
                 width: '160px',
                 height: '48px',
                 padding: '0.75rem 1rem',
@@ -674,257 +681,213 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
               </button>
             </div>
           </div>
-          
-          <div className="quiz-content">
-            <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-              <span>다음 본문의 각 문장을 한국어로 해석하세요.</span>
-              <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#11</span>
+          <div className="quiz-content no-print">
+            <div style={{ padding: '1rem', background: '#f0f7ff', borderRadius: '8px', marginBottom: '2rem', borderLeft: '4px solid #1976d2' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1976d2' }}>총 {quizzes.length}개의 문제가 생성되었습니다.</h3>
             </div>
-            
-            <div className="sentences-container">
-              {quizData?.sentences.map((sentence, index) => (
-                <div key={index} className="sentence-item">
-                  <div className="sentence-header">
-                    <span className="sentence-number">{index + 1}.</span>
-                    <span className="sentence-content">{sentence}</span>
+
+            {quizzes.map((quiz, idx) => {
+              const quizId = quiz.id || `quiz-${idx}`;
+              
+              return (
+                <div key={quizId} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
+                  <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
+                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#11</span>
                   </div>
-                  <div className="translation-container">
-                    <span className="translation-label">해석:</span>
+
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                    <span>다음 본문의 각 문장을 한국어로 해석하세요.</span>
+                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#11</span>
+                  </div>
+                  
+                  <div className="sentences-container">
+                    {quiz.sentences.map((sentence, index) => (
+                      <div key={index} className="sentence-item">
+                        <div className="sentence-header">
+                          <span className="sentence-number">{index + 1}.</span>
+                          <span className="sentence-content">{sentence}</span>
+                        </div>
+                        <div className="translation-container">
+                          <span className="translation-label">해석:</span>
+                          <div className="translation-answer" style={{marginTop:'0.5rem', color:'#1976d2', fontWeight:400}}>
+                            {quiz.translations[index]}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
-
-        {/* 인쇄용 문제 (정답 없음) - 새로운 동적 페이지네이션 사용 */}
-        {printMode === 'no-answer' && (
-          <div className="only-print">
-            <Work11DynamicPrintPages
-              sentences={quizData?.sentences || []}
-              translations={quizData?.translations || []}
-              includeAnswer={false}
-              printMode="no-answer"
-            />
-          </div>
-        )}
-
-        {/* 인쇄용 문제 (정답 포함) - 새로운 동적 페이지네이션 사용 */}
-        {printMode === 'with-answer' && (
-          <div className="only-print print-answer-mode">
-            <Work11DynamicPrintPages
-              sentences={quizData?.sentences || []}
-              translations={quizData?.translations || []}
-              includeAnswer={true}
-              printMode="with-answer"
-            />
-          </div>
-        )}
+        {/* 인쇄 영역 - Work11DynamicPrintPages로 처리 */}
       </div>
     );
   }
 
   return (
-    <div className="quiz-generator" onPaste={handlePaste}>
-      {/* 페이지 제목과 설명 - 문제 생성 전에만 표시 */}
+    <div className="quiz-generator">
       <div className="generator-header">
         <h2>[유형#11] 본문 문장별 해석 문제 생성</h2>
         <p>영어 본문을 입력하면 각 문장별로 해석을 작성할 수 있는 문제를 생성합니다.</p>
       </div>
       
-      {/* 입력 폼 - 문제 생성 전에만 표시 */}
-      <div className="input-type-section">
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'capture'}
-            onChange={() => setInputMode('capture')}
-          />
-          <span>📸 캡처화면 붙여넣기</span>
-          <button
-            type="button"
-            className="screenshot-help-btn"
-            onClick={(e) => {
-              e.preventDefault();
-              setShowScreenshotHelp(true);
-            }}
-            title="화면 캡처 방법 보기"
-          >
-            ?
-          </button>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'file'}
-            onChange={() => setInputMode('file')}
-          />
-          <span>🖼️ 이미지 파일 첨부</span>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'text'}
-            onChange={() => setInputMode('text')}
-          />
-          <span>✍️ 영어 본문 직접 붙여넣기</span>
-        </label>
-      </div>
-      
-      {inputMode === 'capture' && (
-        <div
-          className={`input-guide${isPasteFocused ? ' paste-focused' : ''}`}
-          tabIndex={0}
-          onClick={() => setIsPasteFocused(true)}
-          onFocus={() => setIsPasteFocused(true)}
-          onBlur={() => setIsPasteFocused(false)}
-        >
-          <div className="drop-icon">📋</div>
-          <div className="drop-text">여기에 이미지를 붙여넣으세요</div>
-          <div className="drop-desc">클릭 또는 Tab 후 <b>Ctrl+V</b>로 캡처 이미지를 붙여넣을 수 있습니다.</div>
-          {imagePreview && (
-            <div className="preview-row">
-              <img src={imagePreview} alt="캡처 미리보기" className="preview-img" />
+      <div className="input-items-list">
+        {items.map((item, index) => (
+          <div key={item.id} className={`input-item ${item.isExpanded ? 'expanded' : ''}`}>
+            <div className="input-item-header" onClick={() => toggleExpand(item.id)}>
+              <div className="input-item-title">
+                <span>#{index + 1}</span>
+                <span className={`input-item-status ${item.text.length > 0 ? 'has-text' : ''}`}>
+                  {item.text.length > 0 ? `텍스트 ${item.text.length}자` : '입력 대기'}
+                </span>
+              </div>
+              <div className="input-item-controls">
+                <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); removeItem(item.id); }} title="삭제">🗑️</button>
+                <span className="expand-icon">{item.isExpanded ? '🔼' : '🔽'}</span>
+              </div>
             </div>
-          )}
-          {isProcessing && (
-            <div style={{color:'#d32f2f', fontWeight:600, marginTop:'0.7rem'}}>
-              OpenAI Vision 처리 중...
-            </div>
-          )}
-        </div>
-      )}
-      
-      {inputMode === 'file' && (
-        <div className="input-guide">
-          <div className="file-upload-row">
-            <label htmlFor="sentence-translation-image" className="file-upload-btn">
-              파일 선택
-              <input
-                id="sentence-translation-image"
-                type="file"
-                accept="image/*"
-                onChange={handleImageFileChange}
-                style={{ display: 'none' }}
-              />
-            </label>
-            <span className="file-upload-status">
-              {imageFile ? imageFile.name : '선택된 파일 없음'}
-            </span>
-            {imagePreview && (
-              <img src={imagePreview} alt="업로드 미리보기" className="preview-img" />
-            )}
-            {isProcessing && (
-              <div className="loading-text">
-                OpenAI Vision 처리 중...
+
+            {item.isExpanded && (
+              <div className="input-item-content">
+                <div className="input-type-section" style={{ marginBottom: '15px' }}>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'clipboard'} 
+                      onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })} 
+                    />
+                    <span>📸 캡처화면 붙여넣기</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'file'} 
+                      onChange={() => updateItem(item.id, { inputType: 'file', error: '' })} 
+                    />
+                    <span>🖼️ 이미지 파일 첨부</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'text'} 
+                      onChange={() => updateItem(item.id, { inputType: 'text', error: '' })} 
+                    />
+                    <span>✍️ 직접 붙여넣기</span>
+                  </label>
+                </div>
+                   
+                {item.inputType === 'clipboard' && (
+                  <div
+                    className="input-guide" 
+                    tabIndex={0}
+                    onPaste={async (e) => {
+                      const clipItems = e.clipboardData.items;
+                      for (let i = 0; i < clipItems.length; i++) {
+                        if (clipItems[i].type.indexOf('image') !== -1) {
+                          const file = clipItems[i].getAsFile();
+                          if (file) {
+                            await handleImageToText(item.id, file);
+                            e.preventDefault();
+                            return;
+                          }
+                        }
+                      }
+                    }} 
+                    style={{ minHeight: '120px' }}
+                  >
+                    <div className="drop-icon">📋</div>
+                    <div className="drop-text">여기에 이미지를 붙여넣으세요 (Ctrl+V)</div>
+                    {item.pastedImageUrl && (
+                      <div className="preview-row">
+                        <img src={item.pastedImageUrl} alt="Preview" className="preview-img" />
+                      </div>
+                    )}
+                    {item.isExtracting && (
+                      <div className="loading-text">텍스트 추출 중...</div>
+                    )}
+                  </div>
+                )}
+                
+                {item.inputType === 'file' && (
+                  <div className="input-guide" style={{ minHeight: '80px' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImageToText(item.id, file);
+                        }
+                        e.target.value = '';
+                      }} 
+                      disabled={item.isExtracting} 
+                    />
+                    {item.isExtracting && (
+                      <span className="loading-text">추출 중...</span>
+                    )}
+                  </div>
+                )}
+
+                <textarea
+                  value={item.text}
+                  onChange={(e) => updateItem(item.id, { text: e.target.value })}
+                  placeholder="영어 본문이 여기에 표시됩니다. 직접 입력하거나 수정할 수 있습니다."
+                  className="text-input"
+                  rows={6}
+                  style={{ marginTop: '10px', width: '100%' }}
+                />
+                {item.error && (
+                  <div className="error-message">❌ {item.error}</div>
+                )}
               </div>
             )}
           </div>
-        </div>
-      )}
-      
-
-      
-      <div className="input-section">
-        <div className="input-label-row">
-          <label htmlFor="sentence-translation-text" className="input-label">
-            영어 본문 직접 붙여넣기:
-          </label>
-          {inputText.length < 100 && (
-            <span className="warning">⚠️ 더 긴 본문을 입력하면 더 좋은 결과를 얻을 수 있습니다.</span>
-          )}
-        </div>
-        <textarea
-          id="sentence-translation-text"
-          ref={textAreaRef}
-          value={inputText}
-          onChange={(e) => {
-            setInputText(e.target.value);
-            // 텍스트 양에 따라 자동으로 높이 조정
-            const textarea = e.target;
-            textarea.style.height = 'auto';
-            // scrollHeight를 더 정확하게 계산하기 위해 임시로 높이를 설정
-            const scrollHeight = textarea.scrollHeight;
-            const newHeight = Math.max(120, Math.min(800, scrollHeight));
-            textarea.style.height = newHeight + 'px';
-            // 스크롤바가 생기지 않도록 overflow hidden 유지
-            if (scrollHeight <= 800) {
-              textarea.style.overflow = 'hidden';
-            } else {
-              textarea.style.overflow = 'auto';
-            }
-          }}
-          placeholder="영어 본문을 직접 붙여넣어 주세요. 최소 100자 이상 권장합니다."
-          className="text-input"
-          rows={5}
-          style={{
-            overflow: 'hidden', 
-            resize: 'none',
-            minHeight: '120px',
-            maxHeight: '800px'
-          }}
-          disabled={inputMode === 'file' && !inputText}
-        />
-        <div className="text-info">
-          <span>글자 수: {inputText.length}자</span>
-        </div>
+        ))}
       </div>
       
+      <button onClick={addItem} className="add-item-button">➕ 본문 추가하기</button>
       
       <button
         onClick={handleGenerateQuiz}
-        disabled={isProcessing || !inputText.trim()}
+        disabled={isLoading || items.filter(i => i.text.length >= 10).length === 0}
         className="generate-button"
+        style={{ marginTop: '20px' }}
       >
-        본문 문장별 해석 문제 생성하기
+        {items.filter(i => i.text.length >= 10).length > 1 
+          ? `📋 ${items.filter(i => i.text.length >= 10).length}개 문제 일괄 생성` 
+          : '📋 본문 문장별 해석 문제 생성'}
       </button>
 
       {/* 화면 중앙 모래시계 로딩 스피너 */}
-      {(isProcessing || isExtractingText) && (
+      {(isLoading || isExtractingText) && (
         <div className="centered-hourglass-overlay">
           <div className="centered-hourglass-content">
             <span className="centered-hourglass-spinner">⏳</span>
             <div className="loading-text">
               {isExtractingText ? '📄 텍스트 추출 중...' : '📋 문제 생성 중...'}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* 포인트 차감 확인 후 문제생성 중 모래시계 로딩 스피너 */}
-      {isGenerating && (
-        <div className="centered-hourglass-overlay">
-          <div className="centered-hourglass-content">
-            <span className="centered-hourglass-spinner">⏳</span>
-            <div className="loading-text">
-              {isExtractingText ? '📄 텍스트 추출 중...' : '📋 문제 생성 중...'}
-            </div>
-            <div className="loading-subtext">잠시만 기다려주세요...</div>
           </div>
         </div>
       )}
       
-      {/* 오류 메시지 */}
-      {error && <div className="error-message">{error}</div>}
-
-      {/* 스크린샷 도움말 모달 */}
-      <ScreenshotHelpModal
-        isOpen={showScreenshotHelp}
-        onClose={() => setShowScreenshotHelp(false)}
-      />
-
-      {/* 포인트 차감 모달 */}
+      {/* 포인트 차감 확인 모달 */}
       <PointDeductionModal
-        isOpen={showPointDeductionModal}
-        onClose={handleClosePointDeductionModal}
-        onConfirm={handleGenerateQuizWithPointDeduction}
-        workTypeName="본문 문장별 해석"
-        pointsToDeduct={(workTypePoints.find(wt => wt.id === '11')?.points || 0)}
+        isOpen={showPointModal}
+        onClose={() => setShowPointModal(false)}
+        onConfirm={handlePointDeductionConfirm}
+        workTypeName={`본문 문장별 해석 문제 생성 (${items.filter(i => i.text.length >= 10).length}문제)`}
+        pointsToDeduct={pointsToDeduct}
         userCurrentPoints={userCurrentPoints}
-        remainingPoints={userCurrentPoints - (workTypePoints.find(wt => wt.id === '11')?.points || 0)}
+        remainingPoints={userCurrentPoints - pointsToDeduct}
+      />
+      
+      {/* 화면 캡처 도움말 모달 */}
+      <ScreenshotHelpModal 
+        isOpen={showHelpModal} 
+        onClose={() => setShowHelpModal(false)} 
       />
     </div>
   );
