@@ -116,11 +116,11 @@ const PrintFormatWork09New: React.FC<PrintFormatWork09NewProps> = ({ quizzes, is
     // 줄바꿈 처리
     processedPassage = processedPassage.replace(/\n/g, '<br/>');
 
-    const passageHtml = `<div class="print-passage print-passage-work01-11">${processedPassage}</div>`;
+    // renderSectionNode에서 자동으로 print-html-block 클래스를 추가하므로 외부 div 제거
     sections.push({
       type: 'html',
       key: `html-passage-${index}`,
-      html: passageHtml
+      html: processedPassage
     });
 
     // 4. 선택지
@@ -333,17 +333,63 @@ const PrintFormatWork09New: React.FC<PrintFormatWork09NewProps> = ({ quizzes, is
              font-weight: 700;
              font-size: 10pt;
         }
-        /* 들여쓰기 제거 */
+        /* 문제 제목 패딩 설정 - 인쇄(문제)와 인쇄(정답) 동일 */
+        .work09-print .print-question-title {
+             padding-left: 0.2cm !important;
+             margin-bottom: 0.25cm !important;
+             padding-bottom: 0.15cm !important;
+             margin-top: 0 !important;
+        }
+        /* 첫 번째 카드의 제목: 헤더와의 간격 확보 - 인쇄(문제)와 인쇄(정답) 동일 */
+        .work09-print.print-container .print-column > .print-question-card:first-child .print-question-title,
+        .work09-print.print-container-answer .print-column > .print-question-card:first-child .print-question-title {
+            margin-top: 0.3cm !important;
+        }
         .work09-print .print-passage {
              padding-left: 0 !important;
              padding-right: 0 !important;
+             padding-top: 0 !important;
+             padding-bottom: 0 !important;
+             margin-left: 0 !important;
+             margin-right: 0 !important;
+        }
+        .work09-print .print-html-block {
+             padding-left: 0.2cm !important;
+             padding-right: 0 !important;
+             margin-left: 0 !important;
+             margin-right: 0 !important;
         }
         .work09-print .print-options {
-             padding-left: 0 !important;
+             padding-left: 0.2cm !important;
              padding-right: 0 !important;
         }
         .work09-print .print-option {
              padding-left: 0 !important;
+        }
+        
+        /* 인쇄(정답) 모드: 각 단 컨테이너 내부 여백 설정 */
+        .work09-print.print-container-answer .print-column {
+            padding: 0.1cm 0 0 0.5cm !important;
+            margin: 0 !important;
+            gap: 0.3cm !important;
+        }
+        .work09-print.print-container-answer .print-question-card {
+            padding: 0.1cm 0 0 0 !important;
+            margin: 0 !important;
+        }
+        /* 인쇄(문제) 모드: 인쇄(정답) 모드와 동일한 여백 적용 */
+        .work09-print.print-container .print-column {
+            padding: 0.1cm 0 0 0.5cm !important;
+            margin: 0 !important;
+            gap: 0.3cm !important;
+        }
+        .work09-print.print-container .print-question-card {
+            padding: 0.1cm 0 0 0 !important;
+            margin: 0 !important;
+        }
+        /* 페이지 콘텐츠 패딩 제거 */
+        .work09-print .a4-landscape-page-content {
+            padding: 0 !important;
         }
       `}</style>
 

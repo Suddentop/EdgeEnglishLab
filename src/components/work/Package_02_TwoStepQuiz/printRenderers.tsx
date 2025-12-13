@@ -23,8 +23,8 @@ export const renderSectionNode = (
   if (section.type === 'instruction' && chunkMeta.showInstruction === false) {
     return null;
   }
-  // 유형#01, #03, #04, #05, #07, #08의 경우 options를 항상 표시 (유형#01은 첫 번째 청크에 options가 있음)
-  if (section.type === 'options' && chunkMeta.showOptions === false && normalizedItem.workTypeId !== '01' && normalizedItem.workTypeId !== '03' && normalizedItem.workTypeId !== '04' && normalizedItem.workTypeId !== '05' && normalizedItem.workTypeId !== '07' && normalizedItem.workTypeId !== '08') {
+  // 유형#01, #03, #04, #05, #07, #08, #10의 경우 options를 항상 표시 (유형#01은 첫 번째 청크에 options가 있음)
+  if (section.type === 'options' && chunkMeta.showOptions === false && normalizedItem.workTypeId !== '01' && normalizedItem.workTypeId !== '03' && normalizedItem.workTypeId !== '04' && normalizedItem.workTypeId !== '05' && normalizedItem.workTypeId !== '07' && normalizedItem.workTypeId !== '08' && normalizedItem.workTypeId !== '10') {
     return null;
   }
   // 정답 섹션은 chunkMeta가 있고 showAnswer가 false인 경우에만 제외

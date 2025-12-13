@@ -116,8 +116,8 @@ const QuizDisplayPage: React.FC = () => {
       `;
     } else {
       // Package#02, #03, 유형#01, #02, #03, #04, #05, #06, #07, #08: A4 가로
-      // 유형#07, #08은 PrintFormatWork07New, PrintFormatWork08New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
-      if (isSingleWork && (typeId === '07' || typeId === '08')) {
+      // 유형#07, #08, #09는 PrintFormatWork07New, PrintFormatWork08New, PrintFormatWork09New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
+      if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09')) {
         // 유형#07, #08: 원래 인쇄 방식과 동일하게 간단한 스타일만 적용
         style.textContent = `
           @page {
@@ -698,7 +698,7 @@ const QuizDisplayPage: React.FC = () => {
             workTypeName,
             { 
               isAnswerMode: false, 
-              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08')) ? 'portrait' : 'landscape',
+              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09')) ? 'portrait' : 'landscape',
               fileFormat 
             }
           );
@@ -748,11 +748,11 @@ const QuizDisplayPage: React.FC = () => {
     ) && Array.isArray(packageQuiz) && packageQuiz.length === 1);
     
     // 유형#01은 가로, 단일 유형이면 세로, 패키지#01도 세로
-    // 유형#06, #07은 가로로 표시
+    // 유형#06, #07, #08, #09는 가로로 표시
     const first = packageQuiz[0] || {} as any;
     const typeId = first.workTypeId;
     const isType01Single = isSingleWork && typeId === '01';
-    const isLandscapeType = isSingleWork && (typeId === '01' || typeId === '02' || typeId === '03' || typeId === '04' || typeId === '05' || typeId === '06' || typeId === '07' || typeId === '08');
+    const isLandscapeType = isSingleWork && (typeId === '01' || typeId === '02' || typeId === '03' || typeId === '04' || typeId === '05' || typeId === '06' || typeId === '07' || typeId === '08' || typeId === '09');
     
     if (packageType === 'P01' || (isSingleWork && !isLandscapeType)) {
       // Package#01 또는 단일 유형(가로 유형 제외): A4 세로
@@ -770,8 +770,8 @@ const QuizDisplayPage: React.FC = () => {
       `;
     } else {
       // Package#02, #03, 유형#01: A4 가로
-      // 유형#07, #08은 PrintFormatWork07New, PrintFormatWork08New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
-      if (isSingleWork && (typeId === '07' || typeId === '08')) {
+      // 유형#07, #08, #09는 PrintFormatWork07New, PrintFormatWork08New, PrintFormatWork09New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
+      if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09')) {
         // 유형#07, #08: 원래 인쇄 방식과 동일하게 간단한 스타일만 적용
         style.textContent = `
           @page {
@@ -885,7 +885,7 @@ const QuizDisplayPage: React.FC = () => {
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
     // first, typeId, isType01Single은 위에서 이미 선언됨
-    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08')
+    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09')
       ? 'print-root-package01-answer' 
       : packageType === 'P02' 
         ? 'print-root-package02-answer' 
@@ -907,6 +907,8 @@ const QuizDisplayPage: React.FC = () => {
                         ? 'print-root-work07-new-answer'
                         : packageType === '08' || (isSingleWork && typeId === '08')
                           ? 'print-root-work08-new-answer'
+                          : packageType === '09' || (isSingleWork && typeId === '09')
+                            ? 'print-root-work09-new-answer'
             : 'print-root-package02-answer';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
@@ -1050,6 +1052,32 @@ const QuizDisplayPage: React.FC = () => {
           };
         });
         root.render(<PrintFormatWork08New quizzes={rawQuizzes} isAnswerMode={true} />);
+      } else if (typeId === '09') {
+        // 유형#09는 PrintFormatWork09New 사용
+        const rawQuizzes = packageQuiz.map((item: any) => {
+          const work09Data = item.work09Data || item.quiz || item.data?.work09Data || item.data || item;
+          // 다양한 데이터 소스에서 필드 추출 (호환성 강화)
+          const answerIndex = work09Data.answerIndex !== undefined 
+            ? Number(work09Data.answerIndex) 
+            : (work09Data.answer !== undefined ? Number(work09Data.answer) : 0);
+            
+          const translation = work09Data.translation || 
+                              work09Data.translatedText || 
+                              work09Data.interpret || 
+                              work09Data.koreanTranslation || 
+                              work09Data.korean || 
+                              work09Data.koText || '';
+
+          return {
+            id: item.id || work09Data.id,
+            passage: work09Data.passage || '',
+            options: work09Data.options || [],
+            answerIndex: isNaN(answerIndex) ? 0 : answerIndex,
+            translation: translation,
+            original: work09Data.original || ''
+          };
+        });
+        root.render(<PrintFormatWork09New quizzes={rawQuizzes} isAnswerMode={true} />);
       } else {
         root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={true} translatedText={globalTranslatedText} />);
       }
@@ -1169,8 +1197,34 @@ const QuizDisplayPage: React.FC = () => {
           answerTranslation: work08Data.answerTranslation || '',
           optionTranslations: work08Data.optionTranslations || []
         };
-      });
+        });
       root.render(<PrintFormatWork08New quizzes={rawQuizzes} isAnswerMode={true} />);
+    } else if (packageType === '09') {
+      // 유형#09는 PrintFormatWork09New 사용
+      const rawQuizzes = packageQuiz.map((item: any) => {
+        const work09Data = item.work09Data || item.quiz || item.data?.work09Data || item.data || item;
+        // 다양한 데이터 소스에서 필드 추출 (호환성 강화)
+        const answerIndex = work09Data.answerIndex !== undefined 
+          ? Number(work09Data.answerIndex) 
+          : (work09Data.answer !== undefined ? Number(work09Data.answer) : 0);
+          
+        const translation = work09Data.translation || 
+                            work09Data.translatedText || 
+                            work09Data.interpret || 
+                            work09Data.koreanTranslation || 
+                            work09Data.korean || 
+                            work09Data.koText || '';
+
+        return {
+          id: item.id || work09Data.id,
+          passage: work09Data.passage || '',
+          options: work09Data.options || [],
+          answerIndex: isNaN(answerIndex) ? 0 : answerIndex,
+          translation: translation,
+          original: work09Data.original || ''
+        };
+      });
+      root.render(<PrintFormatWork09New quizzes={rawQuizzes} isAnswerMode={true} />);
     } else {
       root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
     }
@@ -1238,6 +1292,10 @@ const QuizDisplayPage: React.FC = () => {
           elementId = 'print-root-work06-new-answer';
         } else if (packageType === '07' || (isSingleWork && typeId === '07')) {
           elementId = 'print-root-work07-new-answer';
+        } else if (packageType === '08' || (isSingleWork && typeId === '08')) {
+          elementId = 'print-root-work08-new-answer';
+        } else if (packageType === '09' || (isSingleWork && typeId === '09')) {
+          elementId = 'print-root-work09-new-answer';
         }
         const element = document.getElementById(elementId);
         if (element) {
@@ -1316,6 +1374,7 @@ const QuizDisplayPage: React.FC = () => {
           packageType === '06' ? '유형#06_정답' :
           packageType === '07' ? '유형#07_정답' :
           packageType === '08' ? '유형#08_정답' :
+          packageType === '09' ? '유형#09_정답' :
           '정답';
           
           const result = await generateAndUploadFile(

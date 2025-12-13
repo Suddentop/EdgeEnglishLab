@@ -194,11 +194,11 @@ const Work_08_TitleInference: React.FC = () => {
   // 파일 → base64 변환
   function fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
       reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
+            reader.readAsDataURL(file);
+        });
   }
 
   // 이미지 -> 텍스트 (개별 아이템용)
@@ -227,7 +227,7 @@ const Work_08_TitleInference: React.FC = () => {
         error: '이미지 텍스트 추출 실패: ' + (err?.message || err),
         isExtracting: false
       });
-    }
+          }
   };
 
   // imageToTextWithOpenAIVision - 파일 업로드 시 사용
@@ -389,7 +389,7 @@ ${passage}
         }
 
         try {
-          const quizData = await generateTitleQuizWithAI(passage);
+      const quizData = await generateTitleQuizWithAI(passage);
           const quizDataWithId: TitleQuiz = { 
             ...quizData, 
             id: item.id
@@ -450,8 +450,8 @@ ${passage}
       alert(err.message || '문제 생성 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
-      setIsExtractingText(false);
-    }
+        setIsExtractingText(false);
+      }
   };
 
   const handlePrintNoAnswer = () => {
@@ -510,7 +510,7 @@ ${passage}
         inner.classList.add('pdf-generation-active');
       } else {
         requestAnimationFrame(activatePrintContainer);
-      }
+        }
     };
     activatePrintContainer();
 
@@ -530,7 +530,7 @@ ${passage}
           styleEl.remove();
         }
         console.log('✅ 인쇄 완료');
-      }, 100);
+    }, 100);
     }, 500);
   };
 
@@ -601,48 +601,48 @@ ${passage}
                     <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#08</span>
                   </div>
 
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                    <span>다음 글의 제목으로 가장 적절한 것을 고르시오.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
-                  </div>
+            <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+              <span>다음 글의 제목으로 가장 적절한 것을 고르시오.</span>
+              <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#08</span>
+            </div>
                   
-                  <div className="problem-passage" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#f7f8fc', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-                    {quiz.passage}
-                  </div>
+            <div className="problem-passage" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#f7f8fc', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
+              {quiz.passage}
+            </div>
                   
-                  <div className="problem-options" style={{margin:'1.2rem 0'}}>
-                    {quiz.options.map((opt, i) => (
-                      <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
-                        <input
-                          type="radio"
+            <div className="problem-options" style={{margin:'1.2rem 0'}}>
+              {quiz.options.map((opt, i) => (
+                <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
+                  <input
+                    type="radio"
                           name={`title-quiz-${quizId}`}
-                          checked={selected === i}
+                    checked={selected === i}
                           onChange={() => setSelectedAnswers(prev => ({ ...prev, [quizId]: i }))}
-                          style={{marginRight:'0.7rem'}}
-                        />
-                        {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                        {selected !== null && quiz.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                  
-                  {selected !== null && (
-                    <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
-                      정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
-                      {quiz.answerTranslation && (
-                        <div style={{marginTop:'0.4em', color:'#388e3c', fontWeight:600}}>
-                          정답 해석: {quiz.answerTranslation}
-                        </div>
-                      )}
-                    </div>
+                    style={{marginRight:'0.7rem'}}
+                  />
+                  {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                  {selected !== null && quiz.answerIndex === i && (
+                    <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
                   )}
-                </div>
+                </label>
+              ))}
+            </div>
+                  
+            {selected !== null && (
+              <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
+                정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
+                {quiz.answerTranslation && (
+                  <div style={{marginTop:'0.4em', color:'#388e3c', fontWeight:600}}>
+                    정답 해석: {quiz.answerTranslation}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
               );
             })}
-          </div>
         </div>
+          </div>
         {/* 인쇄 영역 - PrintFormatWork08New에서 동적으로 처리하므로 여기서는 제거 */}
       </div>
     );
@@ -674,36 +674,36 @@ ${passage}
             {item.isExpanded && (
               <div className="input-item-content">
                 <div className="input-type-section" style={{ marginBottom: '15px' }}>
-                  <label>
-                    <input 
-                      type="radio" 
+        <label>
+          <input
+            type="radio"
                       checked={item.inputType === 'clipboard'} 
                       onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })} 
-                    />
-                    <span>📸 캡처화면 붙여넣기</span>
-                  </label>
-                  <label>
-                    <input 
-                      type="radio" 
+          />
+          <span>📸 캡처화면 붙여넣기</span>
+        </label>
+        <label>
+          <input
+            type="radio"
                       checked={item.inputType === 'file'} 
                       onChange={() => updateItem(item.id, { inputType: 'file', error: '' })} 
-                    />
-                    <span>🖼️ 이미지 파일 첨부</span>
-                  </label>
-                  <label>
-                    <input 
-                      type="radio" 
+          />
+          <span>🖼️ 이미지 파일 첨부</span>
+        </label>
+        <label>
+          <input
+            type="radio"
                       checked={item.inputType === 'text'} 
                       onChange={() => updateItem(item.id, { inputType: 'text', error: '' })} 
-                    />
+          />
                     <span>✍️ 직접 붙여넣기</span>
-                  </label>
-                </div>
+        </label>
+      </div>
                    
                 {item.inputType === 'clipboard' && (
-                  <div 
+        <div
                     className="input-guide" 
-                    tabIndex={0} 
+          tabIndex={0}
                     onPaste={async (e) => {
                       const clipItems = e.clipboardData.items;
                       for (let i = 0; i < clipItems.length; i++) {
@@ -718,25 +718,25 @@ ${passage}
                       }
                     }} 
                     style={{ minHeight: '120px' }}
-                  >
-                    <div className="drop-icon">📋</div>
+        >
+          <div className="drop-icon">📋</div>
                     <div className="drop-text">여기에 이미지를 붙여넣으세요 (Ctrl+V)</div>
                     {item.pastedImageUrl && (
-                      <div className="preview-row">
+            <div className="preview-row">
                         <img src={item.pastedImageUrl} alt="Preview" className="preview-img" />
-                      </div>
-                    )}
+            </div>
+          )}
                     {item.isExtracting && (
                       <div className="loading-text">텍스트 추출 중...</div>
-                    )}
-                  </div>
-                )}
+          )}
+        </div>
+      )}
                 
                 {item.inputType === 'file' && (
                   <div className="input-guide" style={{ minHeight: '80px' }}>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
+              <input
+                type="file"
+                accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
@@ -749,21 +749,21 @@ ${passage}
                     {item.isExtracting && (
                       <span className="loading-text">추출 중...</span>
                     )}
-                  </div>
-                )}
+              </div>
+            )}
 
-                <textarea
+        <textarea
                   value={item.text}
                   onChange={(e) => updateItem(item.id, { text: e.target.value })}
                   placeholder="영어 본문이 여기에 표시됩니다. 직접 입력하거나 수정할 수 있습니다."
-                  className="text-input"
+          className="text-input"
                   rows={6}
                   style={{ marginTop: '10px', width: '100%' }}
-                />
+        />
                 {item.error && (
                   <div className="error-message">❌ {item.error}</div>
                 )}
-              </div>
+        </div>
             )}
           </div>
         ))}
@@ -814,4 +814,4 @@ ${passage}
   );
 };
 
-export default Work_08_TitleInference;
+export default Work_08_TitleInference; 
