@@ -399,18 +399,79 @@ ${passage}`;
     }
     
     // 빈칸 본문이 원본과 일치하는지 확인 (빈칸 부분 제외)
-    const normalizedOriginal = originalLower.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
-    const normalizedBlanked = blankedLower.replace(/\(_______________\)/g, '').replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
+    // 1. 원본 정규화: 소문자 변환, 특수문자 제거, 공백 정규화
+    const normalizedOriginal = originalLower
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
     
-    if (normalizedBlanked !== normalizedOriginal) {
-      console.warn('⚠️ 빈칸 본문이 원본과 일치하지 않음');
-      console.log('원본:', normalizedOriginal.substring(0, 100));
-      console.log('빈칸:', normalizedBlanked.substring(0, 100));
+    // 2. 빈칸 본문 정규화: 빈칸 제거, 특수문자 제거, 공백 정규화
+    const normalizedBlanked = blankedLower
+      .replace(/\(_______________\)/g, ' ')
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    // 3. 단어 단위로 비교 (더 정확한 검증)
+    const originalWords = normalizedOriginal.split(/\s+/).filter((w: string) => w.length > 0);
+    const blankedWords = normalizedBlanked.split(/\s+/).filter((w: string) => w.length > 0);
+    
+    // 빈칸 개수만큼 단어가 적어야 함
+    const expectedWordCount = originalWords.length;
+    const actualWordCount = blankedWords.length;
+    const blankCount = (blankedLower.match(/\(_______________\)/g) || []).length;
+    
+    console.log('📊 검증 상세 정보:', {
+      원본단어수: expectedWordCount,
+      빈칸본문단어수: actualWordCount,
+      빈칸개수: blankCount,
+      차이: expectedWordCount - actualWordCount
+    });
+    
+    // 단어 수가 일치하는지 확인 (빈칸 개수만큼 적어야 함)
+    if (actualWordCount !== expectedWordCount - blankCount) {
+      console.warn('⚠️ 빈칸 본문의 단어 수가 원본과 일치하지 않음');
+      console.log('원본 단어 수:', expectedWordCount);
+      console.log('빈칸 본문 단어 수:', actualWordCount);
+      console.log('빈칸 개수:', blankCount);
+      console.log('원본 (처음 100자):', normalizedOriginal.substring(0, 100));
+      console.log('빈칸 (처음 100자):', normalizedBlanked.substring(0, 100));
       
+      // 정답이 모두 존재하고 빈칸 표시도 있으면 허용 (AI가 약간 다른 형식으로 생성했을 수 있음)
       if (allAnswersExist && result.blankedText.includes('(_______________)')) {
-        console.log('✅ 정답은 모두 존재하고 빈칸 표시도 있음 - 허용');
+        console.log('✅ 정답은 모두 존재하고 빈칸 표시도 있음 - 허용 (단어 수 차이 무시)');
       } else {
         throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
+      }
+    } else {
+      // 단어 수가 일치하면, 단어 순서와 내용이 일치하는지 확인
+      let wordIndex = 0;
+      let isValid = true;
+      
+      for (let i = 0; i < originalWords.length && wordIndex < blankedWords.length; i++) {
+        if (originalWords[i] === blankedWords[wordIndex]) {
+          wordIndex++;
+        } else {
+          // 빈칸 위치일 수 있으므로 건너뛰기
+          // 하지만 이미 빈칸을 제거했으므로, 단어가 일치하지 않으면 문제
+          isValid = false;
+          break;
+        }
+      }
+      
+      if (!isValid || wordIndex !== blankedWords.length) {
+        console.warn('⚠️ 빈칸 본문의 단어 순서가 원본과 일치하지 않음');
+        console.log('원본 (처음 100자):', normalizedOriginal.substring(0, 100));
+        console.log('빈칸 (처음 100자):', normalizedBlanked.substring(0, 100));
+        
+        // 정답이 모두 존재하고 빈칸 표시도 있으면 허용
+        if (allAnswersExist && result.blankedText.includes('(_______________)')) {
+          console.log('✅ 정답은 모두 존재하고 빈칸 표시도 있음 - 허용 (단어 순서 차이 무시)');
+        } else {
+          throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
+        }
+      } else {
+        console.log('✅ 빈칸 본문 검증 통과');
       }
     }
     

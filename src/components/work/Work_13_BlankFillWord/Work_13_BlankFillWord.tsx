@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
 import './Work_13_BlankFillWord.css';
 import PrintHeader from '../../common/PrintHeader';
 import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
@@ -15,6 +16,8 @@ import {
   translateToKorean, 
   generateBlankFillQuizWithAI 
 } from '../../../services/work13Service';
+import { extractTextFromImage } from '../../../services/common';
+import PrintFormatWork13New from './PrintFormatWork13New';
 import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 // import '../../../styles/PrintFormat.css'; // 독립적인 CSS로 변경
 
@@ -27,8 +30,26 @@ const INPUT_MODES = [
   { key: 'text', label: '본문 직접 붙여넣기' }
 ] as const;
 type InputMode = typeof INPUT_MODES[number]['key'];
-
 type PrintMode = 'none' | 'no-answer' | 'with-answer';
+
+// 입력 아이템 인터페이스 (Work_08과 동일)
+type InputType = 'clipboard' | 'file' | 'text';
+
+interface InputItem {
+  id: string;
+  inputType: InputType;
+  text: string;
+  pastedImageUrl: string | null;
+  isExpanded: boolean;
+  isExtracting: boolean;
+  error: string;
+  imageFile: File | null;
+}
+
+// 퀴즈 인터페이스 확장 (ID 추가)
+interface BlankFillQuizWithId extends BlankFillItem {
+  id?: string; // 다중 입력 처리를 위한 ID
+}
 
 // A4 페이지 높이 계산 상수 (더 관대하게 조정)
 const A4_CONFIG = {
@@ -106,19 +127,21 @@ function shouldSplitPage(quiz: BlankFillItem): boolean {
 
 const Work_13_BlankFillWord: React.FC = () => {
   const { userData, loading } = useAuth();
+  
+  // 상태 관리: 여러 아이템 지원
+  const [items, setItems] = useState<InputItem[]>([
+    { id: '1', inputType: 'text', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '', imageFile: null }
+  ]);
   const [inputMode, setInputMode] = useState<InputMode>('text');
-  const [inputText, setInputText] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [quiz, setQuiz] = useState<BlankFillItem | null>(null);
+  
+  const [quizzes, setQuizzes] = useState<BlankFillQuizWithId[]>([]);
+  const [selectedAnswers, setSelectedAnswers] = useState<{[key: string]: string}>({});
+  const [isAnswerChecked, setIsAnswerChecked] = useState<{[key: string]: boolean}>({});
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isExtractingText, setIsExtractingText] = useState(false);
-  const [userAnswer, setUserAnswer] = useState('');
-  const [isAnswerChecked, setIsAnswerChecked] = useState(false);
   const [printMode, setPrintMode] = useState<PrintMode>('none');
-  // 동적 페이지 분할 계산
-  const shouldSplit = quiz ? shouldSplitPage(quiz) : false;
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  
   const [isPasteFocused, setIsPasteFocused] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   
@@ -162,161 +185,172 @@ const Work_13_BlankFillWord: React.FC = () => {
 
   // 문제 생성 후 스크롤 최상단
   useEffect(() => {
-    if (quiz) {
+    if (quizzes.length > 0) {
       window.scrollTo(0, 0);
-      
-      // 페이지 분할은 동적 계산 함수 shouldSplitPage()에서 처리
     }
-  }, [quiz]);
+  }, [quizzes]);
+
+  // 첫 번째 아이템의 inputType과 inputMode 동기화
+  useEffect(() => {
+    if (items.length > 0) {
+      const firstItem = items[0];
+      const modeMap: { [key in InputType]: InputMode } = {
+        'clipboard': 'capture',
+        'file': 'image',
+        'text': 'text'
+      };
+      if (modeMap[firstItem.inputType] !== inputMode) {
+        setInputMode(modeMap[firstItem.inputType]);
+      }
+    }
+  }, [items]);
+
+  // 아이템 관리 함수들
+  const addItem = () => {
+    const newItem: InputItem = {
+      id: Date.now().toString(),
+      inputType: 'text', 
+      text: '',
+      pastedImageUrl: null,
+      isExpanded: true,
+      isExtracting: false,
+      error: '',
+      imageFile: null
+    };
+    setItems(prev => prev.map(item => ({ ...item, isExpanded: false })).concat(newItem));
+  };
+
+  const removeItem = (id: string) => {
+    if (items.length === 1) {
+      setItems([{ id: Date.now().toString(), inputType: 'text', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '', imageFile: null }]);
+      return;
+    }
+    setItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateItem = (id: string, updates: Partial<InputItem>) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  const toggleExpand = (id: string) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, isExpanded: !item.isExpanded } : item));
+  };
 
   // 입력 방식 변경
   const handleInputModeChange = (mode: InputMode) => {
     setInputMode(mode);
-    setInputText('');
-    setImageFile(null);
-    setImagePreview(null);
-    setQuiz(null);
-    setUserAnswer('');
-    setIsAnswerChecked(false);
-  };
-
-  // 이미지 파일 업로드
-  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      // OCR → textarea에 자동 입력
-      setIsExtractingText(true);
-      try {
-        const ocrText = await imageToTextWithOpenAIVision(file);
-        setInputText(ocrText);
-        setTimeout(() => {
-          if (textAreaRef.current) {
-            textAreaRef.current.style.height = 'auto';
-            textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
-          }
-        }, 0);
-      } catch (err) {
-        alert('OCR 처리 중 오류가 발생했습니다.');
-      } finally {
-        setIsExtractingText(false);
-      }
+    if (items.length > 0) {
+      const firstItem = items[0];
+      const inputTypeMap: { [key in InputMode]: InputType } = {
+        'capture': 'clipboard',
+        'image': 'file',
+        'text': 'text'
+      };
+      updateItem(firstItem.id, { inputType: inputTypeMap[mode] });
     }
   };
 
-  // 붙여넣기(클립보드) 이미지 처리
-  const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    // 텍스트 모드나 이미지 파일 업로드 모드일 때는 기본 동작 허용 (텍스트 붙여넣기)
-    if (inputMode !== 'capture') {
-      return;
-    }
+  // 파일 → base64 변환
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 이미지 -> 텍스트 (개별 아이템용)
+  const handleImageToText = async (id: string, image: File | Blob) => {
+    updateItem(id, { isExtracting: true, error: '' });
     
-    // 캡처 모드일 때만 이미지 처리
-    const items = e.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
-        const file = items[i].getAsFile();
-        if (file) {
-          setImageFile(file);
-          setImagePreview(URL.createObjectURL(file));
-          setIsExtractingText(true);
-          try {
-            const ocrText = await imageToTextWithOpenAIVision(file);
-            setInputText(ocrText);
-            setTimeout(() => {
-              if (textAreaRef.current) {
-                textAreaRef.current.style.height = 'auto';
-                textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
-              }
-            }, 0);
-          } catch (err) {
-            alert('OCR 처리 중 오류가 발생했습니다.');
-          } finally {
-            setIsExtractingText(false);
-          }
-          // 이미지를 찾았으므로 기본 동작(텍스트 붙여넣기) 막기
-          e.preventDefault();
-          return;
-        }
+    try {
+      let previewUrl = null;
+      if (image instanceof Blob) {
+        previewUrl = URL.createObjectURL(image);
+        updateItem(id, { pastedImageUrl: previewUrl });
       }
+      
+      const base64 = await fileToBase64(image as File);
+      const ocrText = await extractTextFromImage(base64);
+      
+      updateItem(id, { 
+        text: ocrText,
+        isExtracting: false,
+        imageFile: image instanceof File ? image : null
+      });
+    } catch (err: any) {
+      updateItem(id, { 
+        error: '이미지 텍스트 추출 실패: ' + (err?.message || err),
+        isExtracting: false
+      });
     }
+  };
+
+  // imageToTextWithOpenAIVision - 파일 업로드 시 사용
+  async function imageToTextWithOpenAIVision(imageFile: File): Promise<string> {
+    const base64 = await fileToBase64(imageFile);
+    return await extractTextFromImage(base64);
+  }
+
+  // 주관식 답안 입력 핸들러 (다중 퀴즈 지원)
+  const handleAnswerChange = (quizId: string, answer: string) => {
+    setSelectedAnswers(prev => ({ ...prev, [quizId]: answer }));
+    setIsAnswerChecked(prev => ({ ...prev, [quizId]: false }));
+  };
+
+  // 답안 확인 핸들러 (다중 퀴즈 지원)
+  const handleCheckAnswer = (quizId: string) => {
+    const quiz = quizzes.find(q => q.id === quizId);
+    const userAnswer = selectedAnswers[quizId];
     
-    // 이미지를 찾지 못했을 때는 기본 동작 허용 (텍스트 붙여넣기 가능)
-  };
-
-  // 본문 입력 핸들러
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(e.target.value);
-    if (textAreaRef.current) {
-      textAreaRef.current.style.height = 'auto';
-      textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
-    }
-  };
-
-  // 주관식 답안 입력 핸들러
-  const handleAnswerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserAnswer(e.target.value);
-    setIsAnswerChecked(false);
-  };
-
-  // 답안 확인 핸들러
-  const handleCheckAnswer = () => {
-    if (!quiz || !userAnswer.trim()) return;
+    if (!quiz || !userAnswer?.trim()) return;
     
     const isCorrect = quiz.correctAnswers?.some(answer => 
       userAnswer.trim().toLowerCase() === answer.toLowerCase()
     ) || false;
-    setIsAnswerChecked(true);
+    
+    setIsAnswerChecked(prev => ({ ...prev, [quizId]: true }));
     
     // quiz 상태 업데이트
-    setQuiz(prev => prev ? {
-      ...prev,
-      userAnswer: userAnswer.trim(),
-      isCorrect: isCorrect
-    } : null);
+    setQuizzes(prev => prev.map(q => 
+      q.id === quizId 
+        ? { ...q, userAnswer: userAnswer.trim(), isCorrect: isCorrect }
+        : q
+    ));
   };
-
-  // 본문에서 이미 ()로 묶인 단어나 구 추출
-  const excludedWords: string[] = [];
-  const bracketRegex = /\(([^)]+)\)/g;
-  let match;
-  while ((match = bracketRegex.exec(inputText)) !== null) {
-    excludedWords.push(match[1].trim());
-  }
-
 
   // 문제 생성 (포인트 차감 포함)
   const handleGenerateQuiz = async () => {
-    console.log('로그인 상태 확인:', { userData, uid: userData?.uid, loading });
-    
-    // 로딩 중이면 대기
     if (loading) {
       alert('로그인 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
       return;
     }
     
-    // 로그인 상태 확인 (더 안전한 방법)
     if (!userData || !userData.uid) {
-      console.error('로그인 상태 오류:', { userData, loading });
       alert('로그인이 필요합니다. 다시 로그인해주세요.');
       return;
     }
 
-    // 포인트 차감 확인
+    const validItems = items.filter(item => item.text.trim().length >= 10);
+    
+    if (validItems.length === 0) {
+      alert('문제 생성을 위해 최소 하나의 본문을 입력해주세요.');
+      return;
+    }
+
     const workType = workTypePoints.find(wt => wt.id === '13'); // 유형#13
     if (!workType) {
       alert('포인트 설정을 불러올 수 없습니다.');
       return;
     }
 
-    const requiredPoints = workType.points;
+    const requiredPoints = workType.points * validItems.length;
     if (userCurrentPoints < requiredPoints) {
-      alert(`포인트가 부족합니다. 현재 ${userCurrentPoints.toLocaleString()}P, 필요 ${requiredPoints.toLocaleString()}P`);
+      alert(`포인트가 부족합니다. 현재 ${userCurrentPoints.toLocaleString()}P, 필요 ${requiredPoints.toLocaleString()}P (${workType.points.toLocaleString()}P × ${validItems.length}개)`);
       return;
     }
 
-    // 포인트 차감 모달 표시
     setPointsToDeduct(requiredPoints);
     setShowPointModal(true);
   };
@@ -331,11 +365,13 @@ const Work_13_BlankFillWord: React.FC = () => {
   const executeQuizGeneration = async () => {
     if (!userData?.uid) return;
 
-    let passage = '';
+    const validItems = items.filter(item => item.text.trim().length >= 10);
+    if (validItems.length === 0) return;
+
     setIsLoading(true);
-    setQuiz(null);
-    setUserAnswer('');
-    setIsAnswerChecked(false);
+    setQuizzes([]);
+    setSelectedAnswers({});
+    setIsAnswerChecked({});
     let deductedPoints = 0;
     
     try {
@@ -343,12 +379,14 @@ const Work_13_BlankFillWord: React.FC = () => {
       const workType = workTypePoints.find(wt => wt.id === '13');
       if (!workType) throw new Error('포인트 설정을 찾을 수 없습니다.');
 
+      const requiredPoints = workType.points * validItems.length;
       const deductionResult = await deductUserPoints(
         userData.uid,
         '13',
         workType.name,
         userData.name || '사용자',
-        userData.nickname || '사용자'
+        userData.nickname || '사용자',
+        requiredPoints
       );
 
       if (!deductionResult.success) {
@@ -358,27 +396,44 @@ const Work_13_BlankFillWord: React.FC = () => {
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      // 문제 생성 로직
-      if (inputMode === 'text') {
-        if (!inputText.trim()) throw new Error('영어 본문을 입력해주세요.');
-        passage = inputText.trim();
-      } else if (inputMode === 'image' && imageFile) {
-        passage = await imageToTextWithOpenAIVision(imageFile);
-      } else if (inputMode === 'capture') {
-        // 캡처 이미지에서 추출된 텍스트가 수정되었을 수 있으므로 inputText 사용
-        if (!inputText.trim()) throw new Error('영어 본문을 입력해주세요.');
-        passage = inputText.trim();
-      } else {
-        throw new Error('이미지를 첨부해주세요.');
-      }
-      if (!passage.trim()) throw new Error('추출된 텍스트가 없습니다.');
+      const generatedQuizzes: BlankFillQuizWithId[] = [];
       
-      const quizData = await generateBlankFillQuizWithAI(passage);
-      console.log('생성된 퀴즈 데이터:', quizData);
-      console.log('quizData.translation:', quizData.translation);
-      setQuiz(quizData);
+      for (const item of validItems) {
+        let passage = '';
+        
+        if (item.inputType === 'text') {
+          passage = item.text.trim();
+        } else if (item.inputType === 'file' && item.imageFile) {
+          passage = await imageToTextWithOpenAIVision(item.imageFile);
+        } else if (item.inputType === 'clipboard') {
+          passage = item.text.trim();
+        }
+        
+        if (!passage.trim()) {
+          console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
+          continue;
+        }
 
-      // 문제 생성 내역 저장
+        try {
+          const quizData = await generateBlankFillQuizWithAI(passage);
+          const quizDataWithId: BlankFillQuizWithId = { 
+            ...quizData, 
+            id: item.id
+          };
+          generatedQuizzes.push(quizDataWithId);
+        } catch (itemError: any) {
+          console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
+          alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+        }
+      }
+
+      if (generatedQuizzes.length === 0) {
+        throw new Error('생성된 문제가 없습니다.');
+      }
+
+      setQuizzes(generatedQuizzes);
+
+      // 문제 생성 내역 저장 (배열로)
       if (userData?.uid && workTypePoints.length > 0) {
         try {
           const workTypePoint = workTypePoints.find(wt => wt.id === '13');
@@ -389,8 +444,8 @@ const Work_13_BlankFillWord: React.FC = () => {
             workTypeId: '13',
             workTypeName: getWorkTypeName('13'),
             points: workTypePoint?.points || 0,
-            inputText: passage,
-            quizData: quizData,
+            inputText: validItems.map(item => item.text.trim()).join('\n\n---\n\n'),
+            quizData: generatedQuizzes,
             status: 'success'
           });
           console.log('✅ Work_13 내역 저장 완료');
@@ -421,81 +476,68 @@ const Work_13_BlankFillWord: React.FC = () => {
       
       alert(err.message || '문제 생성 중 오류가 발생했습니다.');
     } finally {
-        setIsExtractingText(false);
-      }
+      setIsLoading(false);
+      setIsExtractingText(false);
+    }
   };
 
-  // 인쇄 핸들러 - 브라우저 기본 헤더/푸터 숨기기
   const handlePrintNoAnswer = () => {
-    // 인쇄 전에 브라우저 기본 헤더/푸터 숨기기
-    const style = document.createElement('style');
-    style.id = 'print-style';
-    style.textContent = `
-      @page {
-        margin: 0;
-        size: A4;
-      }
-      @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    setPrintMode('no-answer');
-    setTimeout(() => {
-      window.print();
-      // 인쇄 후 스타일 제거
-      setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
-        }
-        setPrintMode('none');
-      }, 1000);
-    }, 100);
+    triggerPrint('no-answer');
   };
   
   const handlePrintWithAnswer = () => {
-    // 인쇄 전에 브라우저 기본 헤더/푸터 숨기기
+    triggerPrint('with-answer');
+  };
+
+  const triggerPrint = (mode: PrintMode) => {
+    if (quizzes.length === 0) return;
+    
+    console.log('🖨️ 인쇄 시작:', mode);
+    
+    const styleId = 'print-style-work13-landscape';
+    const existingStyle = document.getElementById(styleId);
+    if (existingStyle) existingStyle.remove();
+
     const style = document.createElement('style');
-    style.id = 'print-style';
-    style.textContent = `
+    style.id = styleId;
+    style.innerHTML = `
       @page {
-        margin: 0;
-        size: A4;
+        size: A4 landscape !important;
+        margin: 0 !important;
       }
       @media print {
         html, body {
+          width: 29.7cm !important;
+          height: 21cm !important;
           margin: 0 !important;
           padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
         }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+        #root {
+          display: none !important;
         }
       }
     `;
     document.head.appendChild(style);
     
-    setPrintMode('with-answer');
+    const printContainer = document.createElement('div');
+    printContainer.id = mode === 'with-answer' ? 'print-root-work13-new-answer' : 'print-root-work13-new';
+    document.body.appendChild(printContainer);
+
+    const appRoot = document.getElementById('root');
+    if (!appRoot) return;
+
+    // PrintFormatWork13New 컴포넌트를 동적으로 렌더링
+    const root = ReactDOM.createRoot(printContainer);
+    root.render(<PrintFormatWork13New quizzes={quizzes} isAnswerMode={mode === 'with-answer'} />);
+    
+    setPrintMode(mode);
     setTimeout(() => {
       window.print();
-      // 인쇄 후 스타일 제거
       setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
+        const printStyle = document.getElementById(styleId);
+        if (printStyle) printStyle.remove();
+        if (printContainer.parentNode) {
+          printContainer.parentNode.removeChild(printContainer);
         }
         setPrintMode('none');
       }, 1000);
@@ -504,12 +546,10 @@ const Work_13_BlankFillWord: React.FC = () => {
 
   // 리셋
   const resetQuiz = () => {
-    setQuiz(null);
-    setUserAnswer('');
-    setIsAnswerChecked(false);
-    setInputText('');
-    setImageFile(null);
-    setImagePreview(null);
+    setQuizzes([]);
+    setSelectedAnswers({});
+    setIsAnswerChecked({});
+    setItems([{ id: Date.now().toString(), inputType: 'text', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '', imageFile: null }]);
     setIsPasteFocused(false);
     setIsLoading(false);
     setIsExtractingText(false);
@@ -519,7 +559,7 @@ const Work_13_BlankFillWord: React.FC = () => {
     // 화면을 최상단으로 스크롤
     window.scrollTo(0, 0);
   };  // 문제 풀이/출력 화면
-  if (quiz) {
+  if (quizzes.length > 0) {
     return (
       <div>
         <div className="quiz-display no-print">
@@ -580,315 +620,192 @@ const Work_13_BlankFillWord: React.FC = () => {
               </button>
             </div>
           </div>
-          <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.18rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-              <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
-              <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
-            </div>
-          <div className="problem-text" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-              {formatBlankedText(
-                quiz.blankedText || '',
-                quiz.correctAnswers || []
-              )}
+          
+          <div className="quiz-content no-print">
+            <div style={{ padding: '1rem', background: '#f0f7ff', borderRadius: '8px', marginBottom: '2rem', borderLeft: '4px solid #1976d2' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1976d2' }}>총 {quizzes.length}개의 문제가 생성되었습니다.</h3>
             </div>
 
-            {/* 정답 표시 */}
-            {isAnswerChecked && (
-              <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
-                {quiz.isCorrect ? (
-                  <span style={{color: '#1976d2'}}>✅ 정답입니다! 정답: {quiz.correctAnswers?.join(', ') || '정답 없음'}</span>
-                ) : (
-                  <span style={{color: '#e74c3c'}}>❌ 틀렸습니다. 정답: <span className="correct-answer">{quiz.correctAnswers?.join(', ') || '정답 없음'}</span></span>
-                )}
-              </div>
-            )}
+            {quizzes.map((quiz, idx) => {
+              const quizId = quiz.id || `quiz-${idx}`;
+              
+              return (
+                <div key={quizId} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
+                  <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
+                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#13</span>
+                  </div>
+
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                    <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
+                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
+                  </div>
+                  
+                  <div className="problem-text" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
+                    {formatBlankedText(
+                      quiz.blankedText || '',
+                      quiz.correctAnswers || []
+                    )}
+                  </div>
+
+                  {/* 정답 표시 */}
+                  <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
+                    <span style={{color: '#1976d2'}}>정답 : {quiz.correctAnswers?.join(', ') || '정답 없음'}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* 인쇄용: 문제만 */}
-        {printMode === 'no-answer' && (
-          <div className="only-print">
-            {shouldSplit ? (
-              // 1페이지 구성: 문제제목 + 본문 (본문 2000자 이상)
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                      <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
-                      <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
-                    </div>
-                    <div className="work13-print-problem-text" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                      {formatBlankedText(
-                        quiz.blankedText || '',
-                        quiz.correctAnswers || []
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // 1페이지 구성: 문제제목 + 본문 (본문 2000자 미만)
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'block', width:'100%'}}>
-                      다음 빈칸에 들어갈 단어를 직접 입력하시오.
-                    </div>
-                    <div className="work13-print-problem-text" style={{marginTop:'0.9rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                      {formatBlankedText(
-                        quiz.blankedText || '',
-                        quiz.correctAnswers || []
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}        {/* 인쇄용: 정답포함 */}
-        {printMode === 'with-answer' && quiz && (
-          <div className="only-print print-answer-mode">
-            {shouldSplit ? (
-              // 2페이지 구성: 문제제목 + 본문(정답포함), 본문해석 (본문 2000자 이상)
-              <>
-                {/* 1페이지: 문제제목 + 본문(정답포함) */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                        <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
-                        <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
-                      </div>
-                        <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'0', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                          {(() => {
-                            const formattedText = formatBlankedText(
-                              quiz.blankedText || '',
-                              quiz.correctAnswers || []
-                            );
-                            // formatBlankedText로 변환된 패턴: ( _ _ _ _ _ )
-                            const parts = formattedText.split(/(\([\s_]+\))/);
-                            let answerIndex = 0;
-                            return parts.map((part, index) => {
-                              // ( _ _ _ _ _ ) 패턴을 찾아서 정답으로 교체
-                              if (part.match(/^\([\s_]+\)$/)) {
-                                const answer = quiz.correctAnswers?.[answerIndex] || '정답 없음';
-                                answerIndex++;
-                                return (
-                                  <span key={index} style={{color: '#1976d2', fontWeight: 'bold'}}>
-                                    ({answer})
-                                  </span>
-                                );
-                              }
-                              return part;
-                            });
-                          })()}
-                        </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2페이지: 본문 해석 */}
-                <div className="a4-page-template">
-                  <div className="a4-page-header">
-                    <PrintHeaderWork01 />
-                  </div>
-                  <div className="a4-page-content">
-                    <div className="quiz-content">
-                      <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'1.2rem', display:'block', width:'100%'}}>
-                        본문 해석
-                      </div>
-                      <div className="work13-print-translation korean-translation" style={{fontSize:'0.5rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', marginTop:'0'}}>
-                        {quiz.translation}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              // 1페이지 구성: 문제제목 + 본문(정답포함) + 본문해석 (본문 2000자 미만)
-              <div className="a4-page-template">
-                <div className="a4-page-header">
-                  <PrintHeaderWork01 />
-                </div>
-                <div className="a4-page-content">
-                  <div className="quiz-content">
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginBottom:'0', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                      <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
-                      <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
-                    </div>
-                      <div className="work13-print-answer-text" style={{marginTop:'0.9rem', marginBottom:'1.5rem', fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
-                        {(() => {
-                          const formattedText = formatBlankedText(
-                            quiz.blankedText || '',
-                            quiz.correctAnswers || []
-                          );
-                          // formatBlankedText로 변환된 패턴: ( _ _ _ _ _ )
-                          const parts = formattedText.split(/(\([\s_]+\))/);
-                          let answerIndex = 0;
-                          return parts.map((part, index) => {
-                            // ( _ _ _ _ _ ) 패턴을 찾아서 정답으로 교체
-                            if (part.match(/^\([\s_]+\)$/)) {
-                              const answer = quiz.correctAnswers?.[answerIndex] || '정답 없음';
-                              answerIndex++;
-                              return (
-                                <span key={index} style={{color: '#1976d2', fontWeight: 'bold'}}>
-                                  ({answer})
-                                </span>
-                              );
-                            }
-                            return part;
-                          });
-                        })()}
-                      </div>
-                    <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#222', color:'#fff', padding:'0.7rem 0.5rem', borderRadius:'8px', marginTop:'0', marginBottom:'3rem', display:'block', width:'100%'}}>
-                      본문 해석
-                    </div>
-                    <div className="work13-print-translation" style={{fontSize:'1rem !important', padding:'1rem', borderRadius:'8px', fontFamily:'inherit', color:'#222', lineHeight:'1.7', marginTop:'1rem'}}>
-                      {quiz.translation}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 인쇄 영역 - PrintFormatWork13New에서 동적으로 처리하므로 여기서는 제거 */}
       </div>
     );
-  }  // 입력/옵션/버튼 UI
+  }
+
   return (
-    <div className="quiz-generator" onPaste={handlePaste}>
+    <div className="quiz-generator">
       <div className="generator-header">
         <h2>[유형#13] 빈칸 채우기 문제 (단어-주관식) 생성</h2>
         <p>영어 본문에서 문장별로 의미있는 단어를 빈칸으로 바꾸고, 주관식으로 답을 채우는 문제를 생성합니다.</p>
       </div>
-      <div className="input-type-section">
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'capture'}
-            onChange={() => handleInputModeChange('capture')}
-          />
-          <span>📸 캡처화면 붙여넣기</span>
-          <button
-            type="button"
-            className="screenshot-help-btn"
-            onClick={(e) => {
-              e.preventDefault();
-              setShowHelpModal(true);
-            }}
-            title="화면 캡처 방법 보기"
-          >
-            ?
-          </button>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'image'}
-            onChange={() => handleInputModeChange('image')}
-          />
-          <span>🖼️ 이미지 파일 첨부</span>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'text'}
-            onChange={() => handleInputModeChange('text')}
-          />
-          <span>✍️ 영어 본문 직접 붙여넣기</span>
-        </label>
-      </div>
-      {inputMode === 'capture' && (
-        <div
-          className={`input-guide${isPasteFocused ? ' paste-focused' : ''}`}
-          tabIndex={0}
-          onClick={() => setIsPasteFocused(true)}
-          onFocus={() => setIsPasteFocused(true)}
-          onBlur={() => setIsPasteFocused(false)}
-        >
-          <div className="drop-icon">📋</div>
-          <div className="drop-text">여기에 이미지를 붙여넣으세요</div>
-          <div className="drop-desc">클릭 또는 Tab 후 <b>Ctrl+V</b>로 캡처 이미지를 붙여넣을 수 있습니다.</div>
-          {imagePreview && (
-            <div className="preview-row">
-              <img src={imagePreview} alt="캡처 미리보기" className="preview-img" />
+      
+      <div className="input-items-list">
+        {items.map((item, index) => (
+          <div key={item.id} className={`input-item ${item.isExpanded ? 'expanded' : ''}`}>
+            <div className="input-item-header" onClick={() => toggleExpand(item.id)}>
+              <div className="input-item-title">
+                <span>#{index + 1}</span>
+                <span className={`input-item-status ${item.text.length > 0 ? 'has-text' : ''}`}>
+                  {item.text.length > 0 ? `텍스트 ${item.text.length}자` : '입력 대기'}
+                </span>
+              </div>
+              <div className="input-item-controls">
+                <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); removeItem(item.id); }} title="삭제">🗑️</button>
+                <span className="expand-icon">{item.isExpanded ? '🔼' : '🔽'}</span>
+              </div>
             </div>
-          )}
-          {(isLoading || isExtractingText) && (
-            <div style={{color:'#6a5acd', fontWeight:600, marginTop:'0.7rem'}}>
-              OpenAI Vision 처리 중...
-            </div>
-          )}
-        </div>
-      )}
-      {inputMode === 'image' && (
-        <div className="input-guide">
-          <div className="file-upload-row">
-            <label htmlFor="blank-fill-image" className="file-upload-btn">
-              파일 선택
-              <input
-                id="blank-fill-image"
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                style={{ display: 'none' }}
-              />
-            </label>
-            <span className="file-upload-status">
-              {imageFile ? imageFile.name : '선택된 파일 없음'}
-            </span>
-            {imagePreview && (
-              <img src={imagePreview} alt="업로드 미리보기" className="preview-img" />
-            )}
-            {(isLoading || isExtractingText) && (
-              <div className="loading-text">
-                OpenAI Vision 처리 중...
+
+            {item.isExpanded && (
+              <div className="input-item-content">
+                <div className="input-type-section" style={{ marginBottom: '15px' }}>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'clipboard'} 
+                      onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })} 
+                    />
+                    <span>📸 캡처화면 붙여넣기</span>
+                    <button
+                      type="button"
+                      className="screenshot-help-btn"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowHelpModal(true);
+                      }}
+                      title="화면 캡처 방법 보기"
+                    >
+                      ?
+                    </button>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'file'} 
+                      onChange={() => updateItem(item.id, { inputType: 'file', error: '' })} 
+                    />
+                    <span>🖼️ 이미지 파일 첨부</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'text'} 
+                      onChange={() => updateItem(item.id, { inputType: 'text', error: '' })} 
+                    />
+                    <span>✍️ 직접 붙여넣기</span>
+                  </label>
+                </div>
+                   
+                {item.inputType === 'clipboard' && (
+                  <div
+                    className="input-guide" 
+                    tabIndex={0}
+                    onPaste={async (e) => {
+                      const clipItems = e.clipboardData.items;
+                      for (let i = 0; i < clipItems.length; i++) {
+                        if (clipItems[i].type.indexOf('image') !== -1) {
+                          const file = clipItems[i].getAsFile();
+                          if (file) {
+                            await handleImageToText(item.id, file);
+                            e.preventDefault();
+                            return;
+                          }
+                        }
+                      }
+                    }} 
+                    style={{ minHeight: '120px' }}
+                  >
+                    <div className="drop-icon">📋</div>
+                    <div className="drop-text">여기에 이미지를 붙여넣으세요 (Ctrl+V)</div>
+                    {item.pastedImageUrl && (
+                      <div className="preview-row">
+                        <img src={item.pastedImageUrl} alt="Preview" className="preview-img" />
+                      </div>
+                    )}
+                    {item.isExtracting && (
+                      <div className="loading-text">텍스트 추출 중...</div>
+                    )}
+                  </div>
+                )}
+                
+                {item.inputType === 'file' && (
+                  <div className="input-guide" style={{ minHeight: '80px' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImageToText(item.id, file);
+                        }
+                        e.target.value = '';
+                      }} 
+                      disabled={item.isExtracting} 
+                    />
+                    {item.isExtracting && (
+                      <div className="loading-text">텍스트 추출 중...</div>
+                    )}
+                  </div>
+                )}
+
+                <textarea
+                  value={item.text}
+                  onChange={(e) => updateItem(item.id, { text: e.target.value })}
+                  placeholder="영어 본문이 여기에 표시됩니다. 직접 입력하거나 수정할 수 있습니다."
+                  className="text-input"
+                  rows={6}
+                  style={{ marginTop: '10px', width: '100%' }}
+                />
+                {item.error && (
+                  <div className="error-message">❌ {item.error}</div>
+                )}
               </div>
             )}
           </div>
-        </div>
-      )}
-      <div className="input-section">
-        <div className="input-label-row">
-          <label htmlFor="blank-fill-text" className="input-label">
-            영어 본문 직접 붙여넣기:
-          </label>
-          {inputText.length < 100 && (
-            <span className="warning">⚠️ 더 긴 본문을 입력하면 더 좋은 결과를 얻을 수 있습니다.</span>
-          )}
-        </div>
-        <textarea
-          id="blank-fill-text"
-          ref={textAreaRef}
-          value={inputText}
-          onChange={handleInputChange}
-          placeholder="영어 본문을 직접 붙여넣어 주세요. 최소 100자 이상 권장합니다."
-          className="text-input"
-          rows={8}
-          style={{overflow: 'hidden', resize: 'none'}}
-          disabled={inputMode === 'image' && !inputText}
-        />
-        <div className="text-info">
-          <span>글자 수: {inputText.length}자</span>
-        </div>
+        ))}
       </div>
+      
+      <button onClick={addItem} className="add-item-button">➕ 본문 추가하기</button>
       
       <button
         onClick={handleGenerateQuiz}
-        disabled={isLoading || !inputText.trim()}
+        disabled={isLoading || items.filter(i => i.text.length >= 10).length === 0}
         className="generate-button"
+        style={{ marginTop: '20px' }}
       >
-        빈칸 채우기 문제 생성하기
+        {items.filter(i => i.text.length >= 10).length > 1 
+          ? `📋 ${items.filter(i => i.text.length >= 10).length}개 문제 일괄 생성` 
+          : '📋 빈칸 채우기 문제 생성'}
       </button>
 
       {/* 화면 중앙 모래시계 로딩 스피너 */}
@@ -908,7 +825,7 @@ const Work_13_BlankFillWord: React.FC = () => {
         isOpen={showPointModal}
         onClose={() => setShowPointModal(false)}
         onConfirm={handlePointDeductionConfirm}
-        workTypeName="빈칸 채우기 문제 생성"
+        workTypeName={`빈칸 채우기 문제 생성 (${items.filter(i => i.text.length >= 10).length}문제)`}
         pointsToDeduct={pointsToDeduct}
         userCurrentPoints={userCurrentPoints}
         remainingPoints={userCurrentPoints - pointsToDeduct}
