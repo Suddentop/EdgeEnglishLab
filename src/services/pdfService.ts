@@ -3247,11 +3247,27 @@ export const generateAndUploadFile = async (
 ): Promise<{ url: string; fileName: string; size: number }> => {
   const { fileFormat = 'pdf' } = options;
   
+  console.log('📄 ========== generateAndUploadFile 시작 ==========');
+  console.log('📄 generateAndUploadFile 호출:', {
+    fileFormat,
+    fileFormatType: typeof fileFormat,
+    isDoc: fileFormat === 'doc',
+    isPdf: fileFormat === 'pdf',
+    options,
+    workTypeName,
+    elementId: element?.id,
+    elementTagName: element?.tagName
+  });
+  
   switch (fileFormat) {
     case 'doc':
+      console.log('📄 DOC 생성 경로로 이동');
+      console.trace('📄 generateAndUploadDOC 호출 스택');
       return await generateAndUploadDOC(element, userId, historyId, workTypeName, options);
     case 'pdf':
     default:
+      console.log('📄 PDF 생성 경로로 이동 (또는 기본값)');
+      console.trace('📄 generateAndUploadPDF 호출 스택');
       return await generateAndUploadPDF(element, userId, historyId, workTypeName, options);
   }
 };

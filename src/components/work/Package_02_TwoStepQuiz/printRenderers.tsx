@@ -49,14 +49,17 @@ export const renderSectionNode = (
   }
 
   switch (section.type) {
-    case 'title':
+    case 'title': {
+      const showTypeBadge = normalizedItem.workTypeId !== '14'; // 유형#14는 문제 번호만 노출
       return (
         <div key={key} className="print-question-title">
           <span>{section.text}</span>
-          <span className="print-question-type-badge">유형#{normalizedItem.workTypeId}</span>
-          {/* 패키지#02 인쇄(정답) 페이지에서 모든 유형의 청크 정보 표시하지 않음 */}
+          {showTypeBadge && (
+            <span className="print-question-type-badge">유형#{normalizedItem.workTypeId}</span>
+          )}
         </div>
       );
+    }
     case 'instruction':
       return section.text ? (
         <div key={key} className="print-instruction">

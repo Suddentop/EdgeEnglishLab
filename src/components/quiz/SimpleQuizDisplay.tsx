@@ -26,7 +26,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const quizData = quizItem.quiz || quizItem.data?.quiz || quizItem.data;
           return (
             <div key={`quiz-01-${index}`} className="quiz-item">
-              <h3>#01. 문단 순서 맞추기</h3>
+              <h3>문제 {index + 1} : 문단 순서 맞추기</h3>
               <div className="instruction">다음 단락들을 원래 순서대로 배열한 것을 고르세요</div>
               <div className="paragraphs">
                 {quizData?.shuffledParagraphs?.map((para: any, pIndex: number) => (
@@ -60,7 +60,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const right = words.slice(half);
           return (
             <div key={`quiz-12-${index}`} className="quiz-item">
-              <h3>#12. 단어 학습 문제</h3>
+              <h3>문제 {index + 1} : 단어 학습 문제</h3>
               <div className="instruction">다음 영어 단어의 한글 뜻을 고르시오.</div>
               <div style={{ border: '1px solid #e3e6f0', borderRadius: 8, padding: '0.8rem', background: '#fff' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -113,7 +113,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
             .replace(/\n/g, '<br />');
           return (
             <div key={`quiz-02-${index}`} className="quiz-item">
-              <h3>#02. 유사단어 독해</h3>
+              <h3>문제 {index + 1} : 유사단어 독해</h3>
               <div className="instruction">다음 본문을 읽고 해석하세요</div>
               <div className="passage">
                 {normalizedHtml ? (
@@ -143,7 +143,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const work03Data = quizItem.work03Data || quizItem.data?.work03Data || quizItem.data;
           return (
             <div key={`quiz-03-${index}`} className="quiz-item">
-              <h3>#03. 빈칸(단어) 찾기</h3>
+              <h3>문제 {index + 1} : 빈칸(단어) 찾기</h3>
               <div className="instruction">다음 빈칸에 들어갈 가장 적절한 단어를 고르세요</div>
               <div className="passage">
                 {work03Data?.blankedText}
@@ -179,7 +179,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const work04Data = quizItem.work04Data || quizItem.data?.work04Data || quizItem.data;
           return (
             <div key={`quiz-04-${index}`} className="quiz-item">
-              <h3>#04. 빈칸(구) 찾기</h3>
+              <h3>문제 {index + 1} : 빈칸(구) 찾기</h3>
               <div className="instruction">다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오</div>
               <div className="passage">
                 {work04Data?.blankedText}
@@ -226,7 +226,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           
           return (
             <div key={`quiz-05-${index}`} className="quiz-item">
-              <h3>#05. 빈칸(문장) 추론</h3>
+              <h3>문제 {index + 1} : 빈칸(문장) 추론</h3>
               <div className="instruction">다음 빈칸에 들어갈 문장(sentence)으로 가장 적절한 것을 고르시오.</div>
               <div className="passage">
                 {displayBlankedText}
@@ -262,7 +262,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const work06Data = quizItem.work06Data || quizItem.data?.work06Data || quizItem.data;
           return (
             <div key={`quiz-06-${index}`} className="quiz-item">
-              <h3>#06. 문장 위치 찾기</h3>
+              <h3>문제 {index + 1} : 문장 위치 찾기</h3>
               <div className="instruction">다음 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</div>
               <div className="passage" style={{fontWeight: 700, fontSize: '1.08rem', marginBottom: '1rem'}}>
                 <strong>주요 문장:</strong> {work06Data?.missingSentence}
@@ -294,7 +294,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const work07Data = quizItem.work07Data || quizItem.data?.work07Data || quizItem.data;
           return (
             <div key={`quiz-07-${index}`} className="quiz-item">
-              <h3>#07. 주제 추론</h3>
+              <h3>문제 {index + 1} : 주제 추론</h3>
               <div className="instruction">다음 글의 주제로 가장 적절한 것을 고르세요</div>
               <div className="passage">
                 {work07Data?.passage}
@@ -330,7 +330,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const work08Data = quizItem.work08Data || quizItem.data?.work08Data || quizItem.data;
           return (
             <div key={`quiz-08-${index}`} className="quiz-item">
-              <h3>#08. 제목 추론</h3>
+              <h3>문제 {index + 1} : 제목 추론</h3>
               <div className="instruction">다음 글의 제목으로 가장 적절한 것을 고르세요</div>
               <div className="passage">
                 {work08Data?.passage}
@@ -360,7 +360,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           
           return (
             <div key={`quiz-09-${index}`} className="quiz-item">
-              <h3>#09. 어법 오류 찾기</h3>
+              <h3>문제 {index + 1} : 어법 오류 찾기</h3>
               <div className="instruction">다음 글에서 어법상 어색한 부분을 찾아 고르세요</div>
               <div className="passage">
                 {isHtml ? (
@@ -401,7 +401,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
 
           return (
             <div key={`quiz-10-${index}`} className="quiz-item">
-              <h3>#10. 다중 어법 오류 찾기</h3>
+              <h3>문제 {index + 1} : 다중 어법 오류 찾기</h3>
               <div className="instruction">다음 글에서 어법상 어색한 부분을 모두 찾아 고르세요</div>
               <div className="passage">
                 {isHtml ? (
@@ -431,7 +431,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const work11Data = quizItem.work11Data || quizItem.data?.work11Data || quizItem.data;
           return (
             <div key={`quiz-11-${index}`} className="quiz-item">
-              <h3>#11. 본문 문장별 해석</h3>
+              <h3>문제 {index + 1} : 본문 문장별 해석</h3>
               <div className="instruction">다음 문장들의 해석을 고르세요</div>
               <div className="passage">
                 {work11Data?.sentences?.map((sentence: any, sIndex: number) => (
@@ -466,7 +466,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const work13Data = quizItem.work13Data || quizItem.data?.work13Data || quizItem.data;
           return (
             <div key={`quiz-13-${index}`} className="quiz-item">
-              <h3>#13. 빈칸 채우기 (단어-주관식)</h3>
+              <h3>문제 {index + 1} : 빈칸 채우기 (단어-주관식)</h3>
               <div className="instruction">다음 빈칸에 들어갈 적절한 단어를 쓰시오</div>
               <div className="passage">
                 {work13Data?.blankedText}
@@ -497,7 +497,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           
           return (
             <div key={`quiz-14-${index}`} className="quiz-item">
-              <h3>#14. 빈칸 채우기 (문장-주관식)</h3>
+              <h3>문제 {index + 1} : 빈칸 채우기 (문장-주관식)</h3>
               <div className="instruction">다음 빈칸에 들어갈 적절한 문장을 쓰시오</div>
               <div className="passage" style={{ whiteSpace: 'pre-wrap' }}>
                 {formattedPassage}

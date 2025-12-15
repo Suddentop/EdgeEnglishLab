@@ -43,7 +43,15 @@ const FileFormatSelector: React.FC<FileFormatSelectorProps> = ({
                 name={`${groupId}-file-format`}
                 value={option.value}
                 checked={isSelected}
-                onChange={() => onChange(option.value)}
+                onChange={() => {
+                  console.log('📋 FileFormatSelector 변경:', {
+                    이전값: value,
+                    새값: option.value,
+                    타입: typeof option.value,
+                    라벨: option.label
+                  });
+                  onChange(option.value);
+                }}
               />
               <span className="file-format-label">{option.label}</span>
             </label>

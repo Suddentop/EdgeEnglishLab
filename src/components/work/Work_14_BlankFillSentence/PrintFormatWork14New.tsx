@@ -127,7 +127,7 @@ const PrintFormatWork14New: React.FC<PrintFormatWork14NewProps> = ({ quizzes, is
     sections.push({
       type: 'instruction',
       key: `instruction-${index}`,
-      text: '다음 빈칸에 들어갈 문장을 직접 입력하시오.',
+      text: `문제 ${index + 1} : 다음 빈칸에 들어갈 문장을 직접 입력하시오.`,
       meta: { workTypeId }
     });
 

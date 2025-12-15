@@ -36,35 +36,10 @@ const QuizDisplayPage: React.FC = () => {
   const [fileFormat, setFileFormat] = useState<FileFormat>('pdf');
 
   useEffect(() => {
-    // URL 파라미터나 state에서 데이터 가져오기
     const state = location.state as any;
-    
-    console.log('📋 QuizDisplayPage 데이터 로딩:', {
-      hasState: !!state,
-      hasQuizData: !!(state && state.quizData),
-      quizData: state?.quizData,
-      generatedData: state?.quizData?.generatedData,
-      quizzes: state?.quizData?.generatedData?.quizzes
-    });
-    
+
     if (state && state.quizData) {
       const quizzes = state.quizData.generatedData?.quizzes || [];
-      console.log('📦 패키지 퀴즈 데이터:', {
-        quizzesLength: quizzes.length,
-        quizzes: quizzes,
-        workTypeId: state.quizData.workTypeId
-      });
-      
-      // 첫 번째 퀴즈 아이템의 구조 확인
-      if (quizzes.length > 0) {
-        console.log('🔍 첫 번째 퀴즈 아이템 구조:', {
-          firstQuiz: quizzes[0],
-          hasQuiz: !!quizzes[0].quiz,
-          workTypeId: quizzes[0].workTypeId,
-          keys: Object.keys(quizzes[0])
-        });
-      }
-      
       setPackageQuiz(quizzes);
       setInputText(state.quizData.inputText || '');
       setPackageType(state.quizData.workTypeId || ''); // P01, P02, P03 등
@@ -77,14 +52,6 @@ const QuizDisplayPage: React.FC = () => {
 
   // 인쇄(문제) 핸들러
   const handlePrintProblem = async () => {
-    console.log('🖨️ 인쇄(문제) 시작 - 데이터 확인:', {
-      packageQuiz: packageQuiz,
-      packageQuizLength: packageQuiz?.length,
-      packageType: packageType,
-      inputText: inputText,
-      fileFormat: fileFormat
-    });
-    
     if (!packageQuiz || packageQuiz.length === 0) {
       alert('인쇄할 문제가 없습니다.');
       return;
@@ -679,13 +646,30 @@ const QuizDisplayPage: React.FC = () => {
         };
       });
       root.render(<PrintFormatWork13New quizzes={rawQuizzes} isAnswerMode={false} />);
+    } else if (packageType === '14') {
+      // 유형#14는 PrintFormatWork14New 사용 (packageType이 '14'인 경우)
+      const rawQuizzes = packageQuiz.map((item: any) => {
+        const work14Data = item.work14Data || item.quiz || item.data?.work14Data || item.data || item;
+        
+        return {
+          id: item.id || work14Data.id,
+          blankedText: work14Data.blankedText || '',
+          correctAnswers: work14Data.correctAnswers || [],
+          translation: work14Data.translation || '',
+          selectedSentences: work14Data.selectedSentences || []
+        };
+      });
+      root.render(<PrintFormatWork14New quizzes={rawQuizzes} isAnswerMode={false} />);
     } else {
       root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
     }
 
     // 유형#07, #08, #09, #10, #13, #14는 원래 인쇄 방식과 동일하게 처리
-    if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '13' || typeId === '14')) {
-      // 원래 방식: activatePrintContainer 후 바로 인쇄
+    // 단, DOC 저장인 경우에는 파일 생성 로직을 실행해야 하므로 return하지 않음
+    const shouldUseQuickPrint = (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '13' || typeId === '14') || packageType === '14') && fileFormat === 'pdf';
+    
+    if (shouldUseQuickPrint) {
+      // 원래 방식: activatePrintContainer 후 바로 인쇄 (PDF만)
       const activatePrintContainer = () => {
         const inner = printContainer.querySelector('.print-container, .print-container-answer');
         if (inner) {
@@ -712,21 +696,24 @@ const QuizDisplayPage: React.FC = () => {
             typeId === '08' ? 'print-style-work08-landscape' :
             typeId === '09' ? 'print-style-work09-landscape' :
             typeId === '10' ? 'print-style-work10-landscape' :
+            typeId === '13' ? 'print-style-work13-landscape' :
+            typeId === '14' ? 'print-style-work14-landscape' :
             'print-style-work13-landscape'
           );
           if (styleElement) {
             styleElement.remove();
           }
-          console.log('✅ 인쇄(문제) 완료');
         }, 100);
       }, 500);
-      return; // 유형#07, #08, #09, #10, #13, #14는 여기서 종료
+      return; // 유형#07, #08, #09, #10, #13, #14 (PDF만)는 여기서 종료
     }
 
     // 렌더링 완료 후 인쇄 및 파일 생성
-    // DOC 저장은 렌더링 시간이 더 필요함 (특히 Work_06)
+    // DOC 저장은 렌더링 시간이 더 필요함 (특히 Work_06, Work_14)
+    // Work_14 DOC의 경우 1500ms → 800ms로 단축
     const renderDelay = fileFormat === 'doc' 
-      ? ((packageType === '06' || (isSingleWork && typeId === '06')) ? 2000 : 1500)
+      ? ((packageType === '06' || (isSingleWork && typeId === '06')) ? 2000 : 
+         (packageType === '14' || (isSingleWork && typeId === '14')) ? 800 : 1200)
       : ((packageType === '01' || isType01Single) ? 1000 : 500);
     
     setTimeout(async () => {
@@ -757,17 +744,27 @@ const QuizDisplayPage: React.FC = () => {
         } else if (packageType === '13' || (isSingleWork && typeId === '13')) {
           elementId = 'print-root-work13-new';
         } else if (packageType === '14' || (isSingleWork && typeId === '14')) {
-          elementId = 'print-root-work14-new';
+          // Work14는 패키지/단일 모두 printContainer.id를 그대로 사용 (동적으로 생성)
+          elementId = containerId || 'print-root-work14-new';
         }
-        const element = document.getElementById(elementId);
+        
+        let element = document.getElementById(elementId) as HTMLElement | null;
         if (!element) {
           console.error(`❌ 인쇄 컨테이너를 찾을 수 없습니다: ${elementId}`);
+          console.error('🔍 DOM 구조 확인:', {
+            printContainer: printContainer?.id,
+            printContainerChildren: printContainer ? Array.from(printContainer.children).map(c => c.id) : [],
+            allWork14Elements: Array.from(document.querySelectorAll('[id*="work14"]')).map(el => el.id)
+          });
           // 대체 시도: 내부 컨테이너 찾기
-          const innerElement = document.querySelector('.work01-new-print, .work02-new-print, .work03-new-print, .work04-new-print, .work04-print, .work05-new-print, .work05-print, .work06-new-print, .work06-print');
+          const innerElement = document.querySelector('.work01-new-print, .work02-new-print, .work03-new-print, .work04-new-print, .work04-print, .work05-new-print, .work05-print, .work06-new-print, .work06-print, .work14-print') as HTMLElement | null;
           if (innerElement) {
             console.log('✅ 대체 컨테이너 찾음:', innerElement);
+            element = innerElement; // fallback 성공 시 이후 로직 진행
+          } else {
+            console.error('❌ 대체 컨테이너도 찾을 수 없습니다. 파일 생성 중단');
+            return;
           }
-          return;
         }
         
         // DOM 요소가 실제로 내용을 가지고 있는지 확인 (특히 DOC 저장 시)
@@ -816,7 +813,34 @@ const QuizDisplayPage: React.FC = () => {
                               packageType === '09' ? '유형#09_문제' :
                               packageType === '10' ? '유형#10_문제' :
                               packageType === '13' ? '유형#13_문제' :
+                              packageType === '14' ? '유형#14_문제' :
                               '문제';
+          
+          console.log('📤 ========== generateAndUploadFile 호출 전 ==========');
+          console.log('📤 파일 생성 시작:', {
+            fileFormat,
+            fileFormatType: typeof fileFormat,
+            workTypeName,
+            elementId,
+            userId: userData.uid,
+            orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13' && typeId !== '14')) ? 'portrait' : 'landscape',
+            'fileFormat === "doc"': fileFormat === 'doc',
+            'fileFormat === "pdf"': fileFormat === 'pdf',
+            'DOC 저장 모드인가?': fileFormat === 'doc',
+            'PDF 인쇄 모드인가?': fileFormat === 'pdf',
+            전달될옵션: {
+              isAnswerMode: false,
+              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13' && typeId !== '14')) ? 'portrait' : 'landscape',
+              fileFormat: fileFormat
+            }
+          });
+          
+          console.log('📤 generateAndUploadFile 호출 직전:', {
+            element: element ? { id: element.id, tagName: element.tagName, childrenCount: element.children.length } : null,
+            fileFormat,
+            'fileFormat 값': fileFormat,
+            'fileFormat 타입': typeof fileFormat
+          });
           
           const result = await generateAndUploadFile(
             element as HTMLElement,
@@ -825,13 +849,20 @@ const QuizDisplayPage: React.FC = () => {
             workTypeName,
             { 
               isAnswerMode: false, 
-              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13')) ? 'portrait' : 'landscape',
+              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13' && typeId !== '14')) ? 'portrait' : 'landscape',
               fileFormat 
             }
           );
           
+          console.log('📤 ========== generateAndUploadFile 호출 후 ==========');
           const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
           console.log(`📁 ${workTypeName} ${formatName} 저장 완료:`, result.fileName);
+        } else {
+          console.error('❌ 파일 생성 실패 - 조건 불만족:', {
+            hasElement: !!element,
+            hasUserId: !!userData?.uid,
+            elementId
+          });
         }
       } catch (error) {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
@@ -845,7 +876,9 @@ const QuizDisplayPage: React.FC = () => {
       // 인쇄 후 정리
       setTimeout(() => {
         root.unmount();
-        document.body.removeChild(printContainer);
+        if (printContainer.parentNode) {
+          document.body.removeChild(printContainer);
+        }
         if (appRoot) {
           appRoot.style.display = 'block';
         }
@@ -853,9 +886,8 @@ const QuizDisplayPage: React.FC = () => {
         if (styleElement) {
           document.head.removeChild(styleElement);
         }
-        console.log('✅ 인쇄(문제) 완료');
-      }, fileFormat === 'pdf' ? 100 : 500);
-    }, (packageType === '01' || isType01Single) ? 1000 : 500); // 유형#01은 렌더링 시간이 더 필요할 수 있음
+      }, fileFormat === 'pdf' ? 100 : 150);
+    }, (packageType === '01' || isType01Single) ? 1000 : (fileFormat === 'doc' ? renderDelay : 500)); // DOC 저장은 렌더링 시간이 더 필요함
   };
 
   // 인쇄(정답) 핸들러
@@ -1697,7 +1729,7 @@ const QuizDisplayPage: React.FC = () => {
             workTypeName,
             { 
               isAnswerMode: true, 
-              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13')) ? 'portrait' : 'landscape',
+              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13' && typeId !== '14')) ? 'portrait' : 'landscape',
               fileFormat 
             }
           );
