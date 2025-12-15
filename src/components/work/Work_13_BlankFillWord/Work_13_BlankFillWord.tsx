@@ -436,19 +436,30 @@ const Work_13_BlankFillWord: React.FC = () => {
       // 문제 생성 내역 저장 (배열로)
       if (userData?.uid && workTypePoints.length > 0) {
         try {
-          const workTypePoint = workTypePoints.find(wt => wt.id === '13');
+          // requiredPoints 사용 (여러 문제 생성 시 총 포인트: workType.points * validItems.length)
+          // deductedPoints는 포인트 서비스에서 반환되는 값이지만, requiredPoints가 더 정확함
+          console.log('💾 Work_13 내역 저장 시작:', {
+            userId: userData.uid,
+            workTypeId: '13',
+            quizzesCount: generatedQuizzes.length,
+            deductedPoints: deductedPoints,
+            requiredPoints: requiredPoints,
+            validItemsCount: validItems.length,
+            workTypePoints: workType.points
+          });
+          
           await saveQuizWithPDF({
             userId: userData.uid,
             userName: userData.name || '사용자',
             userNickname: userData.nickname || '사용자',
             workTypeId: '13',
             workTypeName: getWorkTypeName('13'),
-            points: workTypePoint?.points || 0,
+            points: requiredPoints, // 실제 차감된 포인트 (workType.points * validItems.length)
             inputText: validItems.map(item => item.text.trim()).join('\n\n---\n\n'),
             quizData: generatedQuizzes,
             status: 'success'
           });
-          console.log('✅ Work_13 내역 저장 완료');
+          console.log('✅ Work_13 내역 저장 완료 (차감 포인트:', requiredPoints, ')');
         } catch (historyError) {
           console.error('❌ Work_13 내역 저장 실패:', historyError);
         }

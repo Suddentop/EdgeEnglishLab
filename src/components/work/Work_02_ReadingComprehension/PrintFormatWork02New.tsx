@@ -253,16 +253,16 @@ const PrintFormatWork02New: React.FC<PrintFormatWork02NewProps> = ({ quizzes, is
     let currentColumnIndex = 0;
 
     const moveToNextColumn = () => {
-      currentColumnIndex++;
-      if (currentColumnIndex > 1) {
-        pages.push(currentColumns);
-        currentColumns = [[], []];
-        currentColumnIndex = 0;
-      }
+             currentColumnIndex++;
+             if (currentColumnIndex > 1) {
+                 pages.push(currentColumns);
+                 currentColumns = [[], []];
+                 currentColumnIndex = 0;
+             }
     };
 
     const addToCurrentColumn = (item: NormalizedQuizItem) => {
-      currentColumns[currentColumnIndex].push(item);
+        currentColumns[currentColumnIndex].push(item);
     };
 
     items.forEach((item) => {
@@ -311,7 +311,7 @@ const PrintFormatWork02New: React.FC<PrintFormatWork02NewProps> = ({ quizzes, is
     });
 
     if (currentColumns[0].length > 0 || currentColumns[1].length > 0) {
-      pages.push(currentColumns);
+        pages.push(currentColumns);
     }
 
     return pages;

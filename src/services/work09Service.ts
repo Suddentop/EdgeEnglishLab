@@ -78,7 +78,7 @@ export async function generateWork09Quiz(passage: string): Promise<GrammarQuiz> 
  * @returns 선택된 단어 배열
  */
 async function selectWords(passage: string): Promise<string[]> {
-    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 어법 오류 찾기 문제를 위한 단어 5개를 선정해주세요.
+  const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 어법 오류 찾기 문제를 위한 단어 5개를 선정해주세요.
 
 **🎯 핵심 선정 기준 (수능 1등급 수준):**
 1. **복잡한 구문 구조:** 단순한 단문이 아닌, 관계사절, 분사구문, 도치 구문, 가정법 등 **복잡한 문장 구조 내에서 문법적 판단이 필요한 단어**를 우선 선정하세요.

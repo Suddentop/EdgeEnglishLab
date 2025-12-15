@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatBlankedText } from '../work/Package_02_TwoStepQuiz/printNormalization';
 
 interface SimpleQuizDisplayProps {
   packageQuiz: any[];
@@ -488,29 +489,25 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
         if (quizItem.workTypeId === '14') {
           const work14Data = quizItem.work14Data || quizItem.data?.work14Data || quizItem.data;
           
-          // 기존 데이터 형식을 새로운 형식으로 변환
-          const convertBlankedText = (text: string) => {
-            if (!text) return text;
-            
-            // ( A ), ( B ), ( C ) 형식을 (______________________________) 형식으로 변환
-            return text.replace(/\(\s*[A-E]\s*\)/g, '(______________________________)');
-          };
-          
-          const convertedBlankedText = convertBlankedText(work14Data?.blankedText);
+          // formatBlankedText를 사용하여 빈칸 포맷팅 (정답 길이에 맞춘 언더스코어)
+          const formattedPassage = formatBlankedText(
+            work14Data?.blankedText || '',
+            work14Data?.correctAnswers || []
+          );
           
           return (
             <div key={`quiz-14-${index}`} className="quiz-item">
               <h3>#14. 빈칸 채우기 (문장-주관식)</h3>
               <div className="instruction">다음 빈칸에 들어갈 적절한 문장을 쓰시오</div>
-              <div className="passage">
-                {convertedBlankedText}
+              <div className="passage" style={{ whiteSpace: 'pre-wrap' }}>
+                {formattedPassage}
               </div>
               {isAnswerMode && (
                 <div className="answer">
                   <strong>정답:</strong>
                   {work14Data?.correctAnswers?.map((answer: string, aIndex: number) => (
                     <div key={aIndex}>
-                      {aIndex + 1}. {answer}
+                      {String.fromCharCode(65 + aIndex)}. {answer}
                     </div>
                   ))}
                 </div>

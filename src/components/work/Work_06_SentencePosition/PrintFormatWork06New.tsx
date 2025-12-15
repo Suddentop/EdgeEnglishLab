@@ -50,14 +50,14 @@ const PrintFormatWork06New: React.FC<PrintFormatWork06NewProps> = ({ quizzes, is
     // 3. 주요 문장 (missingSentence) - 하단 간격 최소화 (글자 크기는 CSS 기본 규칙 사용, 왼쪽 들여쓰기 제거)
     // 정답 모드에서는 주요 문장을 별도로 표시하지 않고 본문에 통합하므로 렌더링하지 않음
     if (!isAnswerMode) {
-      const missingSentenceHtml = `<div class="print-passage print-passage-work01-11 work06-missing-sentence" style="border-radius: 6px; background: #f7f8fc; padding: 0.8em 0 !important; padding-top: 0.8em !important; padding-bottom: 0.8em !important; padding-left: 0 !important; padding-right: 0 !important; margin-bottom: 0 !important; margin-left: 0 !important; font-weight: 700; box-sizing: border-box;">
-        <span style="color: #222;">주요 문장:</span> <span style="color: #6a5acd;">${quiz.missingSentence}</span>
-      </div>`;
-      sections.push({
-        type: 'html',
-        key: `html-missing-sentence-${index}`,
-        html: missingSentenceHtml
-      });
+    const missingSentenceHtml = `<div class="print-passage print-passage-work01-11 work06-missing-sentence" style="border-radius: 6px; background: #f7f8fc; padding: 0.8em 0 !important; padding-top: 0.8em !important; padding-bottom: 0.8em !important; padding-left: 0 !important; padding-right: 0 !important; margin-bottom: 0 !important; margin-left: 0 !important; font-weight: 700; box-sizing: border-box;">
+      <span style="color: #222;">주요 문장:</span> <span style="color: #6a5acd;">${quiz.missingSentence}</span>
+    </div>`;
+    sections.push({
+      type: 'html',
+      key: `html-missing-sentence-${index}`,
+      html: missingSentenceHtml
+    });
     }
 
     // 4. 번호가 매겨진 본문 (numberedPassage) - 컨테이너 없이 배치, 상단 간격 최소화, 내부 상하 여백 완전 제거, 크기 자동 조정 (글자 크기는 CSS 기본 규칙 사용)

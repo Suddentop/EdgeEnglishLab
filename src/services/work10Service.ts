@@ -173,7 +173,7 @@ ${passage}`;
 
     for (let i = 0; i < result.originalWords.length; i++) {
         const word = result.originalWords[i];
-        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
         
         let match;
@@ -182,7 +182,7 @@ ${passage}`;
         while ((match = regex.exec(passage)) !== null) {
             if (!usedIndices.has(match.index)) {
                 mappedWords.push({
-                    original: word,
+        original: word,
                     transformed: result.transformedWords[i],
                     isWrong: result.wrongIndexes.includes(i),
                     start: match.index,

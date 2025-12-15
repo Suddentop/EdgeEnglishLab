@@ -178,7 +178,7 @@ const Work_09_GrammarError: React.FC = () => {
   async function imageToTextWithOpenAIVision(imageFile: File): Promise<string> {
     const base64 = await fileToBase64(imageFile);
     return await extractTextFromImage(base64);
-  }
+    }
 
   const handleGenerateQuiz = async () => {
     if (loading) {
@@ -331,7 +331,7 @@ const Work_09_GrammarError: React.FC = () => {
       alert(err.message || '문제 생성 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
-    }
+      }
   };
 
   const triggerPrint = (mode: 'no-answer' | 'with-answer') => {
@@ -382,7 +382,7 @@ const Work_09_GrammarError: React.FC = () => {
         inner.classList.add('pdf-generation-active');
       } else {
         requestAnimationFrame(activatePrintContainer);
-      }
+        }
     };
     activatePrintContainer();
 
@@ -402,7 +402,7 @@ const Work_09_GrammarError: React.FC = () => {
           styleEl.remove();
         }
         console.log('✅ 인쇄 완료');
-      }, 100);
+    }, 100);
     }, 500);
   };
 
@@ -419,7 +419,7 @@ const Work_09_GrammarError: React.FC = () => {
       window.scrollTo(0, 0);
     }
   }, [quizzes]);
-
+    
   // 마크다운 밑줄을 <u>태그로 변환하는 함수
   function convertMarkdownUnderlineToU(text: string): string {
     return text
@@ -458,13 +458,13 @@ const Work_09_GrammarError: React.FC = () => {
                 <span className="print-icon" aria-hidden>🖨️</span>
                 <span>인쇄 (<span style={{color: '#FFD600'}}>정답</span>)</span>
               </button>
-            </div>
-          </div>
-          
+                  </div>
+                </div>
+
           <div className="quiz-content no-print">
             <div style={{ padding: '1rem', background: '#f0f7ff', borderRadius: '8px', marginBottom: '2rem', borderLeft: '4px solid #1976d2' }}>
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1976d2' }}>총 {quizzes.length}개의 문제가 생성되었습니다.</h3>
-            </div>
+                  </div>
 
             {quizzes.map((quiz, idx) => {
               const quizId = quiz.id || `quiz-${idx}`;
@@ -475,16 +475,16 @@ const Work_09_GrammarError: React.FC = () => {
                   <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
                     <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#09</span>
-                  </div>
+            </div>
 
                   <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                    <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
-                  </div>
+                          <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
+                          <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
+                        </div>
                   
                   <div className="problem-passage" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#f7f8fc', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-                    <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
-                  </div>
+                          <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
+                        </div>
                   
                   <div className="problem-options" style={{margin:'1.2rem 0'}}>
                     {quiz.options.map((opt, i) => (
@@ -502,27 +502,27 @@ const Work_09_GrammarError: React.FC = () => {
                         )}
                       </label>
                     ))}
-                  </div>
+                        </div>
                   
                   {selected !== null && (
                     <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
                       정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
                       <div style={{marginTop:'0.7rem', color:'#1976d2', fontWeight:400, fontSize:'1rem'}}>
                         정답의 원래(정상) 단어/구: {quiz.original}
-                      </div>
+                </div>
                       <div className="translation-section" style={{marginTop:'1.2rem'}}>
                         <h3 style={{fontSize:'1.05rem', color:'#222', marginBottom:'0.5rem'}}>본문 해석</h3>
                         <div style={{background: '#f1f8e9', padding: '1rem', borderRadius: '8px', border: '1.5px solid #c8e6c9', fontSize: '0.98rem', lineHeight: '1.6'}}>
                           {quiz.translation}
                         </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                         </div>
+                       </div>
+                     )}
+                        </div>
               );
             })}
-          </div>
-        </div>
+                        </div>
+                  </div>
       </div>
     );
   }
@@ -553,36 +553,36 @@ const Work_09_GrammarError: React.FC = () => {
             {item.isExpanded && (
               <div className="input-item-content">
                 <div className="input-type-section" style={{ marginBottom: '15px' }}>
-                  <label>
-                    <input 
-                      type="radio" 
+        <label>
+          <input
+            type="radio"
                       checked={item.inputType === 'clipboard'} 
                       onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })} 
-                    />
-                    <span>📸 캡처화면 붙여넣기</span>
-                  </label>
-                  <label>
-                    <input 
-                      type="radio" 
+          />
+          <span>📸 캡처화면 붙여넣기</span>
+        </label>
+        <label>
+          <input
+            type="radio"
                       checked={item.inputType === 'file'} 
                       onChange={() => updateItem(item.id, { inputType: 'file', error: '' })} 
-                    />
-                    <span>🖼️ 이미지 파일 첨부</span>
-                  </label>
-                  <label>
-                    <input 
-                      type="radio" 
+          />
+          <span>🖼️ 이미지 파일 첨부</span>
+        </label>
+        <label>
+          <input
+            type="radio"
                       checked={item.inputType === 'text'} 
                       onChange={() => updateItem(item.id, { inputType: 'text', error: '' })} 
-                    />
+          />
                     <span>✍️ 직접 붙여넣기</span>
-                  </label>
-                </div>
+        </label>
+      </div>
                    
                 {item.inputType === 'clipboard' && (
-                  <div 
+        <div
                     className="input-guide" 
-                    tabIndex={0} 
+          tabIndex={0}
                     onPaste={async (e) => {
                       const clipItems = e.clipboardData.items;
                       for (let i = 0; i < clipItems.length; i++) {
@@ -597,25 +597,25 @@ const Work_09_GrammarError: React.FC = () => {
                       }
                     }} 
                     style={{ minHeight: '120px' }}
-                  >
-                    <div className="drop-icon">📋</div>
+        >
+          <div className="drop-icon">📋</div>
                     <div className="drop-text">여기에 이미지를 붙여넣으세요 (Ctrl+V)</div>
                     {item.pastedImageUrl && (
-                      <div className="preview-row">
+            <div className="preview-row">
                         <img src={item.pastedImageUrl} alt="Preview" className="preview-img" />
-                      </div>
-                    )}
+            </div>
+          )}
                     {item.isExtracting && (
                       <div className="loading-text">텍스트 추출 중...</div>
-                    )}
-                  </div>
-                )}
+          )}
+        </div>
+      )}
                 
                 {item.inputType === 'file' && (
                   <div className="input-guide" style={{ minHeight: '80px' }}>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
+              <input
+                type="file"
+                accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
@@ -628,21 +628,21 @@ const Work_09_GrammarError: React.FC = () => {
                     {item.isExtracting && (
                       <span className="loading-text">추출 중...</span>
                     )}
-                  </div>
-                )}
+              </div>
+            )}
 
-                <textarea
+        <textarea
                   value={item.text}
                   onChange={(e) => updateItem(item.id, { text: e.target.value })}
                   placeholder="영어 본문이 여기에 표시됩니다. 직접 입력하거나 수정할 수 있습니다."
-                  className="text-input"
+          className="text-input"
                   rows={6}
                   style={{ marginTop: '10px', width: '100%' }}
-                />
+        />
                 {item.error && (
                   <div className="error-message">❌ {item.error}</div>
                 )}
-              </div>
+        </div>
             )}
           </div>
         ))}
@@ -691,4 +691,4 @@ const Work_09_GrammarError: React.FC = () => {
   );
 };
 
-export default Work_09_GrammarError;
+export default Work_09_GrammarError; 
