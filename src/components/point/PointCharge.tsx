@@ -3,6 +3,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { TossPaymentService } from '../../services/tossPaymentService';
 import { getUserCurrentPoints } from '../../services/pointService';
 import { POINT_POLICY } from '../../utils/pointConstants';
+import { needsReauthentication, markReauthenticated } from '../../utils/authSession';
+import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { auth } from '../../firebase/config';
 import './PointCharge.css';
 
 const PointCharge: React.FC = () => {
@@ -39,6 +42,29 @@ const PointCharge: React.FC = () => {
     if (!user) {
       setMessage({ type: 'error', text: '로그인이 필요합니다.' });
       return;
+    }
+
+    // 최근 로그인/재인증이 30분을 초과한 경우 비밀번호 재입력 요구
+    if (needsReauthentication()) {
+      const password = window.prompt('보안을 위해 결제 전에 현재 비밀번호를 다시 입력해주세요.');
+      if (!password) {
+        setMessage({ type: 'error', text: '재인증이 취소되어 결제를 진행할 수 없습니다.' });
+        return;
+      }
+      try {
+        const currentUser = auth.currentUser;
+        if (!currentUser || !currentUser.email) {
+          setMessage({ type: 'error', text: '재인증에 필요한 사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.' });
+          return;
+        }
+        const credential = EmailAuthProvider.credential(currentUser.email, password);
+        await reauthenticateWithCredential(currentUser, credential);
+        markReauthenticated();
+      } catch (reauthError: any) {
+        console.error('결제 전 재인증 오류:', reauthError);
+        setMessage({ type: 'error', text: '비밀번호가 올바르지 않거나 재인증에 실패했습니다.' });
+        return;
+      }
     }
 
     const paymentAmount = selectedAmount;

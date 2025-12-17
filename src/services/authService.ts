@@ -4,11 +4,15 @@ import {
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
-  User
+  User,
+  setPersistence,
+  browserSessionPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { POINT_POLICY } from '../utils/pointConstants';
 import { DEFAULT_PRINT_HEADER } from '../utils/printHeader';
+import { markLoginSession } from '../utils/authSession';
 
 // 사용자 데이터 타입 정의
 interface UserData {
@@ -52,9 +56,17 @@ export const findUserByEmail = async (email: string): Promise<UserData | null> =
 /**
  * 이메일로 로그인
  */
-export const signInWithEmail = async (email: string, password: string) => {
+export const signInWithEmail = async (email: string, password: string, rememberMe: boolean = false) => {
   try {
+    // 세션 단위 또는 자동 로그인(7일) 여부에 따라 퍼시스턴스 설정
+    const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+    await setPersistence(auth, persistence);
+
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    // 로그인 시점 기록 (재인증/자동로그인 만료 체크용)
+    markLoginSession(rememberMe);
+
     return userCredential;
   } catch (error: any) {
     console.error('로그인 오류:', error);

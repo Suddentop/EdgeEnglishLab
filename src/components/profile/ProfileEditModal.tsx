@@ -4,6 +4,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { needsReauthentication, markReauthenticated } from '../../utils/authSession';
 import './ProfileEditModal.css';
 
 interface ProfileEditModalProps {
@@ -53,12 +54,42 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
 
         // 비밀번호 변경 validation (비밀번호 필드에 값이 있는 경우에만)
         const hasPasswordFields = values.currentPassword || values.newPassword || values.confirmNewPassword;
-        
-        if (hasPasswordFields) {
+        const isPhoneChanged =
+          values.phoneNumber &&
+          userData &&
+          values.phoneNumber !== userData.phoneNumber;
+
+        // 전화번호 변경 또는 비밀번호 변경이 있고, 마지막 로그인/재인증 후 30분 이상이면 재인증 요구
+        if ((isPhoneChanged || hasPasswordFields) && needsReauthentication()) {
           if (!values.currentPassword) {
-            setError('현재 비밀번호를 입력해주세요');
+            setError('보안을 위해 현재 비밀번호를 입력해주세요.');
             return;
           }
+          if (!currentUser) {
+            throw new Error('로그인이 필요합니다');
+          }
+
+          try {
+            const credential = EmailAuthProvider.credential(
+              currentUser.email || '',
+              values.currentPassword
+            );
+            await reauthenticateWithCredential(currentUser, credential);
+            markReauthenticated();
+          } catch (reauthError: any) {
+            console.error('재인증 오류:', reauthError);
+            if (reauthError.code === 'auth/wrong-password') {
+              throw new Error('현재 비밀번호가 올바르지 않습니다.');
+            } else if (reauthError.code === 'auth/user-mismatch') {
+              throw new Error('사용자 정보가 일치하지 않습니다. 다시 로그인해주세요.');
+            } else if (reauthError.code === 'auth/invalid-credential') {
+              throw new Error('인증 정보가 올바르지 않습니다. 현재 비밀번호를 확인해주세요.');
+            }
+            throw reauthError;
+          }
+        }
+        
+        if (hasPasswordFields) {
           if (!values.newPassword) {
             setError('새 비밀번호를 입력해주세요');
             return;
@@ -103,29 +134,11 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ isOpen, onClose }) 
 
         // 비밀번호 변경 (비밀번호 필드에 값이 있는 경우)
         if (hasPasswordFields && values.newPassword) {
+          // 위에서 재인증이 이미 수행되었으므로 여기서는 비밀번호만 변경
           if (!currentUser) {
             throw new Error('로그인이 필요합니다');
           }
-          
-          // 현재 비밀번호로 재인증
-          try {
-            const credential = EmailAuthProvider.credential(
-              currentUser.email || '',
-              values.currentPassword
-            );
-            await reauthenticateWithCredential(currentUser, credential);
-          } catch (reauthError: any) {
-            console.error('재인증 오류:', reauthError);
-            if (reauthError.code === 'auth/wrong-password') {
-              throw new Error('현재 비밀번호가 올바르지 않습니다.');
-            } else if (reauthError.code === 'auth/user-mismatch') {
-              throw new Error('사용자 정보가 일치하지 않습니다. 다시 로그인해주세요.');
-            } else if (reauthError.code === 'auth/invalid-credential') {
-              throw new Error('인증 정보가 올바르지 않습니다. 현재 비밀번호를 확인해주세요.');
-            }
-            throw reauthError;
-          }
-          
+
           // Firebase Auth의 updatePassword 사용
           await updatePassword(currentUser, values.newPassword);
           setSuccess('프로필 정보와 비밀번호가 성공적으로 업데이트되었습니다.');

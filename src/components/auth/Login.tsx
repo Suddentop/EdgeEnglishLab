@@ -28,13 +28,14 @@ const Login: React.FC = () => {
   const formik = useFormik({
     initialValues: {
       email: '',
-      password: ''
+      password: '',
+      rememberMe: false
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
         setError('');
-        await login(values.email, values.password);
+        await login(values.email, values.password, values.rememberMe);
         navigate('/');
       } catch (err) {
         setError('이메일 또는 비밀번호가 올바르지 않습니다');
@@ -128,6 +129,19 @@ const Login: React.FC = () => {
           {formik.touched.password && formik.errors.password && (
             <div className="error-message">{formik.errors.password}</div>
           )}
+        </div>
+
+        <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input
+            id="rememberMe"
+            name="rememberMe"
+            type="checkbox"
+            checked={formik.values.rememberMe}
+            onChange={formik.handleChange}
+          />
+          <label htmlFor="rememberMe" style={{ margin: 0 }}>
+            자동 로그인 유지 (7일)
+          </label>
         </div>
 
         <button type="submit" className="submit-button">

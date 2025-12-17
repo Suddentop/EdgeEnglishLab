@@ -8,6 +8,7 @@ import { auth, db } from '../firebase/config';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { signInWithEmail, signUpWithEmail, logout, getCurrentUserData, updateUserData } from '../services/authService';
 import { setCurrentPrintHeader } from '../utils/printHeader';
+import { clearAuthSessionState, hasRememberSessionExpired } from '../utils/authSession';
 
 // 🔍 AuthContext 진단 로그
 console.log('=== 🔐 AuthContext 로딩 시작 ===');
@@ -20,7 +21,7 @@ interface AuthContextType {
   userData: any | null;
   loading: boolean;
   signup: (email: string, password: string, userData: UserData) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (userData: Partial<UserData>) => Promise<void>;
   refreshUserData: () => Promise<void>;
@@ -54,11 +55,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signUpWithEmail(email, password, userData);
   };
 
-  const login = async (email: string, password: string) => {
-    await signInWithEmail(email, password);
+  const login = async (email: string, password: string, rememberMe: boolean = false) => {
+    await signInWithEmail(email, password, rememberMe);
   };
 
   const handleLogout = () => {
+    clearAuthSessionState();
     return logout();
   };
 
@@ -112,6 +114,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       try {
+        // 자동 로그인 유지(7일) 만료 여부 검사
+        if (user && hasRememberSessionExpired()) {
+          console.log('🔐 자동 로그인 유지 기간 만료 - 강제 로그아웃');
+          clearAuthSessionState();
+          await logout();
+          setCurrentUser(null);
+          setUserData(null);
+          setCurrentPrintHeader(undefined);
+          setLoading(false);
+          return;
+        }
+
         setCurrentUser(user);
         if (user) {
           try {
