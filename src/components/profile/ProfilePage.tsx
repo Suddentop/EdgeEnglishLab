@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { PaymentService } from '../../services/paymentService';
 import { Payment } from '../../types/types';
-import { PAYMENT_STATUS } from '../../utils/pointConstants';
+import { PAYMENT_STATUS, POINT_POLICY } from '../../utils/pointConstants';
 import { formatPhoneNumber } from '../../utils/textProcessor';
+import { DEFAULT_PRINT_HEADER } from '../../utils/printHeader';
+import { deductPointsForPrintHeaderChange } from '../../services/pointService';
 import './ProfilePage.css';
 
 const ProfilePage: React.FC = () => {
@@ -22,6 +24,10 @@ const ProfilePage: React.FC = () => {
     newPassword: '',
     confirmNewPassword: ''
   });
+  // 문제지 헤더 변경 관련 상태 (모달 열림 여부 포함)
+  const [isHeaderEditing, setIsHeaderEditing] = useState(false);
+  const [headerText, setHeaderText] = useState('');
+  const [headerMessage, setHeaderMessage] = useState('');
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -39,6 +45,9 @@ const ProfilePage: React.FC = () => {
         nickname: userData.nickname || '',
         phoneNumber: userData.phoneNumber || ''
       });
+      // 프로필 로딩 시 현재 헤더 텍스트도 초기화
+      const initialHeader = (userData as any).printHeader || DEFAULT_PRINT_HEADER;
+      setHeaderText(initialHeader);
     }
   }, [userData]);
 
@@ -243,6 +252,68 @@ const ProfilePage: React.FC = () => {
     }));
   };
 
+  // 문제지 헤더 변경 시작
+  const handleStartHeaderEdit = () => {
+    const currentHeader = (userData as any)?.printHeader || DEFAULT_PRINT_HEADER;
+    setHeaderText(currentHeader);
+    setHeaderMessage('');
+    setIsHeaderEditing(true);
+  };
+
+  const handleCancelHeaderEdit = () => {
+    const currentHeader = (userData as any)?.printHeader || DEFAULT_PRINT_HEADER;
+    setHeaderText(currentHeader);
+    setHeaderMessage('');
+    setIsHeaderEditing(false);
+  };
+
+  // 문제지 헤더 저장 + 포인트 차감
+  const handleSaveHeaderChange = async () => {
+    if (!currentUser || !userData) return;
+
+    const trimmed = headerText.trim();
+    if (!trimmed) {
+      setHeaderMessage('헤더 문구를 입력해주세요.');
+      return;
+    }
+    if (trimmed.length > 80) {
+      setHeaderMessage('헤더 문구는 80자 이내로 입력해주세요.');
+      return;
+    }
+
+    const cost = POINT_POLICY.HEADER_CHANGE_COST;
+
+    setLoading(true);
+    setHeaderMessage('');
+    try {
+      // 1) 포인트 차감
+      const result = await deductPointsForPrintHeaderChange(
+        userData.uid,
+        userData.name || '사용자',
+        userData.nickname || '사용자'
+      );
+
+      if (!result.success) {
+        setHeaderMessage(result.error || '포인트 차감에 실패했습니다.');
+        setLoading(false);
+        return;
+      }
+
+      // 2) 사용자 프로필에 헤더 문자열 저장
+      await updateUserProfile({ printHeader: trimmed } as any);
+
+      setHeaderMessage(
+        `문제지 헤더가 변경되었고 ${cost.toLocaleString()}P가 차감되었습니다. (잔여 포인트: ${result.remainingPoints.toLocaleString()}P)`
+      );
+      setIsHeaderEditing(false);
+    } catch (error) {
+      console.error('문제지 헤더 변경 오류:', error);
+      setHeaderMessage('문제지 헤더 변경 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 결제 관련 유틸리티 함수
   const formatPaymentDate = (date: Date) => {
     const year = date.getFullYear();
@@ -364,14 +435,31 @@ const ProfilePage: React.FC = () => {
                 </span>
               </div>
 
-                                           <div className="info-row">
+              <div className="info-row">
                 <label>잔여 포인트 :</label>
                 <span className="info-value points">
                   {(userData.points || 0).toLocaleString()}P
                 </span>
               </div>
 
-              
+              {/* 문제지 헤더 행: 값 + 오른쪽 버튼 (모달 트리거 전용) */}
+              <div className="info-row header-row">
+                <label>문제지 헤더 :</label>
+                <div className="header-value-container">
+                  <span className="info-value">
+                    {(userData as any).printHeader || DEFAULT_PRINT_HEADER}
+                  </span>
+                </div>
+                <div className="info-actions-inline">
+                  <button
+                    onClick={handleStartHeaderEdit}
+                    className="btn-secondary header-edit-btn"
+                    disabled={loading}
+                  >
+                    문제지 헤더변경
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -456,6 +544,68 @@ const ProfilePage: React.FC = () => {
 
         </div>
       </div>
+
+      {/* 문제지 헤더 변경 모달 */}
+      {isHeaderEditing && (
+        <div className="header-modal-overlay">
+          <div className="header-modal">
+            <div className="header-modal-header">
+              <h2>문제지 헤더 변경</h2>
+              <button
+                className="header-modal-close"
+                onClick={handleCancelHeaderEdit}
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+            <div className="header-modal-body">
+              <div className="header-modal-current">
+                <span className="header-modal-label">현재 헤더</span>
+                <span className="header-modal-value">
+                  {(userData as any).printHeader || DEFAULT_PRINT_HEADER}
+                </span>
+              </div>
+              <div className="header-modal-input-group">
+                <label htmlFor="headerText">새 헤더 문구</label>
+                <input
+                  id="headerText"
+                  type="text"
+                  value={headerText}
+                  onChange={(e) => setHeaderText(e.target.value)}
+                  className="header-modal-input"
+                  placeholder="예) 홍길동 선생님 전용 영어 문제지"
+                />
+              </div>
+              <div className="header-description">
+                기본값은 "{DEFAULT_PRINT_HEADER}" 이며, 헤더를 변경할 때마다{' '}
+                {POINT_POLICY.HEADER_CHANGE_COST.toLocaleString()}P가 차감됩니다.
+              </div>
+              {headerMessage && (
+                <div className={`message ${headerMessage.includes('차감되었습니다') ? 'success' : 'error'}`}>
+                  {headerMessage}
+                </div>
+              )}
+            </div>
+            <div className="header-modal-actions">
+              <button
+                onClick={handleSaveHeaderChange}
+                className="btn-primary"
+                disabled={loading}
+              >
+                {loading ? '변경 중...' : `헤더 변경 (−${POINT_POLICY.HEADER_CHANGE_COST.toLocaleString()}P)`}
+              </button>
+              <button
+                onClick={handleCancelHeaderEdit}
+                className="btn-secondary"
+                disabled={loading}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 결제 내역 컨테이너 - 별도 컨테이너 */}
       <div className="payment-history-container">
@@ -572,3 +722,4 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
+

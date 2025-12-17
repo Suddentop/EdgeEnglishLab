@@ -168,8 +168,8 @@
   
   .print-header-text-work01 {
     font-size: 1rem;
-    font-weight: 600;
-    color: #000;
+    font-weight: 700;
+    color: #000; /* 인쇄/저장용 헤더는 검정색 */
     font-family: 'Noto Sans KR', 'IBM Plex Sans KR', Arial, sans-serif;
     margin-bottom: 0.5rem;
   }

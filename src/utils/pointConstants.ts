@@ -3,6 +3,9 @@ export const POINT_POLICY = {
   // 문제 생성당 필요한 포인트
   PROBLEM_GENERATION_COST: 200,
   
+  // 문제지 헤더 1회 변경 비용
+  HEADER_CHANGE_COST: 500,
+  
   // 최소 결제 금액 (원)
   MINIMUM_PURCHASE_AMOUNT: 1000,
   

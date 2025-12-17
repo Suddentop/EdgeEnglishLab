@@ -7,6 +7,7 @@ import {
 import { auth, db } from '../firebase/config';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { signInWithEmail, signUpWithEmail, logout, getCurrentUserData, updateUserData } from '../services/authService';
+import { setCurrentPrintHeader } from '../utils/printHeader';
 
 // 🔍 AuthContext 진단 로그
 console.log('=== 🔐 AuthContext 로딩 시작 ===');
@@ -30,6 +31,8 @@ interface UserData {
   nickname: string;
   phoneNumber: string;
   role?: string;
+  // 문제지 인쇄/저장 헤더 커스텀 문자열
+  printHeader?: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -78,6 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data
       };
       setUserData(userDataWithUid);
+      // 현재 로그인 사용자의 문제지 헤더를 전역 상태에 반영
+      setCurrentPrintHeader((userDataWithUid as any).printHeader);
     } catch (error) {
       console.error('사용자 정보 새로고침 오류:', error);
       // 오프라인 모드일 때 기본 사용자 정보 설정
@@ -112,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try {
             // 사용자 정보 로드
             const data = await getCurrentUserData(user.uid);
-            setUserData({
+            const baseUserData = {
               uid: user.uid,  // uid 추가
               ...(data || {
                 name: '사용자',
@@ -120,20 +125,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: user.email || '',
                 role: 'user'
               })
-            });
+            };
+            setUserData(baseUserData);
+            // 최초 로드 시에도 헤더 반영
+            setCurrentPrintHeader((baseUserData as any).printHeader);
             
             // 사용자 문서 실시간 구독으로 role 등 변경 즉시 반영
             const userRef = doc(db, 'users', user.uid);
-            const unsubscribeUser = onSnapshot(userRef, (snapshot) => {
-              if (snapshot.exists()) {
-                setUserData({
-                  uid: user.uid,  // uid 추가
-                  ...snapshot.data()
-                });
-              }
-            }, (error) => {
+            const unsubscribeUser = onSnapshot(
+              userRef,
+              (snapshot) => {
+                if (snapshot.exists()) {
+                  const snapData = {
+                    uid: user.uid,  // uid 추가
+                    ...snapshot.data()
+                  };
+                  setUserData(snapData);
+                  // 실시간으로 변경된 헤더를 전역 상태에 반영
+                  setCurrentPrintHeader((snapData as any).printHeader);
+                }
+              },
+              (error) => {
               console.warn('사용자 문서 구독 오류:', error);
-            });
+              }
+            );
             // 컴포넌트 언마운트 시 구독 해제는 cleanup에서 처리
           } catch (error: any) {
             console.error('❌ 사용자 데이터 로드 실패:', error);
@@ -151,6 +166,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           console.log('📁 사용자가 없음 - userData를 null로 설정');
           setUserData(null);
+          // 로그아웃 시 헤더를 기본값으로 되돌림
+          setCurrentPrintHeader(undefined);
         }
       } catch (error: any) {
         console.error('❌ 인증 상태 변경 처리 오류:', error);

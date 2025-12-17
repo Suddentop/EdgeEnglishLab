@@ -1,14 +1,19 @@
 import React from 'react';
 import './PrintFormat12.css';
+import { getCurrentPrintHeader } from '../../../utils/printHeader';
 
 // 유형#12 전용 인쇄 헤더 컴포넌트
-export const PrintHeaderWork12: React.FC = () => (
-  <div className="print-header-work12">
-    <div className="print-header-text-work12">
-      EdgeEnglishLab | AI 영어 문제 생성 플랫폼
+export const PrintHeaderWork12: React.FC = () => {
+  const headerText = getCurrentPrintHeader();
+
+  return (
+    <div className="print-header-work12">
+      <div className="print-header-text-work12">
+        {headerText}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // 유형#12 전용 A4 페이지 템플릿 컴포넌트
 interface A4PageTemplateWork12Props {

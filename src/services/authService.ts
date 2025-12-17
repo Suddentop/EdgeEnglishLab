@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { POINT_POLICY } from '../utils/pointConstants';
+import { DEFAULT_PRINT_HEADER } from '../utils/printHeader';
 
 // 사용자 데이터 타입 정의
 interface UserData {
@@ -89,7 +90,9 @@ export const signUpWithEmail = async (
       points: POINT_POLICY.DEFAULT_SIGNUP_POINTS, // 신규 회원가입 시 기본 포인트 자동 부여
       totalPaidPoints: 0,
       usedPoints: 0,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      // 문제지 인쇄/저장 헤더 기본값
+      printHeader: DEFAULT_PRINT_HEADER
     });
     
     return userCredential;
@@ -143,6 +146,9 @@ export const updateUserData = async (uid: string, userData: {
   nickname?: string;
   email?: string;
   role?: string;
+  phoneNumber?: string;
+  // 문제지 인쇄/저장 헤더 커스텀 문자열
+  printHeader?: string;
 }) => {
   try {
     await setDoc(doc(db, 'users', uid), userData, { merge: true });

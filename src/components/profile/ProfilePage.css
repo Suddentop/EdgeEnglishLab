@@ -98,6 +98,69 @@
   font-size: 1rem;
 }
 
+/* 문제지 헤더 행 전용 레이아웃 */
+.info-row.header-row {
+  align-items: center;
+  gap: 0.75rem;
+  /* 전체 너비 사용: 잔여 포인트 행까지 병합 */
+  grid-column: 1 / -1;
+}
+
+.header-value-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.header-edit-btn {
+  min-width: 150px;
+  white-space: nowrap;
+}
+
+.header-description {
+  margin-top: 0.75rem;
+  padding: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.info-actions-inline {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* 문제지 헤더변경 버튼 - 형광색 그라데이션 강조 */
+.info-row.header-row .btn-secondary.header-edit-btn {
+  background: linear-gradient(135deg, #bef264 0%, #a3e635 30%, #22c55e 65%, #14b8a6 100%);
+  color: #0f172a;
+  border: none;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.45);
+  font-weight: 700;
+}
+
+.info-row.header-row .btn-secondary.header-edit-btn:hover {
+  background: linear-gradient(135deg, #d9f99d 0%, #bbf7d0 35%, #34d399 70%, #22c55e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.6);
+}
+
+.info-row.header-row .btn-secondary.header-edit-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(22, 163, 74, 0.5);
+}
+
+/* 문제지 헤더 값 텍스트 - 진한 파란색으로 강조 */
+.info-row.header-row .info-value {
+  color: #2563eb;
+  font-weight: 700;
+}
+
 .info-value.points {
   font-weight: 600;
   color: #1976d2;
@@ -176,6 +239,124 @@
   transition: all 0.2s ease;
   font-size: 1rem;
   min-width: 120px;
+}
+
+/* 내정보 - 정보 수정 버튼 너비 축소 (가로폭 약 40% 수준) */
+.profile-actions .btn-primary {
+  width: 40%;
+  max-width: 320px;
+}
+
+/* 문제지 헤더 변경 모달 */
+.header-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.header-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.35);
+  padding: 1.75rem 2rem 1.5rem 2rem;
+  box-sizing: border-box;
+}
+
+.header-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.header-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.header-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.header-modal-close:hover {
+  color: #111827;
+}
+
+.header-modal-body {
+  margin-top: 0.5rem;
+}
+
+.header-modal-current {
+  margin-bottom: 0.75rem;
+}
+
+.header-modal-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.header-modal-value {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
+.header-modal-input-group {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.header-modal-input-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.header-modal-input {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.96rem;
+}
+
+.header-modal-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.header-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.header-modal-actions .btn-primary,
+.header-modal-actions .btn-secondary {
+  min-width: 140px;
 }
 
 /* 보기 버튼 전용 스타일 */

@@ -1,12 +1,17 @@
 import React from 'react';
+import { getCurrentPrintHeader } from '../../utils/printHeader';
 
-const PrintHeaderWork01: React.FC = () => (
-  <div className="print-header-work01">
-    <div className="print-header-text-work01">
-      EdgeEnglishLab | AI 영어 문제 생성 플랫폼
+const PrintHeaderWork01: React.FC = () => {
+  const headerText = getCurrentPrintHeader();
+
+  return (
+    <div className="print-header-work01">
+      <div className="print-header-text-work01">
+        {headerText}
+      </div>
+      <div className="print-header-divider"></div>
     </div>
-    <div className="print-header-divider"></div>
-  </div>
-);
+  );
+};
 
 export default PrintHeaderWork01;

@@ -1,5 +1,6 @@
 import { doc, getDoc, updateDoc, setDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { POINT_POLICY } from '../utils/pointConstants';
 
 export interface WorkTypePoints {
   id: string;
@@ -243,6 +244,64 @@ export const chargePoints = async (
     
   } catch (error) {
     console.error('포인트 충전 오류:', error);
+    throw error;
+  }
+};
+
+// 문제지 헤더 변경용 포인트 차감 (기본 500포인트)
+export const deductPointsForPrintHeaderChange = async (
+  userId: string,
+  userName: string,
+  userNickname: string
+): Promise<{ success: boolean; remainingPoints: number; error?: string }> => {
+  try {
+    const HEADER_COST = POINT_POLICY.HEADER_CHANGE_COST;
+
+    // 사용자 문서 조회
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+
+    const userData = userSnap.data();
+    const currentPoints: number = userData.points || 0;
+
+    // 포인트 부족 확인
+    if (currentPoints < HEADER_COST) {
+      return {
+        success: false,
+        remainingPoints: currentPoints,
+        error: '포인트가 부족합니다.'
+      };
+    }
+
+    // 포인트 차감
+    await updateDoc(userRef, {
+      points: increment(-HEADER_COST),
+      updatedAt: serverTimestamp()
+    });
+
+    // 포인트 거래 내역 기록
+    const transaction: Omit<PointTransaction, 'id'> = {
+      userId,
+      userName,
+      userNickname,
+      type: 'subtract',
+      amount: HEADER_COST,
+      reason: '문제지 헤더 변경',
+      timestamp: new Date()
+    };
+
+    await addDoc(collection(db, 'pointTransactions'), transaction);
+
+    return {
+      success: true,
+      remainingPoints: currentPoints - HEADER_COST
+    };
+  } catch (error) {
+    console.error('문제지 헤더 변경 포인트 차감 오류:', error);
     throw error;
   }
 };
