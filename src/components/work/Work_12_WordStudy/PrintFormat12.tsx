@@ -43,7 +43,8 @@ export const ProblemInstructionWork12: React.FC<ProblemInstructionWork12Props> =
   className = '' 
 }) => (
   <div className={`problem-instruction-work12 ${className}`}>
-    {children}
+    <span className="problem-instruction-text-work12">{children}</span>
+    <span className="problem-type-label-work12">유형#12</span>
   </div>
 );
 
@@ -120,7 +121,7 @@ export const WordListTableWork12: React.FC<WordListTableWork12Props> = ({
   showAnswers = false,
   quizType = 'english-to-korean'
 }) => {
-  // 단어를 2단으로 나누기
+  // 단어를 2단으로 나누기 (좌/우 테이블)
   const midPoint = Math.ceil(words.length / 2);
   const leftWords = words.slice(0, midPoint);
   const rightWords = words.slice(midPoint);

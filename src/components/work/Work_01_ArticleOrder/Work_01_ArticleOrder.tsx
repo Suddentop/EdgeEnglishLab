@@ -11,6 +11,7 @@ import PrintFormatWork01New from './PrintFormatWork01New';
 import './Work_01_ArticleOrder.css';
 import '../../../styles/PrintFormat.css';
 import { callOpenAI } from '../../../services/common';
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 interface Work_01_ArticleOrderProps {
   onQuizGenerated?: (quiz: Quiz) => void;
@@ -299,20 +300,27 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
       if (deductionResult.success) {
         setUserCurrentPoints(deductionResult.remainingPoints);
         
-        // 순차적으로 문제 생성
         const allInputTexts: string[] = [];
-        for (const item of validItems) {
+        const results = await processWithConcurrency(validItems, 3, async (item) => {
           try {
             console.log(`🔍 문제 생성 시작 (ID: ${item.id})...`);
             const quiz = await generateWork01Quiz(item.text, false); // 항상 규칙 기반 분할 사용
-            generatedQuizzes.push(quiz);
-            allInputTexts.push(item.text);
-            successCount++;
+            return { quiz, input: item.text };
           } catch (err) {
             console.error(`❌ 문제 생성 실패 (ID: ${item.id}):`, err);
-            failCount++;
+            return null;
           }
-        }
+        });
+
+        results.forEach(res => {
+          if (!res) {
+            failCount++;
+            return;
+          }
+          generatedQuizzes.push(res.quiz);
+          allInputTexts.push(res.input);
+          successCount++;
+        });
 
         setQuizzes(generatedQuizzes);
         

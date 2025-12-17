@@ -11,6 +11,7 @@ import { extractTextFromImage } from '../../../services/common';
 import { useAuth } from '../../../contexts/AuthContext';
 import { generateWork09Quiz, type GrammarQuiz } from '../../../services/work09Service';
 import PrintFormatWork09New from './PrintFormatWork09New';
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 // 입력 아이템 인터페이스
 type InputType = 'clipboard' | 'file' | 'text';
@@ -251,9 +252,7 @@ const Work_09_GrammarError: React.FC = () => {
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes: (GrammarQuiz & { id?: string })[] = [];
-      
-      for (const item of validItems) {
+      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
         let passage = '';
         
         if (item.inputType === 'text') {
@@ -266,7 +265,7 @@ const Work_09_GrammarError: React.FC = () => {
         
         if (!passage.trim()) {
           console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
-          continue;
+          return null;
         }
 
         try {
@@ -275,12 +274,13 @@ const Work_09_GrammarError: React.FC = () => {
             ...quizData, 
             id: item.id
           };
-          generatedQuizzes.push(quizDataWithId);
+          return quizDataWithId;
         } catch (itemError: any) {
           console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
           alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          return null;
         }
-      }
+      });
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

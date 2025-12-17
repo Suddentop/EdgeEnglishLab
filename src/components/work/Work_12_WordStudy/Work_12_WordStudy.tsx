@@ -1,4 +1,6 @@
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import ReactDOMServer from 'react-dom/server';
 import './Work_12_WordStudy.css';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
@@ -22,12 +24,16 @@ import {
   WordQuestionWork12Type,
   WordQuizWork12Type
 } from './PrintFormat12';
+import HistoryPrintWork12 from './HistoryPrintWork12';
 import './PrintFormat12.css';
 
 // PrintFormat12의 타입을 사용
 type WordItem = WordItemWork12;
 type WordQuestion = WordQuestionWork12Type;
 type WordQuiz = WordQuizWork12Type;
+
+// 인쇄 모드 타입 (PrintFormat12와 동일하게 유지)
+type PrintMode = PrintModeWork12;
 
 // 입력 방식 타입
 const INPUT_MODES = [
@@ -36,9 +42,6 @@ const INPUT_MODES = [
   { key: 'text', label: '본문 직접 붙여넣기' }
 ] as const;
 type InputMode = typeof INPUT_MODES[number]['key'];
-
-// PrintFormat12의 타입을 사용
-type PrintMode = PrintModeWork12;
 
 const Work_12_WordStudy: React.FC = () => {
   const { userData, loading } = useAuth();
@@ -50,7 +53,6 @@ const Work_12_WordStudy: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isExtractingText, setIsExtractingText] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: number}>({});
-  const [printMode, setPrintMode] = useState<PrintMode>('none');
   const [quizType, setQuizType] = useState<'english-to-korean' | 'korean-to-english'>('english-to-korean');
   const [extractedWords, setExtractedWords] = useState<WordItem[]>([]);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -62,6 +64,132 @@ const Work_12_WordStudy: React.FC = () => {
   const [pointsToDeduct, setPointsToDeduct] = useState(0);
   const [userCurrentPoints, setUserCurrentPoints] = useState(0);
   const [workTypePoints, setWorkTypePoints] = useState<any[]>([]);
+
+  // 인쇄용 최소 스타일 (A4 세로 + 2단 단어표)
+  const PRINT_STYLES = `
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+    }
+    @media print {
+      html, body {
+        overflow: hidden;
+      }
+    }
+    .a4-page-template-work12 {
+      width: 21cm;
+      height: 29.7cm;
+      box-sizing: border-box;
+      padding: 0.8cm 0.8cm 1cm 0.8cm;
+    }
+    .a4-page-header-work12 {
+      width: 100%;
+      margin-bottom: 0.4cm;
+      text-align: center;
+    }
+    .print-header-text-work12 {
+      font-size: 11pt;
+      font-weight: 700;
+    }
+    .a4-page-content-work12 {
+      width: 100%;
+    }
+    .problem-instruction-work12 {
+      font-weight: 800;
+      font-size: 11pt;
+      background: #F0F0F0;
+      color: #000000;
+      padding: 0.6rem 0.5rem;
+      border-radius: 6px;
+      margin: 0 0 0.6rem 0;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .problem-instruction-text-work12 {
+      flex: 1 1 auto;
+    }
+    .problem-type-label-work12 {
+      margin-left: 0.5cm;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #000000;
+    }
+    .word-list-container-work12 {
+      display: flex;
+      gap: 0.5cm;
+      width: 100%;
+      margin-top: 0.4cm;
+    }
+    .word-list-column-work12 {
+      flex: 1 1 50%;
+      width: 50%;
+    }
+    .word-list-table-work12 {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+      background: #ffffff;
+      border: 2px solid #000000;
+    }
+    .word-list-table-work12 th {
+      background: #e3f2fd;
+      color: #000000;
+      font-weight: 700;
+      padding: 0.3rem;
+      text-align: center;
+      border: 1px solid #000000;
+    }
+    .word-list-table-work12 td {
+      border: 1px solid #000000;
+      padding: 0.3rem;
+      font-size: 9pt;
+    }
+    .word-list-table-work12 td:first-child {
+      text-align: center;
+      width: 15%;
+    }
+    .word-list-table-work12 tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    .word-list-table-work12 .answer-cell {
+      color: #1976d2;
+      font-weight: 700;
+      background: #f0f8ff;
+    }
+
+    /* 다른 유형의 @media print { body * { visibility: hidden; } } 규칙을 무력화하기 위해
+       인쇄 시점에만 body에 id="work12-print-active"를 temporarily 부여하고,
+       그 안의 모든 요소를 다시 보이게 강제한다. */
+    @media print {
+      body#work12-print-active * {
+        visibility: visible !important;
+      }
+    }
+  `;
+
+  // 디버깅용: 컴포넌트 마운트/퀴즈 상태 변화 로그
+  useEffect(() => {
+    console.log('🧪 [Work12] Work_12_WordStudy 마운트됨', {
+      locationHref: window.location.href
+    });
+  }, []);
+
+  useEffect(() => {
+    if (quiz) {
+      console.log('🧪 [Work12] quiz 상태 갱신됨', {
+        wordsCount: quiz.words?.length,
+        quizType: quiz.quizType,
+        totalQuestions: quiz.totalQuestions
+      });
+    }
+  }, [quiz]);
 
   // 포인트 관련 초기화
   useEffect(() => {
@@ -835,102 +963,96 @@ ${englishWords.join(', ')}
       }
   };
 
-  // 인쇄 핸들러 - 브라우저 기본 헤더/푸터 숨기기 - 유형#04와 동일
-  const handlePrintNoAnswer = () => {
-    // 인쇄 전에 브라우저 기본 헤더/푸터 숨기기 - 유형#04와 동일
-    const style = document.createElement('style');
-    style.id = 'print-style';
-    style.textContent = `
-      @page {
-        margin: 0;
-        size: A4;
-      }
-      @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .only-print-work12 {
-          display: block !important;
-        }
-        .a4-page-template-work12 {
-          display: block !important;
-        }
-        .print-header-work12 {
-          display: flex !important;
-        }
-      }
+  // 인쇄 트리거 - 새 창을 열어 그 안에서 렌더링/인쇄 (가장 안정적인 방식)
+  const triggerPrint = (mode: PrintMode) => {
+    if (!quiz) {
+      console.warn('🖨️ [Work12] triggerPrint 호출되었지만 quiz 데이터가 없습니다.', { mode });
+      return;
+    }
+
+    console.log('🖨️ [Work12] triggerPrint 시작(새 창)', {
+      mode,
+      wordsCount: quiz.words?.length,
+      quizType,
+      totalQuestions: quiz.totalQuestions,
+      locationHref: window.location.href
+    });
+
+    // HistoryPrintWork12에서 기대하는 데이터 형태로 변환
+    const dataForPrint: any = {
+      words: quiz.words,
+      questions: quiz.questions,
+      quizType: quiz.quizType,
+      totalQuestions: quiz.totalQuestions
+    };
+    console.log('🖨️ [Work12] 인쇄용 데이터 준비 완료 (새 창)', dataForPrint);
+
+    // React 컴포넌트를 정적 HTML로 렌더링
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <HistoryPrintWork12
+        data={dataForPrint}
+        isAnswerMode={mode === 'with-answer'}
+      />
+    );
+
+    // 현재 창 위에 전체 화면 오버레이 컨테이너 생성
+    const overlayId = 'work12-print-overlay';
+    const existingOverlay = document.getElementById(overlayId);
+    if (existingOverlay && existingOverlay.parentNode) {
+      existingOverlay.parentNode.removeChild(existingOverlay);
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = overlayId;
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      inset: '0',
+      backgroundColor: '#ffffff',
+      zIndex: '9999',
+      overflow: 'hidden'
+    } as Partial<CSSStyleDeclaration>);
+
+    // 오버레이에 인쇄용 스타일 + 마크업 주입
+    overlay.innerHTML = `
+      <style>${PRINT_STYLES}</style>
+      ${markup}
     `;
-    document.head.appendChild(style);
-    
-    setPrintMode('no-answer');
+
+    document.body.appendChild(overlay);
+
+    // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+    const prevBodyId = document.body.getAttribute('id');
+    document.body.setAttribute('id', 'work12-print-active');
+
+    // 약간의 지연 후 인쇄 실행
     setTimeout(() => {
       window.print();
-      // 인쇄 후 스타일 제거
+
+      // 인쇄 후 오버레이 정리
       setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
+        const ov = document.getElementById(overlayId);
+        if (ov && ov.parentNode) {
+          ov.parentNode.removeChild(ov);
         }
-        setPrintMode('none');
-      }, 1000);
-    }, 100);
+
+         // body id 되돌리기
+        if (prevBodyId) {
+          document.body.setAttribute('id', prevBodyId);
+        } else {
+          document.body.removeAttribute('id');
+        }
+      }, 100);
+    }, 300);
+  };
+
+  const handlePrintNoAnswer = () => {
+    console.log('🖨️ [Work12] 인쇄(문제) 버튼 클릭');
+    triggerPrint('no-answer');
   };
   
   const handlePrintWithAnswer = () => {
-    // 인쇄 전에 브라우저 기본 헤더/푸터 숨기기 - 유형#04와 동일
-    const style = document.createElement('style');
-    style.id = 'print-style';
-    style.textContent = `
-      @page {
-        margin: 0;
-        size: A4;
-      }
-      @media print {
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .only-print-work12 {
-          display: block !important;
-        }
-        .print-answer-mode-work12 {
-          display: block !important;
-        }
-        .a4-page-template-work12 {
-          display: block !important;
-        }
-        .print-header-work12 {
-          display: flex !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    setPrintMode('with-answer');
-    setTimeout(() => {
-      window.print();
-      // 인쇄 후 스타일 제거
-      setTimeout(() => {
-        const printStyle = document.getElementById('print-style');
-        if (printStyle) {
-          printStyle.remove();
-        }
-        setPrintMode('none');
-      }, 1000);
-    }, 100);
+    console.log('🖨️ [Work12] 인쇄(정답) 버튼 클릭');
+    triggerPrint('with-answer');
   };
   // 리셋
   const resetQuiz = () => {
@@ -1090,56 +1212,6 @@ ${englishWords.join(', ')}
             </div>
           </div>
         </div>
-        {/* 인쇄용: 문제만 - 유형#04와 동일한 구조 */}
-        {printMode === 'no-answer' && quiz && (
-          <div className="only-print-work12">
-            <div className="a4-page-template-work12">
-              <div className="a4-page-header-work12">
-                <PrintHeaderWork12 />
-              </div>
-              <div className="a4-page-content-work12">
-                <div className="quiz-content-work12">
-                  <ProblemInstructionWork12>
-                    {quiz.quizType === 'english-to-korean' ? '다음 영어 단어의 한글 뜻을 고르시오.' : '다음 한글 뜻에 해당하는 영어 단어를 고르시오.'}
-                  </ProblemInstructionWork12>
-                  
-                  <WordQuizContainerWork12>
-                    <WordListTableWork12 
-                      words={quiz.words} 
-                      showAnswers={false}
-                      quizType={quiz.quizType}
-                    />
-                  </WordQuizContainerWork12>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* 인쇄용: 정답포함 - 유형#04와 동일한 구조 */}
-        {printMode === 'with-answer' && quiz && (
-          <div className="only-print-work12 print-answer-mode-work12">
-            <div className="a4-page-template-work12">
-              <div className="a4-page-header-work12">
-                <PrintHeaderWork12 />
-              </div>
-              <div className="a4-page-content-work12">
-                <div className="quiz-content-work12">
-                  <ProblemInstructionWork12>
-                    {quiz.quizType === 'english-to-korean' ? '다음 영어 단어의 한글 뜻을 고르시오.' : '다음 한글 뜻에 해당하는 영어 단어를 고르시오.'}
-                  </ProblemInstructionWork12>
-                  
-                  <WordQuizContainerWork12>
-                    <WordListTableWork12 
-                      words={quiz.words} 
-                      showAnswers={true}
-                      quizType={quiz.quizType}
-                    />
-                  </WordQuizContainerWork12>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }

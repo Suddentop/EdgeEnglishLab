@@ -1519,7 +1519,7 @@ const QuizDisplayPage: React.FC = () => {
       root.render(<PrintFormatWork09New quizzes={rawQuizzes} isAnswerMode={true} />);
     } else if (packageType === '10') {
       // 유형#10는 PrintFormatWork10New 사용
-      const rawQuizzes = packageQuiz.map((item: any) => {
+      const rawQuizzes = packageQuiz.map((item: any, index: number) => {
         const work10Data = item.work10Data || item.quiz || item.data?.work10Data || item.data || item;
         // 다양한 데이터 소스에서 필드 추출 (호환성 강화)
         const answerIndex = work10Data.answerIndex !== undefined 
@@ -1532,6 +1532,19 @@ const QuizDisplayPage: React.FC = () => {
                             work10Data.koreanTranslation || 
                             work10Data.korean || 
                             work10Data.koText || '';
+
+        // 디버깅: translation 데이터 확인
+        if (process.env.NODE_ENV === 'development' || !translation) {
+          console.log(`🔍 Work_10 문제 ${index + 1} translation 추출:`, {
+            hasTranslation: !!translation,
+            translationLength: translation?.length || 0,
+            translationPreview: translation?.substring(0, 100) || '없음',
+            work10DataKeys: Object.keys(work10Data),
+            work10DataTranslation: work10Data.translation,
+            work10DataTranslatedText: work10Data.translatedText,
+            itemKeys: Object.keys(item)
+          });
+        }
 
         return {
           id: item.id || work10Data.id,

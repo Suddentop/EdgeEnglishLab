@@ -9,6 +9,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { extractTextFromImage, callOpenAI } from '../../../services/common';
 import '../../../styles/PrintFormat.css';
 import PrintFormatWork03New from './PrintFormatWork03New';
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 // A4 페이지 설정 상수 (실제 A4 크기 기준, px 단위)
 const A4_CONFIG = {
@@ -646,35 +647,25 @@ ${englishText}`;
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      // 각 아이템에 대해 문제 생성
-      const generatedQuizzes: BlankQuiz[] = [];
-      
-      for (const item of validItems) {
+      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
         const passage = item.text.trim();
-        if (!passage) continue;
+        if (!passage) return null;
 
         try {
-      // 1) 문제 생성
-      const quizData = await generateBlankQuizWithAI(passage);
-      console.log('생성된 퀴즈 데이터:', quizData);
-
-          // 2) 번역 생성
-      const translation = await translateToKorean(passage);
-      console.log('번역된 텍스트:', translation);
-
-          // 3) 번역을 포함한 데이터로 저장
+          const quizData = await generateBlankQuizWithAI(passage);
+          const translation = await translateToKorean(passage);
           const quizDataWithTranslation: BlankQuiz = { 
             ...quizData, 
             translation,
             id: item.id
           };
-          generatedQuizzes.push(quizDataWithTranslation);
+          return quizDataWithTranslation;
         } catch (itemError: any) {
           console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
-          // 개별 아이템 실패 시 경고만 표시하고 계속 진행
           alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          return null;
         }
-      }
+      });
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

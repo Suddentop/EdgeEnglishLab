@@ -20,6 +20,7 @@ import { extractTextFromImage } from '../../../services/common';
 import PrintFormatWork13New from './PrintFormatWork13New';
 import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 // import '../../../styles/PrintFormat.css'; // 독립적인 CSS로 변경
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 // 인터페이스는 work13AIService.ts에서 import
 
@@ -396,9 +397,7 @@ const Work_13_BlankFillWord: React.FC = () => {
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes: BlankFillQuizWithId[] = [];
-      
-      for (const item of validItems) {
+      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
         let passage = '';
         
         if (item.inputType === 'text') {
@@ -411,7 +410,7 @@ const Work_13_BlankFillWord: React.FC = () => {
         
         if (!passage.trim()) {
           console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
-          continue;
+          return null;
         }
 
         try {
@@ -420,12 +419,13 @@ const Work_13_BlankFillWord: React.FC = () => {
             ...quizData, 
             id: item.id
           };
-          generatedQuizzes.push(quizDataWithId);
+          return quizDataWithId;
         } catch (itemError: any) {
           console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
           alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          return null;
         }
-      }
+      });
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

@@ -11,6 +11,7 @@ import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelp
 import { useAuth } from '../../../contexts/AuthContext';
 import { callOpenAI } from '../../../services/common';
 import PrintFormatWork07New from './PrintFormatWork07New';
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 const INPUT_MODES = [
   { key: 'capture', label: '캡처 이미지 붙여넣기' },
@@ -761,28 +762,20 @@ ${passage}
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      // 각 아이템에 대해 문제 생성
-      const generatedQuizzes: MainIdeaQuiz[] = [];
-      
-      for (const item of validItems) {
+      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
         let passage = '';
         
-        // 텍스트 입력 모드
         if (item.inputType === 'text') {
           passage = item.text.trim();
-        } 
-        // 이미지 파일 업로드 모드
-        else if (item.inputType === 'file' && item.imageFile) {
+        } else if (item.inputType === 'file' && item.imageFile) {
           passage = await imageToTextWithOpenAIVision(item.imageFile);
-        } 
-        // 캡처 이미지 붙여넣기 모드
-        else if (item.inputType === 'clipboard') {
+        } else if (item.inputType === 'clipboard') {
           passage = item.text.trim();
         }
         
         if (!passage.trim()) {
           console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
-          continue;
+          return null;
         }
 
         try {
@@ -791,13 +784,13 @@ ${passage}
             ...quizData, 
             id: item.id
           };
-          generatedQuizzes.push(quizDataWithId);
+          return quizDataWithId;
         } catch (itemError: any) {
           console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
-          // 개별 아이템 실패 시 경고만 표시하고 계속 진행
           alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          return null;
         }
-      }
+      });
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

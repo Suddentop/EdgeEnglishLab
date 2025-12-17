@@ -19,6 +19,7 @@ import { translateToKorean, extractTextFromImage } from '../../../services/commo
 import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 import PrintFormatWork14New from './PrintFormatWork14New';
 import '../../../styles/PrintFormat.css';
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 interface VocabularyItem {
   word: string;
@@ -497,9 +498,7 @@ const Work_14_FillSentence: React.FC = () => {
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes: BlankQuizData[] = [];
-      
-      for (const item of validItems) {
+      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
         let passage = '';
         
         if (item.inputType === 'text') {
@@ -512,7 +511,7 @@ const Work_14_FillSentence: React.FC = () => {
         
         if (!passage.trim()) {
           console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
-          continue;
+          return null;
         }
 
         try {
@@ -521,7 +520,6 @@ const Work_14_FillSentence: React.FC = () => {
             ...quizData, 
             id: item.id
           };
-          generatedQuizzes.push(quizDataWithId);
           
           // 주관식 답안 초기화 (실제 빈칸 개수만큼)
           const blankCount = countBlanks(quizData.blankedText);
@@ -529,11 +527,14 @@ const Work_14_FillSentence: React.FC = () => {
             ...prev,
             [item.id]: new Array(blankCount).fill('')
           }));
+
+          return quizDataWithId;
         } catch (itemError: any) {
           console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
           alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          return null;
         }
-      }
+      });
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

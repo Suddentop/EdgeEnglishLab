@@ -12,6 +12,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { extractTextFromImage } from '../../../services/common';
 import { generateWork10Quiz, MultiGrammarQuiz } from '../../../services/work10Service';
 import PrintFormatWork10New from './PrintFormatWork10New';
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 const INPUT_MODES = [
   { key: 'capture', label: '캡처 이미지 붙여넣기' },
@@ -269,9 +270,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes: MultiGrammarQuizWithId[] = [];
-      
-      for (const item of validItems) {
+      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
         let passage = '';
         
         if (item.inputType === 'text') {
@@ -284,7 +283,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
         
         if (!passage.trim()) {
           console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
-          continue;
+          return null;
         }
 
         try {
@@ -293,12 +292,13 @@ const Work_10_MultiGrammarError: React.FC = () => {
             ...quizData, 
             id: item.id
           };
-          generatedQuizzes.push(quizDataWithId);
+          return quizDataWithId;
         } catch (itemError: any) {
           console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
           alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          return null;
         }
-      }
+      });
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');
@@ -547,17 +547,12 @@ const Work_10_MultiGrammarError: React.FC = () => {
                     ))}
                   </div>
                   
+                  {/* 정답 확인 - 선택했을 때만 표시 */}
                   {selected !== null && (
                     <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
                       정답: {quiz.options[quiz.answerIndex]}개
                       <div style={{marginTop:'0.7rem', color:'#1976d2', fontWeight:400, fontSize:'1rem'}}>
                         어법상 틀린 단어: {quiz.wrongIndexes.map(idx => `${numberSymbols[idx]}${quiz.transformedWords[idx]} → ${quiz.originalWords[idx]}`).join(', ')}
-                      </div>
-                      <div className="translation-section" style={{marginTop:'1.2rem'}}>
-                        <h3 style={{fontSize:'1.05rem', color:'#1976d2', marginBottom:'0.5rem'}}>본문 해석</h3>
-                        <div style={{background: '#f1f8e9', padding: '1rem', borderRadius: '8px', border: '1.5px solid #c8e6c9', fontSize: '0.98rem', lineHeight: '1.6'}}>
-                          {quiz.translation}
-                        </div>
                       </div>
                     </div>
                   )}

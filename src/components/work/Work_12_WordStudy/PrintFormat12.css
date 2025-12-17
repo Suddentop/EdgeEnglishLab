@@ -1,73 +1,64 @@
-/* 유형#12 전용 인쇄 스타일 - 유형#04와 동일한 A4 템플릿 디자인 */
+/* 유형#12 전용 인쇄 스타일 (A4 세로, 2단 단어표)
+   기존 스타일이 손상되어 재구성한 버전입니다. */
 
-/* 화면에서 인쇄 요소 숨김 */
+/* 화면에서는 인쇄용 요소를 숨기지 않는다.
+   Work_12는 별도 print-root를 사용하므로, 인쇄 시점에만 DOM에 나타난다. */
 @media screen {
-  .print-header-work12 {
-    display: none !important;
-  }
-  .print-gap-work12 {
-    display: none !important;
-  }
-  .only-print-work12 {
-    display: none !important;
-  }
-  .print-header-margin-work12 {
-    display: none !important;
-  }
-  .print-answer-mode-work12 {
-    display: none !important;
-  }
-  .quiz-print-body-work12 {
-    display: none !important;
-  }
+  .print-header-work12,
+  .print-gap-work12,
+  .print-header-margin-work12,
+  .quiz-print-body-work12,
   .print-footer-work12 {
     display: none !important;
   }
-  .a4-page-template-work12 {
-    display: none !important;
-  }
+
+  /* .only-print-work12 / .a4-page-template-work12 는 화면에서도 보이도록 둠
+     (인쇄용 루트에만 존재하므로 일반 화면에는 영향 없음) */
 }
 
-/* 인쇄 시 스타일 - 유형#04와 동일 */
 @media print {
+  /* 브라우저 기본 여백 제거 및 A4 세로 고정 */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .only-print-work12 {
     display: block !important;
   }
-  
-  .print-answer-mode-work12 {
-    display: block !important;
-  }
-  
-  .a4-page-template-work12 {
-    display: block !important;
-  }
-  
-  
-  .print-footer-work12 {
-    display: block !important;
-  }
 
-  /* A4 페이지 템플릿 스타일 - 유형#04와 동일 */
+  /* A4 세로 페이지 템플릿 */
   .a4-page-template-work12 {
     width: 21cm;
     height: 29.7cm;
     margin: 0;
     padding: 0;
-    background: white;
+    background: #ffffff;
     box-sizing: border-box;
     page-break-inside: avoid;
     position: relative;
     display: flex;
     flex-direction: column;
-    left: 0;
-    top: 0;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+  }
+
+  .a4-page-template-work12:not(:last-child) {
+    page-break-after: always;
+    break-after: page;
   }
 
   .a4-page-header-work12 {
     width: 100%;
     height: 1.5cm;
     flex-shrink: 0;
-    padding: 0.5cm 0.3cm 0 0.3cm;
+    padding: 0.5cm 0.8cm 0 0.8cm;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -77,21 +68,17 @@
   }
 
   .print-header-work12 {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    text-align: center;
-    font-family: 'Noto Sans KR', 'Segoe UI', 'Apple SD Gothic Neo', Arial, sans-serif;
   }
 
   .print-header-text-work12 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #333;
-    margin: 0;
-    text-align: center;
+    font-size: 11pt;
+    font-weight: 700;
+    color: #000;
   }
 
   .print-header-work12::after {
@@ -105,14 +92,9 @@
   .a4-page-content-work12 {
     width: 100%;
     flex: 1;
-    padding: 0.35cm 0.8cm 1cm 0.8cm;
+    padding: 0.4cm 0.8cm 1cm 0.8cm;
     box-sizing: border-box;
     overflow: visible;
-    page-break-inside: auto;
-    break-inside: auto;
-    -webkit-column-break-inside: auto;
-    height: auto;
-    min-height: auto;
   }
 
   .quiz-content-work12 {
@@ -122,103 +104,34 @@
     flex-direction: column;
   }
 
-  /* 폰트 크기 통일 */
-  .only-print-work12 .a4-page-template-work12,
-  .only-print-work12 .a4-page-template-work12 * {
-    font-size: 1rem !important;
-  }
-  
-  .only-print-work12 .a4-page-content-work12,
-  .only-print-work12 .a4-page-content-work12 * {
-    font-size: 1rem !important;
-  }
-
-  /* 페이지 분할 설정 */
-  .only-print-work12 .a4-page-template-work12:not(:last-child) {
-    page-break-after: always !important;
-    break-after: page !important;
-  }
-  
-  .only-print-work12 .a4-page-template-work12:last-child {
-    page-break-after: avoid !important;
-    break-after: avoid !important;
-  }
-
-  /* 페이지 설정 - 브라우저 기본 여백 완전 제거 */
-  @page {
-    size: A4;
-    margin: 0;
-    padding: 0;
-  }
-
-  /* 문제 지시문 스타일 */
+  /* 문제 지시문: 다른 유형과 동일한 연한 회색 배경 */
   .problem-instruction-work12 {
     font-weight: 800;
-    font-size: 1rem !important;
-    background: #222;
-    color: #fff;
-    padding: 0.7rem 0.5rem;
+    font-size: 11pt;
+    background: #F0F0F0;
+    color: #000000;
+    padding: 0.7rem 0.6rem;
     border-radius: 8px;
-    margin-bottom: 0;
-    display: block;
+    margin: 0 0 0.8rem 0;
     width: 100%;
     box-sizing: border-box;
-  }
-
-  /* 단어 학습 퀴즈 스타일 */
-  .word-quiz-container-work12 {
-    margin: 0;
-  }
-
-  .word-question-work12 {
-    margin-bottom: 2rem;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #f9f9f9;
-  }
-
-  .word-question-text-work12 {
-    font-size: 1rem !important;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 1rem;
-  }
-
-  .word-options-work12 {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .word-option-work12 {
-    font-size: 1rem !important;
-    padding: 0.5rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    background: #fff;
-    cursor: pointer;
+  .problem-instruction-text-work12 {
+    flex: 1 1 auto;
   }
 
-  .word-option-work12.correct {
-    background: #e8f5e8;
-    border-color: #4caf50;
-    color: #1976d2;
-    font-weight: 600;
+  .problem-type-label-work12 {
+    margin-left: 0.5cm;
+    font-size: 10pt;
+    font-weight: 700;
+    color: #000000;
   }
 
-  .word-answer-work12 {
-    margin-top: 1rem;
-    padding: 0.8rem;
-    background: #f0f8ff;
-    border: 1px solid #e3f2fd;
-    border-radius: 4px;
-    color: #1976d2;
-    font-weight: 600;
-    font-size: 1rem !important;
-  }
-
-  /* 2단 단어 목록 테이블 컨테이너 */
+  /* 단어표 2단 컨테이너 (좌/우 테이블) */
   .word-list-container-work12 {
     display: flex;
     gap: 0.5cm;
@@ -227,53 +140,42 @@
   }
 
   .word-list-column-work12 {
-    flex: 1;
+    flex: 1 1 50%;
     width: 50%;
   }
 
-  /* 단어 목록 테이블 스타일 - 2단 구성 */
+  /* 단어 목록 테이블 */
   .word-list-table-work12 {
     width: 100%;
     border-collapse: collapse;
     margin: 0;
-    font-size: 0.75rem !important;
-    background: white;
+    font-size: 9pt;
+    background: #ffffff;
     border: 2px solid #000000;
-    border-radius: 0;
-    overflow: hidden;
   }
 
   .word-list-table-work12 th {
     background: #e3f2fd;
     color: #000000;
     font-weight: 700;
-    font-size: 0.75rem !important;
-    padding: 0.4rem;
+    font-size: 9pt;
+    padding: 0.35rem;
     text-align: center;
     border: 1px solid #000000;
-    width: 15%;
-  }
-
-  .word-list-table-work12 th:nth-child(2) {
-    width: 42.5%;
-  }
-
-  .word-list-table-work12 th:nth-child(3) {
-    width: 42.5%;
   }
 
   .word-list-table-work12 td {
     border: 1px solid #000000;
-    padding: 0.4rem;
+    padding: 0.35rem;
     text-align: left;
-    font-size: 0.75rem !important;
+    font-size: 9pt;
     font-weight: 500;
     color: #000000;
   }
 
-  /* No. 열 가운데 정렬 */
   .word-list-table-work12 td:first-child {
     text-align: center;
+    width: 15%;
   }
 
   .word-list-table-work12 tr:nth-child(even) {
@@ -281,61 +183,30 @@
   }
 
   .word-list-table-work12 tr:nth-child(odd) {
-    background: white;
+    background: #ffffff;
   }
 
-  /* 정답 표시 스타일 - 파란색으로 강조 */
+  /* 정답 칸: 파란색 강조 */
   .word-list-table-work12 .answer-cell {
     color: #1976d2 !important;
     font-weight: 700 !important;
     background: #f0f8ff !important;
   }
 
-  /* 반응형 조정 */
-  @media print and (max-width: 21cm) {
-    .a4-page-template-work12 {
-      width: 100%;
-      height: auto;
-      min-height: 29.7cm;
-    }
+  /* 페이지 분할/빈 페이지 방지 */
+  .a4-page-template-work12 {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
-  /* 긴 콘텐츠에 대한 자동 페이지 분할 설정 */
-  .a4-page-content-work12 {
-    page-break-inside: auto;
-  }
-  
-  /* 각 문제 요소별 페이지 분할 규칙 */
+  .a4-page-content-work12,
+  .word-list-table-work12,
   .problem-instruction-work12 {
-    page-break-after: avoid;
-    break-after: avoid;
-  }
-
-  .word-question-work12 {
     page-break-inside: avoid;
     break-inside: avoid;
   }
 
-  .word-list-table-work12 {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* 빈 페이지 숨김 */
   .a4-page-template-work12:empty {
     display: none;
-  }
-  
-  /* A4 템플릿 페이지 분할 */
-  .only-print-work12 .a4-page-template-work12 {
-    page-break-inside: avoid;
-    break-inside: avoid;
-    -webkit-column-break-inside: avoid;
-  }
-  
-  .only-print-work12 .a4-page-content-work12 {
-    page-break-inside: auto;
-    break-inside: auto;
-    -webkit-column-break-inside: auto;
   }
 }

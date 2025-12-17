@@ -9,6 +9,7 @@ import { extractTextFromImage } from '../../../services/common';
 import { useAuth } from '../../../contexts/AuthContext';
 import { generateWork06Quiz, type SentencePositionQuiz } from '../../../services/work06Service';
 import PrintFormatWork06New from './PrintFormatWork06New';
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 // 입력 아이템 인터페이스 (Work_05와 동일)
 type InputType = 'clipboard' | 'file' | 'text';
@@ -272,29 +273,23 @@ const Work_06_SentencePosition: React.FC = () => {
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      // 각 아이템에 대해 문제 생성
-      const generatedQuizzes: (SentencePositionQuiz & { id?: string })[] = [];
-      
-      for (const item of validItems) {
+      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
         const passage = item.text.trim();
-        if (!passage) continue;
+        if (!passage) return null;
 
         try {
-          // work06Service의 generateWork06Quiz 사용 (번역 포함)
           const quizData = await generateWork06Quiz(passage);
-          console.log('생성된 퀴즈 데이터:', quizData);
-
           const quizDataWithId: SentencePositionQuiz & { id?: string } = { 
             ...quizData, 
             id: item.id
           };
-          generatedQuizzes.push(quizDataWithId);
+          return quizDataWithId;
         } catch (itemError: any) {
           console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
-          // 개별 아이템 실패 시 경고만 표시하고 계속 진행
           alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          return null;
         }
-      }
+      });
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

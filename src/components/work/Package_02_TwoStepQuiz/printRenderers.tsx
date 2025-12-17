@@ -196,7 +196,8 @@ export const renderSectionNode = (
         );
       }
       // 유형#10 인쇄(정답) 모드: 텍스트 블록 렌더링 (항상 표시)
-      if (normalizedItem.workTypeId === '10' && section.key?.includes('text-10-test-label')) {
+      if (normalizedItem.workTypeId === '10' && 
+          (section.key?.includes('text-10-test-label') || section.key?.includes('wrong-words'))) {
         console.log('🎨 유형#10 텍스트 블록 렌더링 (항상 로그):', {
           key,
           text: section.text,
@@ -225,6 +226,13 @@ export const renderSectionNode = (
           }
         }
         
+        // 틀린 단어 정보 섹션은 간격을 더 줄임
+        const isWrongWordsSection = section.key?.includes('wrong-words');
+        const compactSpacing = section.meta?.compactSpacing || isWrongWordsSection;
+        
+        // 선택지 다음에 오는 텍스트 블록은 여백을 80% 줄임 (0.05cm → 0.01cm)
+        const marginTopValue = compactSpacing ? '0.01cm' : '0.02cm'; // 80% 감소
+        
         return (
           <div 
             key={key} 
@@ -232,8 +240,8 @@ export const renderSectionNode = (
             style={{ 
               minHeight: '0.5cm',
               padding: '0.1cm',
-              marginTop: '0.1cm', /* 50% 감소: 0.2cm → 0.1cm */
-              marginBottom: '0.2cm',
+              marginTop: marginTopValue, // 선택지 다음 텍스트 블록 여백 80% 감소
+              marginBottom: '0.02cm', // 80% 감소: 0.1cm → 0.02cm (번역 섹션과의 간격)
               display: 'block',
               visibility: 'visible',
               opacity: 1,
@@ -248,6 +256,25 @@ export const renderSectionNode = (
           </div>
         );
       }
+      // 일반 text 섹션 렌더링 (유형#10의 틀린 단어 정보 포함)
+      if (normalizedItem.workTypeId === '10' && section.key?.includes('wrong-words')) {
+        // 틀린 단어 정보 섹션은 간격을 더 줄임 (선택지 다음이므로 80% 감소)
+        const compactSpacing = section.meta?.compactSpacing !== false;
+        return section.text ? (
+          <div 
+            key={key} 
+            className="print-text-block print-text-block-work10"
+            style={{
+              marginTop: compactSpacing ? '0.01cm' : '0.02cm', // 80% 감소 (0.05cm → 0.01cm)
+              marginBottom: '0.02cm', // 80% 감소: 0.1cm → 0.02cm (번역 섹션과의 간격)
+              padding: '0.1cm'
+            }}
+          >
+            {section.text}
+          </div>
+        ) : null;
+      }
+      
       return section.text ? (
         <div key={key} className="print-text-block">
           {section.text}

@@ -11,6 +11,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { extractTextFromImage, callOpenAI } from '../../../services/common';
 import '../../../styles/PrintFormat.css';
 import PrintFormatWork02New from './PrintFormatWork02New';
+import { processWithConcurrency } from '../../../utils/concurrency';
 
 interface WordReplacement {
   original: string;           // 원본 단어/숙어
@@ -445,21 +446,25 @@ Korean translation:`;
       deductedPoints = totalPoints; 
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      // 순차적 생성
-      for (const item of validItems) {
+      const results = await processWithConcurrency(validItems, 3, async (item) => {
         try {
           const quizData = await generateReadingComprehensionWithAI(item.text);
-          // 레이아웃 계산 (간소화됨)
           const layout = await calculatePageLayoutForQuiz(quizData);
-          
-          const completeQuizData = { ...quizData, id: item.id, layout };
-          generatedQuizzes.push(completeQuizData);
-          successCount++;
+          return { ...quizData, id: item.id, layout };
         } catch (err) {
           console.error(`ID ${item.id} 생성 실패:`, err);
+          return null;
+        }
+      });
+
+      results.forEach(res => {
+        if (res) {
+          generatedQuizzes.push(res);
+          successCount++;
+        } else {
           failCount++;
         }
-      }
+      });
       
       setQuizzes(generatedQuizzes);
 
