@@ -6,7 +6,8 @@ import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
-import { extractTextFromImage, callOpenAI } from '../../../services/common';
+import { extractTextFromImage, callOpenAI, translateToKorean } from '../../../services/common';
+import { generateWork03Quiz } from '../../../services/work03Service';
 import '../../../styles/PrintFormat.css';
 import PrintFormatWork03New from './PrintFormatWork03New';
 import { processWithConcurrency } from '../../../utils/concurrency';
@@ -376,173 +377,11 @@ const Work_03_VocabularyWord: React.FC = () => {
 
 
 
-  // 본문 → 빈칸 문제/객관식 생성 (AI) - 번역은 별도 함수로 처리
-  async function generateBlankQuizWithAI(passage: string): Promise<BlankQuiz> {
-  // 본문에서 이미 ()로 묶인 단어나 구 추출
-  const excludedWords: string[] = [];
-  const bracketRegex = /\(([^)]+)\)/g;
-  let match;
-    while ((match = bracketRegex.exec(passage)) !== null) {
-    excludedWords.push(match[1].trim());
-  }
-
-    const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 빈칸 추론 문제를 만들어주세요.
-
-**🎯 수능 수준의 어휘 선택 기준 (절대 필수):**
-
-**수능 영어 빈칸 추론 문제의 특징:**
-- 실제 수능에서는 본문 전체의 맥락을 이해하고, 앞뒤 문맥을 종합적으로 분석해야 답을 찾을 수 있는 어휘를 출제합니다.
-- 단순히 단어 자체의 의미를 아는 것이 아니라, 문맥 속에서의 적절한 의미를 추론할 수 있는 능력을 평가합니다.
-- 어휘 난이도는 CEFR B2-C1 수준(고등학교 3-5등급 어휘)에 해당하며, 학술적 텍스트나 문학 작품에서 자주 등장하는 어휘입니다.
-- 실제 수능 기출 문제를 참고하세요: 단어 자체가 어렵기보다는 문맥에서의 의미 추론이 중요한 단어를 선택합니다.
-
-1. **단어 선정 기준:**
-   - ❌ 피해야 할 단어: 고유명사, 기본 어휘(a, an, the, is, are, was, were, go, come 등), 일상 대화용 어휘, 너무 쉬운 단어
-   - ✅ 선택해야 할 단어: 
-     * 학술 논문이나 교과서에서 등장하는 어휘 (예: analyze, demonstrate, significant, essential, phenomenon, perspective 등)
-     * 문맥에 따라 의미가 달라지는 다의어 (예: address, concern, current, feature 등)
-     * 추상적 개념을 표현하는 명사/형용사 (예: profound, subtle, inherent, explicit, implicit 등)
-     * 본문의 논리적 흐름을 이해해야 답을 찾을 수 있는 어휘
-   - 본문 전체를 읽고 맥락을 이해한 후, 그 맥락에서 가장 적절한 의미를 가진 핵심 단어를 선택하세요.
-   - 단어를 단독으로 봤을 때의 의미보다, **본문에서 사용된 맥락에서의 의미**를 추론해야 하는 단어여야 합니다.
-
-2. **정답 단어 요구사항:**
-   - 반드시 본문에 실제로 등장한 단어(철자, 형태, 대소문자까지 동일)를 정답으로 선정해야 해. 변형, 대체, 동의어, 어형 변화 없이 본문에 있던 그대로 사용해야 해.
-
-3. **본문 처리 규칙:**
-   - 문제의 본문(빈칸 포함)은 반드시 사용자가 입력한 전체 본문과 완전히 동일해야 하며, 일부 문장만 추출하거나, 문장 순서를 바꾸거나, 본문을 요약/변형해서는 안 돼. 오직 정답 단어만 ()로 치환해.
-
-4. **제외 대상:**
-   - 입력된 본문에 이미 ()로 묶인 단어나 구가 있다면, 그 부분은 절대 빈칸 처리 대상으로 삼지 마세요. 반드시 괄호 밖에 있는 단어만 빈칸 후보로 선정하세요.
-   - 아래 단어/구는 절대 빈칸 처리하지 마세요: ${excludedWords.length > 0 ? excludedWords.join(', ') : '없음'}
-
-5. **5지선다 선택지 생성 (수능 스타일):**
-   - 정답(핵심단어) + 오답 4개 = 총 5개 선택지
-   - **오답 선정 기준 (실제 수능 기출 스타일):**
-     * 정답과 같은 품사이면서 의미가 비슷하지만 본문 맥락에는 맞지 않는 단어 (예: answer가 정답이면, response, reply 등)
-     * 정답과 철자가 비슷하거나 발음이 비슷한 단어 (혼동 유도용)
-     * 정답과 반대 의미를 가진 단어 (단, 본문 맥락에서는 적절하지 않음)
-     * 본문 맥락에서는 논리적으로 들어갈 수 없지만, 다른 맥락에서는 가능한 어휘
-   - 수능에서는 단순히 "틀린 단어"가 아니라, **본문 맥락을 정확히 이해하지 못하면 선택할 수 있는 오답**을 출제합니다.
-   - 예시: 본문이 "The study reveals that..."이고 정답이 "reveals"라면, 오답으로 "shows", "indicates", "demonstrates" 등을 사용 (맥락이 정확하지 않으면 혼동 가능)
-
-6. **정답 위치:**
-   - 정답의 위치는 1~5번 중 랜덤으로 배치하세요.
-
-7. **JSON 형식으로 응답하세요:**
-
-{
-  "options": ["선택지1", "선택지2", "선택지3", "선택지4", "선택지5"],
-  "answerIndex": 0
-}
-
-**⚠️ 최종 확인 (실제 수능 기출 스타일 검증):**
-- ✅ 본문을 읽지 않고 단어만 봤을 때는 정답을 찾기 어려워야 합니다.
-- ✅ 본문 전체의 논리적 흐름과 맥락을 종합적으로 이해해야 정답을 선택할 수 있어야 합니다.
-- ✅ 단순히 쉬운 단어(a, the, is 등)나 고유명사는 선택하지 않았는지 확인하세요.
-- ✅ CEFR B2-C1 수준(고등학교 3-5등급)의 학술적/문학적 어휘인지 확인하세요.
-- ✅ 오답 선택지들이 본문 맥락을 정확히 이해하지 못하면 선택할 수 있는 유사한 어휘들인지 확인하세요.
-- ✅ 실제 수능 기출 문제처럼, 문맥 추론 능력을 평가하는 문제인지 최종 검증하세요.
-
-입력된 영어 본문:
-${passage}`;
-    // 공통 헬퍼 함수 사용 (프록시 자동 지원)
-    const response = await callOpenAI({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 1200,
-      temperature: 0.7
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API 호출 실패: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    console.log('AI 응답 전체:', data);
-    console.log('AI 응답 내용:', data.choices[0].message.content);
-    
-    const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
-    
-    console.log('추출된 JSON:', jsonMatch[0]);
-    
-    let result: any;
-    try {
-      result = JSON.parse(jsonMatch[0]);
-      console.log('파싱된 결과:', result);
-    } catch {
-      throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
-    }
-    // 정답 단어가 본문에 실제로 존재하는지 검증
-    if (!passage.includes(result.options[result.answerIndex])) {
-      throw new Error('정답 단어가 본문에 존재하지 않습니다. AI 응답 오류입니다.');
-    }
-    // blankedText를 프론트엔드에서 직접 생성 (괄호 split 방식, 괄호 안/밖 완벽 구분, 디버깅 로그 포함)
-    function replaceFirstOutsideBrackets(text: string, word: string): string {
-      let replaced = false;
-      // 괄호로 split (괄호 안/밖 구분)
-      const tokens = text.split(/([()])/);
-      let inBracket = false;
-      for (let i = 0; i < tokens.length; i++) {
-        if (tokens[i] === '(') {
-          inBracket = true;
-          continue;
-        }
-        if (tokens[i] === ')') {
-          inBracket = false;
-          continue;
-        }
-        if (!inBracket && !replaced) {
-          // 괄호 밖에서만 단어 치환 (단어 경계 체크)
-          const regex = new RegExp(`\\b${word}\\b`);
-          if (regex.test(tokens[i])) {
-            tokens[i] = tokens[i].replace(regex, '(__________)');
-            replaced = true;
-          }
-        }
-      }
-      // split으로 괄호가 사라지므로, 다시 조립
-      let result = '';
-      inBracket = false;
-      for (let i = 0; i < tokens.length; i++) {
-        if (tokens[i] === '(') {
-          inBracket = true;
-          result += '(';
-          continue;
-        }
-        if (tokens[i] === ')') {
-          inBracket = false;
-          result += ')';
-          continue;
-        }
-        result += tokens[i];
-      }
-      return result;
-    }
-    const answer = result.options[result.answerIndex];
-    const blankedText = replaceFirstOutsideBrackets(passage, answer);
-    result.blankedText = blankedText;
-    
-    // 빈칸 본문이 원본 본문과 일치하는지 검증
-    const blankRestore = result.blankedText.replace(/\( *_{6,}\)/, answer);
-    if (blankRestore.trim() !== passage.trim()) {
-      throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
-    }
-    
-    console.log('최종 검증 전 결과:', {
-      blankedText: result.blankedText,
-      options: result.options,
-      answerIndex: result.answerIndex
-    });
-    
-    if (!result.blankedText || !result.options || typeof result.answerIndex !== 'number') {
-      throw new Error('AI 응답에 필수 필드가 누락되었습니다.');
-    }
-    
-    console.log('AI 응답 검증 완료, 반환할 결과:', result);
-    return result;
+  // 본문 → 빈칸 문제/객관식 생성 (AI) - work03Service 사용
+  // 이 함수는 호환성을 위해 유지하지만, 실제로는 generateWork03Quiz를 사용합니다.
+  async function generateBlankQuizWithAI(passage: string, previouslySelectedWords?: string[]): Promise<BlankQuiz> {
+    // work03Service의 generateWork03Quiz 함수 사용
+    return await generateWork03Quiz(passage, previouslySelectedWords);
   }
 
   // 영어본문 한글 번역 함수
@@ -647,25 +486,53 @@ ${englishText}`;
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
+      // 동일한 본문별로 그룹화하여 이전 선택 추적
+      const passageGroups = new Map<string, { items: typeof validItems, selectedWords: string[] }>();
+      
+      validItems.forEach(item => {
         const passage = item.text.trim();
-        if (!passage) return null;
-
-        try {
-          const quizData = await generateBlankQuizWithAI(passage);
-          const translation = await translateToKorean(passage);
-          const quizDataWithTranslation: BlankQuiz = { 
-            ...quizData, 
-            translation,
-            id: item.id
-          };
-          return quizDataWithTranslation;
-        } catch (itemError: any) {
-          console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
-          alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
-          return null;
+        if (!passageGroups.has(passage)) {
+          passageGroups.set(passage, { items: [], selectedWords: [] });
         }
+        passageGroups.get(passage)!.items.push(item);
       });
+
+      const generatedQuizzes: BlankQuiz[] = [];
+
+      // 각 본문 그룹별로 순차 처리 (동일 본문 내에서 이전 선택 추적)
+      for (const [passage, group] of Array.from(passageGroups.entries())) {
+        console.log(`📝 본문 그룹 처리 시작: "${passage.substring(0, 50)}..." (${group.items.length}개 아이템)`);
+        
+        // 동일 본문 내에서는 순차 처리
+        for (let i = 0; i < group.items.length; i++) {
+          const item = group.items[i];
+          
+          try {
+            console.log(`  🔄 아이템 ${i + 1}/${group.items.length} 처리 중...`);
+            console.log(`  📌 이전 선택 단어: ${group.selectedWords.length > 0 ? group.selectedWords.join(', ') : '없음'}`);
+            
+            // 이전 선택 단어를 포함하여 문제 생성
+            const quizData = await generateWork03Quiz(passage, group.selectedWords);
+            const translation = await translateToKorean(passage);
+            
+            const quizDataWithTranslation: BlankQuiz = { 
+              ...quizData, 
+              translation,
+              id: item.id
+            };
+            
+            // 생성된 문제의 정답 단어를 이전 선택 목록에 추가
+            const selectedWord = quizData.options[quizData.answerIndex];
+            group.selectedWords.push(selectedWord);
+            console.log(`  ✅ 정답 단어 "${selectedWord}" 선택됨 (이제 제외 목록에 추가됨)`);
+            
+            generatedQuizzes.push(quizDataWithTranslation);
+          } catch (itemError: any) {
+            console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
+            alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          }
+        }
+      }
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

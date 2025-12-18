@@ -6,7 +6,7 @@
  * 원본 파일은 수정하지 않았으며, 로직을 복사하여 독립적으로 사용합니다.
  */
 
-import { callOpenAI, translateToKorean } from './common';
+import { callOpenAI, translateToKorean, addVarietyToPrompt, getProblemGenerationTemperature } from './common';
 
 /**
  * 문장 위치 찾기 문제 타입 정의
@@ -22,9 +22,13 @@ export interface SentencePositionQuiz {
 /**
  * 유형#06: 문장 위치 찾기 문제 생성
  * @param passage - 영어 본문
+ * @param previouslySelectedSentences - 이전에 선택된 문장 목록 (동일 본문으로 여러 번 생성 시 사용)
  * @returns 문장 위치 찾기 문제 데이터
  */
-export async function generateWork06Quiz(passage: string): Promise<SentencePositionQuiz> {
+export async function generateWork06Quiz(
+  passage: string,
+  previouslySelectedSentences?: string[]
+): Promise<SentencePositionQuiz> {
   console.log('🔍 Work_06 문제 생성 시작...');
   console.log('📝 입력 텍스트 길이:', passage.length);
 
@@ -46,7 +50,14 @@ export async function generateWork06Quiz(passage: string): Promise<SentencePosit
 12. **절대 금지**: 원문자 중복 사용 금지 (①, ②, ③, ④, ⑤ 각각 한 번씩만 사용)
 
 **작업 순서:**
-1. 본문에서 가장 중요한 주제 문장 1개를 선정하여 제거 (이것이 missingSentence)
+${previouslySelectedSentences && previouslySelectedSentences.length > 0 ? `
+**⚠️ 매우 중요 - 이전 선택 문장 제외:**
+* 아래 문장들은 이전에 이미 선택된 문장입니다. 이 문장들은 **절대 선택하지 마세요**:
+* ${previouslySelectedSentences.map(sentence => `"${sentence.substring(0, 100)}${sentence.length > 100 ? '...' : ''}"`).join(', ')}
+* 위 문장들과는 **완전히 다른 문장**을 선택해야 합니다.
+* 본문에서 위 문장들을 제외한 다른 적절한 문장을 선택하세요.
+
+` : ''}1. 본문에서 가장 중요한 주제 문장 1개를 선정하여 제거 (이것이 missingSentence)
 2. 남은 본문을 문장 단위로 분할 (마침표, 느낌표, 물음표 기준)
 3. 처음 5개 문장 앞에 ①~⑤를 순서대로 삽입 (중복 없이) (이것이 numberedPassage)
 4. 빠진 문장이 들어갈 위치를 1~5 중 하나로 결정 (answerIndex: 0~4)
@@ -92,11 +103,15 @@ export async function generateWork06Quiz(passage: string): Promise<SentencePosit
 **입력 본문:**
 ${passage}`;
 
+    // 다양성 추가
+    const enhancedPrompt = addVarietyToPrompt(prompt);
+    const temperature = getProblemGenerationTemperature(0.7);
+
     const response = await callOpenAI({
       model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content: enhancedPrompt }],
       max_tokens: 2000,
-      temperature: 0.7
+      temperature: temperature
     });
 
     if (!response.ok) {

@@ -7,7 +7,8 @@ import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
-import { extractTextFromImage, callOpenAI } from '../../../services/common';
+import { extractTextFromImage, callOpenAI, translateToKorean } from '../../../services/common';
+import { generateWork08Quiz } from '../../../services/work08Service';
 import { useAuth } from '../../../contexts/AuthContext';
 import PrintFormatWork08New from './PrintFormatWork08New';
 import { processWithConcurrency } from '../../../utils/concurrency';
@@ -237,7 +238,15 @@ const Work_08_TitleInference: React.FC = () => {
     return await extractTextFromImage(base64);
   }
 
-  async function generateTitleQuizWithAI(passage: string): Promise<TitleQuiz> {
+  // 본문 → 제목 추론 문제 생성 (AI) - work08Service 사용
+  // 이 함수는 호환성을 위해 유지하지만, 실제로는 generateWork08Quiz를 사용합니다.
+  async function generateTitleQuizWithAI(passage: string, previouslySelectedTitles?: string[]): Promise<TitleQuiz> {
+    // work08Service의 generateWork08Quiz 함수 사용
+    return await generateWork08Quiz(passage, previouslySelectedTitles);
+  }
+  
+  // 기존 로컬 함수는 제거하고 서비스 함수 사용
+  async function generateTitleQuizWithAI_OLD(passage: string): Promise<TitleQuiz> {
     const prompt = `아래 영어 본문을 읽고, 글의 주제의식에 가장 적합한 제목(title) 1개를 선정해.
 
 요구사항:
@@ -371,9 +380,12 @@ ${passage}
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
+      // 동일한 본문별로 그룹화하여 이전 선택 추적
+      const passageGroups = new Map<string, { items: typeof validItems, selectedTitles: string[] }>();
+      
+      // 먼저 모든 아이템의 본문 추출
+      const itemsWithPassage = await Promise.all(validItems.map(async (item) => {
         let passage = '';
-        
         if (item.inputType === 'text') {
           passage = item.text.trim();
         } else if (item.inputType === 'file' && item.imageFile) {
@@ -381,25 +393,52 @@ ${passage}
         } else if (item.inputType === 'clipboard') {
           passage = item.text.trim();
         }
-        
-        if (!passage.trim()) {
-          console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
-          return null;
-        }
+        return { item, passage };
+      }));
 
-        try {
-          const quizData = await generateTitleQuizWithAI(passage);
-          const quizDataWithId: TitleQuiz = { 
-            ...quizData, 
-            id: item.id
-          };
-          return quizDataWithId;
-        } catch (itemError: any) {
-          console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
-          alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
-          return null;
+      itemsWithPassage.forEach(({ item, passage }) => {
+        if (passage.trim()) {
+          if (!passageGroups.has(passage)) {
+            passageGroups.set(passage, { items: [], selectedTitles: [] });
+          }
+          passageGroups.get(passage)!.items.push(item);
         }
       });
+
+      const generatedQuizzes: TitleQuiz[] = [];
+
+      // 각 본문 그룹별로 순차 처리 (동일 본문 내에서 이전 선택 추적)
+      for (const [passage, group] of Array.from(passageGroups.entries())) {
+        console.log(`📝 본문 그룹 처리 시작: "${passage.substring(0, 50)}..." (${group.items.length}개 아이템)`);
+        
+        // 동일 본문 내에서는 순차 처리
+        for (let i = 0; i < group.items.length; i++) {
+          const item = group.items[i];
+          
+          try {
+            console.log(`  🔄 아이템 ${i + 1}/${group.items.length} 처리 중...`);
+            console.log(`  📌 이전 선택 제목: ${group.selectedTitles.length > 0 ? group.selectedTitles.map(t => t.substring(0, 50) + '...').join(', ') : '없음'}`);
+            
+            // 이전 선택 제목을 포함하여 문제 생성
+            const quizData = await generateTitleQuizWithAI(passage, group.selectedTitles);
+            
+            const quizDataWithId: TitleQuiz = { 
+              ...quizData, 
+              id: item.id
+            };
+            
+            // 생성된 문제의 정답 제목(options[answerIndex])을 이전 선택 목록에 추가
+            const selectedTitle = quizData.options[quizData.answerIndex];
+            group.selectedTitles.push(selectedTitle);
+            console.log(`  ✅ 정답 제목 "${selectedTitle.substring(0, 50)}${selectedTitle.length > 50 ? '...' : ''}" 선택됨 (이제 제외 목록에 추가됨)`);
+            
+            generatedQuizzes.push(quizDataWithId);
+          } catch (itemError: any) {
+            console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
+            alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          }
+        }
+      }
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

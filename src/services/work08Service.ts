@@ -6,7 +6,7 @@
  * 원본 파일은 수정하지 않았으며, 로직을 복사하여 독립적으로 사용합니다.
  */
 
-import { callOpenAI, translateToKorean } from './common';
+import { callOpenAI, translateToKorean, addVarietyToPrompt, getProblemGenerationTemperature } from './common';
 
 /**
  * 제목 추론 문제 타입 정의
@@ -23,9 +23,13 @@ export interface TitleQuiz {
 /**
  * 유형#08: 제목 추론 문제 생성
  * @param passage - 영어 본문
+ * @param previouslySelectedTitles - 이전에 선택된 제목/선택지 목록 (동일 본문으로 여러 번 생성 시 사용)
  * @returns 제목 추론 문제 데이터
  */
-export async function generateWork08Quiz(passage: string): Promise<TitleQuiz> {
+export async function generateWork08Quiz(
+  passage: string,
+  previouslySelectedTitles?: string[]
+): Promise<TitleQuiz> {
   console.log('🔍 Work_08 문제 생성 시작...');
   console.log('📝 입력 텍스트 길이:', passage.length);
 
@@ -47,10 +51,16 @@ export async function generateWork08Quiz(passage: string): Promise<TitleQuiz> {
    - 정답이 너무 뻔하게 드러나지 않도록 모든 선택지의 길이와 문법 구조를 비슷하게 맞추세요.
 
 **✅ 단계별 작업:**
-1단계: 본문의 핵심 메시지와 저자의 의도를 파악합니다.
+${previouslySelectedTitles && previouslySelectedTitles.length > 0 ? `
+**⚠️ 매우 중요 - 이전 선택 제목/선택지 제외:**
+* 아래 제목/선택지들은 이전에 이미 선택된 것입니다. 이들과는 **완전히 다른 제목/선택지**를 작성해야 합니다:
+* ${previouslySelectedTitles.map(title => `"${title.substring(0, 100)}${title.length > 100 ? '...' : ''}"`).join(', ')}
+* 위 제목/선택지들과는 **완전히 다른 관점이나 표현**을 사용하여 새로운 문제를 생성하세요.
+
+` : ''}1단계: 본문의 핵심 메시지와 저자의 의도를 파악합니다.
 2단계: 이를 가장 잘 표현하는 **함축적이고 세련된 영어 제목(정답)**을 1개 작성합니다.
 3단계: 위 '매력적인 오답' 패턴을 활용하여 오답 4개를 작성합니다. (정답과 의미적 거리는 멀되, 형태적 유사성은 가깝게)
-4단계: 5개 선택지를 배열에 배치합니다. (정답 위치는 랜덤)
+4단계: 5개 선택지를 배열에 배치합니다. **⚠️ 매우 중요: 정답의 위치는 반드시 1~5번 중 랜덤하게 배치해야 합니다. 절대로 항상 같은 위치(예: 1번)에 배치하지 마세요. 각 문제마다 다른 위치(0~4 중 랜덤)에 배치하세요.**
 5단계: 본문과 선택지를 정확하고 자연스러운 한국어로 번역합니다.
 
 아래 JSON 형식으로 응답:
@@ -72,11 +82,15 @@ ${passage}
 - optionTranslations는 모든 선택지의 해석 배열 (options와 동일한 순서)
 - 모든 해석이 정확히 일치해야 함`;
 
+    // 다양성 추가
+    const enhancedPrompt = addVarietyToPrompt(prompt);
+    const temperature = getProblemGenerationTemperature(0.7);
+
     const response = await callOpenAI({
       model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content: enhancedPrompt }],
       max_tokens: 2000,
-      temperature: 0.5
+      temperature: temperature
     });
 
     if (!response.ok) {
@@ -129,6 +143,35 @@ ${passage}
       if (result.optionTranslations.length > 5) {
         result.optionTranslations = result.optionTranslations.slice(0, 5);
       }
+    }
+
+    // 정답 위치를 랜덤하게 재배치 (1~5번에 골고루 분포)
+    const correctAnswer = result.options[result.answerIndex];
+    const correctAnswerTranslation = result.optionTranslations[result.answerIndex];
+    
+    // 0~4 중 랜덤한 위치 선택
+    const newAnswerIndex = Math.floor(Math.random() * 5);
+    
+    // 정답이 이미 랜덤 위치에 있으면 그대로 유지, 아니면 재배치
+    if (newAnswerIndex !== result.answerIndex) {
+      // 선택지 배열 복사
+      const shuffledOptions = [...result.options];
+      const shuffledOptionTranslations = [...result.optionTranslations];
+      
+      // 정답을 새 위치로 이동
+      shuffledOptions.splice(result.answerIndex, 1); // 기존 위치에서 제거
+      shuffledOptions.splice(newAnswerIndex, 0, correctAnswer); // 새 위치에 삽입
+      
+      shuffledOptionTranslations.splice(result.answerIndex, 1);
+      shuffledOptionTranslations.splice(newAnswerIndex, 0, correctAnswerTranslation);
+      
+      result.options = shuffledOptions;
+      result.optionTranslations = shuffledOptionTranslations;
+      result.answerIndex = newAnswerIndex;
+      
+      console.log(`🔄 정답 위치 변경: ${result.answerIndex} → ${newAnswerIndex} (${newAnswerIndex + 1}번)`);
+    } else {
+      console.log(`✅ 정답 위치 유지: ${result.answerIndex} (${result.answerIndex + 1}번)`);
     }
 
     console.log('✅ Work_08 문제 생성 완료:', result);

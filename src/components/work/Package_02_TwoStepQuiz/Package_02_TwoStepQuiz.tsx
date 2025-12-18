@@ -770,7 +770,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         }
 
         case '05': {
-          const quiz = await generateWork05Quiz(inputText);
+          const quiz = await generateWork05Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           // 번역 실패 시에도 문제 생성은 계속 진행
           let translation = '';
           try {
@@ -788,7 +788,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         }
 
         case '06': {
-          const quiz = await generateWork06Quiz(inputText);
+          const quiz = await generateWork06Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           quizItem.work06Data = quiz;
           // 주요 문장을 포함한 원본 전체 본문의 번역
           // 번역 실패 시에도 문제 생성은 계속 진행
@@ -802,28 +802,28 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         }
 
         case '07': {
-          const quiz = await generateWork07Quiz(inputText);
+          const quiz = await generateWork07Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           quizItem.work07Data = quiz;
           quizItem.translatedText = quiz.translation;
           break;
         }
 
         case '08': {
-          const quiz = await generateWork08Quiz(inputText);
+          const quiz = await generateWork08Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           quizItem.work08Data = quiz;
           quizItem.translatedText = quiz.translation;
           break;
         }
 
         case '09': {
-          const quiz = await generateWork09Quiz(inputText);
+          const quiz = await generateWork09Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           quizItem.work09Data = quiz;
           quizItem.translatedText = quiz.translation;
           break;
         }
 
         case '10': {
-          const quiz = await generateWork10Quiz(inputText);
+          const quiz = await generateWork10Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           quizItem.work10Data = quiz;
           quizItem.translatedText = quiz.translation;
           break;

@@ -6,7 +6,7 @@
  * 원본 파일은 수정하지 않았으며, 로직을 복사하여 독립적으로 사용합니다.
  */
 
-import { callOpenAI, translateToKorean } from './common';
+import { callOpenAI, translateToKorean, addVarietyToPrompt, getProblemGenerationTemperature } from './common';
 
 /**
  * 다중 어법 오류 문제 타입 정의
@@ -25,9 +25,13 @@ export interface MultiGrammarQuiz {
 /**
  * 유형#10: 다중 어법 오류 찾기 문제 생성
  * @param passage - 영어 본문
+ * @param previouslySelectedWords - 이전에 선택된 단어 목록 (동일 본문으로 여러 번 생성 시 사용)
  * @returns 다중 어법 오류 문제 데이터
  */
-export async function generateWork10Quiz(passage: string): Promise<MultiGrammarQuiz> {
+export async function generateWork10Quiz(
+  passage: string,
+  previouslySelectedWords?: string[]
+): Promise<MultiGrammarQuiz> {
   console.log('🔍 Work_10 문제 생성 시작...');
   console.log('📝 입력 텍스트 길이:', passage.length);
 
@@ -53,6 +57,13 @@ export async function generateWork10Quiz(passage: string): Promise<MultiGrammarQ
 
 본문:
 ${passage}
+${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
+
+**⚠️ 매우 중요 - 이전 선택 단어 제외:**
+* 아래 단어들은 이전에 이미 선택된 단어입니다. 이 단어들은 **절대 선택하지 마세요**:
+* ${previouslySelectedWords.map(word => `"${word}"`).join(', ')}
+* 위 단어들과는 **완전히 다른 단어**를 선택해야 합니다.
+* 본문에서 위 단어들을 제외한 다른 적절한 단어를 선택하세요.` : ''}
 
 응답 형식 (JSON 배열, 최소 15개 이상 추출):
 ["word1", "word2", "word3", ...]`;
@@ -158,11 +169,15 @@ ${JSON.stringify(validCandidateWords, null, 2)}
 - wrongIndexes는 반드시 3개 이상 8개 이하여야 합니다 (예: [0,1,2] 또는 [0,1,2,3,4,5,6,7] 등)
 - wrongIndexes의 모든 값은 0~7 범위여야 합니다`;
 
+    // 다양성 추가
+    const enhancedPrompt = addVarietyToPrompt(prompt);
+    const temperature = getProblemGenerationTemperature(0.7);
+
     const response = await callOpenAI({
       model: 'gpt-4o',
-      messages: [{ role: 'system', content: 'You are an English grammar expert specializing in the Korean CSAT (Suneung). You create challenging syntax errors.' }, { role: 'user', content: prompt }],
+      messages: [{ role: 'system', content: 'You are an English grammar expert specializing in the Korean CSAT (Suneung). You create challenging syntax errors.' }, { role: 'user', content: enhancedPrompt }],
       max_tokens: 3000,
-      temperature: 0.7
+      temperature: temperature
     });
 
     if (!response.ok) {

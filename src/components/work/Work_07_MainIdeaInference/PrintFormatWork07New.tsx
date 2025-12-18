@@ -27,18 +27,18 @@ interface PrintFormatWork07NewProps {
 const PAGE_HEIGHT_PX = 730; 
 
 // 1. 영어 본문 (9.4pt, line-height 1.54)
-// 자폭 약 7px 가정 (510px / 7px ≈ 73자)
-const CHARS_PER_LINE_ENG = 73; 
+// 자폭 약 6.25px 가정 (512px / 6.25px ≈ 82자)
+const CHARS_PER_LINE_ENG = 82; // 73 -> 82 (줄 수 과대평가 방지)
 const LINE_HEIGHT_ENG = 20; // 19.3px -> 20px (안전 마진)
 
 // 2. 한글 해석 (8.8pt, line-height 1.35)
-// 자폭 약 11.7px 가정 (510px / 11.7px ≈ 43.5자)
-const CHARS_PER_LINE_KOR = 43;
+// 자폭 약 11px 가정 (512px / 11px ≈ 46자)
+const CHARS_PER_LINE_KOR = 48; // 43 -> 48 (줄 수 과대평가 방지)
 const LINE_HEIGHT_KOR = 16; // 15.8px -> 16px
 
 // 3. 선택지 (9.35pt, line-height 1.3)
-const CHARS_PER_LINE_OPTION = 75; // 영어 기준
-const HEIGHT_PER_OPTION = 21; // 15.6px + 마진 4.5px ≈ 20.1px -> 21px
+const CHARS_PER_LINE_OPTION = 85; // 75 -> 85 (줄 수 과대평가 방지)
+const HEIGHT_PER_OPTION = 20; // 21 -> 20 (정확한 높이)
 
 // 높이 계산 헬퍼 함수
 const estimateSectionHeight = (section: PrintSection): number => {
@@ -67,13 +67,23 @@ const estimateSectionHeight = (section: PrintSection): number => {
     }
     case 'options': {
       // 컨테이너 마진/패딩
-      let totalOptionHeight = 15; 
+      let totalOptionHeight = 10; // 15 -> 10 (여백 축소 가정)
       section.options?.forEach(opt => {
-        const textLen = (opt.text || '').length + 5; // 번호 길이 포함
-        // 옵션 텍스트가 길어서 줄바꿈 되는 경우 고려
-        const lines = Math.ceil(textLen / CHARS_PER_LINE_OPTION);
+        // 옵션 텍스트 길이 + 번호 (약 5자)
+        const textLen = (opt.text || '').length + 5; 
+        let lines = Math.ceil(textLen / CHARS_PER_LINE_OPTION);
+        
+        // 옵션 해석이 있으면 추가 높이 계산 (줄 수에 합산)
+        if (opt.translation) {
+          const transLen = opt.translation.length;
+          const transLines = Math.ceil(transLen / CHARS_PER_LINE_KOR);
+          // 해석은 약간 작은 폰트일 수 있으나 안전하게 계산
+          lines += transLines; 
+        }
+        
         // 기본 1줄일 때 HEIGHT_PER_OPTION, 줄바꿈 되면 줄당 높이 추가
-        const optionHeight = HEIGHT_PER_OPTION + ((lines - 1) * 18);
+        // 줄당 16px 추가 (18 -> 16, 더 정확한 계산)
+        const optionHeight = HEIGHT_PER_OPTION + ((lines - 1) * 16);
         totalOptionHeight += optionHeight;
       });
       return totalOptionHeight;
@@ -133,10 +143,12 @@ const PrintFormatWork07New: React.FC<PrintFormatWork07NewProps> = ({ quizzes, is
     });
 
     // 4. 선택지 - options 타입 사용 (세로 배치 보장)
+    // 정답 모드일 때 각 선택지에 해석 추가
     const options = quiz.options.map((opt, i) => ({
       label: ['①', '②', '③', '④', '⑤'][i] || `${i+1}.`,
       text: opt,
-      isCorrect: isAnswerMode && i === quiz.answerIndex
+      isCorrect: isAnswerMode && i === quiz.answerIndex,
+      translation: isAnswerMode && quiz.optionTranslations && quiz.optionTranslations[i] ? quiz.optionTranslations[i] : undefined
     }));
     
     sections.push({
@@ -185,46 +197,78 @@ const PrintFormatWork07New: React.FC<PrintFormatWork07NewProps> = ({ quizzes, is
     };
 
     items.forEach((item) => {
-      // 1. 아이템 높이 정밀 분석
-      const mainSections = item.sections.filter(s => s.type !== 'translation');
-      const transSections = item.sections.filter(s => s.type === 'translation');
+      // 1. 아이템 높이 정밀 분석 (3단계 분할 로직 A/B/C)
+      // A: 문제 헤더 + 본문 (title, instruction, html)
+      // B: 핵심 질문/선택지 (options)
+      // C: 부가 정보 (translation)
+      
+      const sectionA = item.sections.filter(s => ['title', 'instruction', 'html'].includes(s.type));
+      const sectionB = item.sections.filter(s => ['options'].includes(s.type));
+      const sectionC = item.sections.filter(s => ['translation'].includes(s.type));
 
-      const mainHeight = mainSections.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
-      const transHeight = transSections.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
-      const totalHeight = mainHeight + transHeight;
+      const heightA = sectionA.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
+      const heightB = sectionB.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
+      const heightC = sectionC.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
+      
+      const buffer = 0; // 5 -> 0 (최대한 타이트하게 계산, 과대평가 방지)
+      const heightTotal = heightA + heightB + heightC + buffer;
+      const heightAB = heightA + heightB + buffer;
 
       // 현재 단에 내용이 있으면 무조건 다음 단으로 이동 (새로운 문제는 항상 새 단에서 시작)
       if (currentColumns[currentColumnIndex].length > 0) {
         moveToNextColumn();
       }
 
-      // 2. 분할 결정
-      // 전체 높이가 페이지 높이(730px)를 초과하고, 본문+선택지는 페이지 높이보다 작은 경우에만 분할
-      if (isAnswerMode && transSections.length > 0 && totalHeight > PAGE_HEIGHT_PX && mainHeight < PAGE_HEIGHT_PX) {
-        // 분할 처리
-        
-        // Item A: 본문 + 선택지
-        const itemMain: NormalizedQuizItem = {
-          ...item,
-          sections: mainSections,
-        };
+      // 2. 분할 결정 (A/B/C Split Logic)
+      if (isAnswerMode && sectionC.length > 0) {
+        // 정답 모드일 때만 분할 로직 적용
+        if (heightTotal <= PAGE_HEIGHT_PX) {
+          // Case 1: A + B + C <= H → 모두 현재 단에 배치
+          addToCurrentColumn(item);
+        } else {
+          if (heightAB <= PAGE_HEIGHT_PX) {
+            // Case 2: A + B + C > H 이고 A + B <= H → A + B는 현재 단, C는 다음 단으로 분리
+            const itemAB: NormalizedQuizItem = {
+              ...item,
+              sections: [...sectionA, ...sectionB]
+            };
+            const itemC: NormalizedQuizItem = {
+              originalItem: item.originalItem,
+              workTypeId: item.workTypeId,
+              sections: sectionC,
+              chunkMeta: { ...item.chunkMeta, isSplitPart: true }
+            };
 
-        // Item B: 해석
-        const itemTrans: NormalizedQuizItem = {
-          originalItem: item.originalItem,
-          workTypeId: item.workTypeId,
-          sections: transSections,
-          chunkMeta: { ...item.chunkMeta, isSplitPart: true }
-        };
+            // Item A+B를 현재 단에 배치
+            addToCurrentColumn(itemAB);
 
-        // Item A를 현재 단에 배치
-        addToCurrentColumn(itemMain);
+            // Item C(해석)를 다음 단으로 이동하여 배치
+            moveToNextColumn();
+            addToCurrentColumn(itemC);
+          } else {
+            // Case 3: A + B > H → A는 현재 단, B + C는 다음 단으로 분리
+            // (만약 A 자체도 높다면 어쩔 수 없이 넘치거나 짤림, 하지만 시작은 현재 단)
+            const itemA: NormalizedQuizItem = {
+              ...item,
+              sections: sectionA
+            };
+            const itemBC: NormalizedQuizItem = {
+              originalItem: item.originalItem,
+              workTypeId: item.workTypeId,
+              sections: [...sectionB, ...sectionC],
+              chunkMeta: { ...item.chunkMeta, isSplitPart: true }
+            };
 
-        // Item B(해석)를 다음 단으로 이동하여 배치
-        moveToNextColumn();
-        addToCurrentColumn(itemTrans);
+            // Item A를 현재 단에 배치
+            addToCurrentColumn(itemA);
+
+            // Item B+C를 다음 단으로 이동하여 배치
+            moveToNextColumn();
+            addToCurrentColumn(itemBC);
+          }
+        }
       } else {
-        // 분할 불필요 (한 단에 모두 들어가거나, 본문 자체가 너무 커서 분할 의미가 없는 경우)
+        // 문제 모드이거나 해석이 없는 경우: 분할 없이 그대로 배치
         addToCurrentColumn(item);
       }
     });
@@ -280,6 +324,17 @@ const PrintFormatWork07New: React.FC<PrintFormatWork07NewProps> = ({ quizzes, is
             height: 19.3cm !important;
             overflow: hidden !important;
           }
+        }
+        /* 유형#07 인쇄(정답) 모드: 영어본문과 4지선다 사이 여백 50% 감소 */
+        .work07-print.print-container-answer .print-passage {
+          margin-bottom: 0.125cm !important; /* 기존 0.25cm의 50% */
+        }
+        /* 유형#07 인쇄(정답) 모드: 4지선다와 본문해석 사이 여백 50% 감소 */
+        .work07-print.print-container-answer .print-options {
+          margin-bottom: 0.25cm !important; /* 기존 0.5cm의 50% */
+        }
+        .work07-print.print-container-answer .print-translation-section {
+          margin-top: 0.15cm !important; /* 기존 0.3cm의 50% */
         }
       `}</style>
 

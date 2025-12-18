@@ -252,9 +252,12 @@ const Work_09_GrammarError: React.FC = () => {
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
+      // 동일한 본문별로 그룹화하여 이전 선택 추적
+      const passageGroups = new Map<string, { items: typeof validItems, selectedWords: string[] }>();
+      
+      // 먼저 모든 아이템의 본문 추출
+      const itemsWithPassage = await Promise.all(validItems.map(async (item) => {
         let passage = '';
-        
         if (item.inputType === 'text') {
           passage = item.text.trim();
         } else if (item.inputType === 'file' && item.imageFile) {
@@ -262,25 +265,55 @@ const Work_09_GrammarError: React.FC = () => {
         } else if (item.inputType === 'clipboard') {
           passage = item.text.trim();
         }
-        
-        if (!passage.trim()) {
-          console.warn(`아이템 ${item.id}의 텍스트가 비어있습니다.`);
-          return null;
-        }
+        return { item, passage };
+      }));
 
-        try {
-          const quizData = await generateWork09Quiz(passage);
-          const quizDataWithId = { 
-            ...quizData, 
-            id: item.id
-          };
-          return quizDataWithId;
-        } catch (itemError: any) {
-          console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
-          alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
-          return null;
+      itemsWithPassage.forEach(({ item, passage }) => {
+        if (passage.trim()) {
+          if (!passageGroups.has(passage)) {
+            passageGroups.set(passage, { items: [], selectedWords: [] });
+          }
+          passageGroups.get(passage)!.items.push(item);
         }
       });
+
+      const generatedQuizzes: (GrammarQuiz & { id?: string })[] = [];
+
+      // 각 본문 그룹별로 순차 처리 (동일 본문 내에서 이전 선택 추적)
+      for (const [passage, group] of Array.from(passageGroups.entries())) {
+        console.log(`📝 본문 그룹 처리 시작: "${passage.substring(0, 50)}..." (${group.items.length}개 아이템)`);
+        
+        // 동일 본문 내에서는 순차 처리
+        for (let i = 0; i < group.items.length; i++) {
+          const item = group.items[i];
+          
+          try {
+            console.log(`  🔄 아이템 ${i + 1}/${group.items.length} 처리 중...`);
+            console.log(`  📌 이전 선택 단어: ${group.selectedWords.length > 0 ? group.selectedWords.join(', ') : '없음'}`);
+            
+            // 이전 선택 단어를 포함하여 문제 생성
+            const quizData = await generateWork09Quiz(passage, group.selectedWords);
+            
+            const quizDataWithId = { 
+              ...quizData, 
+              id: item.id
+            };
+            
+            // 생성된 문제의 정답 단어를 이전 선택 목록에 추가
+            // 유형#09는 original 필드가 정답 단어(변형 전 원본 단어)
+            const selectedWord = quizData.original;
+            if (selectedWord && !group.selectedWords.includes(selectedWord)) {
+              group.selectedWords.push(selectedWord);
+              console.log(`  ✅ 정답 단어 "${selectedWord}" 선택됨 (이제 제외 목록에 추가됨)`);
+            }
+            
+            generatedQuizzes.push(quizDataWithId);
+          } catch (itemError: any) {
+            console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
+            alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          }
+        }
+      }
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

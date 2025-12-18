@@ -6,7 +6,7 @@
  * 원본 파일은 수정하지 않았으며, 로직을 복사하여 독립적으로 사용합니다.
  */
 
-import { callOpenAI, translateToKorean } from './common';
+import { callOpenAI, translateToKorean, addVarietyToPrompt, getProblemGenerationTemperature } from './common';
 
 // 문장 분할 유틸리티 함수 (work14Service.ts에서 가져옴)
 function splitSentences(input: string): string[] {
@@ -45,13 +45,17 @@ export interface BlankQuiz {
 /**
  * 유형#05: 빈칸(문장) 문제 생성
  * @param passage - 영어 본문
+ * @param previouslySelectedSentences - 이전에 선택된 문장 목록 (동일 본문으로 여러 번 생성 시 사용)
  * @returns 빈칸 문제 데이터
  */
 
 // 빈칸 형식 상수 (언더스코어 30개)
 const BLANK_PATTERN = '(______________________________)';
 
-export async function generateWork05Quiz(passage: string): Promise<BlankQuiz> {
+export async function generateWork05Quiz(
+  passage: string,
+  previouslySelectedSentences?: string[]
+): Promise<BlankQuiz> {
   console.log('🔍 Work_05 문제 생성 시작...');
   console.log('📝 입력 텍스트 길이:', passage.length);
 
@@ -88,6 +92,12 @@ export async function generateWork05Quiz(passage: string): Promise<BlankQuiz> {
    - 철자, 형태, 대소문자, 구두점까지 완전히 동일해야 합니다.
    - 절대로 변형, 대체, 동의어, 어형 변화를 하지 마세요.
    - 본문을 복사해서 붙여넣기 하듯이 정확히 동일하게 사용하세요.
+   ${previouslySelectedSentences && previouslySelectedSentences.length > 0 ? `
+   - **⚠️⚠️⚠️ 절대 필수: 이전에 선택된 문장들은 절대 선택하지 마세요.**
+   - **이전 선택 문장 목록:**
+     ${previouslySelectedSentences.map((s, idx) => `${idx + 1}. "${s.substring(0, 80)}${s.length > 80 ? '...' : ''}"`).join('\n     ')}
+   - **위 문장들과는 완전히 다른 문장을 선택해야 합니다.**
+   - **본문에서 위 문장들을 제외한 다른 적절한 문장을 선택하세요.**` : ''}
 
 2. **본문 처리:**
    - 문제의 본문(빈칸 포함)은 사용자가 입력한 전체 본문과 완전히 동일해야 합니다.
@@ -97,6 +107,15 @@ export async function generateWork05Quiz(passage: string): Promise<BlankQuiz> {
 3. **제외 문장:**
    - 입력된 본문에 이미 ()로 묶인 문장이 있다면, 그 부분은 절대 빈칸 처리 대상으로 삼지 마세요.
    - 아래 문장들은 절대 빈칸 처리하지 마세요: ${excludedSentences.length > 0 ? excludedSentences.join(', ') : '없음'}
+${previouslySelectedSentences && previouslySelectedSentences.length > 0 ? `
+   - **⚠️⚠️⚠️ 절대 필수 - 이전 선택 문장 제외 (매우 중요):**
+     * 아래 문장들은 이전에 이미 선택된 문장입니다. 이 문장들은 **절대 선택하지 마세요**:
+     * ${previouslySelectedSentences.map(sentence => `"${sentence.substring(0, 100)}${sentence.length > 100 ? '...' : ''}"`).join(', ')}
+     * 위 문장들과는 **완전히 다른 문장**을 선택해야 합니다.
+     * 본문에서 위 문장들을 제외한 다른 적절한 문장을 선택하세요.
+     * **이전에 선택한 문장과 동일하거나 유사한 문장을 선택하면 안 됩니다.**
+     * **반드시 본문의 다른 위치에서 다른 문장을 선택해야 합니다.**
+     * **이 지시를 무시하면 문제가 재생성됩니다.**` : ''}
 
 4. **5지선다 생성:**
    - 정답 문장(본문에서 선정한 문장을 그대로) + 오답 문장 4개 = 총 5개
@@ -146,11 +165,15 @@ ${forbiddenSentences.map((s, i) => `   ${i + 1}. "${s.substring(0, 80)}${s.lengt
 본문:
 ${passage}`;
 
+    // 다양성 추가
+    const enhancedPrompt = addVarietyToPrompt(prompt);
+    const temperature = getProblemGenerationTemperature(attempt === 1 ? 0.7 : 0.6);
+
     const response = await callOpenAI({
       model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content: enhancedPrompt }],
       max_tokens: 3000,
-      temperature: attempt === 1 ? 0.5 : 0.3 // 첫 시도는 0.5, 재시도는 더 낮춤 (일관성 향상)
+      temperature: temperature
     });
 
     if (!response.ok) {

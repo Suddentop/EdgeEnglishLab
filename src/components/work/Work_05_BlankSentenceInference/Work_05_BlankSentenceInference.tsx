@@ -10,7 +10,7 @@ import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPo
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import { generateWork05Quiz, type BlankQuiz } from '../../../services/work05Service';
-import { extractTextFromImage, callOpenAI } from '../../../services/common';
+import { extractTextFromImage, callOpenAI, translateToKorean } from '../../../services/common';
 import PrintFormatWork05New from './PrintFormatWork05New';
 import { processWithConcurrency } from '../../../utils/concurrency';
 
@@ -352,28 +352,64 @@ ${englishText}`;
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
+      // 동일한 본문별로 그룹화하여 이전 선택 추적
+      const passageGroups = new Map<string, { items: typeof validItems, selectedSentences: string[] }>();
+      
+      validItems.forEach(item => {
         const passage = item.text.trim();
-        if (!passage) return null;
-
-        try {
-          const quizData = await generateWork05Quiz(passage);
-          let translation = quizData.translation;
-          if (!translation) {
-            translation = await translateToKorean(passage);
-          }
-          const quizDataWithTranslation: BlankQuiz = { 
-            ...quizData, 
-            translation,
-            id: item.id
-          };
-          return quizDataWithTranslation;
-        } catch (itemError: any) {
-          console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
-          alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
-          return null;
+        if (!passageGroups.has(passage)) {
+          passageGroups.set(passage, { items: [], selectedSentences: [] });
         }
+        passageGroups.get(passage)!.items.push(item);
       });
+
+      const generatedQuizzes: BlankQuiz[] = [];
+
+      // 각 본문 그룹별로 순차 처리 (동일 본문 내에서 이전 선택 추적)
+      for (const [passage, group] of Array.from(passageGroups.entries())) {
+        console.log(`📝 본문 그룹 처리 시작: "${passage.substring(0, 50)}..." (${group.items.length}개 아이템)`);
+        
+        // 동일 본문 내에서는 순차 처리
+        for (let i = 0; i < group.items.length; i++) {
+          const item = group.items[i];
+          
+          try {
+            console.log(`  🔄 아이템 ${i + 1}/${group.items.length} 처리 중...`);
+            console.log(`  📌 이전 선택 문장: ${group.selectedSentences.length > 0 ? group.selectedSentences.map(s => s.substring(0, 50) + '...').join(', ') : '없음'}`);
+            
+            // 이전 선택 문장을 포함하여 문제 생성
+            const quizData = await generateWork05Quiz(passage, group.selectedSentences);
+            let translation = quizData.translation;
+            if (!translation) {
+              translation = await translateToKorean(passage);
+            }
+            
+            const quizDataWithTranslation: BlankQuiz = { 
+              ...quizData, 
+              translation,
+              id: item.id
+            };
+            
+            // 생성된 문제의 정답 문장을 이전 선택 목록에 추가
+            // 유형#05는 options[answerIndex]가 정답 문장
+            const selectedSentence = quizData.options[quizData.answerIndex];
+            
+            // 이전에 선택된 문장과 중복 확인
+            if (group.selectedSentences.includes(selectedSentence)) {
+              console.warn(`⚠️ 경고: 이전에 선택된 문장 "${selectedSentence.substring(0, 50)}..."가 다시 선택되었습니다. AI가 지시를 따르지 않았습니다.`);
+            } else {
+              group.selectedSentences.push(selectedSentence);
+              console.log(`  ✅ 정답 문장 "${selectedSentence.substring(0, 50)}${selectedSentence.length > 50 ? '...' : ''}" 선택됨 (이제 제외 목록에 추가됨)`);
+              console.log(`  📋 현재 제외 목록 (${group.selectedSentences.length}개):`, group.selectedSentences.map(s => s.substring(0, 40) + '...'));
+            }
+            
+            generatedQuizzes.push(quizDataWithTranslation);
+          } catch (itemError: any) {
+            console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
+            alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          }
+        }
+      }
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');

@@ -2456,6 +2456,50 @@ textarea#text-input:focus {
   box-shadow: 0 0 0 2px rgba(31, 143, 152, 0.2);
 }
 
+/* 비밀번호 입력 필드 래퍼 */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 2.5rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 1.2rem;
+  color: #666;
+  transition: color 0.2s, opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  line-height: 1;
+  user-select: none;
+}
+
+.password-toggle-btn:hover {
+  color: #1f8f98;
+  opacity: 0.8;
+}
+
+.password-toggle-btn:active {
+  opacity: 0.6;
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  color: #1f8f98;
+}
+
 .form-group.checkbox {
   display: flex !important;
   align-items: center !important;

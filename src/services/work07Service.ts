@@ -6,7 +6,7 @@
  * 원본 파일은 수정하지 않았으며, 로직을 복사하여 독립적으로 사용합니다.
  */
 
-import { callOpenAI, translateToKorean } from './common';
+import { callOpenAI, translateToKorean, addVarietyToPrompt, getProblemGenerationTemperature } from './common';
 
 /**
  * 주제 추론 문제 타입 정의
@@ -23,9 +23,13 @@ export interface MainIdeaQuiz {
 /**
  * 유형#07: 주제 추론 문제 생성
  * @param passage - 영어 본문
+ * @param previouslySelectedTopics - 이전에 선택된 주제/선택지 목록 (동일 본문으로 여러 번 생성 시 사용)
  * @returns 주제 추론 문제 데이터
  */
-export async function generateWork07Quiz(passage: string): Promise<MainIdeaQuiz> {
+export async function generateWork07Quiz(
+  passage: string,
+  previouslySelectedTopics?: string[]
+): Promise<MainIdeaQuiz> {
   console.log('🔍 Work_07 문제 생성 시작...');
   console.log('📝 입력 텍스트 길이:', passage.length);
 
@@ -51,10 +55,26 @@ export async function generateWork07Quiz(passage: string): Promise<MainIdeaQuiz>
 - ❌ 너무 쉬운 유치한 오답(전혀 관련 없는 내용)을 포함하지 마세요.
 
 **✅ 단계별 작업:**
-1단계: 본문 전체를 정독하고 핵심 주제, 요지, 저자의 의도를 파악합니다.
+${previouslySelectedTopics && previouslySelectedTopics.length > 0 ? `
+**⚠️⚠️⚠️ 절대 필수 - 이전 선택 주제/선택지 제외 (매우 중요):**
+* 아래 주제/선택지들은 이전에 이미 선택된 것입니다. 이 주제/선택지들은 **절대 사용하지 마세요**:
+* ${previouslySelectedTopics.map(topic => `"${topic.substring(0, 100)}${topic.length > 100 ? '...' : ''}"`).join(', ')}
+* 위 주제/선택지들과는 **완전히 다른 주제/선택지**를 작성해야 합니다.
+* 본문에서 위 주제/선택지들을 제외한 다른 적절한 주제/선택지를 선택하세요.
+* **이전에 선택한 주제/선택지와 동일하거나 유사한 것을 선택하면 안 됩니다.**
+* **반드시 본문의 다른 관점이나 표현을 사용하여 새로운 문제를 생성해야 합니다.**
+* **이 지시를 무시하면 문제가 재생성됩니다.**
+
+` : ''}1단계: 본문 전체를 정독하고 핵심 주제, 요지, 저자의 의도를 파악합니다.
+${previouslySelectedTopics && previouslySelectedTopics.length > 0 ? `
+**⚠️⚠️⚠️ 절대 필수: 이전에 선택된 주제/선택지들은 절대 사용하지 마세요.**
+**이전 선택 주제/선택지 목록:**
+${previouslySelectedTopics.map((t, idx) => `${idx + 1}. "${t.substring(0, 80)}${t.length > 80 ? '...' : ''}"`).join('\n')}
+**위 주제/선택지들과는 완전히 다른 주제/선택지를 선택해야 합니다.**
+**본문에서 위 주제/선택지들을 제외한 다른 적절한 주제/선택지를 선택하세요.**` : ''}
 2단계: **고3 수능 수준**의 고급 어휘와 구문을 사용하여 정답 선택지 1개를 작성합니다. (추상적, 함축적 표현 권장)
 3단계: 위에서 언급한 '매력적인 오답' 유형을 활용하여 오답 4개를 작성합니다. 정답과 **의미적 거리는 멀되, 형태적 유사성은 가깝게** 만드세요.
-4단계: 5개 선택지를 배열에 배치합니다. (정답 위치는 랜덤)
+4단계: 5개 선택지를 배열에 배치합니다. **⚠️ 매우 중요: 정답의 위치는 반드시 1~5번 중 랜덤하게 배치해야 합니다. 절대로 항상 같은 위치(예: 1번)에 배치하지 마세요. 각 문제마다 다른 위치(0~4 중 랜덤)에 배치하세요.**
 5단계: 본문 전체를 자연스러운 한국어로 번역합니다.
 6단계: 각 선택지를 정확한 한국어로 번역합니다. (직역보다는 의미 전달 위주)
 
@@ -77,11 +97,15 @@ ${passage}
 - optionTranslations는 모든 선택지의 해석 배열 (options와 동일한 순서)
 - 모든 해석이 정확히 일치해야 함`;
 
+    // 다양성 추가
+    const enhancedPrompt = addVarietyToPrompt(prompt);
+    const temperature = getProblemGenerationTemperature(0.7);
+
     const response = await callOpenAI({
       model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content: enhancedPrompt }],
       max_tokens: 2000,
-      temperature: 0.3 // 더 낮은 temperature로 일관성 향상
+      temperature: temperature
     });
 
     if (!response.ok) {
@@ -127,6 +151,35 @@ ${passage}
 
     if (answerTranslation !== optionTranslation) {
       console.warn('정답 해석과 선택지 해석이 일치하지 않습니다. 재시도를 권장합니다.');
+    }
+
+    // 정답 위치를 랜덤하게 재배치 (1~5번에 골고루 분포)
+    const correctAnswer = result.options[result.answerIndex];
+    const correctAnswerTranslation = result.optionTranslations[result.answerIndex];
+    
+    // 0~4 중 랜덤한 위치 선택
+    const newAnswerIndex = Math.floor(Math.random() * 5);
+    
+    // 정답이 이미 랜덤 위치에 있으면 그대로 유지, 아니면 재배치
+    if (newAnswerIndex !== result.answerIndex) {
+      // 선택지 배열 복사
+      const shuffledOptions = [...result.options];
+      const shuffledOptionTranslations = [...result.optionTranslations];
+      
+      // 정답을 새 위치로 이동
+      shuffledOptions.splice(result.answerIndex, 1); // 기존 위치에서 제거
+      shuffledOptions.splice(newAnswerIndex, 0, correctAnswer); // 새 위치에 삽입
+      
+      shuffledOptionTranslations.splice(result.answerIndex, 1);
+      shuffledOptionTranslations.splice(newAnswerIndex, 0, correctAnswerTranslation);
+      
+      result.options = shuffledOptions;
+      result.optionTranslations = shuffledOptionTranslations;
+      result.answerIndex = newAnswerIndex;
+      
+      console.log(`🔄 정답 위치 변경: ${result.answerIndex} → ${newAnswerIndex} (${newAnswerIndex + 1}번)`);
+    } else {
+      console.log(`✅ 정답 위치 유지: ${result.answerIndex} (${result.answerIndex + 1}번)`);
     }
 
     console.log('✅ Work_07 문제 생성 완료:', result);

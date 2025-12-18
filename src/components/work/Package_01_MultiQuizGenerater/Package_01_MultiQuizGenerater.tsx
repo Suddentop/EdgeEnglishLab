@@ -11,13 +11,19 @@ import { createQuiz } from '../../../utils/textProcessor';
 import { Quiz, SentenceTranslationQuiz } from '../../../types/types';
 import { generateWork02Quiz, Work02QuizData } from '../../../services/work02Service';
 import { imageToTextWithOpenAIVision, splitSentences, countWordsInSentence, filterValidSentences, generateBlankQuizWithAI } from '../../../services/work14Service';
-import { generateWork05Quiz } from '../../../services/work05Service';
-import { generateWork09Quiz } from '../../../services/work09Service';
+import { generateWork04Quiz as generateWork04QuizService } from '../../../services/work04Service';
+import { generateWork05Quiz as generateWork05QuizService } from '../../../services/work05Service';
+import { generateWork06Quiz as generateWork06QuizService } from '../../../services/work06Service';
+import { generateWork07Quiz as generateWork07QuizService } from '../../../services/work07Service';
+import { generateWork08Quiz as generateWork08QuizService } from '../../../services/work08Service';
+import { generateWork09Quiz as generateWork09QuizService } from '../../../services/work09Service';
+import { generateWork10Quiz as generateWork10QuizService } from '../../../services/work10Service';
 import PrintFormatPackage01, { PrintFormatPackage01Work02, PrintFormatPackage01Work03, PrintFormatPackage01Work04, PrintFormatPackage01Work05, PrintFormatPackage01Work06, PrintFormatPackage01Work07, PrintFormatPackage01Work08, PrintFormatPackage01Work09, PrintFormatPackage01Work10, PrintFormatPackage01Work11, PrintFormatPackage01Work13, PrintFormatPackage01Work14 } from './PrintFormatPackage01';
 import './PrintFormatPackage01.css';
 import '../shared/PrintControls.css';
 import FileFormatSelector from '../shared/FileFormatSelector';
-import { callOpenAI, translateToKorean } from '../../../services/common';
+import { callOpenAI, translateToKorean, addVarietyToPrompt, getProblemGenerationTemperature } from '../../../services/common';
+import { generateWork03Quiz as generateWork03QuizService } from '../../../services/work03Service';
 import { FileFormat, generateAndUploadFile } from '../../../services/pdfService';
 import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 
@@ -819,8 +825,24 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
     }
   };
 
-  // Work_04 (빈칸 구 문제) 문제 생성 함수
+  // Work_04 (빈칸 구 문제) 문제 생성 함수 - work04Service 사용
   const generateWork04Quiz = async (inputText: string): Promise<BlankQuiz> => {
+    // work04Service의 함수 사용 (패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음)
+    const blankQuiz = await generateWork04QuizService(inputText);
+    
+    // Package_01의 BlankQuiz 타입에 맞게 변환 (translation 필수)
+    const translation = blankQuiz.translation || await translateToKorean(inputText);
+    
+    return {
+      blankedText: blankQuiz.blankedText,
+      options: blankQuiz.options,
+      answerIndex: blankQuiz.answerIndex,
+      translation: translation
+    };
+  };
+  
+  // 기존 로컬 함수는 제거하고 서비스 함수 사용
+  const generateWork04Quiz_OLD = async (inputText: string): Promise<BlankQuiz> => {
     console.log('🔍 Work_04 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
 
@@ -987,6 +1009,11 @@ ${inputText}`;
   };
 
   const generateWork07Quiz = async (inputText: string): Promise<MainIdeaQuiz> => {
+    // work07Service의 함수 사용 (패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음)
+    return await generateWork07QuizService(inputText);
+  };
+  
+  const generateWork07Quiz_OLD = async (inputText: string): Promise<MainIdeaQuiz> => {
     console.log('🔍 Work_07 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
 
@@ -1023,12 +1050,16 @@ ${inputText}
 - optionTranslations[1]도 "미래는 불확실하지만 희망적입니다."가 되어야 함
 - 모든 해석이 정확히 일치해야 함`;
 
+      // 다양성 추가
+      const enhancedPrompt = addVarietyToPrompt(prompt);
+      const temperature = getProblemGenerationTemperature(0.7);
+
       console.log('🤖 OpenAI API 호출 중...');
       const response = await callOpenAIAPI({
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: enhancedPrompt }],
         max_tokens: 2000,
-          temperature: 0.3
+        temperature: temperature
       });
 
       if (!response.ok) {
@@ -1199,6 +1230,11 @@ ${inputText}
 
   // Work_08 제목 추론 문제 생성 함수
   const generateWork08Quiz = async (inputText: string): Promise<TitleQuiz> => {
+    // work08Service의 함수 사용 (패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음)
+    return await generateWork08QuizService(inputText);
+  };
+  
+  const generateWork08Quiz_OLD = async (inputText: string): Promise<TitleQuiz> => {
     console.log('🔄 Work_08 문제 생성 시작...');
     
     const prompt = `아래 영어 본문을 읽고, 글의 주제의식에 가장 적합한 제목(title) 1개를 선정해.\n1. 정답 제목(문장/구) + 오답(비슷한 길이의 제목 4개, 의미는 다름) 총 5개를 생성해.\n2. 정답의 위치는 1~5번 중 랜덤.\n3. 본문 해석도 함께 제공.\n4. 아래 JSON 형식으로, 반드시 answerTranslation(정답 제목의 한글 해석) 필드를 별도 포함해서 응답:\n{\n  \"passage\": \"...\",\n  \"options\": [\"...\", \"...\", \"...\", \"...\", \"...\"],\n  \"answerIndex\": 2,\n  \"translation\": \"...\",\n  \"answerTranslation\": \"정답 제목의 한글 해석\"\n}\n본문:\n${inputText}\n정답(제목)의 한글 해석도 반드시 포함해줘.\n정답(제목) 영어 문장과 그 한글 해석(answerTranslation)도 반드시 별도 필드로 포함해줘.`;
@@ -1531,6 +1567,11 @@ ${passage}`;
 
   // Work_10 (다중 어법 오류 문제) 문제 생성 함수
   const generateWork10Quiz = async (inputText: string): Promise<MultiGrammarQuiz> => {
+    // work10Service의 함수 사용 (패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음)
+    return await generateWork10QuizService(inputText);
+  };
+  
+  const generateWork10Quiz_OLD = async (inputText: string): Promise<MultiGrammarQuiz> => {
     console.log('🔍 Work_10 문제 생성 시작...');
     
     try {
@@ -1994,161 +2035,28 @@ ${passage}`;
   };
 
   // Work_03 (빈칸 단어 문제) 문제 생성 함수
+  // work03Service의 함수를 사용하되, 패키지에서는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 추적 불필요
   const generateWork03Quiz = async (inputText: string): Promise<BlankQuiz> => {
     console.log('🔍 Work_03 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
 
     try {
-      const excludedWords: string[] = []; // 제외할 단어들 (필요시 추가)
+      // work03Service의 함수 사용 (이전 선택 없음)
+      const blankQuiz = await generateWork03QuizService(inputText);
       
-      const prompt = `아래 영어 본문을 읽고, **대한민국 고등학교 교육과정 수학능력평가(수능) 수준**의 빈칸 추론 문제를 만들어주세요.
+      // 번역 추가 (서비스 함수에는 번역이 없을 수 있음)
+      const translation = blankQuiz.translation || await translateToKorean(inputText);
 
-**🎯 수능 수준의 어휘 선택 기준 (절대 필수):**
-
-**수능 영어 빈칸 추론 문제의 특징:**
-- 실제 수능에서는 본문 전체의 맥락을 이해하고, 앞뒤 문맥을 종합적으로 분석해야 답을 찾을 수 있는 어휘를 출제합니다.
-- 단순히 단어 자체의 의미를 아는 것이 아니라, 문맥 속에서의 적절한 의미를 추론할 수 있는 능력을 평가합니다.
-- 어휘 난이도는 CEFR B2-C1 수준(고등학교 3-5등급 어휘)에 해당하며, 학술적 텍스트나 문학 작품에서 자주 등장하는 어휘입니다.
-- 실제 수능 기출 문제를 참고하세요: 단어 자체가 어렵기보다는 문맥에서의 의미 추론이 중요한 단어를 선택합니다.
-
-1. **단어 선정 기준:**
-   - ❌ 피해야 할 단어: 고유명사, 기본 어휘(a, an, the, is, are, was, were, go, come 등), 일상 대화용 어휘, 너무 쉬운 단어
-   - ✅ 선택해야 할 단어: 
-     * 학술 논문이나 교과서에서 등장하는 어휘 (예: analyze, demonstrate, significant, essential, phenomenon, perspective 등)
-     * 문맥에 따라 의미가 달라지는 다의어 (예: address, concern, current, feature 등)
-     * 추상적 개념을 표현하는 명사/형용사 (예: profound, subtle, inherent, explicit, implicit 등)
-     * 본문의 논리적 흐름을 이해해야 답을 찾을 수 있는 어휘
-   - 본문 전체를 읽고 맥락을 이해한 후, 그 맥락에서 가장 적절한 의미를 가진 핵심 단어를 선택하세요.
-   - 단어를 단독으로 봤을 때의 의미보다, **본문에서 사용된 맥락에서의 의미**를 추론해야 하는 단어여야 합니다.
-
-2. **정답 단어 요구사항:**
-   - 반드시 본문에 실제로 등장한 단어(철자, 형태, 대소문자까지 동일)를 정답으로 선정해야 해. 변형, 대체, 동의어, 어형 변화 없이 본문에 있던 그대로 사용해야 해.
-
-3. **본문 처리 규칙:**
-   - 문제의 본문(빈칸 포함)은 반드시 사용자가 입력한 전체 본문과 완전히 동일해야 하며, 일부 문장만 추출하거나, 문장 순서를 바꾸거나, 본문을 요약/변형해서는 안 돼. 오직 정답 단어만 ()로 치환해.
-
-4. **제외 대상:**
-   - 입력된 본문에 이미 ()로 묶인 단어나 구가 있다면, 그 부분은 절대 빈칸 처리 대상으로 삼지 마세요. 반드시 괄호 밖에 있는 단어만 빈칸 후보로 선정하세요.
-   - 아래 단어/구는 절대 빈칸 처리하지 마세요: ${excludedWords.length > 0 ? excludedWords.join(', ') : '없음'}
-
-5. **5지선다 선택지 생성 (수능 스타일):**
-   - 정답(핵심단어) + 오답 4개 = 총 5개 선택지
-   - **오답 선정 기준 (실제 수능 기출 스타일):**
-     * 정답과 같은 품사이면서 의미가 비슷하지만 본문 맥락에는 맞지 않는 단어 (예: answer가 정답이면, response, reply 등)
-     * 정답과 철자가 비슷하거나 발음이 비슷한 단어 (혼동 유도용)
-     * 정답과 반대 의미를 가진 단어 (단, 본문 맥락에서는 적절하지 않음)
-     * 본문 맥락에서는 논리적으로 들어갈 수 없지만, 다른 맥락에서는 가능한 어휘
-   - 수능에서는 단순히 "틀린 단어"가 아니라, **본문 맥락을 정확히 이해하지 못하면 선택할 수 있는 오답**을 출제합니다.
-   - 예시: 본문이 "The study reveals that..."이고 정답이 "reveals"라면, 오답으로 "shows", "indicates", "demonstrates" 등을 사용 (맥락이 정확하지 않으면 혼동 가능)
-
-6. **정답 위치:**
-   - 정답의 위치는 1~5번 중 랜덤으로 배치하세요.
-
-7. **JSON 형식으로 응답하세요:**
-
-{
-  "options": ["선택지1", "선택지2", "선택지3", "선택지4", "선택지5"],
-  "answerIndex": 0
-}
-
-**⚠️ 최종 확인 (실제 수능 기출 스타일 검증):**
-- ✅ 본문을 읽지 않고 단어만 봤을 때는 정답을 찾기 어려워야 합니다.
-- ✅ 본문 전체의 논리적 흐름과 맥락을 종합적으로 이해해야 정답을 선택할 수 있어야 합니다.
-- ✅ 단순히 쉬운 단어(a, the, is 등)나 고유명사는 선택하지 않았는지 확인하세요.
-- ✅ CEFR B2-C1 수준(고등학교 3-5등급)의 학술적/문학적 어휘인지 확인하세요.
-- ✅ 오답 선택지들이 본문 맥락을 정확히 이해하지 못하면 선택할 수 있는 유사한 어휘들인지 확인하세요.
-- ✅ 실제 수능 기출 문제처럼, 문맥 추론 능력을 평가하는 문제인지 최종 검증하세요.
-
-입력된 영어 본문:
-${inputText}`;
-
-      const response = await callOpenAIAPI({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1200,
-        temperature: 0.7
-      });
-
-      const data = await response.json();
-      console.log('AI 응답 전체:', data);
-      console.log('AI 응답 내용:', data.choices[0].message.content);
-      
-      const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
-      
-      console.log('추출된 JSON:', jsonMatch[0]);
-      
-      let result: any;
-      try {
-        result = JSON.parse(jsonMatch[0]);
-        console.log('파싱된 결과:', result);
-      } catch {
-        throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
-      }
-
-      // 정답 단어가 본문에 실제로 존재하는지 검증
-      if (!inputText.includes(result.options[result.answerIndex])) {
-        throw new Error('정답 단어가 본문에 존재하지 않습니다. AI 응답 오류입니다.');
-      }
-
-      // blankedText를 프론트엔드에서 직접 생성 (괄호 split 방식, 괄호 안/밖 완벽 구분)
-      const replaceFirstOutsideBrackets = (text: string, word: string): string => {
-        let replaced = false;
-        // 괄호로 split (괄호 안/밖 구분)
-        const tokens = text.split(/([()])/);
-        let inBracket = false;
-        for (let i = 0; i < tokens.length; i++) {
-          if (tokens[i] === '(') {
-            inBracket = true;
-            continue;
-          }
-          if (tokens[i] === ')') {
-            inBracket = false;
-            continue;
-          }
-          if (!inBracket && !replaced) {
-            // 괄호 밖에서만 단어 치환 (단어 경계 체크)
-            const regex = new RegExp(`\\b${word}\\b`);
-            if (regex.test(tokens[i])) {
-              tokens[i] = tokens[i].replace(regex, '(__________)');
-              replaced = true;
-            }
-          }
-        }
-        // split으로 괄호가 사라지므로, 다시 조립
-        let result = '';
-        inBracket = false;
-        for (let i = 0; i < tokens.length; i++) {
-          if (tokens[i] === '(') {
-            inBracket = true;
-            result += '(';
-            continue;
-          }
-          if (tokens[i] === ')') {
-            inBracket = false;
-            result += ')';
-            continue;
-          }
-          result += tokens[i];
-        }
-        return result;
-      };
-
-      const blankedText = replaceFirstOutsideBrackets(inputText, result.options[result.answerIndex]);
-      console.log('빈칸 처리된 텍스트:', blankedText);
-
-      // 번역 생성
-      const translation = await translateToKorean(inputText);
-
-      const blankQuiz: BlankQuiz = {
-        blankedText: blankedText,
-        options: result.options,
-        answerIndex: result.answerIndex,
+      // Package_01의 BlankQuiz 타입에 맞게 변환 (translation 필수)
+      const result: BlankQuiz = {
+        blankedText: blankQuiz.blankedText,
+        options: blankQuiz.options,
+        answerIndex: blankQuiz.answerIndex,
         translation: translation
       };
 
-      console.log('✅ Work_03 퀴즈 생성 완료:', blankQuiz);
-      return blankQuiz;
+      console.log('✅ Work_03 퀴즈 생성 완료:', result);
+      return result;
 
     } catch (error) {
       console.error('❌ Work_03 문제 생성 실패:', error);
@@ -2186,8 +2094,8 @@ ${inputText}`;
           break;
           
         case '05': // 빈칸 문장 문제
-          quizData = await generateWork05Quiz(inputText);
-          translatedText = quizData.translation;
+          quizData = await generateWork05QuizService(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
+          translatedText = quizData.translation || '';
           break;
           
         case '06': // 문장 위치 찾기 문제
@@ -2206,7 +2114,7 @@ ${inputText}`;
           break;
           
         case '09': // 어법 변형 문제
-          quizData = await generateWork09Quiz(inputText);
+          quizData = await generateWork09QuizService(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           translatedText = quizData.translation;
           break;
           

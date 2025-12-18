@@ -273,23 +273,51 @@ const Work_06_SentencePosition: React.FC = () => {
       deductedPoints = deductionResult.deductedPoints;
       setUserCurrentPoints(deductionResult.remainingPoints);
 
-      const generatedQuizzes = await processWithConcurrency(validItems, 3, async (item) => {
+      // 동일한 본문별로 그룹화하여 이전 선택 추적
+      const passageGroups = new Map<string, { items: typeof validItems, selectedSentences: string[] }>();
+      
+      validItems.forEach(item => {
         const passage = item.text.trim();
-        if (!passage) return null;
-
-        try {
-          const quizData = await generateWork06Quiz(passage);
-          const quizDataWithId: SentencePositionQuiz & { id?: string } = { 
-            ...quizData, 
-            id: item.id
-          };
-          return quizDataWithId;
-        } catch (itemError: any) {
-          console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
-          alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
-          return null;
+        if (!passageGroups.has(passage)) {
+          passageGroups.set(passage, { items: [], selectedSentences: [] });
         }
+        passageGroups.get(passage)!.items.push(item);
       });
+
+      const generatedQuizzes: (SentencePositionQuiz & { id?: string })[] = [];
+
+      // 각 본문 그룹별로 순차 처리 (동일 본문 내에서 이전 선택 추적)
+      for (const [passage, group] of Array.from(passageGroups.entries())) {
+        console.log(`📝 본문 그룹 처리 시작: "${passage.substring(0, 50)}..." (${group.items.length}개 아이템)`);
+        
+        // 동일 본문 내에서는 순차 처리
+        for (let i = 0; i < group.items.length; i++) {
+          const item = group.items[i];
+          
+          try {
+            console.log(`  🔄 아이템 ${i + 1}/${group.items.length} 처리 중...`);
+            console.log(`  📌 이전 선택 문장: ${group.selectedSentences.length > 0 ? group.selectedSentences.map(s => s.substring(0, 50) + '...').join(', ') : '없음'}`);
+            
+            // 이전 선택 문장을 포함하여 문제 생성
+            const quizData = await generateWork06Quiz(passage, group.selectedSentences);
+            
+            const quizDataWithId: SentencePositionQuiz & { id?: string } = { 
+              ...quizData, 
+              id: item.id
+            };
+            
+            // 생성된 문제의 정답 문장(missingSentence)을 이전 선택 목록에 추가
+            const selectedSentence = quizData.missingSentence;
+            group.selectedSentences.push(selectedSentence);
+            console.log(`  ✅ 정답 문장 "${selectedSentence.substring(0, 50)}${selectedSentence.length > 50 ? '...' : ''}" 선택됨 (이제 제외 목록에 추가됨)`);
+            
+            generatedQuizzes.push(quizDataWithId);
+          } catch (itemError: any) {
+            console.error(`아이템 ${item.id} 처리 중 오류:`, itemError);
+            alert(`본문 "${passage.substring(0, 50)}..." 처리 중 오류가 발생했습니다: ${itemError.message}`);
+          }
+        }
+      }
 
       if (generatedQuizzes.length === 0) {
         throw new Error('생성된 문제가 없습니다.');
@@ -491,42 +519,18 @@ const Work_06_SentencePosition: React.FC = () => {
                     <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#06</span>
                   </div>
 
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.18rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
+                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.18rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'3.5rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                     <span>아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
                     <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#06</span>
                   </div>
 
-                  <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginBottom:'1.8em', fontWeight:700, fontSize:'1.08rem'}}>
+                  <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#f7f8fc', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1.8em', fontWeight:700, fontSize:'1.08rem'}}>
                     <span style={{color:'#222'}}>주요 문장:</span> <span style={{color:'#6a5acd'}}>{quiz.missingSentence}</span>
                   </div>
                   
                   <div style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit', whiteSpace:'pre-line', border:'1.5px solid #e3e6f0'}}>
                     {quiz.numberedPassage}
                   </div>
-
-                  <div className="problem-options" style={{margin:'1.2rem 0'}}>
-                    {['①', '②', '③', '④', '⑤'].slice(0, 5).map((label, i) => (
-                      <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
-                        <input
-                          type="radio"
-                          name={`sentence-position-quiz-${quizId}`}
-                          checked={selected === i}
-                          onChange={() => setSelectedAnswers({ ...selectedAnswers, [quizId]: i })}
-                          style={{marginRight:'0.7rem'}}
-                        />
-                        {label} 위치 {i + 1}
-                        {selected !== null && quiz.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                  
-                  {selected !== null && (
-                    <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
-                      정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1}
-                    </div>
-                  )}
 
                   {quiz.translation && (
                     <div className="translation-section" style={{marginTop:'2rem'}}>

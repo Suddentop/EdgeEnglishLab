@@ -8,7 +8,7 @@
 
 import { Paragraph, Quiz, AIParagraphResponse } from '../types/types';
 import { divideParagraphsWithAI } from './aiParagraphService';
-import { callOpenAI } from './common';
+import { callOpenAI, addVarietyToPrompt, getProblemGenerationTemperature } from './common';
 
 // B, C, D의 가능한 모든 순열 생성
 function getAllPermutations(arr: string[]): string[][] {
@@ -124,11 +124,15 @@ async function getAIShuffledParagraphs(text: string): Promise<string[] | null> {
 영어 본문:
 ${text}`;
 
+    // 다양성 추가
+    const enhancedPrompt = addVarietyToPrompt(prompt);
+    const temperature = getProblemGenerationTemperature(0.7);
+
     const response = await callOpenAI({
       model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content: enhancedPrompt }],
       max_tokens: 1500,
-      temperature: 0.7
+      temperature: temperature
     });
 
     if (!response.ok) {

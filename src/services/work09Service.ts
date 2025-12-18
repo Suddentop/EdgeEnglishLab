@@ -22,15 +22,19 @@ export interface GrammarQuiz {
 /**
  * 유형#09: 어법 오류 찾기 문제 생성
  * @param passage - 영어 본문
+ * @param previouslySelectedWords - 이전에 선택된 단어 목록 (동일 본문으로 여러 번 생성 시 사용)
  * @returns 어법 오류 문제 데이터
  */
-export async function generateWork09Quiz(passage: string): Promise<GrammarQuiz> {
+export async function generateWork09Quiz(
+  passage: string,
+  previouslySelectedWords?: string[]
+): Promise<GrammarQuiz> {
   console.log('🔍 Work_09 문제 생성 시작...');
   console.log('📝 입력 텍스트 길이:', passage.length);
 
   try {
     // Step 1: 단어 선정 (다양성 검증 포함, 최대 3회 재시도)
-    let words = await selectWords(passage);
+    let words = await selectWords(passage, previouslySelectedWords);
     console.log('✅ 선택된 단어들:', words);
     
     // 관계대명사/관계부사/접속사 과다 선택 검증 (최대 3회 재시도)
@@ -43,7 +47,7 @@ export async function generateWork09Quiz(passage: string): Promise<GrammarQuiz> 
       const relativeCount = words.filter(w => relativeWords.includes(w.trim())).length;
       if (relativeCount >= 2) {
         console.warn(`⚠️ 관계대명사/관계부사/접속사가 ${relativeCount}개 선택됨 (최대 1개만 허용). 재시도 ${retryCount + 1}/${maxRetries}...`);
-        words = await selectWords(passage);
+        words = await selectWords(passage, previouslySelectedWords);
         console.log('✅ 재선택된 단어들:', words);
         retryCount++;
         continue;
@@ -109,9 +113,13 @@ export async function generateWork09Quiz(passage: string): Promise<GrammarQuiz> 
 /**
  * MCP 1: 단어 선정 서비스
  * @param passage - 영어 본문
+ * @param previouslySelectedWords - 이전에 선택된 단어 목록
  * @returns 선택된 단어 배열
  */
-async function selectWords(passage: string): Promise<string[]> {
+async function selectWords(
+  passage: string,
+  previouslySelectedWords?: string[]
+): Promise<string[]> {
   // Step 1: 본문에서 어법 변형 가능한 단어 후보를 먼저 추출
   const candidatePrompt = `아래 영어 본문을 분석하여, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 어법 오류 찾기 문제로 변형 가능한 단어들을 추출해주세요.
 

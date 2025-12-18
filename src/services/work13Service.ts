@@ -1,5 +1,5 @@
 // Work13 (빈칸 채우기 단어) 관련 AI 서비스 함수들
-import { callOpenAI } from './common';
+import { callOpenAI, addVarietyToPrompt, getProblemGenerationTemperature } from './common';
 
 export interface BlankFillItem {
   blankedText: string;
@@ -167,6 +167,10 @@ ${sentenceList}
 ${passage}`;
   
   try {
+    // 다양성 추가
+    const enhancedPrompt = addVarietyToPrompt(prompt);
+    const temperature = getProblemGenerationTemperature(0.6);
+
     const request = {
       model: 'gpt-4o',
       messages: [
@@ -185,6 +189,7 @@ PROCESSING METHOD:
 - Select the most important word (noun, verb, or adjective)
 - Avoid articles (a, an, the), prepositions (in, on, at), conjunctions (and, or, but)
 - Each sentence must contribute exactly 1 word
+- Vary your word selection approach to create different problems even with the same passage
 
 OUTPUT FORMAT:
 Return JSON only:
@@ -195,10 +200,10 @@ Return JSON only:
 
 Remember: ${validSentences.length} sentences = exactly ${validSentences.length} words!` 
         },
-        { role: 'user' as const, content: prompt }
+        { role: 'user' as const, content: enhancedPrompt }
       ],
       max_tokens: 2000,
-      temperature: 0.01
+      temperature: temperature
     };
 
     const response = await callOpenAI(request);

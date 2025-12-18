@@ -450,14 +450,14 @@ const Package_03_ParagraphOrder: React.FC = () => {
           break;
         }
         case '07': {
-          const quiz = await generateWork07Quiz(inputText);
+          const quiz = await generateWork07Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           quizItem.work07Data = quiz;
           quizItem.translatedText = quiz.translation;
           console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);
           break;
         }
         case '08': {
-          const quiz = await generateWork08Quiz(inputText);
+          const quiz = await generateWork08Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
           quizItem.work08Data = quiz;
           quizItem.translatedText = quiz.translation;
           console.log(`✅ 유형#${typeId} 문제 생성 완료 (${currentIndex + 1}/${totalCount})`);

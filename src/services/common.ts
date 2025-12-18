@@ -4,6 +4,56 @@
  */
 
 /**
+ * 문제 생성 시 다양성을 추가하는 프롬프트 지시문 생성
+ * 동일한 본문이라도 다른 문제가 생성되도록 도와줍니다.
+ * 매번 다른 랜덤 시드를 추가하여 더 확실한 다양성을 보장합니다.
+ */
+export function addVarietyToPrompt(basePrompt: string): string {
+  // 매번 다른 랜덤 시드 생성 (타임스탬프 + 랜덤 숫자)
+  const randomSeed = Date.now() + Math.floor(Math.random() * 10000);
+  
+  // 다양한 접근 방식 중 하나를 랜덤하게 선택
+  const approaches = [
+    '본문의 첫 번째 부분에 집중하여 문제를 생성',
+    '본문의 중간 부분에 집중하여 문제를 생성',
+    '본문의 마지막 부분에 집중하여 문제를 생성',
+    '본문 전체를 종합적으로 분석하여 문제를 생성',
+    '본문의 논리적 구조에 집중하여 문제를 생성',
+    '본문의 감정적 톤에 집중하여 문제를 생성',
+    '본문의 인과관계에 집중하여 문제를 생성',
+    '본문의 대조와 비교에 집중하여 문제를 생성'
+  ];
+  const selectedApproach = approaches[Math.floor(Math.random() * approaches.length)];
+  
+  const varietyInstructions = [
+    '**다양성 요구사항 (중요):**',
+    `- 이번 생성은 시드 ${randomSeed}를 사용하며, "${selectedApproach}"하세요.`,
+    '- 동일한 본문이라도 매번 완전히 다른 관점과 접근 방식으로 문제를 생성해주세요.',
+    '- 선택지의 표현 방식, 어휘 선택, 문장 구조를 이전과 다르게 만들어주세요.',
+    '- 정답의 위치를 랜덤하게 배치하고, 오답 선택지도 다양한 유형으로 생성해주세요.',
+    '- 본문의 다른 부분이나 다른 해석 관점을 활용하여 문제의 다양성을 확보해주세요.',
+    '- 이전에 생성한 문제와는 확실히 다른 선택지와 정답 위치를 사용해주세요.',
+    ''
+  ].join('\n');
+
+  return `${basePrompt}\n\n${varietyInstructions}`;
+}
+
+/**
+ * 문제 생성에 적합한 temperature 값 반환
+ * 다양성을 위해 기본값을 높게 설정하되, 약간의 랜덤 변동을 추가하여 더 확실한 다양성 보장
+ */
+export function getProblemGenerationTemperature(customTemperature?: number): number {
+  // 기본값: 0.7 (다양성과 일관성의 균형)
+  // 약간의 랜덤 변동 추가 (±0.1)로 매번 다른 결과 보장
+  const baseTemp = customTemperature !== undefined ? customTemperature : 0.7;
+  const variation = (Math.random() - 0.5) * 0.2; // -0.1 ~ +0.1 범위
+  const finalTemp = Math.max(0.5, Math.min(0.9, baseTemp + variation)); // 0.5 ~ 0.9 범위로 제한
+  
+  return Math.round(finalTemp * 100) / 100; // 소수점 2자리로 반올림
+}
+
+/**
  * OpenAI API 호출 헬퍼 함수
  * 보안을 위해 프록시 서버만 사용 (직접 API 호출 제거)
  */

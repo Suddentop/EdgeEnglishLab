@@ -15,6 +15,7 @@ const Login: React.FC = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // 이메일 로그인을 위한 validation schema
   const validationSchema = Yup.object({
@@ -120,12 +121,23 @@ const Login: React.FC = () => {
 
         <div className="form-group">
           <label htmlFor="password">비밀번호</label>
-          <input
-            id="password"
-            type="password"
-            {...formik.getFieldProps('password')}
-            autoComplete="current-password"
-          />
+          <div className="password-input-wrapper">
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              {...formik.getFieldProps('password')}
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              className="password-toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+              title={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+            >
+              {showPassword ? '👁️' : '👁'}
+            </button>
+          </div>
           {formik.touched.password && formik.errors.password && (
             <div className="error-message">{formik.errors.password}</div>
           )}
