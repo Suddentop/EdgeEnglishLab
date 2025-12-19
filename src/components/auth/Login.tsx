@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { sendPasswordReset } from '../../services/authService';
 import { sendPasswordResetWithDiagnostics, checkFirebaseConfig } from '../../utils/emailDiagnostics';
+import SEO from '../common/SEO';
 
 
 const Login: React.FC = () => {
@@ -98,6 +99,10 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-container">
+      <SEO 
+        title="로그인" 
+        description="EngQuiz에 로그인하여 AI 기반 영어 문제 생성 서비스를 이용하세요. 수능형 문제 제작을 지금 시작해보세요." 
+      />
       <h2>로그인</h2>
       {error && <div className="error-message">{error}</div>}
       

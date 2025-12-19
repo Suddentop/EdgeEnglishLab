@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /static
+Allow: /
+
+User-agent: Yeti
+Allow: /
+
+Sitemap: https://edgeenglish.net/sitemap.xml

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SEO from './SEO';
 
 interface HomePageProps {
   setCurrentQuiz?: (quiz: any) => void;
@@ -111,6 +112,10 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
 
   return (
     <div className="homepage">
+      <SEO 
+        title="홈 - AI 영어 문제 생성 솔루션" 
+        description="수능 수준의 고품질 영어 문제를 AI로 자동 생성하세요. 독해, 문법, 어휘 문제 제작과 인쇄를 지원하는 영어 선생님 필수 도구입니다." 
+      />
       <section className="hero-section">
         <div className="hero-content">
           <h1 className="hero-title">영어 교육 전문가를 위한 AI 영어 문제 생성 플랫폼</h1>

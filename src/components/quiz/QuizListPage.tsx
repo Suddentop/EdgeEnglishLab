@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getQuizHistory, QuizHistoryItem } from '../../services/quizHistoryService';
 import './QuizListPage.css';
+import SEO from '../common/SEO';
 
 const QuizListPage: React.FC = () => {
   const { userData } = useAuth();
@@ -684,6 +685,10 @@ const QuizListPage: React.FC = () => {
 
   return (
     <div className="quiz-list-page">
+      <SEO 
+        title="나의 문제 보관함" 
+        description="생성한 영어 문제 목록을 확인하고 다시 다운로드하거나 편집하세요. 나만의 문제 보관함입니다." 
+      />
       <div className="quiz-list-container">
         <div className="table-header">
           <h2>나의 문제 생성 목록</h2>
