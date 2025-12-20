@@ -84,7 +84,7 @@ export const translateToKorean = async (englishText: string): Promise<string> =>
 ${englishText}`;
 
     const request = {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o',
         messages: [
           { role: 'system' as const, content: 'You are a helpful assistant that provides natural Korean translations.' },
           { role: 'user' as const, content: prompt }

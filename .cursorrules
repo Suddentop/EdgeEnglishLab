@@ -5,7 +5,7 @@
 ## 1. 프로젝트 개요 및 기술 스택
 - **프로젝트**: EngQuiz (영어 퀴즈 생성 및 관리 웹 애플리케이션)
 - **기술 스택**: React + TypeScript + Firebase (Auth, Firestore)
-- **인증**: 전화번호 로그인 (Firebase Auth, 전화번호를 `{phone}@engquiz.local` 이메일 형식으로 변환하여 사용)
+- **인증**: 이메일/비밀번호 기반 로그인 (Firebase Auth의 `signInWithEmailAndPassword` 사용, 전화번호는 사용자 정보로만 저장)
 - **배포**: Firebase Hosting 미사용. `npm run build` 후 정적 산출물 별도 배포 (Windows PowerShell 사용)
 
 ## 2. 코드 작성 원칙

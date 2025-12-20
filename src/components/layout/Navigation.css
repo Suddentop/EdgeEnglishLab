@@ -155,6 +155,10 @@
   align-items: center;
   text-decoration: none;
   color: inherit;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  border: none !important;
 }
 .logo-image {
   width: 48px;
@@ -298,8 +302,13 @@
 }
 .hamburger-menu {
   display: none;
-  align-items: center;
-  height: 100%;
+  visibility: hidden;
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  z-index: 1001;
+  border: none !important;
 }
 .hamburger-btn {
   background: none;
@@ -308,13 +317,16 @@
   border: none;
   padding: 0.5rem;
   cursor: pointer;
-  margin-left: 0.5rem;
   transition: color 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  position: relative;
+  z-index: 11;
 }
 
 .hamburger-btn:hover {
@@ -324,20 +336,49 @@
 .hamburger-btn:active {
   color: #cbd5e1;
 }
+/* 모바일 메뉴 배경 오버레이 */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1999;
+  animation: fadeIn 0.3s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .mobile-menu-content {
   position: fixed;
   top: 0;
   right: 0;
   width: 280px;
-  height: 100vh;
+  max-height: 100vh;
+  height: auto;
   background: #ffffff;
   color: #333333;
   z-index: 2000;
   box-shadow: -4px 0 20px rgba(0,0,0,0.15);
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 1rem 1rem 1rem;
+  padding: 0;
   animation: slideIn 0.3s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: height 0.3s ease;
 }
 @keyframes slideIn {
   from { 
@@ -348,6 +389,35 @@
     right: 0; 
     opacity: 1; 
   }
+}
+
+/* 메뉴 레이어 컨테이너 */
+.mobile-menu-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  padding: 3.5rem 1rem 1rem 1rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+/* 활성 레이어: 현재 보이는 메뉴 */
+.mobile-menu-layer.active {
+  transform: translateX(0);
+  opacity: 1;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* 숨겨진 레이어: 오른쪽으로 슬라이드 아웃된 메뉴 (기본 메뉴가 문제생성 메뉴로 전환될 때) */
+.mobile-menu-layer.hidden {
+  transform: translateX(100%);
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 .mobile-menu-close {
   position: absolute;
@@ -365,6 +435,8 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  z-index: 2001;
+  line-height: 1;
 }
 
 .mobile-menu-close:hover {
@@ -558,15 +630,462 @@ body, #root, .App {
   margin: 0;
   padding: 0;
 }
+/* 모바일 및 태블릿 세로 모드 지원 */
 @media (max-width: 900px) {
   .nav-center { display: none; }
-  .hamburger-menu { display: block; }
-  .nav-links { gap: 0.7rem; }
-  .logo-text h1 { font-size: 1.05rem; }
-  .logo-image { width: 38px; height: 38px; }
-  .navigation { padding: 0.56rem 0.56rem 0.56rem 0.56rem; }
+  .navigation {
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative;
+    overflow: visible;
+  }
+  .logo {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: calc(100% - 50px);
+    overflow: hidden;
+  }
+  .logo-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hamburger-menu { 
+    display: block !important; 
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.8rem !important;
+    transform: translateY(-50%) !important;
+    z-index: 1001 !important;
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .hamburger-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+    font-size: 1.8rem !important;
+    font-weight: bold !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 1002 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+  }
+  .nav-links { 
+    gap: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    min-width: 0;
+  }
+  /* 모바일에서 PC 메뉴 항목들 숨기기 */
+  .nav-links > .dropdown,
+  .nav-links > .nav-text-link,
+  .nav-links > .feedback-link,
+  .nav-links > .profile-link,
+  .nav-links > .guide-link,
+  .nav-links > .admin-link,
+  .nav-links > .auth-link {
+    display: none !important;
+  }
+  .logo-text h1 { 
+    font-size: 0.9rem; 
+    line-height: 1.2;
+    margin: 0;
+    padding: 0;
+    display: block;
+    overflow: visible;
+    white-space: nowrap;
+  }
+  .logo-image { 
+    width: 30px; 
+    height: 30px; 
+    flex-shrink: 0;
+    margin: 0 0.5rem 0 0 !important;
+    padding: 0 !important;
+    object-fit: contain;
+    align-self: center !important;
+    vertical-align: middle !important;
+  }
+  .navigation { 
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 57px !important;
+    height: 57px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    position: relative !important;
+  }
+  .logo {
+    align-items: center !important;
+    height: 100% !important;
+    min-height: 0;
+    overflow: visible;
+    flex-shrink: 1;
+    max-width: calc(100% - 50px);
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .logo-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    line-height: 1.2;
+    overflow: visible;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-self: stretch !important;
+    border: none !important;
+  }
+  .logo-text h1 {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
   .tagline { 
-    display: none;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  .navigation .tagline {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+/* 모바일 세로 모드 (portrait) 추가 보장 */
+@media (max-width: 900px) and (orientation: portrait) {
+  .navigation {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 57px !important;
+    height: 57px !important;
+    align-items: center !important;
+    display: flex !important;
+    position: relative !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+  .logo {
+    align-items: center !important;
+    display: flex !important;
+    align-self: stretch !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+    border: none !important;
+  }
+  .logo-image {
+    align-self: center !important;
+    margin: 0 0.5rem 0 0 !important;
+  }
+  .logo-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-self: stretch !important;
+    border: none !important;
+  }
+  .logo-text h1 {
+    display: block !important;
+    margin: auto 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+  }
+  .hamburger-menu { 
+    display: block !important; 
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.8rem !important;
+    transform: translateY(-50%) !important;
+    z-index: 1001 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .hamburger-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+  }
+  .tagline,
+  .navigation .tagline {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+/* 모바일 가로 모드 (landscape) */
+@media (max-width: 900px) and (orientation: landscape) {
+  .navigation {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 57px !important;
+    height: 57px !important;
+    align-items: center !important;
+    display: flex !important;
+    position: relative !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+  .logo {
+    align-items: center !important;
+    display: flex !important;
+    align-self: stretch !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+    border: none !important;
+  }
+  .logo-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-self: stretch !important;
+    border: none !important;
+  }
+  .logo-text h1 {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+  }
+  .hamburger-menu { 
+    display: block !important; 
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.8rem !important;
+    transform: translateY(-50%) !important;
+    z-index: 1001 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .hamburger-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+  }
+  .tagline,
+  .navigation .tagline {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+/* 작은 모바일 기기 지원 (더 작은 화면) */
+@media (max-width: 768px) {
+  .navigation {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 57px !important;
+    height: 57px !important;
+    align-items: center !important;
+    display: flex !important;
+    position: relative !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+  .logo {
+    align-items: center !important;
+    display: flex !important;
+    align-self: stretch !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+  }
+  .logo-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-self: stretch !important;
+  }
+  .logo-text h1 {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+  }
+  .hamburger-menu { 
+    display: block !important; 
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.8rem !important;
+    transform: translateY(-50%) !important;
+    z-index: 1001 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .hamburger-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+  }
+  .tagline,
+  .navigation .tagline {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+/* 매우 작은 모바일 기기 지원 */
+@media (max-width: 480px) {
+  .navigation {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 57px !important;
+    height: 57px !important;
+    align-items: center !important;
+    display: flex !important;
+    position: relative !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+  .logo {
+    align-items: center !important;
+    display: flex !important;
+    align-self: stretch !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+  }
+  .logo-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-self: stretch !important;
+  }
+  .logo-text h1 {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+  }
+  .hamburger-menu { 
+    display: block !important; 
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.5rem !important;
+    transform: translateY(-50%) !important;
+    z-index: 1001 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .hamburger-btn {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+    font-size: 1.8rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+  }
+  .tagline,
+  .navigation .tagline {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
   }
 } 
 /* 기존 스타일 오버라이드 제거 */
@@ -698,6 +1217,22 @@ body, #root, .App {
 /* 문제생성 하위 메뉴들 들여쓰기 */
 .mobile-sub-item {
   padding-left: 1.5rem;
+}
+
+/* 뒤로가기 버튼 스타일 */
+.mobile-back-button {
+  background: #f8f9fa !important;
+  color: #3a3e7a !important;
+  font-weight: 600 !important;
+  border-bottom: 2px solid #e0e0e0 !important;
+  margin-bottom: 0.5rem !important;
+  padding: 1rem 0.5rem !important;
+}
+
+.mobile-back-button:hover {
+  background: #e9ecef !important;
+  color: #2c3e50 !important;
+  transform: translateX(-3px) !important;
 }
 
 /* 드롭다운 메뉴 커스텀 스크롤바 스타일 */

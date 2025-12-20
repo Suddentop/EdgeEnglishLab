@@ -33,19 +33,81 @@ const Navigation: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownCloseTimer = React.useRef<NodeJS.Timeout | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [mobileMenuView, setMobileMenuView] = useState<'main' | 'work-submenu'>('main');
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const menuContentRef = React.useRef<HTMLDivElement>(null);
+  const activeLayerRef = React.useRef<HTMLDivElement>(null);
 
 
-  // 반응형 체크
-  const [isMobile, setIsMobile] = useState(false);
+  // 반응형 체크 - 초기값을 즉시 계산
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 900;
+    }
+    return false;
+  });
   useEffect(() => {
-    const handleResize = () => {
+    const checkMobile = () => {
       setIsMobile(window.innerWidth <= 900);
     };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    
+    // 초기 체크
+    checkMobile();
+    
+    // resize 이벤트 리스너
+    window.addEventListener('resize', checkMobile);
+    
+    // orientationchange 이벤트 리스너 (모바일 기기 회전 시)
+    window.addEventListener('orientationchange', () => {
+      // orientationchange 후 약간의 지연을 두고 체크 (브라우저가 레이아웃을 업데이트할 시간 제공)
+      setTimeout(checkMobile, 100);
+    });
+    
+    // 미디어 쿼리 리스너 (더 정확한 반응형 체크)
+    const mediaQuery = window.matchMedia('(max-width: 900px)');
+    const handleMediaChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      setIsMobile(e.matches);
+    };
+    
+    // 초기값 설정
+    handleMediaChange(mediaQuery);
+    
+    // 미디어 쿼리 변경 리스너 (addEventListener가 지원되는 경우)
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange);
+    } else {
+      // 구형 브라우저 지원
+      mediaQuery.addListener(handleMediaChange);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('orientationchange', checkMobile);
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange);
+      } else {
+        mediaQuery.removeListener(handleMediaChange);
+      }
+    };
   }, []);
+
+  // 모바일 메뉴 높이 동적 조정
+  useEffect(() => {
+    if (showMobileMenu && activeLayerRef.current && menuContentRef.current) {
+      const updateHeight = () => {
+        if (activeLayerRef.current && menuContentRef.current) {
+          const layerHeight = activeLayerRef.current.scrollHeight;
+          const maxHeight = window.innerHeight;
+          menuContentRef.current.style.height = `${Math.min(layerHeight, maxHeight)}px`;
+        }
+      };
+      
+      updateHeight();
+      // 레이어 전환 시 높이 재조정을 위한 약간의 지연
+      const timer = setTimeout(updateHeight, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showMobileMenu, mobileMenuView]);
 
   // 드롭다운 토글 (클릭 시만)
   const handleDropdownToggle = (e: React.MouseEvent) => {
@@ -81,11 +143,13 @@ const Navigation: React.FC = () => {
       setShowAuthModal(true);
       setShowDropdown(false);
       setShowMobileMenu(false);
+      setMobileMenuView('main');
       return;
     }
     navigate(path);
     setShowDropdown(false);
     setShowMobileMenu(false);
+    setMobileMenuView('main');
   };
 
   return (
@@ -99,119 +163,187 @@ const Navigation: React.FC = () => {
           </h1>
         </div>
       </Link>
-      {/* 모바일/태블릿: 햄버거 */}
-      {isMobile && (
-        <div className="hamburger-menu">
-          <button className="hamburger-btn" onClick={() => setShowMobileMenu(v => !v)}>
-            ☰
-          </button>
-          {showMobileMenu && (
-            <div className="mobile-menu-content">
-              <button className="mobile-menu-close" onClick={() => setShowMobileMenu(false)}>×</button>
-              {/* 문제생성 */}
-              <button
-                className="mobile-menu-item mobile-single-item"
-                onClick={() => { setShowMobileMenu(false); }}
-              >
-                문제생성
-              </button>
-              
-              {/* 문제생성 하위 메뉴들 */}
-              {WORK_MENUS.map(menu => (
-                <button
-                  key={menu.path}
-                  className="mobile-menu-item mobile-sub-item"
-                  onClick={() => handleMenuClick(menu.path)}
+      {/* 모바일 햄버거 메뉴 - navigation의 직접 자식으로 배치 */}
+      <div className="hamburger-menu">
+            <button className="hamburger-btn" onClick={() => { 
+              setShowMobileMenu(v => !v);
+              if (!showMobileMenu) {
+                setMobileMenuView('main');
+              }
+            }}>
+              ☰
+            </button>
+            {showMobileMenu && (
+              <>
+                {/* 배경 오버레이 */}
+                <div 
+                  className="mobile-menu-overlay"
+                  onClick={(e) => { 
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowMobileMenu(false); 
+                    setMobileMenuView('main'); 
+                  }}
+                  onTouchEnd={(e) => {
+                    // 터치 이벤트도 처리
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowMobileMenu(false); 
+                    setMobileMenuView('main'); 
+                  }}
+                  onMouseDown={(e) => {
+                    // 마우스 다운 이벤트도 처리
+                    if (e.target === e.currentTarget) {
+                      setShowMobileMenu(false); 
+                      setMobileMenuView('main'); 
+                    }
+                  }}
+                />
+                <div 
+                  ref={menuContentRef}
+                  className="mobile-menu-content"
+                  onClick={(e) => {
+                    // 메뉴 컨텐츠 내부 클릭은 전파 중지
+                    e.stopPropagation();
+                  }}
+                  onMouseDown={(e) => {
+                    // 메뉴 컨텐츠 내부 마우스 다운도 전파 중지
+                    e.stopPropagation();
+                  }}
                 >
-                  {menu.label}
-                </button>
-              ))}
-              
-              {/* 나의문제목록 */}
-              <button
-                className="mobile-menu-item mobile-single-item"
-                onClick={() => { setShowMobileMenu(false); navigate('/quiz-list'); }}
-              >
-                나의문제목록
-              </button>
-              
-              {/* Feedback */}
-              <button
-                className="mobile-menu-item mobile-single-item"
-                onClick={() => { setShowMobileMenu(false); navigate('/feedback'); }}
-              >
-                Feedback
-              </button>
-              
-              {/* 내 정보 */}
-              {currentUser && (
-                <button
-                  className="mobile-menu-item mobile-single-item"
-                  onClick={() => { setShowMobileMenu(false); navigate('/profile'); }}
-                >
-                  내 정보
-                </button>
-              )}
-              
-              {/* 이용안내 */}
-              <button
-                className="mobile-menu-item mobile-single-item"
-                onClick={() => { setShowMobileMenu(false); navigate('/guide'); }}
-              >
-                이용안내
-              </button>
-              
-              {/* 포인트구매 */}
-              {currentUser && (
-                <button
-                  className="mobile-menu-item mobile-single-item"
-                  onClick={() => { setShowMobileMenu(false); navigate('/point-charge'); }}
-                >
-                  포인트구매
-                </button>
-              )}
-              
-              {/* 관리자 */}
-              {currentUser && isAdmin(userData) && (
-                <button
-                  className="mobile-menu-item mobile-single-item"
-                  onClick={() => { setShowMobileMenu(false); navigate('/admin'); }}
-                >
-                  관리자
-                </button>
-              )}
-              
-              {/* 로그아웃 */}
-              {currentUser && (
-                <button
-                  className="mobile-menu-item mobile-single-item"
-                  onClick={() => { setShowMobileMenu(false); handleLogout(); }}
-                >
-                  로그아웃
-                </button>
-              )}
-              
-              {/* 로그인/회원가입 (로그인하지 않은 상태일 때만) */}
-              {!currentUser && (
-                <>
-                  <button
-                    className="mobile-menu-item mobile-single-item"
-                    onClick={() => { setShowMobileMenu(false); navigate('/login'); }}
+                  <button 
+                    className="mobile-menu-close" 
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      setShowMobileMenu(false); 
+                      setMobileMenuView('main'); 
+                    }}
                   >
-                    로그인
+                    ×
                   </button>
-                  <button
-                    className="mobile-menu-item mobile-single-item"
-                    onClick={() => { setShowMobileMenu(false); navigate('/signup'); }}
+                
+                  {/* 메인 메뉴 */}
+                  <div 
+                    ref={mobileMenuView === 'main' ? activeLayerRef : null}
+                    className={`mobile-menu-layer ${mobileMenuView === 'main' ? 'active' : 'hidden'}`}
                   >
-                    회원가입
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                    {/* 문제생성 */}
+                    <button
+                      className="mobile-menu-item mobile-single-item"
+                      onClick={() => setMobileMenuView('work-submenu')}
+                    >
+                      문제생성 →
+                    </button>
+                    
+                    {/* 나의문제목록 */}
+                    <button
+                      className="mobile-menu-item mobile-single-item"
+                      onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); navigate('/quiz-list'); }}
+                    >
+                      나의문제목록
+                    </button>
+                    
+                    {/* Feedback */}
+                    <button
+                      className="mobile-menu-item mobile-single-item"
+                      onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); navigate('/feedback'); }}
+                    >
+                      Feedback
+                    </button>
+                    
+                    {/* 내 정보 */}
+                    {currentUser && (
+                      <button
+                        className="mobile-menu-item mobile-single-item"
+                        onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); navigate('/profile'); }}
+                      >
+                        내 정보
+                      </button>
+                    )}
+                    
+                    {/* 이용안내 */}
+                    <button
+                      className="mobile-menu-item mobile-single-item"
+                      onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); navigate('/guide'); }}
+                    >
+                      이용안내
+                    </button>
+                    
+                    {/* 포인트구매 */}
+                    {currentUser && (
+                      <button
+                        className="mobile-menu-item mobile-single-item"
+                        onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); navigate('/point-charge'); }}
+                      >
+                        포인트구매
+                      </button>
+                    )}
+                    
+                    {/* 관리자 */}
+                    {currentUser && isAdmin(userData) && (
+                      <button
+                        className="mobile-menu-item mobile-single-item"
+                        onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); navigate('/admin'); }}
+                      >
+                        관리자
+                      </button>
+                    )}
+                    
+                    {/* 로그아웃 */}
+                    {currentUser && (
+                      <button
+                        className="mobile-menu-item mobile-single-item"
+                        onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); handleLogout(); }}
+                      >
+                        로그아웃
+                      </button>
+                    )}
+                    
+                    {/* 로그인/회원가입 (로그인하지 않은 상태일 때만) */}
+                    {!currentUser && (
+                      <>
+                        <button
+                          className="mobile-menu-item mobile-single-item"
+                          onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); navigate('/login'); }}
+                        >
+                          로그인
+                        </button>
+                        <button
+                          className="mobile-menu-item mobile-single-item"
+                          onClick={() => { setShowMobileMenu(false); setMobileMenuView('main'); navigate('/signup'); }}
+                        >
+                          회원가입
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* 문제생성 서브메뉴 */}
+                  <div 
+                    ref={mobileMenuView === 'work-submenu' ? activeLayerRef : null}
+                    className={`mobile-menu-layer ${mobileMenuView === 'work-submenu' ? 'active' : 'hidden'}`}
+                  >
+                    <button
+                      className="mobile-menu-item mobile-back-button"
+                      onClick={() => setMobileMenuView('main')}
+                    >
+                      ← 뒤로가기
+                    </button>
+                    
+                    {WORK_MENUS.map(menu => (
+                      <button
+                        key={menu.path}
+                        className="mobile-menu-item mobile-sub-item"
+                        onClick={() => handleMenuClick(menu.path)}
+                      >
+                        {menu.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+      </div>
       <div className="nav-links">
         {/* PC: 드롭다운 */}
         {!isMobile && (

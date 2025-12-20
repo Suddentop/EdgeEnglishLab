@@ -774,7 +774,7 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
       try {
         if (true) { // 프록시 서버 사용을 위해 항상 true로 설정
           const response = await callOpenAIAPI({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o',
           messages: [
             {
                   role: 'system',
@@ -1545,7 +1545,7 @@ Make sure the transformed word is actually DIFFERENT and WRONG compared to the o
 ${passage}`;
 
     const response = await callOpenAIAPI({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: 'You are a helpful assistant that provides natural Korean translations.' },
           { role: 'user', content: prompt }
