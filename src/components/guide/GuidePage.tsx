@@ -79,12 +79,18 @@ const GuidePage: React.FC = () => {
   const loadNotices = async () => {
     setLoading(true);
     try {
+      // 로그인 여부와 관계없이 공지사항 조회 가능
       const noticeList = await getNotices();
       setNotices(noticeList);
       setFilteredNotices(noticeList);
     } catch (error) {
       console.error('공지사항 로드 실패:', error);
-      alert('공지사항을 불러오는데 실패했습니다.');
+      // 로그인하지 않은 사용자에게도 에러 메시지 표시
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+      console.error('에러 상세:', errorMessage);
+      // alert 대신 콘솔 로그만 남기고 사용자에게는 빈 목록 표시
+      setNotices([]);
+      setFilteredNotices([]);
     } finally {
       setLoading(false);
     }

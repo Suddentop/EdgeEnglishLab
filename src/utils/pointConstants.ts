@@ -13,7 +13,7 @@ export const POINT_POLICY = {
   POINTS_PER_WON: 1,
   
   // 신규 회원가입 시 기본 부여 포인트
-  DEFAULT_SIGNUP_POINTS: 10000,
+  DEFAULT_SIGNUP_POINTS: 30000,
   
   // 문제 유형별 이름
   PROBLEM_TYPE_NAMES: {
