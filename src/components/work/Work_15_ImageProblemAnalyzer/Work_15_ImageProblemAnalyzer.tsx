@@ -510,14 +510,39 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
   // 인쇄(정답) 핸들러 - PDF/DOC 저장
   const handlePrintAnswer = async () => {
+    console.log('🖨️ [Work15] 인쇄(정답) 핸들러 시작');
+    
     if (!analysisResult) {
+      console.error('❌ [Work15] analysisResult가 없습니다.');
       alert('저장할 내용이 없습니다.');
       return;
     }
 
-    console.log('🖨️ 유형#15 정답 저장 시작');
+    console.log('📋 [Work15] analysisResult 내용:', {
+      hasEnglishText: !!analysisResult.englishText,
+      englishTextLength: analysisResult.englishText?.length || 0,
+      englishTextPreview: analysisResult.englishText?.substring(0, 50) || '',
+      hasKoreanTranslation: !!analysisResult.koreanTranslation,
+      koreanTranslationLength: analysisResult.koreanTranslation?.length || 0,
+      koreanTranslationPreview: analysisResult.koreanTranslation?.substring(0, 50) || ''
+    });
+
+    if (!currentUser?.uid) {
+      console.error('❌ [Work15] currentUser.uid가 없습니다.');
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    console.log('✅ [Work15] 기본 검증 완료, 인쇄 프로세스 시작');
     
-    // A4 세로 페이지 스타일 동적 추가
+    // 기존 스타일 제거
+    const existingStyle = document.getElementById('print-style-work15-answer');
+    if (existingStyle) {
+      console.log('🗑️ [Work15] 기존 스타일 제거');
+      existingStyle.remove();
+    }
+    
+    // A4 세로 페이지 스타일 동적 추가 (디버깅용 색상별 테두리 포함)
     const style = document.createElement('style');
     style.id = 'print-style-work15-answer';
     style.textContent = `
@@ -526,152 +551,587 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
         size: A4 portrait;
       }
       @media print {
-        body {
-          margin: 0;
-          padding: 0;
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 21cm !important;
+          height: 29.7cm !important;
+          overflow: visible !important;
+        }
+        body > *:not(#print-root-work15-answer) {
+          display: none !important;
+        }
+        #root {
+          display: none !important;
+        }
+        /* 최상위 컨테이너 */
+        #print-root-work15-answer {
+          display: block !important;
+          position: relative !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 21cm !important;
+          max-width: 21cm !important;
+          height: auto !important;
+          max-height: 29.7cm !important;
+          background: white !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          z-index: 999999 !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        #print-root-work15-answer * {
+          visibility: visible !important;
+          opacity: 1 !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
+        }
+        /* a4-page-template - A4 페이지 전체 */
+        #print-root-work15-answer .a4-page-template {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          width: 100% !important;
+          max-width: 21cm !important;
+          height: auto !important;
+          max-height: 29.7cm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          page-break-after: auto !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        /* a4-page-header - 헤더 영역 */
+        #print-root-work15-answer .a4-page-header {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          max-height: 5cm !important;
+          border: none !important;
+          border-bottom: none !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        /* print-header-work01 하위 모든 border 제거 */
+        #print-root-work15-answer .print-header-work01 {
+          border: none !important;
+          border-bottom: none !important;
+        }
+        #print-root-work15-answer .print-header-text-work01 {
+          border: none !important;
+          border-bottom: none !important;
+        }
+        /* a4-page-content - 본문 영역 - 상단 패딩 50% 감소 */
+        #print-root-work15-answer .a4-page-content {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          max-height: 24.7cm !important;
+          padding-top: 0 !important;
+          padding-left: 1cm !important;
+          padding-right: 1cm !important;
+          padding-bottom: 1cm !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        /* problem-instruction - 문제 제목 - 상단 여백 제거 */
+        #print-root-work15-answer .problem-instruction {
+          margin-top: 0 !important;
+          box-sizing: border-box !important;
+        }
+        /* print-content-section - 영어 본문, 한글 해석 섹션 */
+        #print-root-work15-answer .print-content-section {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          max-height: 100% !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        /* print-divider - 구분선 */
+        #print-root-work15-answer .print-divider {
+          box-sizing: border-box !important;
+        }
+        /* print-section-title - 섹션 제목 */
+        #print-root-work15-answer .print-section-title {
+          box-sizing: border-box !important;
+        }
+        /* print-text-content - 텍스트 내용 */
+        #print-root-work15-answer .print-text-content {
+          box-sizing: border-box !important;
+        }
+        /* 모든 하위 요소도 A4 크기 제한 */
+        #print-root-work15-answer .print-section-title,
+        #print-root-work15-answer .print-text-content {
+          max-width: 100% !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+        }
+      }
+      @media screen {
+        /* 화면에서는 인쇄용 컨테이너 완전히 숨기기 */
+        #print-root-work15-answer {
+          display: none !important;
+          visibility: hidden !important;
+          position: absolute !important;
+          left: -9999px !important;
+          top: -9999px !important;
+          opacity: 0 !important;
+          z-index: -1 !important;
+          width: 21cm !important;
+          max-width: 21cm !important;
+          background: white !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        #print-root-work15-answer * {
+          max-width: 100% !important;
+          max-height: 100% !important;
+        }
+        /* a4-page-template - A4 페이지 전체 */
+        #print-root-work15-answer .a4-page-template {
+          width: 100% !important;
+          max-width: 21cm !important;
+          height: auto !important;
+          max-height: 29.7cm !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        /* a4-page-header - 헤더 영역 */
+        #print-root-work15-answer .a4-page-header {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          max-height: 5cm !important;
+          border: none !important;
+          border-bottom: none !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        /* print-header-work01 하위 모든 border 제거 */
+        #print-root-work15-answer .print-header-work01 {
+          border: none !important;
+          border-bottom: none !important;
+        }
+        #print-root-work15-answer .print-header-text-work01 {
+          border: none !important;
+          border-bottom: none !important;
+        }
+        /* a4-page-content - 본문 영역 - 상단 패딩 50% 감소 */
+        #print-root-work15-answer .a4-page-content {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          max-height: 24.7cm !important;
+          padding-top: 0 !important;
+          padding-left: 1cm !important;
+          padding-right: 1cm !important;
+          padding-bottom: 1cm !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        /* problem-instruction - 문제 제목 - 상단 여백 제거 */
+        #print-root-work15-answer .problem-instruction {
+          margin-top: 0 !important;
+          box-sizing: border-box !important;
+        }
+        /* print-content-section - 영어 본문, 한글 해석 섹션 */
+        #print-root-work15-answer .print-content-section {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          max-height: 100% !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+        /* print-divider - 구분선 */
+        #print-root-work15-answer .print-divider {
+          box-sizing: border-box !important;
+        }
+        /* print-section-title - 섹션 제목 */
+        #print-root-work15-answer .print-section-title {
+          box-sizing: border-box !important;
+        }
+        /* print-text-content - 텍스트 내용 */
+        #print-root-work15-answer .print-text-content {
+          box-sizing: border-box !important;
+        }
+        /* 모든 하위 요소도 A4 크기 제한 */
+        #print-root-work15-answer .problem-instruction,
+        #print-root-work15-answer .print-section-title,
+        #print-root-work15-answer .print-text-content {
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
         }
       }
     `;
     document.head.appendChild(style);
+    console.log('✅ [Work15] CSS 스타일 추가 완료');
     
-    // 인쇄용 컨테이너 생성
+    // 인쇄용 컨테이너 생성 (화면 밖에 배치하여 보이지 않게)
     const printContainer = document.createElement('div');
     printContainer.id = 'print-root-work15-answer';
+    printContainer.style.position = 'absolute';
+    printContainer.style.left = '-9999px';
+    printContainer.style.top = '0';
+    printContainer.style.width = '21cm';
+    printContainer.style.background = 'white';
+    printContainer.style.zIndex = '9999';
+    // 화면에서는 보이지 않게, 인쇄 시에만 보이게
+    printContainer.style.visibility = 'hidden';
     document.body.appendChild(printContainer);
+    console.log('✅ [Work15] 인쇄 컨테이너 생성 및 DOM 추가 완료 (화면 밖 배치):', {
+      containerId: printContainer.id,
+      containerPosition: printContainer.style.position,
+      containerLeft: printContainer.style.left,
+      containerWidth: printContainer.style.width,
+      containerZIndex: printContainer.style.zIndex,
+      containerVisibility: printContainer.style.visibility,
+      isInBody: document.body.contains(printContainer)
+    });
 
-    // 기존 화면 숨기기
-    const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
+    // 원래 화면은 그대로 유지 (숨기지 않음)
+    console.log('✅ [Work15] 원래 문제 생성 결과 페이지 유지');
 
-    // React 18 방식으로 렌더링
+    console.log('🔄 [Work15] React 렌더링 시작...');
+    // React 18 방식으로 렌더링 - 중간 컨테이너 제거하고 직접 배치
     const root = ReactDOM.createRoot(printContainer);
     root.render(
-      <div className="only-print">
-        <div className="a4-page-template">
-          <div className="a4-page-header">
-            <PrintHeaderWork01 />
+      <div className="a4-page-template">
+        <div className="a4-page-header">
+          <PrintHeaderWork01 />
+        </div>
+        <div className="a4-page-content">
+          {/* 문제 제목 컨테이너 */}
+          <div className="problem-instruction" style={{
+            fontWeight: 800, 
+            fontSize: '1rem', 
+            background: '#222', 
+            color: '#fff', 
+            padding: '0.7rem 0.5rem', 
+            borderRadius: '8px', 
+            marginBottom: '1.2rem', 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            width: '100%'
+          }}>
+            <span>영어 본문 추출 결과 및 한글해석</span>
+            <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#15</span>
           </div>
-          <div className="a4-page-content">
-            <div className="quiz-content">
-              <div className="problem-instruction" style={{
-                fontWeight: 800, 
-                fontSize: '1rem', 
-                background: '#222', 
-                color: '#fff', 
-                padding: '0.7rem 0.5rem', 
-                borderRadius: '8px', 
-                marginBottom: '1.2rem', 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                width: '100%'
-              }}>
-                <span>영어 본문 추출 결과 및 한글해석</span>
-                <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#15</span>
-              </div>
-              
-              <div className="print-content-section">
-                <div className="print-section-title" style={{
-                  fontSize: '14pt',
-                  fontWeight: 'bold',
-                  marginBottom: '8pt',
-                  color: '#2d3a60',
-                  borderBottom: '2px solid #6a5acd',
-                  paddingBottom: '4pt'
-                }}>
-                  📖 영어 본문
-                </div>
-                <div className="print-text-content" style={{
-                  fontSize: '11pt',
-                  lineHeight: '1.6',
-                  textAlign: 'justify',
-                  marginBottom: '12pt'
-                }}>
-                  {analysisResult.englishText}
-                </div>
-              </div>
-              
-              <div className="print-divider" style={{
-                borderTop: '1px solid #ddd',
-                margin: '15pt 0'
-              }}></div>
-              
-              <div className="print-content-section">
-                <div className="print-section-title" style={{
-                  fontSize: '14pt',
-                  fontWeight: 'bold',
-                  marginBottom: '8pt',
-                  color: '#2d3a60',
-                  borderBottom: '2px solid #6a5acd',
-                  paddingBottom: '4pt'
-                }}>
-                  🇰🇷 한글 해석
-                </div>
-                <div className="print-text-content korean" style={{
-                  fontSize: '11pt',
-                  lineHeight: '1.6',
-                  textAlign: 'justify',
-                  marginBottom: '12pt',
-                  color: '#1976d2',
-                  fontWeight: '500'
-                }}>
-                  {analysisResult.koreanTranslation}
-                </div>
-              </div>
+          
+          {/* 영어 본문 컨테이너 */}
+          <div className="print-content-section">
+            <div className="print-section-title" style={{
+              fontSize: '14pt',
+              fontWeight: 'bold',
+              marginBottom: '8pt',
+              color: '#2d3a60',
+              borderBottom: '2px solid #6a5acd',
+              paddingBottom: '4pt'
+            }}>
+              📖 영어 본문
+            </div>
+            <div className="print-text-content" style={{
+              fontSize: '11pt',
+              lineHeight: '1.6',
+              textAlign: 'justify',
+              marginBottom: '12pt',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
+            }}>
+              {analysisResult.englishText}
+            </div>
+          </div>
+          
+          <div className="print-divider" style={{
+            borderTop: '1px solid #ddd',
+            margin: '15pt 0'
+          }}></div>
+          
+          {/* 한글 해석 컨테이너 */}
+          <div className="print-content-section">
+            <div className="print-section-title" style={{
+              fontSize: '14pt',
+              fontWeight: 'bold',
+              marginBottom: '8pt',
+              color: '#2d3a60',
+              borderBottom: '2px solid #6a5acd',
+              paddingBottom: '4pt'
+            }}>
+              🇰🇷 한글 해석
+            </div>
+            <div className="print-text-content korean" style={{
+              fontSize: '11pt',
+              lineHeight: '1.6',
+              textAlign: 'justify',
+              marginBottom: '12pt',
+              color: '#1976d2',
+              fontWeight: '500',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
+            }}>
+              {analysisResult.koreanTranslation}
             </div>
           </div>
         </div>
       </div>
     );
 
-    // 렌더링 완료 후 파일 생성
-    setTimeout(async () => {
-      try {
+    // 렌더링 완료 대기 및 파일 생성
+    const waitForRender = async (maxAttempts = 20): Promise<HTMLElement | null> => {
+      console.log(`⏳ [Work15] 렌더링 완료 대기 시작 (최대 ${maxAttempts}회 시도)`);
+      for (let i = 0; i < maxAttempts; i++) {
         const element = document.getElementById('print-root-work15-answer');
-        if (element && userData?.uid) {
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `work15_answer_${Date.now()}`,
-            '유형#15_정답',
-            { isAnswerMode: true, orientation: 'portrait', fileFormat }
-          );
+        if (element) {
+          const templateElement = element.querySelector('.a4-page-template');
+          const hasContent = templateElement && templateElement.children.length > 0;
           
-          // 문제 내역에 파일 URL 저장
-          const history = await getQuizHistory(userData.uid, { limit: 10 });
-          const work15History = history.find(h => h.workTypeId === WORK_TYPE_ID);
+          console.log(`🔍 [Work15] 렌더링 확인 (시도 ${i + 1}/${maxAttempts}):`, {
+            hasElement: !!element,
+            hasTemplate: !!templateElement,
+            templateChildrenCount: templateElement?.children.length || 0,
+            elementInnerHTML: element.innerHTML.substring(0, 200),
+            elementComputedStyle: {
+              display: window.getComputedStyle(element).display,
+              position: window.getComputedStyle(element).position,
+              visibility: window.getComputedStyle(element).visibility,
+              opacity: window.getComputedStyle(element).opacity
+            }
+          });
           
-          if (work15History) {
-            await updateQuizHistoryFile(work15History.id, result.url, result.fileName, 'answer');
-            const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 유형#15 정답 ${formatName} 저장 완료:`, result.fileName);
+          if (hasContent) {
+            console.log(`✅ [Work15] 렌더링 완료 확인 (시도 ${i + 1}/${maxAttempts})`);
+            return element;
           }
+        } else {
+          console.warn(`⚠️ [Work15] 인쇄 컨테이너를 찾을 수 없음 (시도 ${i + 1}/${maxAttempts})`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      console.warn('⚠️ [Work15] 렌더링 완료 확인 실패, 최대 시도 횟수 초과');
+      const finalElement = document.getElementById('print-root-work15-answer');
+      if (finalElement) {
+        console.log('📊 [Work15] 최종 요소 상태:', {
+          innerHTML: finalElement.innerHTML.substring(0, 500),
+          children: Array.from(finalElement.children).map(c => ({
+            tagName: c.tagName,
+            className: c.className,
+            childrenCount: c.children.length
+          }))
+        });
+      }
+      return finalElement;
+    };
+
+    setTimeout(async () => {
+      console.log('⏰ [Work15] setTimeout 콜백 실행 시작');
+      try {
+        const element = await waitForRender();
+        if (!element) {
+          console.error('❌ [Work15] 인쇄 컨테이너를 찾을 수 없습니다.');
+          // 정리
+          root.unmount();
+          if (document.body.contains(printContainer)) {
+            document.body.removeChild(printContainer);
+          }
+          // appRoot는 숨기지 않았으므로 복원 불필요
+          const styleElement = document.getElementById('print-style-work15-answer');
+          if (styleElement) {
+            styleElement.remove();
+          }
+          return;
+        }
+
+        // 요소가 제대로 렌더링되었는지 확인
+        const templateElement = element.querySelector('.a4-page-template');
+        const headerElement = element.querySelector('.a4-page-header');
+        const contentElement = element.querySelector('.a4-page-content');
+        const englishTextElement = element.querySelector('.print-text-content:not(.korean)');
+        const koreanTextElement = element.querySelector('.print-text-content.korean');
+        
+        console.log('📊 [Work15] DOM 요소 상세 확인:', {
+          elementId: element.id,
+          elementRect: element.getBoundingClientRect(),
+          hasTemplate: !!templateElement,
+          templateRect: templateElement?.getBoundingClientRect(),
+          templateHeight: templateElement?.getBoundingClientRect().height,
+          templateChildrenCount: templateElement?.children.length || 0,
+          hasHeader: !!headerElement,
+          hasContent: !!contentElement,
+          contentChildrenCount: contentElement?.children.length || 0,
+          hasEnglishText: !!englishTextElement,
+          englishTextContent: englishTextElement?.textContent?.substring(0, 100) || '',
+          hasKoreanText: !!koreanTextElement,
+          koreanTextContent: koreanTextElement?.textContent?.substring(0, 100) || '',
+          computedStyles: {
+            element: {
+              display: window.getComputedStyle(element).display,
+              position: window.getComputedStyle(element).position,
+              visibility: window.getComputedStyle(element).visibility,
+              opacity: window.getComputedStyle(element).opacity,
+              width: window.getComputedStyle(element).width,
+              height: window.getComputedStyle(element).height
+            },
+            template: templateElement ? {
+              display: window.getComputedStyle(templateElement).display,
+              visibility: window.getComputedStyle(templateElement).visibility,
+              opacity: window.getComputedStyle(templateElement).opacity
+            } : null
+          }
+        });
+
+        if (!templateElement) {
+          console.error('❌ [Work15] A4 페이지 템플릿을 찾을 수 없습니다.');
+          console.log('🔍 [Work15] 전체 DOM 구조:', {
+            elementHTML: element.innerHTML.substring(0, 1000),
+            allClasses: Array.from(element.querySelectorAll('*')).map(el => el.className).filter(Boolean)
+          });
+          // 정리
+          root.unmount();
+          if (document.body.contains(printContainer)) {
+            document.body.removeChild(printContainer);
+          }
+          // appRoot는 숨기지 않았으므로 복원 불필요
+          const styleElement = document.getElementById('print-style-work15-answer');
+          if (styleElement) {
+            styleElement.remove();
+          }
+          return;
+        }
+
+        console.log('📄 [Work15] 파일 생성 시작...');
+        // currentUser.uid 사용
+        const result = await generateAndUploadFile(
+          element as HTMLElement,
+          currentUser.uid,
+          `work15_answer_${Date.now()}`,
+          '유형#15_정답',
+          { isAnswerMode: true, orientation: 'portrait', fileFormat }
+        );
+        
+        console.log('✅ [Work15] 파일 생성 완료:', result);
+        
+        // 문제 내역에 파일 URL 저장
+        const history = await getQuizHistory(currentUser.uid, { limit: 10 });
+        const work15History = history.find(h => h.workTypeId === WORK_TYPE_ID);
+        
+        if (work15History) {
+          await updateQuizHistoryFile(work15History.id, result.url, result.fileName, 'answer');
+          const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+          console.log(`📁 [Work15] 유형#15 정답 ${formatName} 저장 완료:`, result.fileName);
         }
       } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+        console.error(`❌ [Work15] 파일 저장 실패 (${fileFormat}):`, error);
+        console.error('❌ [Work15] 에러 상세:', {
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+          errorName: error instanceof Error ? error.name : undefined
+        });
+        alert(`파일 저장 중 오류가 발생했습니다: ${error}`);
       }
 
       // PDF인 경우에만 브라우저 인쇄
       if (fileFormat === 'pdf') {
-        window.print();
+        console.log('🖨️ [Work15] PDF 인쇄 시작...');
+        
+        // 인쇄 전 최종 상태 확인
+        const printElement = document.getElementById('print-root-work15-answer');
+        const templateEl = printElement?.querySelector('.a4-page-template');
+        console.log('📊 [Work15] 인쇄 전 최종 상태 확인:', {
+          containerExists: !!printElement,
+          containerVisible: printElement?.offsetParent !== null,
+          containerDisplay: printElement ? window.getComputedStyle(printElement).display : 'none',
+          containerPosition: printElement ? window.getComputedStyle(printElement).position : 'none',
+          containerWidth: printElement ? window.getComputedStyle(printElement).width : 'none',
+          containerHeight: printElement ? window.getComputedStyle(printElement).height : 'none',
+          hasTemplate: !!templateEl,
+          templateDisplay: templateEl ? window.getComputedStyle(templateEl).display : 'none',
+          templateWidth: templateEl ? window.getComputedStyle(templateEl).width : 'none',
+          templateHeight: templateEl ? window.getComputedStyle(templateEl).height : 'none',
+          templateChildrenCount: templateEl?.children.length || 0,
+          windowPrintAvailable: typeof window.print === 'function',
+          // 인쇄 미디어 쿼리 확인을 위한 추가 정보
+          bodyChildren: Array.from(document.body.children).map(c => ({
+            id: c.id,
+            tagName: c.tagName,
+            display: window.getComputedStyle(c).display
+          }))
+        });
+        
+        // 인쇄 전에 컨테이너가 확실히 보이도록 보장
+        if (printElement) {
+          // 인쇄 시에만 화면에 보이게 설정 (원래는 화면 밖에 있음)
+          printElement.style.display = 'block';
+          printElement.style.position = 'absolute';
+          printElement.style.left = '0';
+          printElement.style.top = '0';
+          printElement.style.width = '21cm';
+          printElement.style.background = 'white';
+          printElement.style.zIndex = '999999';
+          printElement.style.visibility = 'visible';
+          printElement.style.opacity = '1';
+          
+          if (templateEl) {
+            (templateEl as HTMLElement).style.display = 'block';
+            (templateEl as HTMLElement).style.visibility = 'visible';
+            (templateEl as HTMLElement).style.opacity = '1';
+          }
+          
+          console.log('✅ [Work15] 인쇄 컨테이너 스타일 강제 적용 완료');
+        }
+        
+        // 인쇄 전에 약간의 지연을 두어 렌더링 완료 보장
+        setTimeout(() => {
+          console.log('🖨️ [Work15] window.print() 호출 직전 최종 확인:', {
+            containerExists: !!document.getElementById('print-root-work15-answer'),
+            containerInBody: document.body.contains(document.getElementById('print-root-work15-answer') || document.createElement('div')),
+            containerHTML: document.getElementById('print-root-work15-answer')?.innerHTML.substring(0, 300) || ''
+          });
+          
+          console.log('🖨️ [Work15] window.print() 호출');
+          window.print();
+          console.log('✅ [Work15] window.print() 호출 완료');
+          
+          // window.print() 호출 직후 즉시 컨테이너를 화면 밖으로 이동 (인쇄 미리보기에는 @media print CSS가 적용됨)
+          if (printElement) {
+            printElement.style.left = '-9999px';
+            printElement.style.visibility = 'hidden';
+            printElement.style.display = 'none';
+            console.log('✅ [Work15] 인쇄용 컨테이너를 즉시 화면 밖으로 이동 완료');
+          }
+        }, 300);
       }
       
-      // 정리
+      // 정리 (인쇄 다이얼로그가 닫힌 후)
       setTimeout(() => {
+        console.log('🧹 [Work15] 정리 작업 시작...');
         root.unmount();
-        document.body.removeChild(printContainer);
-        if (appRoot) {
-          appRoot.style.display = 'block';
+        if (document.body.contains(printContainer)) {
+          document.body.removeChild(printContainer);
+          console.log('✅ [Work15] 인쇄 컨테이너 제거 완료');
         }
+        // appRoot는 숨기지 않았으므로 복원 불필요
         const styleElement = document.getElementById('print-style-work15-answer');
-        if (styleElement) {
+        if (styleElement && document.head.contains(styleElement)) {
           document.head.removeChild(styleElement);
+          console.log('✅ [Work15] 스타일 요소 제거 완료');
         }
-        console.log('✅ 유형#15 정답 저장 완료');
-      }, 100);
+        console.log('✅ [Work15] 유형#15 정답 저장 완료');
+      }, fileFormat === 'pdf' ? 2000 : 100);
     }, 500);
+    
+    console.log('✅ [Work15] handlePrintAnswer 함수 실행 완료 (비동기 작업 시작)');
   };
 
   return (
