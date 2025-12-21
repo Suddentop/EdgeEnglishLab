@@ -889,7 +889,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     );
 
     // 렌더링 완료 대기 및 파일 생성
-    const waitForRender = async (maxAttempts = 20): Promise<HTMLElement | null> => {
+    const waitForRender = async (maxAttempts = 10): Promise<HTMLElement | null> => {
       console.log(`⏳ [Work15] 렌더링 완료 대기 시작 (최대 ${maxAttempts}회 시도)`);
       for (let i = 0; i < maxAttempts; i++) {
         const element = document.getElementById('print-root-work15-answer');
@@ -897,27 +897,31 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           const templateElement = element.querySelector('.a4-page-template');
           const hasContent = templateElement && templateElement.children.length > 0;
           
-          console.log(`🔍 [Work15] 렌더링 확인 (시도 ${i + 1}/${maxAttempts}):`, {
-            hasElement: !!element,
-            hasTemplate: !!templateElement,
-            templateChildrenCount: templateElement?.children.length || 0,
-            elementInnerHTML: element.innerHTML.substring(0, 200),
-            elementComputedStyle: {
-              display: window.getComputedStyle(element).display,
-              position: window.getComputedStyle(element).position,
-              visibility: window.getComputedStyle(element).visibility,
-              opacity: window.getComputedStyle(element).opacity
-            }
-          });
+          if (i === 0 || i === maxAttempts - 1) {
+            console.log(`🔍 [Work15] 렌더링 확인 (시도 ${i + 1}/${maxAttempts}):`, {
+              hasElement: !!element,
+              hasTemplate: !!templateElement,
+              templateChildrenCount: templateElement?.children.length || 0,
+              elementInnerHTML: element.innerHTML.substring(0, 200),
+              elementComputedStyle: {
+                display: window.getComputedStyle(element).display,
+                position: window.getComputedStyle(element).position,
+                visibility: window.getComputedStyle(element).visibility,
+                opacity: window.getComputedStyle(element).opacity
+              }
+            });
+          }
           
           if (hasContent) {
             console.log(`✅ [Work15] 렌더링 완료 확인 (시도 ${i + 1}/${maxAttempts})`);
             return element;
           }
         } else {
-          console.warn(`⚠️ [Work15] 인쇄 컨테이너를 찾을 수 없음 (시도 ${i + 1}/${maxAttempts})`);
+          if (i === 0 || i === maxAttempts - 1) {
+            console.warn(`⚠️ [Work15] 인쇄 컨테이너를 찾을 수 없음 (시도 ${i + 1}/${maxAttempts})`);
+          }
         }
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
       console.warn('⚠️ [Work15] 렌더링 완료 확인 실패, 최대 시도 횟수 초과');
       const finalElement = document.getElementById('print-root-work15-answer');
@@ -1091,14 +1095,8 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           console.log('✅ [Work15] 인쇄 컨테이너 스타일 강제 적용 완료');
         }
         
-        // 인쇄 전에 약간의 지연을 두어 렌더링 완료 보장
+        // 인쇄 전에 최소한의 지연을 두어 렌더링 완료 보장
         setTimeout(() => {
-          console.log('🖨️ [Work15] window.print() 호출 직전 최종 확인:', {
-            containerExists: !!document.getElementById('print-root-work15-answer'),
-            containerInBody: document.body.contains(document.getElementById('print-root-work15-answer') || document.createElement('div')),
-            containerHTML: document.getElementById('print-root-work15-answer')?.innerHTML.substring(0, 300) || ''
-          });
-          
           console.log('🖨️ [Work15] window.print() 호출');
           window.print();
           console.log('✅ [Work15] window.print() 호출 완료');
@@ -1110,7 +1108,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
             printElement.style.display = 'none';
             console.log('✅ [Work15] 인쇄용 컨테이너를 즉시 화면 밖으로 이동 완료');
           }
-        }, 300);
+        }, 100);
       }
       
       // 정리 (인쇄 다이얼로그가 닫힌 후)
@@ -1129,7 +1127,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
         }
         console.log('✅ [Work15] 유형#15 정답 저장 완료');
       }, fileFormat === 'pdf' ? 2000 : 100);
-    }, 500);
+    }, 200);
     
     console.log('✅ [Work15] handlePrintAnswer 함수 실행 완료 (비동기 작업 시작)');
   };

@@ -1145,12 +1145,6 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   const isPackage02 = element.querySelector('.print-header-package02') !== null || 
                       element.querySelector('.print-question-card') !== null;
   
-  // 유형#15 식별 (questionCards 처리 전에)
-  const work15QuizContentForCheck = element.querySelector('.quiz-content');
-  const hasPrintContentSection = work15QuizContentForCheck?.querySelector('.print-content-section') !== null;
-  const hasQuestionCard = element.querySelector('.print-question-card') !== null;
-  const isWork15 = hasPrintContentSection && !hasQuestionCard;
-  
   // 유형#11 처리 플래그 (순서를 유지하기 위해 questionCards 루프 안에서 처리)
   let work11SentencesProcessed = false;
   
@@ -1262,6 +1256,14 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   
   if (questionCards.length > 0) {
     questionCards.forEach((card, cardIndex) => {
+      // 유형#15인 경우 건너뛰기 (별도 처리됨)
+      const cardWork15Content = card.querySelector('.quiz-content') || card.querySelector('.a4-page-content');
+      const cardHasPrintContentSection = cardWork15Content?.querySelector('.print-content-section') !== null;
+      const cardHasQuestionCard = card.querySelector('.print-question-card') !== null;
+      if (cardHasPrintContentSection && !cardHasQuestionCard) {
+        return; // 유형#15는 별도 처리되므로 건너뛰기
+      }
+      
       // .a4-page-template인 경우 내부의 .a4-page-content를 찾아서 처리
       let actualCard = card as HTMLElement;
       let pageContentForWorkType: HTMLElement | null = null;
@@ -3018,17 +3020,21 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
     }
   }
   
-  // 유형#15 처리: .quiz-content 내부의 .print-content-section 처리
-  // 유형#15는 .quiz-content 안에 .print-content-section이 있고, .print-question-card가 없는 구조
-  // (isWork15는 위에서 이미 선언됨)
-  const work15QuizContent = element.querySelector('.quiz-content');
-  if (isWork15 && work15QuizContent) {
+  // 유형#15 처리: .quiz-content 또는 .a4-page-content 내부의 .print-content-section 처리
+  // 유형#15는 .quiz-content 또는 .a4-page-content 안에 .print-content-section이 있고, .print-question-card가 없는 구조
+  const work15QuizContent = element.querySelector('.quiz-content') || element.querySelector('.a4-page-content');
+  const work15HasPrintContentSection = work15QuizContent?.querySelector('.print-content-section') !== null;
+  const work15HasQuestionCard = element.querySelector('.print-question-card') !== null;
+  const work15IsWork15 = work15HasPrintContentSection && !work15HasQuestionCard;
+  
+  if (work15IsWork15 && work15QuizContent) {
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 유형#15 DOC 변환 시작:', {
-        hasPrintContentSection,
-        hasQuestionCard,
-        isWork15,
-        contentSectionsCount: work15QuizContent.querySelectorAll('.print-content-section').length
+        hasPrintContentSection: work15HasPrintContentSection,
+        hasQuestionCard: work15HasQuestionCard,
+        isWork15: work15IsWork15,
+        contentSectionsCount: work15QuizContent.querySelectorAll('.print-content-section').length,
+        containerClass: work15QuizContent.className
       });
     }
     // 유형#15의 경우: .print-content-section을 찾아서 처리
