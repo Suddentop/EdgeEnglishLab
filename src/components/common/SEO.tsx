@@ -11,12 +11,19 @@ interface SEOProps {
  */
 const SEO: React.FC<SEOProps> = ({ title, description }) => {
   useEffect(() => {
-    // 기본값 설정
-    const defaultTitle = "Edge English Lab (엣지잉글리쉬랩) - AI 영어 문제 생성 플랫폼";
+    // 기본값 설정 (40자 이내 권장)
+    const defaultTitle = "Edge English Lab - AI 영어 문제 생성 플랫폼";
     const defaultDescription = "수능 수준의 고품질 영어 문제를 AI로 자동 생성하세요. 독해, 문법, 어휘 문제 제작과 인쇄를 지원하는 영어 선생님 필수 도구입니다.";
 
     // 제목 변경
     document.title = title ? `${title} | Edge English Lab` : defaultTitle;
+    
+    // 메타 title 태그 변경 (40자 이내 권장)
+    const metaTitle = document.querySelector('meta[name="title"]');
+    if (metaTitle) {
+      const metaTitleValue = title ? `${title} | Edge English Lab` : defaultTitle;
+      metaTitle.setAttribute('content', metaTitleValue);
+    }
     
     // Open Graph 제목 변경 (40자 이내 권장)
     const ogTitle = document.querySelector('meta[property="og:title"]');
