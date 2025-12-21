@@ -79,7 +79,7 @@ export class TossPaymentService {
       const tossRequestData: TossPaymentRequest = {
         amount: amount,
         orderId: savedOrderId,
-        orderName: `EngQuiz 포인트 충전 (${amount.toLocaleString()}원)`,
+        orderName: `엣지잉글리쉬랩 포인트 충전 (${amount.toLocaleString()}원)`,
         customerName: userName,
         customerEmail: userEmail,
         customerMobilePhone: userPhone,

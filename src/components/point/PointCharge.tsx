@@ -120,7 +120,7 @@ const PointCharge: React.FC = () => {
         await tossPayments.requestPayment('카드', {
           amount: paymentAmount,
           orderId: tossData.orderId,
-          orderName: `EngQuiz 포인트 충전 (${paymentAmount.toLocaleString()}원)`,
+          orderName: `엣지잉글리쉬랩 포인트 충전 (${paymentAmount.toLocaleString()}원)`,
           customerName: user.displayName || '사용자',
           customerEmail: user.email || '',
           successUrl: `${window.location.origin}/#/payment/success?orderId=${tossData.orderId}&amount=${paymentAmount}`,

@@ -94,7 +94,7 @@ const SignUp: React.FC = () => {
     <div className="signup-container">
       <SEO 
         title="회원가입" 
-        description="EngQuiz에 무료로 가입하고 AI 영어 문제 생성 도구를 체험해보세요. 선생님을 위한 스마트한 문제 제작 솔루션입니다." 
+        description="엣지잉글리쉬랩에 무료로 가입하고 AI 영어 문제 생성 도구를 체험해보세요. 선생님을 위한 스마트한 문제 제작 솔루션입니다." 
       />
       <h2>회원가입</h2>
       {error && <div className="error-message">{error}</div>}
