@@ -21,6 +21,12 @@
   font-weight: 700;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .search-controls {
   display: flex;
   gap: 0.5rem;

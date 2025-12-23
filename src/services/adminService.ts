@@ -238,3 +238,44 @@ export const togglePointUsage = async (uid: string, pointUsageDisabled: boolean)
     throw error;
   }
 };
+
+/**
+ * 관리자가 사용자를 생성하는 함수
+ */
+export interface CreateUserData {
+  email: string;
+  password: string;
+  name: string;
+  nickname: string;
+  phoneNumber?: string;
+  role?: string;
+}
+
+export const createUserByAdmin = async (
+  adminUid: string,
+  userData: CreateUserData
+): Promise<{ success: boolean; message: string; userId?: string }> => {
+  try {
+    const response = await fetch('https://us-central1-edgeenglishlab.cloudfunctions.net/createUserByAdmin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        adminUid,
+        userData
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || '사용자 생성에 실패했습니다.');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('사용자 생성 오류:', error);
+    throw error;
+  }
+};

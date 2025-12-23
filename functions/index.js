@@ -804,17 +804,16 @@ exports.deleteUserByAdmin = functions.https.onRequest((req, res) => {
         await admin.auth().deleteUser(userId);
         console.log(`Firebase Auth 사용자 삭제 완료: ${userId}`);
       } catch (error) {
-        console.log(`Firebase Auth 사용자 삭제 실패 (이미 삭제되었을 수 있음): ${error.message}`);
+        // 사용자가 이미 삭제되었거나 존재하지 않는 경우에도 계속 진행
+        if (error.code !== 'auth/user-not-found') {
+          console.log(`Firebase Auth 사용자 삭제 실패: ${error.message}`);
+        }
       }
       
-      // 3. Firestore에서 사용자 비활성화
-      await admin.firestore().collection('users').doc(userId).update({
-        isActive: false,
-        deletedAt: admin.firestore.FieldValue.serverTimestamp(),
-        deletedBy: adminUid
-      });
+      // 3. Firestore에서 사용자 완전 삭제
+      await admin.firestore().collection('users').doc(userId).delete();
       
-      console.log(`Firestore 사용자 비활성화 완료: ${userId}`);
+      console.log(`Firestore 사용자 완전 삭제 완료: ${userId}`);
       
       res.json({
         success: true,
@@ -869,6 +868,117 @@ exports.updateUserByAdmin = functions.https.onRequest((req, res) => {
       res.status(500).json({ success: false, message: '사용자 정보 업데이트 중 오류가 발생했습니다.', error: error.message });
     }
   });
+});
+
+/**
+ * 관리자가 사용자를 생성하는 함수
+ */
+exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
+  // CORS 설정
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const { adminUid, userData } = req.body;
+      
+      if (!adminUid || !userData) {
+        res.status(400).json({ success: false, message: 'adminUid와 userData가 필요합니다.' });
+        return;
+      }
+      
+      const { email, password, name, nickname, phoneNumber, role } = userData;
+      
+      if (!email || !password || !name || !nickname) {
+        res.status(400).json({ success: false, message: '이메일, 비밀번호, 이름, 닉네임은 필수입니다.' });
+        return;
+      }
+      
+      console.log(`관리자 사용자 생성: ${adminUid} -> ${email}`);
+      
+      // 1. 관리자 권한 확인
+      const adminDoc = await admin.firestore().collection('users').doc(adminUid).get();
+      if (!adminDoc.exists || adminDoc.data().role !== 'admin') {
+        res.status(403).json({ success: false, message: '관리자 권한이 필요합니다.' });
+        return;
+      }
+      
+      // 2. 이메일 중복 확인
+      try {
+        await admin.auth().getUserByEmail(email);
+        res.status(400).json({ success: false, message: '이미 존재하는 이메일입니다.' });
+        return;
+      } catch (error) {
+        // 사용자가 존재하지 않으면 계속 진행
+        if (error.code !== 'auth/user-not-found') {
+          throw error;
+        }
+      }
+      
+      // 3. Firebase Auth에 사용자 생성
+      const userRecord = await admin.auth().createUser({
+        email: email,
+        password: password,
+        emailVerified: true // 관리자가 생성한 계정은 이메일 인증 완료 상태로 생성
+      });
+      
+      console.log(`Firebase Auth 사용자 생성 완료: ${userRecord.uid}`);
+      
+      // 4. Firestore에 사용자 정보 저장
+      const defaultPoints = 30000; // 신규 회원가입 시 기본 포인트
+      const defaultPrintHeader = 'EdgeEnglishLab | AI 영어 문제 생성 플랫폼';
+      
+      await admin.firestore().collection('users').doc(userRecord.uid).set({
+        name: name,
+        nickname: nickname,
+        email: email,
+        phoneNumber: phoneNumber || '',
+        role: role || 'user',
+        isActive: true,
+        points: defaultPoints,
+        totalPaidPoints: 0,
+        usedPoints: 0,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdBy: adminUid,
+        printHeader: defaultPrintHeader
+      });
+      
+      console.log(`Firestore 사용자 정보 저장 완료: ${userRecord.uid}`);
+      
+      res.json({
+        success: true,
+        message: '사용자가 성공적으로 생성되었습니다.',
+        userId: userRecord.uid
+      });
+      
+    } catch (error) {
+      console.error('사용자 생성 오류:', error);
+      
+      let errorMessage = '사용자 생성 중 오류가 발생했습니다.';
+      if (error.code === 'auth/email-already-exists') {
+        errorMessage = '이미 존재하는 이메일입니다.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = '유효하지 않은 이메일 형식입니다.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = '비밀번호가 너무 약합니다.';
+      }
+      
+      res.status(500).json({ 
+        success: false, 
+        message: errorMessage, 
+        error: error.message 
+      });
+    }
 });
 
 /**

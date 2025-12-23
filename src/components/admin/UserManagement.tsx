@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { searchUsers, toggleUserStatus, User } from '../../services/adminService';
+import { searchUsers, toggleUserStatus, User, createUserByAdmin, CreateUserData } from '../../services/adminService';
 import { app } from '../../firebase/config';
 import { getAuth } from 'firebase/auth';
 import { formatPhoneNumber, formatPhoneInput } from '../../utils/textProcessor';
@@ -10,6 +10,7 @@ const UserManagement: React.FC = () => {
   const { userData } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deletedUserIds, setDeletedUserIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState<'all' | 'name' | 'nickname' | 'phoneNumber'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -17,6 +18,7 @@ const UserManagement: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     nickname: '',
@@ -24,6 +26,16 @@ const UserManagement: React.FC = () => {
     phoneNumber: '',
     role: 'user'
   });
+  const [createForm, setCreateForm] = useState<CreateUserData & { confirmPassword: string }>({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
+    nickname: '',
+    phoneNumber: '',
+    role: 'user'
+  });
+  const [createError, setCreateError] = useState('');
 
   const [hasMore, setHasMore] = useState(false);
   const [lastDoc, setLastDoc] = useState<any>(null);
@@ -47,10 +59,18 @@ const UserManagement: React.FC = () => {
 
       const result = await searchUsers(options);
       
+      // 삭제된 사용자 필터링
+      const filteredUsers = result.users.filter(user => !deletedUserIds.has(user.uid));
+      
       if (loadMore) {
-        setUsers(prev => [...prev, ...result.users]);
+        setUsers(prev => {
+          // 기존 목록에서도 삭제된 사용자 제거 후 새 데이터 추가
+          const existingFiltered = prev.filter(user => !deletedUserIds.has(user.uid));
+          return [...existingFiltered, ...filteredUsers];
+        });
       } else {
-        setUsers(result.users);
+        // 새로고침 시 완전히 교체
+        setUsers(filteredUsers);
       }
       
       setLastDoc(result.lastDoc);
@@ -122,11 +142,14 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // 회원 삭제 (비활성화)
+  // 회원 삭제
   const handleDeleteUser = async () => {
     if (!selectedUser || !userData) return;
 
     try {
+      setLoading(true);
+      console.log('회원 삭제 시작:', selectedUser.uid, selectedUser.name);
+      
       // Cloud Function을 사용하여 사용자 삭제
       const response = await fetch('https://us-central1-edgeenglishlab.cloudfunctions.net/deleteUserByAdmin', {
         method: 'POST',
@@ -139,18 +162,47 @@ const UserManagement: React.FC = () => {
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log('삭제 응답:', result);
 
       if (result.success) {
+        const deletedUserId = selectedUser.uid;
         setShowDeleteModal(false);
-        loadUsers(); // 목록 새로고침
+        setSelectedUser(null);
+        
+        // 삭제된 사용자 ID를 Set에 추가 (향후 필터링용)
+        setDeletedUserIds(prev => {
+          const newSet = new Set(prev);
+          newSet.add(deletedUserId);
+          return newSet;
+        });
+        
+        // 목록에서 삭제된 사용자 즉시 제거
+        setUsers(prevUsers => prevUsers.filter(user => user.uid !== deletedUserId));
+        
+        // 페이지네이션 상태 리셋
+        setLastDoc(null);
+        setHasMore(false);
+        
         alert('회원이 성공적으로 삭제되었습니다.');
+        
+        // 즉시 목록 새로고침 (비동기로 실행하되 await 하지 않음)
+        loadUsers(false).catch(err => {
+          console.error('목록 새로고침 오류:', err);
+        });
       } else {
+        console.error('삭제 실패:', result.message);
         alert(`회원 삭제에 실패했습니다: ${result.message}`);
       }
     } catch (error) {
       console.error('회원 삭제 오류:', error);
-      alert('회원 삭제에 실패했습니다.');
+      alert(`회원 삭제에 실패했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,6 +215,85 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       console.error('회원 상태 변경 오류:', error);
       alert('회원 상태 변경에 실패했습니다.');
+    }
+  };
+
+  // 회원 등록
+  const handleCreateUser = async () => {
+    if (!userData) return;
+
+    // 유효성 검사
+    if (!createForm.email || !createForm.password || !createForm.name || !createForm.nickname) {
+      setCreateError('이메일, 비밀번호, 이름, 닉네임은 필수 입력 항목입니다.');
+      return;
+    }
+
+    if (createForm.password.length < 8) {
+      setCreateError('비밀번호는 최소 8자 이상이어야 합니다.');
+      return;
+    }
+
+    if (createForm.password !== createForm.confirmPassword) {
+      setCreateError('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    // 이메일 형식 검사
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(createForm.email)) {
+      setCreateError('올바른 이메일 형식이 아닙니다.');
+      return;
+    }
+
+    try {
+      setCreateError('');
+      setLoading(true);
+
+      const userDataToCreate: CreateUserData = {
+        email: createForm.email,
+        password: createForm.password,
+        name: createForm.name,
+        nickname: createForm.nickname,
+        phoneNumber: createForm.phoneNumber || undefined,
+        role: createForm.role || 'user'
+      };
+
+      const result = await createUserByAdmin(userData.uid, userDataToCreate);
+
+      if (result.success) {
+        setShowCreateModal(false);
+        setCreateForm({
+          email: '',
+          password: '',
+          confirmPassword: '',
+          name: '',
+          nickname: '',
+          phoneNumber: '',
+          role: 'user'
+        });
+        setCreateError('');
+        loadUsers(); // 목록 새로고침
+        alert('회원이 성공적으로 등록되었습니다.');
+      } else {
+        setCreateError(result.message || '회원 등록에 실패했습니다.');
+      }
+    } catch (error: any) {
+      console.error('회원 등록 오류:', error);
+      let errorMessage = '회원 등록에 실패했습니다.';
+      
+      if (error.message.includes('이미 존재하는 이메일')) {
+        errorMessage = '이미 존재하는 이메일입니다.';
+      } else if (error.message.includes('유효하지 않은 이메일')) {
+        errorMessage = '유효하지 않은 이메일 형식입니다.';
+      } else if (error.message.includes('비밀번호가 너무 약')) {
+        errorMessage = '비밀번호가 너무 약합니다. 영문, 숫자, 특수문자를 포함해주세요.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setCreateError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -227,6 +358,27 @@ const UserManagement: React.FC = () => {
     <div className="user-management">
       <div className="user-management-header">
         <h2>회원관리</h2>
+        <div className="header-actions">
+          <button 
+            onClick={() => {
+              setCreateForm({
+                email: '',
+                password: '',
+                confirmPassword: '',
+                name: '',
+                nickname: '',
+                phoneNumber: '',
+                role: 'user'
+              });
+              setCreateError('');
+              setShowCreateModal(true);
+            }}
+            className="btn-primary"
+            style={{ marginRight: '10px' }}
+          >
+            ➕ 회원 등록
+          </button>
+        </div>
         <div className="search-controls">
           <select 
             value={searchType} 
@@ -278,7 +430,9 @@ const UserManagement: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {users
+              .filter(user => !deletedUserIds.has(user.uid))
+              .map((user) => (
               <tr key={user.uid} className={!user.isActive ? 'inactive-user' : ''}>
                 <td>{user.name}</td>
                 <td>{user.nickname}</td>
@@ -451,6 +605,117 @@ const UserManagement: React.FC = () => {
               <div className="modal-actions">
                 <button onClick={handlePasswordChange} className="btn-primary">이메일 발송</button>
                 <button onClick={() => setShowPasswordModal(false)} className="btn-secondary">취소</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 회원 등록 모달 */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>회원 등록</h3>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {createError && (
+                <div className="error-message" style={{ 
+                  color: '#d32f2f', 
+                  backgroundColor: '#ffebee', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  marginBottom: '15px' 
+                }}>
+                  {createError}
+                </div>
+              )}
+              <div className="form-group">
+                <label>이메일 <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="email"
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
+                  placeholder="example@email.com"
+                />
+              </div>
+              <div className="form-group">
+                <label>비밀번호 <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="password"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({...createForm, password: e.target.value})}
+                  placeholder="최소 8자 이상"
+                />
+                <small style={{ color: '#666', fontSize: '12px' }}>
+                  영문, 숫자, 특수문자를 포함해주세요
+                </small>
+              </div>
+              <div className="form-group">
+                <label>비밀번호 확인 <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="password"
+                  value={createForm.confirmPassword}
+                  onChange={(e) => setCreateForm({...createForm, confirmPassword: e.target.value})}
+                  placeholder="비밀번호를 다시 입력하세요"
+                />
+              </div>
+              <div className="form-group">
+                <label>이름 <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
+                  placeholder="실명"
+                />
+              </div>
+              <div className="form-group">
+                <label>닉네임 <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  value={createForm.nickname}
+                  onChange={(e) => setCreateForm({...createForm, nickname: e.target.value})}
+                  placeholder="닉네임"
+                />
+              </div>
+              <div className="form-group">
+                <label>전화번호</label>
+                <input
+                  type="tel"
+                  value={createForm.phoneNumber}
+                  onChange={(e) => setCreateForm({...createForm, phoneNumber: formatPhoneInput(e.target.value)})}
+                  placeholder="010-0000-0000 (선택사항)"
+                />
+              </div>
+              <div className="form-group">
+                <label>역할</label>
+                <select
+                  value={createForm.role}
+                  onChange={(e) => setCreateForm({...createForm, role: e.target.value})}
+                >
+                  <option value="user">일반</option>
+                  <option value="admin">관리자</option>
+                </select>
+              </div>
+              <div className="modal-actions">
+                <button 
+                  onClick={handleCreateUser} 
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? '등록 중...' : '등록'}
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setCreateError('');
+                  }} 
+                  className="btn-secondary"
+                  disabled={loading}
+                >
+                  취소
+                </button>
               </div>
             </div>
           </div>
