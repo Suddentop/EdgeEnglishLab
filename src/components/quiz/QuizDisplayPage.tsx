@@ -461,7 +461,7 @@ const QuizDisplayPage: React.FC = () => {
         root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} translatedText={globalTranslatedText} />);
       }
     } else if (packageType === 'P01') {
-      root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} />);
+      root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={false} />);
     } else if (packageType === 'P02') {
       root.render(<PrintFormatPackage02 packageQuiz={packageQuiz} />);
     } else if (packageType === 'P03') {
