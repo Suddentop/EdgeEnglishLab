@@ -36,6 +36,7 @@ import Work_11_SentenceTranslation from './components/work/Work_11_SentenceTrans
 import Work_12_WordStudy from './components/work/Work_12_WordStudy/Work_12_WordStudy';
 import Work_13_BlankFillWord from './components/work/Work_13_BlankFillWord/Work_13_BlankFillWord';
 import Work_14_BlankFillSentence from './components/work/Work_14_BlankFillSentence/Work_14_BlankFillSentence';
+import Work_16_PassageWordStudy from './components/work/Work_16_PassageWordStudy/Work_16_PassageWordStudy';
 import Work_15_ImageProblemAnalyzer from './components/work/Work_15_ImageProblemAnalyzer/Work_15_ImageProblemAnalyzer';
 import Package_01_MultiQuizGenerater from './components/work/Package_01_MultiQuizGenerater/Package_01_MultiQuizGenerater';
 import Package_02_TwoStepQuiz from './components/work/Package_02_TwoStepQuiz/Package_02_TwoStepQuiz';
@@ -213,6 +214,14 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <Work_14_BlankFillSentence />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/work_16_passage-word-study" 
+            element={
+              <PrivateRoute>
+                <Work_16_PassageWordStudy />
               </PrivateRoute>
             } 
           />

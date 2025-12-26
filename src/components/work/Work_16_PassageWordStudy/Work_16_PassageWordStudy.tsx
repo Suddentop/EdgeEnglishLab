@@ -1,0 +1,1031 @@
+import React, { useState, useRef, useEffect } from 'react';
+import ReactDOMServer from 'react-dom/server';
+import { generateWork16Quiz, WordQuiz } from '../../../services/work16Service';
+import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
+import PointDeductionModal from '../../modal/PointDeductionModal';
+import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
+import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
+import { useAuth } from '../../../contexts/AuthContext';
+import { callOpenAI } from '../../../services/common';
+import { processWithConcurrency } from '../../../utils/concurrency';
+import HistoryPrintWork16 from './HistoryPrintWork16';
+import './Work_16_PassageWordStudy.css';
+import './PrintFormat16.css';
+
+type InputType = 'clipboard' | 'file' | 'text';
+
+// 입력 아이템 인터페이스 정의
+interface InputItem {
+  id: string;
+  inputType: InputType;
+  text: string;
+  pastedImageUrl: string | null;
+  isExpanded: boolean;
+  isExtracting: boolean;
+  error: string;
+}
+
+// 파일 → base64 변환
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// OpenAI Vision API 호출 (프록시만 사용)
+async function callOpenAIVisionAPI(imageBase64: string, prompt: string): Promise<string> {
+  const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
+  
+  if (!proxyUrl) {
+    throw new Error('프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.');
+  }
+
+  let imageUrl = imageBase64;
+  
+  if (!imageBase64.startsWith('data:')) {
+    try {
+      imageUrl = imageBase64;
+    } catch (error) {
+      console.warn('⚠️ 이미지 URL 처리 실패, base64 직접 사용:', error);
+    }
+  }
+
+  const proxyRequest = {
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'user' as const,
+        content: [
+          { type: 'text' as const, text: prompt },
+          { type: 'image_url' as const, image_url: { url: imageUrl } }
+        ]
+      }
+    ],
+    max_tokens: 2048
+  };
+
+  let lastError: Error | null = null;
+  const maxRetries = 3;
+  const retryDelay = 1000;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await callOpenAI(proxyRequest);
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error('OpenAI Vision API 호출 실패: ' + errText);
+      }
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`⚠️ Vision API 호출 실패 (시도 ${attempt}/${maxRetries}):`, lastError.message);
+      
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        continue;
+      }
+    }
+  }
+  
+  throw lastError || new Error('OpenAI Vision API 호출 실패: 알 수 없는 오류');
+}
+
+const visionPrompt = `영어문제로 사용되는 본문이야.\n이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.\n글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
+
+// OpenAI Vision 결과에서 안내문 제거
+function cleanOpenAIVisionResult(text: string): string {
+  return text.replace(/^(Sure!|Here is|Here are|Here's|Here's)[^\n:]*[:：]?\s*/i, '').trim();
+}
+
+const Work_16_PassageWordStudy: React.FC = () => {
+  // 상태 관리
+  const [items, setItems] = useState<InputItem[]>([
+    { id: '1', inputType: 'clipboard', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '' }
+  ]);
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [quizzes, setQuizzes] = useState<WordQuiz[]>([]); // 생성된 퀴즈 배열
+  const quizType: 'english-to-korean' = 'english-to-korean'; // 고정: 영어→한글만 사용
+  const [showScreenshotHelp, setShowScreenshotHelp] = useState(false);
+
+  // 포인트 관련 상태
+  const { userData, loading } = useAuth();
+  const [showPointModal, setShowPointModal] = useState(false);
+  const [pointsToDeduct, setPointsToDeduct] = useState(0);
+  const [userCurrentPoints, setUserCurrentPoints] = useState(0);
+  const [workTypePoints, setWorkTypePoints] = useState<any[]>([]);
+
+  // 포인트 초기화
+  useEffect(() => {
+    const initializePoints = async () => {
+      if (!loading && userData) {
+        try {
+          const [workTypePointsData, userPoints] = await Promise.all([
+            getWorkTypePoints(),
+            getUserCurrentPoints(userData.uid)
+          ]);
+          
+          setWorkTypePoints(workTypePointsData);
+          const workType = workTypePointsData.find((wt: any) => wt.id === '16');
+          if (workType) {
+            setPointsToDeduct(workType.points);
+          }
+          setUserCurrentPoints(userPoints);
+        } catch (error) {
+          console.error('포인트 초기화 오류:', error);
+        }
+      }
+    };
+    if (!loading) {
+      initializePoints();
+    }
+  }, [loading, userData]);
+
+  // 아이템 관리 함수들
+  const addItem = () => {
+    const newItem: InputItem = {
+      id: Date.now().toString(),
+      inputType: 'clipboard',
+      text: '',
+      pastedImageUrl: null,
+      isExpanded: true,
+      isExtracting: false,
+      error: ''
+    };
+    setItems(prev => prev.map(item => ({ ...item, isExpanded: false })).concat(newItem));
+  };
+
+  const removeItem = (id: string) => {
+    if (items.length === 1) {
+      setItems([{ id: Date.now().toString(), inputType: 'clipboard', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '' }]);
+      return;
+    }
+    setItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateItem = (id: string, updates: Partial<InputItem>) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
+  const toggleExpand = (id: string) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, isExpanded: !item.isExpanded } : item));
+  };
+
+  // Vision API 핸들러 (개별 아이템용)
+  const handleImageToText = async (id: string, image: File | Blob) => {
+    updateItem(id, { isExtracting: true, error: '' });
+    
+    try {
+      let previewUrl = null;
+      if (image instanceof Blob) {
+        previewUrl = URL.createObjectURL(image);
+        updateItem(id, { pastedImageUrl: previewUrl });
+      }
+      
+      const imageBase64 = await fileToBase64(image as File);
+      const resultText = await callOpenAIVisionAPI(imageBase64, visionPrompt);
+      
+      updateItem(id, { 
+        text: cleanOpenAIVisionResult(resultText),
+        pastedImageUrl: null,
+        isExtracting: false 
+      });
+    } catch (err: any) {
+      updateItem(id, { 
+        error: 'OpenAI Vision API 호출 실패: ' + (err?.message || err),
+        isExtracting: false,
+        pastedImageUrl: null
+      });
+    }
+  };
+
+  // 이벤트 핸들러들
+  const handlePaste = (id: string, e: React.ClipboardEvent) => {
+    const item = items.find(i => i.id === id);
+    if (!item || item.inputType !== 'clipboard') return;
+
+    const clipItems = e.clipboardData.items;
+    for (let i = 0; i < clipItems.length; i++) {
+      if (clipItems[i].type.indexOf('image') !== -1) {
+        const file = clipItems[i].getAsFile();
+        if (file) {
+          handleImageToText(id, file);
+          e.preventDefault();
+          return;
+        }
+      }
+    }
+  };
+
+  const handleFileChange = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      updateItem(id, { error: '이미지 파일만 첨부 가능합니다.' });
+      return;
+    }
+    handleImageToText(id, file);
+    e.target.value = '';
+  };
+
+  // 문제 생성 핸들러
+  const handleGenerateQuiz = async () => {
+    const validItems = items.filter(item => item.text.trim().length >= 10);
+    
+    if (validItems.length === 0) {
+      alert('문제 생성을 위해 최소 하나의 본문을 입력해주세요.');
+      return;
+    }
+
+    if (loading) return;
+    if (!userData || !userData.uid) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    const totalPoints = pointsToDeduct * validItems.length;
+    if (userCurrentPoints < totalPoints) {
+      alert(`포인트가 부족합니다. 현재 ${userCurrentPoints.toLocaleString()}포인트, 필요 ${totalPoints.toLocaleString()}포인트 (${validItems.length}문제)`);
+      return;
+    }
+
+    setShowPointModal(true);
+  };
+
+  const handlePointDeductionConfirm = async () => {
+    setShowPointModal(false);
+    setIsLoading(true);
+    setQuizzes([]);
+
+    const validItems = items.filter(item => item.text.trim().length >= 10);
+    const generatedQuizzes: WordQuiz[] = [];
+    let successCount = 0;
+    let failCount = 0;
+
+    try {
+      const totalPoints = pointsToDeduct * validItems.length;
+      const deductionResult = await deductUserPoints(
+        userData!.uid, 
+        '16',
+        `본문 단어 학습 (${validItems.length}문제)`,
+        userData!.displayName || '사용자',
+        userData!.nickname || '사용자',
+        totalPoints
+      );
+      
+      if (deductionResult.success) {
+        setUserCurrentPoints(deductionResult.remainingPoints);
+        
+        const allInputTexts: string[] = [];
+        const results = await processWithConcurrency(validItems, 3, async (item) => {
+          try {
+            console.log(`🔍 문제 생성 시작 (ID: ${item.id})...`);
+            const quiz = await generateWork16Quiz(item.text, quizType);
+            return { quiz, input: item.text };
+          } catch (err) {
+            console.error(`❌ 문제 생성 실패 (ID: ${item.id}):`, err);
+            return null;
+          }
+        });
+
+        results.forEach(res => {
+          if (!res) {
+            failCount++;
+            return;
+          }
+          generatedQuizzes.push(res.quiz);
+          allInputTexts.push(res.input);
+          successCount++;
+        });
+
+        setQuizzes(generatedQuizzes);
+        
+        if (generatedQuizzes.length > 0 && userData!.uid) {
+          try {
+            const combinedInputText = allInputTexts.join('\n\n---\n\n');
+            await saveQuizWithPDF({
+              userId: userData!.uid,
+              userName: userData!.name || '사용자',
+              userNickname: userData!.nickname || '사용자',
+              workTypeId: '16',
+              workTypeName: `${getWorkTypeName('16')} (${generatedQuizzes.length}문제)`,
+              points: totalPoints,
+              inputText: combinedInputText,
+              quizData: generatedQuizzes,
+              status: 'success'
+            });
+            console.log(`✅ 유형#16 내역 저장 완료 (${generatedQuizzes.length}문제)`);
+          } catch (historyError) {
+            console.error('❌ 유형#16 내역 저장 실패:', historyError);
+          }
+        }
+        
+        if (failCount > 0) {
+          alert(`${validItems.length}건 중 ${successCount}건 성공, ${failCount}건 실패했습니다.`);
+        }
+        
+      } else {
+        alert('포인트 차감 실패: ' + deductionResult.error);
+      }
+    } catch (err) {
+      console.error('처리 중 오류:', err);
+      alert('오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  // 인쇄 스타일 정의
+  const PRINT_STYLES = `
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+      width: 29.7cm !important;
+      height: 21cm !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    @media print {
+      html, body {
+        overflow: hidden;
+      }
+    }
+    
+    /* 화면에서도 오버레이에 표시되도록 */
+    .only-print-work16 {
+      display: block !important;
+    }
+    .a4-landscape-page-template-work16 {
+      width: 29.7cm;
+      height: 21cm;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      box-sizing: border-box;
+      page-break-inside: avoid;
+      position: relative;
+      display: flex !important;
+      flex-direction: column;
+      font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+    }
+    .a4-landscape-page-template-work16:not(:last-child) {
+      page-break-after: always;
+      break-after: page;
+    }
+    .a4-landscape-page-header-work16 {
+      width: 100%;
+      height: 1.5cm;
+      flex-shrink: 0;
+      padding: 0.5cm 0.8cm 0 0.8cm;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .print-header-work16 {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .print-header-text-work16 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #000;
+    }
+    .print-header-work16::after {
+      content: '';
+      width: 100%;
+      height: 1px;
+      background-color: #333;
+      margin-top: 0.3cm;
+    }
+    .a4-landscape-page-content-work16 {
+      width: 100%;
+      flex: 1;
+      padding: 0.4cm 0.8cm 1cm 0.8cm;
+      box-sizing: border-box;
+      overflow: visible;
+    }
+    .quiz-content-work16 {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .problem-instruction-work16 {
+      font-weight: 800;
+      font-size: 11pt;
+      background: #F0F0F0;
+      color: #000000;
+      padding: 0.7rem 0.6rem;
+      border-radius: 8px;
+      margin: 0 0 0.8rem 0;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .problem-instruction-text-work16 {
+      flex: 1 1 auto;
+    }
+    .problem-type-label-work16 {
+      margin-left: 0.5cm;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #000000;
+    }
+    .word-list-container-work16 {
+      display: flex;
+      gap: 0.5cm;
+      width: 100%;
+      margin: 1rem 0;
+    }
+    .word-list-column-work16 {
+      flex: 1 1 50%;
+      width: 50%;
+    }
+    .word-list-table-work16 {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+      font-size: 9pt;
+      background: #ffffff;
+      border: 2px solid #000000;
+    }
+    .word-list-table-work16 th {
+      background: #e3f2fd;
+      color: #000000;
+      font-weight: 700;
+      font-size: 9pt;
+      padding: 0.35rem;
+      text-align: center;
+      border: 1px solid #000000;
+    }
+    .word-list-table-work16 td {
+      border: 1px solid #000000;
+      padding: 0.35rem;
+      text-align: left;
+      font-size: 9pt;
+      font-weight: 500;
+      color: #000000;
+    }
+    .word-list-table-work16 td:first-child,
+    .word-list-table-work16 th:first-child {
+      text-align: center;
+      width: 15%;
+    }
+    .word-list-table-work16 td:nth-child(2),
+    .word-list-table-work16 th:nth-child(2),
+    .word-list-table-work16 td:nth-child(3),
+    .word-list-table-work16 th:nth-child(3) {
+      width: 42.5%;
+    }
+    .word-list-table-work16 tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    .word-list-table-work16 tr:nth-child(odd) {
+      background: #ffffff;
+    }
+    .word-list-table-work16 .answer-cell {
+      color: #1976d2 !important;
+      font-weight: 700 !important;
+      background: #f0f8ff !important;
+    }
+
+    /* 화면에서 인쇄용 오버레이를 완전히 숨기기 */
+    @media screen {
+      #work16-print-overlay {
+        display: none !important;
+        visibility: hidden !important;
+        left: -9999px !important;
+        opacity: 0 !important;
+        z-index: -1 !important;
+        position: absolute !important;
+      }
+    }
+    
+    /* 다른 유형의 @media print { body * { visibility: hidden; } } 규칙을 무력화하기 위해
+       인쇄 시점에만 body에 id="work16-print-active"를 temporarily 부여하고,
+       그 안의 모든 요소를 다시 보이게 강제한다. */
+    @media print {
+      body#work16-print-active * {
+        visibility: visible !important;
+      }
+      .only-print-work16 {
+        display: block !important;
+      }
+      .a4-landscape-page-template-work16 {
+        display: flex !important;
+      }
+      #work16-print-overlay {
+        display: block !important;
+        visibility: visible !important;
+        left: 0 !important;
+        opacity: 1 !important;
+        z-index: 9999 !important;
+        position: fixed !important;
+      }
+    }
+  `;
+
+  // 인쇄 트리거
+  type PrintMode = 'no-answer' | 'with-answer';
+  
+  const triggerPrint = (mode: PrintMode) => {
+    if (!quizzes || quizzes.length === 0) {
+      console.warn('🖨️ [Work16] triggerPrint 호출되었지만 quiz 데이터가 없습니다.', { mode });
+      return;
+    }
+
+    console.log('🖨️ [Work16] triggerPrint 시작', {
+      mode,
+      quizzesCount: quizzes.length,
+      totalWords: quizzes.reduce((sum, q) => sum + (q.words?.length || 0), 0)
+    });
+
+    // 각 퀴즈를 독립적으로 전달 (본문별로 분리)
+    const dataForPrint: any = {
+      quizzes: quizzes.map((quiz, index) => {
+        const words = Array.isArray(quiz.words) ? quiz.words : [];
+        const wordsWithPartOfSpeech = words.filter((w: any) => w.partOfSpeech && w.partOfSpeech.trim().length > 0);
+        console.log(`🖨️ [Work16] 퀴즈 ${index + 1} 데이터:`, {
+          wordsCount: words.length,
+          hasWords: words.length > 0,
+          quizType: quiz.quizType || quizType,
+          sampleWords: words.slice(0, 3).map((w: any) => ({
+            english: w.english,
+            korean: w.korean,
+            partOfSpeech: w.partOfSpeech,
+            hasPartOfSpeech: !!(w.partOfSpeech && w.partOfSpeech.trim().length > 0)
+          })),
+          wordsWithPartOfSpeechCount: wordsWithPartOfSpeech.length,
+          wordsWithoutPartOfSpeechCount: words.length - wordsWithPartOfSpeech.length
+        });
+        return {
+          words: words,
+          quizType: quiz.quizType || quizType,
+          totalQuestions: quiz.totalQuestions || words.length,
+          passage: quiz.passage
+        };
+      }),
+      quizType: quizType
+    };
+    console.log('🖨️ [Work16] 인쇄용 데이터 준비 완료', { 
+      quizzesCount: quizzes.length,
+      dataForPrintQuizzesCount: dataForPrint.quizzes.length,
+      quizzes: dataForPrint.quizzes.map((q: any) => ({ 
+        wordsCount: q.words.length,
+        hasWords: q.words.length > 0,
+        wordsWithPartOfSpeech: q.words.filter((w: any) => w.partOfSpeech && w.partOfSpeech.trim().length > 0).length
+      }))
+    });
+
+    // React 컴포넌트를 정적 HTML로 렌더링
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <HistoryPrintWork16
+        data={dataForPrint}
+        isAnswerMode={mode === 'with-answer'}
+      />
+    );
+
+    console.log('🖨️ [Work16] 렌더링된 마크업 길이:', markup.length);
+    console.log('🖨️ [Work16] 마크업 샘플:', markup.substring(0, 500));
+
+    // 현재 창 위에 전체 화면 오버레이 컨테이너 생성
+    const overlayId = 'work16-print-overlay';
+    const existingOverlay = document.getElementById(overlayId);
+    if (existingOverlay && existingOverlay.parentNode) {
+      existingOverlay.parentNode.removeChild(existingOverlay);
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = overlayId;
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      inset: '0',
+      backgroundColor: '#ffffff',
+      zIndex: '9999',
+      overflow: 'auto'
+    } as Partial<CSSStyleDeclaration>);
+
+    // 오버레이에 인쇄용 스타일 + 마크업 주입
+    overlay.innerHTML = `
+      <style>${PRINT_STYLES}</style>
+      ${markup}
+    `;
+
+    document.body.appendChild(overlay);
+
+    // 디버깅: 오버레이 내용 확인
+    console.log('🖨️ [Work16] 오버레이 추가 완료', {
+      overlayId,
+      hasContent: overlay.innerHTML.length > 0,
+      childrenCount: overlay.children.length
+    });
+
+    // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+    const prevBodyId = document.body.getAttribute('id');
+    document.body.setAttribute('id', 'work16-print-active');
+
+    // 약간의 지연 후 인쇄 실행
+    setTimeout(() => {
+      window.print();
+
+      // window.print() 호출 직후 즉시 오버레이 숨기기
+      overlay.style.display = 'none';
+      overlay.style.visibility = 'hidden';
+      overlay.style.left = '-9999px';
+      overlay.style.opacity = '0';
+      overlay.style.zIndex = '-1';
+
+      // 인쇄 후 오버레이 정리
+      setTimeout(() => {
+        const ov = document.getElementById(overlayId);
+        if (ov && ov.parentNode) {
+          ov.parentNode.removeChild(ov);
+        }
+
+         // body id 되돌리기
+        if (prevBodyId) {
+          document.body.setAttribute('id', prevBodyId);
+        } else {
+          document.body.removeAttribute('id');
+        }
+      }, 100);
+    }, 300);
+  };
+
+  const handlePrintNoAnswer = () => {
+    console.log('🖨️ [Work16] 인쇄(문제) 버튼 클릭');
+    triggerPrint('no-answer');
+  };
+  
+  const handlePrintWithAnswer = () => {
+    console.log('🖨️ [Work16] 인쇄(정답) 버튼 클릭');
+    triggerPrint('with-answer');
+  };
+
+  // 리셋
+  const resetAll = () => {
+    setQuizzes([]);
+    setItems([{ id: Date.now().toString(), inputType: 'clipboard', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '' }]);
+  };
+
+  // 퀴즈 생성 완료 화면
+  if (quizzes.length > 0) {
+    return (
+      <div className="quiz-display">
+        <div className="quiz-header no-print">
+          <h2>#16. 본문 단어 학습 (총 {quizzes.length}문제)</h2>
+          <div className="quiz-header-buttons">
+            <button 
+              onClick={resetAll} 
+              style={{
+                width: '130px',
+                height: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '11pt',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #bef264 0%, #a3e635 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(190, 242, 100, 0.25)'
+              }}
+            >
+              새문제
+            </button>
+            <button 
+              onClick={handlePrintNoAnswer} 
+              style={{
+                width: '130px',
+                height: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '11pt',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)'
+              }}
+            >
+              🖨️ 인쇄 (문제)
+            </button>
+            <button 
+              onClick={handlePrintWithAnswer} 
+              style={{
+                width: '130px',
+                height: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '11pt',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(240, 147, 251, 0.25)'
+              }}
+            >
+              🖨️ 인쇄 (정답)
+            </button>
+          </div>
+        </div>
+
+        <div className="quiz-content no-print">
+          <div style={{ padding: '1rem', background: '#f0f7ff', borderRadius: '8px', marginBottom: '2rem', borderLeft: '4px solid #1976d2' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1976d2' }}>
+              총 {quizzes.length}개의 문제가 생성되었습니다.
+            </h3>
+          </div>
+          
+          {/* 생성된 문제 상세 리스트 */}
+          <div className="generated-quizzes-list">
+            {quizzes.map((quiz, idx) => (
+              <div key={idx} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
+                <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
+                  <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#16</span>
+                </div>
+
+                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.1rem', background:'#222', color:'#fff', padding:'0.7rem 0.8rem', borderRadius:'8px', marginBottom:'1rem'}}>
+                  다음 영어 단어의 한글 뜻을 고르시오.
+                </div>
+                
+                {/* 단어 테이블 표시 */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: quiz.words.length > 10 ? '1fr 1fr' : '1fr',
+                  gap: '2rem',
+                  marginTop: '1rem'
+                }}>
+                  <div style={{
+                    background: '#ffffff',
+                    border: '2px solid #000000',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  }}>
+                    <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                      <thead>
+                        <tr style={{background: '#e3f2fd'}}>
+                          <th style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', fontWeight: '700', color: '#000000', width: '15%'}}>No.</th>
+                          <th style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', fontWeight: '700', color: '#000000', width: '42.5%'}}>영어 단어</th>
+                          <th style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', fontWeight: '700', color: '#000000', width: '42.5%'}}>한글 뜻</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {quiz.words.slice(0, Math.ceil(quiz.words.length / 2)).map((word, index) => {
+                          // 품사가 있으면 품사+한글뜻 표시
+                          const partOfSpeech = word.partOfSpeech?.trim();
+                          const hasPartOfSpeech = partOfSpeech && partOfSpeech.length > 0;
+                          const displayKorean = hasPartOfSpeech
+                            ? `${partOfSpeech} ${word.korean}`
+                            : word.korean;
+                          
+                          return (
+                            <tr key={index}>
+                              <td style={{border: '1px solid #000000', padding: '0.8rem', textAlign: 'center', fontSize: '1rem', fontWeight: '500', color: '#000000'}}>
+                                {index + 1}
+                              </td>
+                              <td style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', fontWeight: '500', color: '#000000'}}>
+                                {word.english}
+                              </td>
+                              <td style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', color: '#000000'}}>
+                                {displayKorean}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {quiz.words.length > 10 && (
+                    <div style={{
+                      background: '#ffffff',
+                      border: '2px solid #000000',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                    }}>
+                      <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                        <thead>
+                          <tr style={{background: '#e3f2fd'}}>
+                            <th style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', fontWeight: '700', color: '#000000', width: '15%'}}>No.</th>
+                            <th style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', fontWeight: '700', color: '#000000', width: '42.5%'}}>영어 단어</th>
+                            <th style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', fontWeight: '700', color: '#000000', width: '42.5%'}}>한글 뜻</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {quiz.words.slice(Math.ceil(quiz.words.length / 2)).map((word, index) => {
+                            // 품사가 있으면 품사+한글뜻 표시
+                            const partOfSpeech = word.partOfSpeech?.trim();
+                            const hasPartOfSpeech = partOfSpeech && partOfSpeech.length > 0;
+                            const displayKorean = hasPartOfSpeech
+                              ? `${partOfSpeech} ${word.korean}`
+                              : word.korean;
+                            
+                            return (
+                              <tr key={index + Math.ceil(quiz.words.length / 2)}>
+                                <td style={{border: '1px solid #000000', padding: '0.8rem', textAlign: 'center', fontSize: '1rem', fontWeight: '500', color: '#000000'}}>
+                                  {index + Math.ceil(quiz.words.length / 2) + 1}
+                                </td>
+                                <td style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', fontWeight: '500', color: '#000000'}}>
+                                  {word.english}
+                                </td>
+                                <td style={{border: '1px solid #000000', padding: '0.8rem', fontSize: '1rem', color: '#000000'}}>
+                                  {displayKorean}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="quiz-generator no-print">
+      <div className="generator-header">
+        <h2>[유형#16] 본문 단어 학습</h2>
+        <p>여러 개의 영어 본문을 입력하여 각 본문에서 고3 수준의 단어를 추출하여 단어 학습 문제를 생성합니다.</p>
+      </div>
+
+      <div className="input-items-list">
+        {items.map((item, index) => (
+          <div key={item.id} className={`input-item ${item.isExpanded ? 'expanded' : ''}`}>
+            <div className="input-item-header" onClick={() => toggleExpand(item.id)}>
+              <div className="input-item-title">
+                <span>#{index + 1}</span>
+                <span className={`input-item-status ${item.text.length > 0 ? 'has-text' : ''}`}>
+                  {item.text.length > 0 ? `텍스트 ${item.text.length}자` : '입력 대기'}
+                </span>
+              </div>
+              <div className="input-item-controls">
+                <button 
+                  className="icon-btn delete" 
+                  onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
+                  title="삭제"
+                >
+                  🗑️
+                </button>
+                <span className="expand-icon">{item.isExpanded ? '🔼' : '🔽'}</span>
+              </div>
+            </div>
+
+            {item.isExpanded && (
+              <div className="input-item-content">
+                {/* 입력 방식 선택 */}
+                <div className="input-type-section" style={{ marginBottom: '15px' }}>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'clipboard'}
+                      onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })}
+                    />
+                    <span>📸 캡처화면 붙여넣기</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'file'}
+                      onChange={() => updateItem(item.id, { inputType: 'file', error: '' })}
+                    />
+                    <span>🖼️ 이미지 파일 첨부</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={item.inputType === 'text'}
+                      onChange={() => updateItem(item.id, { inputType: 'text', error: '' })}
+                    />
+                    <span>✍️ 직접 붙여넣기</span>
+                  </label>
+                </div>
+
+                {/* 입력 UI */}
+                {item.inputType === 'clipboard' && (
+                  <div
+                    className="input-guide"
+                    tabIndex={0}
+                    onPaste={(e) => handlePaste(item.id, e)}
+                    style={{ minHeight: '120px' }}
+                  >
+                    <div className="drop-icon">📋</div>
+                    <div className="drop-text">여기에 이미지를 붙여넣으세요 (Ctrl+V)</div>
+                    {item.pastedImageUrl && (
+                      <div className="preview-row">
+                        <img src={item.pastedImageUrl} alt="Preview" className="preview-img" />
+                      </div>
+                    )}
+                    {item.isExtracting && <div className="loading-text">텍스트 추출 중...</div>}
+                  </div>
+                )}
+
+                {item.inputType === 'file' && (
+                  <div className="input-guide" style={{ minHeight: '80px' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(item.id, e)}
+                      disabled={item.isExtracting}
+                    />
+                    {item.isExtracting && <span className="loading-text">추출 중...</span>}
+                  </div>
+                )}
+
+                <textarea
+                  value={item.text}
+                  onChange={(e) => updateItem(item.id, { text: e.target.value })}
+                  placeholder="영어 본문을 입력하세요. AI가 본문을 분석하여 고3 수준의 단어 15~20개를 추출합니다.
+
+캡처 이미지 붙여넣기를 한 경우 '텍스트 추출 중...'이 완료된 후 '본문 추가하기'를 누르시거나 '일괄생성' 버튼을 눌러주세요.
+
+직접 본문을 입력하거나 추출된 텍스트를 수정할 수 있습니다."
+                  className="text-input"
+                  rows={6}
+                  style={{ marginTop: '10px', width: '100%' }}
+                />
+                
+                {item.error && <div className="error-message">❌ {item.error}</div>}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button onClick={addItem} className="add-item-button">
+        ➕ 본문 추가하기
+      </button>
+
+      <button
+        onClick={handleGenerateQuiz}
+        disabled={isLoading}
+        className="generate-button"
+        style={{ marginTop: '20px' }}
+      >
+        {items.filter(i => i.text.length >= 10).length > 1 
+          ? `📋 ${items.filter(i => i.text.length >= 10).length}개 문제 일괄 생성` 
+          : '📋 문제 생성'}
+      </button>
+
+      {/* 로딩 오버레이 */}
+      {isLoading && (
+        <div className="centered-hourglass-overlay">
+          <div className="centered-hourglass-content">
+            <span className="centered-hourglass-spinner">⏳</span>
+            <div className="loading-text">
+              문제를 생성하고 있습니다...<br/>
+              잠시만 기다려주세요.
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ScreenshotHelpModal
+        isOpen={showScreenshotHelp}
+        onClose={() => setShowScreenshotHelp(false)}
+      />
+
+      <PointDeductionModal
+        isOpen={showPointModal}
+        onClose={() => setShowPointModal(false)}
+        onConfirm={handlePointDeductionConfirm}
+        pointsToDeduct={pointsToDeduct * items.filter(i => i.text.length >= 10).length}
+        userCurrentPoints={userCurrentPoints}
+        remainingPoints={userCurrentPoints - (pointsToDeduct * items.filter(i => i.text.length >= 10).length)}
+        workTypeName={`본문 단어 학습 (${items.filter(i => i.text.length >= 10).length}문제)`}
+      />
+    </div>
+  );
+};
+
+export default Work_16_PassageWordStudy;
+

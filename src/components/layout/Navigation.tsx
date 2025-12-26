@@ -23,7 +23,8 @@ const WORK_MENUS = [
   { label: '11. 본문 문장별 해석', path: '/work_11_sentence-translation' },
   { label: '12. 단어 학습', path: '/work_12_word-study' },
   { label: '13. 빈칸 채우기 (단어-주관식)', path: '/work_13_blank-fill-word' },
-  { label: '14. 빈칸 채우기 (문장-주관식)', path: '/work_14_blank-fill-sentence' }
+  { label: '14. 빈칸 채우기 (문장-주관식)', path: '/work_14_blank-fill-sentence' },
+  { label: '16. 본문 단어 학습', path: '/work_16_passage-word-study' }
 ];
 
 const Navigation: React.FC = () => {

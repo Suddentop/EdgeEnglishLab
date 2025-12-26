@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
+import ReactDOMServer from 'react-dom/server';
 import { translateToKorean } from '../../services/common';
 import PrintFormatPackage02 from '../work/Package_02_TwoStepQuiz/PrintFormatPackage02';
 import SimplePrintFormatPackage02 from '../work/Package_02_TwoStepQuiz/SimplePrintFormatPackage02';
@@ -19,6 +20,7 @@ import PrintFormatWork10New from '../work/Work_10_MultiGrammarError/PrintFormatW
 import PrintFormatWork13New from '../work/Work_13_BlankFillWord/PrintFormatWork13New';
 import PrintFormatWork14New from '../work/Work_14_BlankFillSentence/PrintFormatWork14New';
 import HistoryPrintWork12 from '../work/Work_12_WordStudy/HistoryPrintWork12';
+import HistoryPrintWork16 from '../work/Work_16_PassageWordStudy/HistoryPrintWork16';
 import SimpleQuizDisplay from './SimpleQuizDisplay';
 import FileFormatSelector from '../work/shared/FileFormatSelector';
 import { FileFormat, generateAndUploadFile } from '../../services/pdfService';
@@ -234,6 +236,8 @@ const QuizDisplayPage: React.FC = () => {
                               ? 'print-root-work13-new'
                               : packageType === '14' || (isSingleWork && typeId === '14')
                                 ? 'print-root-work14-new'
+                                : packageType === '16' || (isSingleWork && typeId === '16')
+                                  ? 'print-root-work16-new'
             : 'print-root-package02';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
@@ -258,6 +262,297 @@ const QuizDisplayPage: React.FC = () => {
       if (typeId === '12') {
         const data: any = first.work12Data || first.data?.work12Data || first.data || first;
         root.render(<HistoryPrintWork12 data={data} />);
+      } else if (typeId === '16') {
+        // 유형#16은 Work_16_PassageWordStudy.tsx와 동일한 방식으로 오버레이 사용
+        const work16Data = first.work16Data || first.data?.work16Data || first.data || first;
+        console.log('🔍 [QuizDisplayPage] 유형#16 인쇄(문제) - 단일 문제:', {
+          firstKeys: Object.keys(first || {}),
+          hasWork16Data: !!work16Data,
+          work16DataKeys: work16Data ? Object.keys(work16Data) : [],
+          hasWords: !!work16Data?.words,
+          wordsCount: work16Data?.words?.length || 0,
+          hasQuizzes: !!work16Data?.quizzes,
+          quizzesCount: work16Data?.quizzes?.length || 0,
+          work16DataType: typeof work16Data,
+          work16DataIsArray: Array.isArray(work16Data)
+        });
+        
+        // work16Data가 WordQuiz 객체인 경우 quizzes 배열로 변환
+        let data: any;
+        if (work16Data?.words && Array.isArray(work16Data.words) && work16Data.words.length > 0) {
+          // 단일 WordQuiz 객체인 경우 quizzes 배열로 변환
+          data = {
+            quizzes: [{
+              words: work16Data.words,
+              quizType: work16Data.quizType || 'english-to-korean',
+              totalQuestions: work16Data.totalQuestions || work16Data.words.length,
+              passage: work16Data.passage
+            }]
+          };
+        } else if (work16Data?.quizzes && Array.isArray(work16Data.quizzes)) {
+          // 이미 quizzes 배열인 경우
+          data = work16Data;
+        } else {
+          // 그 외의 경우 원본 데이터 사용
+          data = work16Data;
+        }
+        
+        console.log('🔍 [QuizDisplayPage] 유형#16 인쇄(문제) - 변환된 데이터:', {
+          hasQuizzes: !!data?.quizzes,
+          quizzesCount: data?.quizzes?.length || 0,
+          firstQuizWordsCount: data?.quizzes?.[0]?.words?.length || 0,
+          firstQuizSample: data?.quizzes?.[0]?.words?.slice(0, 2)
+        });
+        
+        // Work_16_PassageWordStudy.tsx와 동일한 PRINT_STYLES 사용
+        const PRINT_STYLES = `
+          @page {
+            size: A4 landscape;
+            margin: 0;
+          }
+          html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+            width: 29.7cm !important;
+            height: 21cm !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          @media print {
+            html, body {
+              overflow: hidden;
+            }
+          }
+          
+          .only-print-work16 {
+            display: block !important;
+          }
+          .a4-landscape-page-template-work16 {
+            width: 29.7cm;
+            height: 21cm;
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            box-sizing: border-box;
+            page-break-inside: avoid;
+            position: relative;
+            display: flex !important;
+            flex-direction: column;
+            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+          }
+          .a4-landscape-page-template-work16:not(:last-child) {
+            page-break-after: always;
+            break-after: page;
+          }
+          .a4-landscape-page-header-work16 {
+            width: 100%;
+            height: 1.5cm;
+            flex-shrink: 0;
+            padding: 0.5cm 0.8cm 0 0.8cm;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+          }
+          .print-header-work16 {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .print-header-text-work16 {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #000;
+          }
+          .print-header-work16::after {
+            content: '';
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+            margin-top: 0.3cm;
+          }
+          .a4-landscape-page-content-work16 {
+            width: 100%;
+            flex: 1;
+            padding: 0.4cm 0.8cm 1cm 0.8cm;
+            box-sizing: border-box;
+            overflow: visible;
+          }
+          .quiz-content-work16 {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          .problem-instruction-work16 {
+            font-weight: 800;
+            font-size: 11pt;
+            background: #F0F0F0;
+            color: #000000;
+            padding: 0.7rem 0.6rem;
+            border-radius: 8px;
+            margin: 0 0 0.8rem 0;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .problem-instruction-text-work16 {
+            flex: 1 1 auto;
+          }
+          .problem-type-label-work16 {
+            margin-left: 0.5cm;
+            font-size: 10pt;
+            font-weight: 700;
+            color: #000000;
+          }
+          .word-list-container-work16 {
+            display: flex;
+            gap: 0.5cm;
+            width: 100%;
+            margin: 1rem 0;
+          }
+          .word-list-column-work16 {
+            flex: 1 1 50%;
+            width: 50%;
+          }
+          .word-list-table-work16 {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            font-size: 9pt;
+            background: #ffffff;
+            border: 2px solid #000000;
+          }
+          .word-list-table-work16 th {
+            background: #e3f2fd;
+            color: #000000;
+            font-weight: 700;
+            font-size: 9pt;
+            padding: 0.35rem;
+            text-align: center;
+            border: 1px solid #000000;
+          }
+          .word-list-table-work16 td {
+            border: 1px solid #000000;
+            padding: 0.35rem;
+            text-align: left;
+            font-size: 9pt;
+            font-weight: 500;
+            color: #000000;
+          }
+          .word-list-table-work16 td:first-child,
+          .word-list-table-work16 th:first-child {
+            text-align: center;
+            width: 15%;
+          }
+          .word-list-table-work16 td:nth-child(2),
+          .word-list-table-work16 th:nth-child(2),
+          .word-list-table-work16 td:nth-child(3),
+          .word-list-table-work16 th:nth-child(3) {
+            width: 42.5%;
+          }
+          .word-list-table-work16 tr:nth-child(even) {
+            background: #f8f9fa;
+          }
+          .word-list-table-work16 tr:nth-child(odd) {
+            background: #ffffff;
+          }
+          .word-list-table-work16 .answer-cell {
+            color: #1976d2 !important;
+            font-weight: 700 !important;
+            background: #f0f8ff !important;
+          }
+          @media print {
+            body#work16-print-active * {
+              visibility: visible !important;
+            }
+            .only-print-work16 {
+              display: block !important;
+            }
+          }
+        `;
+        
+        // React 컴포넌트를 정적 HTML로 렌더링
+        const markup = ReactDOMServer.renderToStaticMarkup(
+          <HistoryPrintWork16 data={data} isAnswerMode={false} />
+        );
+        
+        console.log('🖨️ [QuizDisplayPage] 유형#16 인쇄(문제) - 렌더링된 마크업 길이:', markup.length);
+        
+        // 기존 printContainer 제거
+        if (printContainer && printContainer.parentNode) {
+          printContainer.parentNode.removeChild(printContainer);
+        }
+        
+        // 오버레이 생성
+        const overlayId = 'work16-print-overlay';
+        const existingOverlay = document.getElementById(overlayId);
+        if (existingOverlay && existingOverlay.parentNode) {
+          existingOverlay.parentNode.removeChild(existingOverlay);
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.id = overlayId;
+        Object.assign(overlay.style, {
+          position: 'fixed',
+          inset: '0',
+          backgroundColor: '#ffffff',
+          zIndex: '9999',
+          overflow: 'auto'
+        } as Partial<CSSStyleDeclaration>);
+        
+        // 오버레이에 인쇄용 스타일 + 마크업 주입
+        overlay.innerHTML = `
+          <style>${PRINT_STYLES}</style>
+          ${markup}
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+        const prevBodyId = document.body.getAttribute('id');
+        document.body.setAttribute('id', 'work16-print-active');
+        
+        // 약간의 지연 후 인쇄 실행
+        setTimeout(() => {
+          window.print();
+          
+          // window.print() 호출 직후 즉시 오버레이 숨기기
+          overlay.style.display = 'none';
+          overlay.style.visibility = 'hidden';
+          overlay.style.left = '-9999px';
+          overlay.style.opacity = '0';
+          overlay.style.zIndex = '-1';
+          
+          // 인쇄 후 오버레이 정리
+          setTimeout(() => {
+            const ov = document.getElementById(overlayId);
+            if (ov && ov.parentNode) {
+              ov.parentNode.removeChild(ov);
+            }
+            
+            // body id 되돌리기
+            if (prevBodyId) {
+              document.body.setAttribute('id', prevBodyId);
+            } else {
+              document.body.removeAttribute('id');
+            }
+            
+            // appRoot 다시 표시
+            if (appRoot) {
+              appRoot.style.display = '';
+            }
+          }, 100);
+        }, 300);
+        
+        return; // 오버레이 방식 사용 시 root.render 호출하지 않음
       } else if (typeId === '01') {
         // 유형#01은 PrintFormatWork01New 사용
         const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
@@ -656,13 +951,347 @@ const QuizDisplayPage: React.FC = () => {
         };
       });
       root.render(<PrintFormatWork14New quizzes={rawQuizzes} isAnswerMode={false} />);
+    } else if (packageType === '16') {
+      // 유형#16 (여러 문제일 때) - 나의문제목록에서 불러온 경우
+      console.log('🔍 유형#16 인쇄(문제) - 여러 문제 (packageType=16):', {
+        packageQuizLength: packageQuiz.length,
+        firstItem: packageQuiz[0],
+        firstItemKeys: packageQuiz[0] ? Object.keys(packageQuiz[0]) : []
+      });
+      
+      const rawQuizzes = packageQuiz.map((item: any, index: number) => {
+        // 여러 방법으로 work16Data 찾기
+        const work16Data = item.work16Data || item.quiz || item.data?.work16Data || item.data || item;
+        
+        console.log(`🔍 유형#16 Quiz ${index + 1} 데이터 추출 (packageType=16, 문제):`, {
+          itemKeys: Object.keys(item || {}),
+          hasWork16Data: !!item.work16Data,
+          work16DataKeys: work16Data ? Object.keys(work16Data) : [],
+          work16DataType: typeof work16Data,
+          work16DataIsArray: Array.isArray(work16Data),
+          hasWords: !!work16Data?.words,
+          wordsCount: work16Data?.words?.length || 0,
+          wordsType: Array.isArray(work16Data?.words) ? 'array' : typeof work16Data?.words,
+          quizType: work16Data?.quizType,
+          sampleWords: work16Data?.words?.slice(0, 2)
+        });
+        
+        // work16Data가 WordQuiz 객체인 경우 words 배열 추출
+        const words = Array.isArray(work16Data?.words) ? work16Data.words : [];
+        
+        if (words.length === 0) {
+          console.warn(`⚠️ 유형#16 Quiz ${index + 1}에 단어가 없습니다. (문제)`, {
+            work16Data,
+            work16DataKeys: work16Data ? Object.keys(work16Data) : []
+          });
+        }
+        
+        const extracted = {
+          words: words,
+          quizType: work16Data?.quizType || 'english-to-korean',
+          totalQuestions: work16Data?.totalQuestions || words.length || 0,
+          passage: work16Data?.passage || ''
+        };
+        
+        console.log(`✅ 유형#16 Quiz ${index + 1} 추출 결과 (packageType=16, 문제):`, {
+          wordsCount: extracted.words.length,
+          quizType: extracted.quizType,
+          sampleWords: extracted.words.slice(0, 2).map((w: any) => ({
+            english: w.english,
+            korean: w.korean,
+            partOfSpeech: w.partOfSpeech
+          }))
+        });
+        
+        return extracted;
+      });
+      
+      console.log('🖨️ 유형#16 인쇄(문제) 최종 rawQuizzes (packageType=16):', rawQuizzes);
+      console.log('🔍 [QuizDisplayPage] 유형#16 인쇄(문제) - 여러 문제 데이터 확인:', {
+        quizzesCount: rawQuizzes.length,
+        quizzesWithWords: rawQuizzes.filter((q: any) => q.words && q.words.length > 0).length,
+        firstQuizWordsCount: rawQuizzes[0]?.words?.length || 0,
+        secondQuizWordsCount: rawQuizzes[1]?.words?.length || 0,
+        allQuizzesHaveWords: rawQuizzes.every((q: any) => q.words && q.words.length > 0)
+      });
+      
+      // 유형#16은 오버레이 방식 사용 (Work_16_PassageWordStudy.tsx와 동일)
+      // PRINT_STYLES는 위에서 이미 정의됨 (단일 문제 처리 부분)
+      const PRINT_STYLES_MULTI = `
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
+        html, body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+          width: 29.7cm !important;
+          height: 21cm !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        @media print {
+          html, body {
+            overflow: hidden;
+          }
+        }
+        
+        .only-print-work16 {
+          display: block !important;
+        }
+        .a4-landscape-page-template-work16 {
+          width: 29.7cm;
+          height: 21cm;
+          margin: 0;
+          padding: 0;
+          background: #ffffff;
+          box-sizing: border-box;
+          page-break-inside: avoid;
+          position: relative;
+          display: flex !important;
+          flex-direction: column;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+        }
+        .a4-landscape-page-template-work16:not(:last-child) {
+          page-break-after: always;
+          break-after: page;
+        }
+        .a4-landscape-page-header-work16 {
+          width: 100%;
+          height: 1.5cm;
+          flex-shrink: 0;
+          padding: 0.5cm 0.8cm 0 0.8cm;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+        .print-header-work16 {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .print-header-text-work16 {
+          font-size: 11pt;
+          font-weight: 700;
+          color: #000;
+        }
+        .print-header-work16::after {
+          content: '';
+          width: 100%;
+          height: 1px;
+          background-color: #333;
+          margin-top: 0.3cm;
+        }
+        .a4-landscape-page-content-work16 {
+          width: 100%;
+          flex: 1;
+          padding: 0.4cm 0.8cm 1cm 0.8cm;
+          box-sizing: border-box;
+          overflow: visible;
+        }
+        .quiz-content-work16 {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .problem-instruction-work16 {
+          font-weight: 800;
+          font-size: 11pt;
+          background: #F0F0F0;
+          color: #000000;
+          padding: 0.7rem 0.6rem;
+          border-radius: 8px;
+          margin: 0 0 0.8rem 0;
+          width: 100%;
+          box-sizing: border-box;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .problem-instruction-text-work16 {
+          flex: 1 1 auto;
+        }
+        .problem-type-label-work16 {
+          margin-left: 0.5cm;
+          font-size: 10pt;
+          font-weight: 700;
+          color: #000000;
+        }
+        .word-list-container-work16 {
+          display: flex;
+          gap: 0.5cm;
+          width: 100%;
+          margin: 1rem 0;
+        }
+        .word-list-column-work16 {
+          flex: 1 1 50%;
+          width: 50%;
+        }
+        .word-list-table-work16 {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 0;
+          font-size: 9pt;
+          background: #ffffff;
+          border: 2px solid #000000;
+        }
+        .word-list-table-work16 th {
+          background: #e3f2fd;
+          color: #000000;
+          font-weight: 700;
+          font-size: 9pt;
+          padding: 0.35rem;
+          text-align: center;
+          border: 1px solid #000000;
+        }
+        .word-list-table-work16 td {
+          border: 1px solid #000000;
+          padding: 0.35rem;
+          text-align: left;
+          font-size: 9pt;
+          font-weight: 500;
+          color: #000000;
+        }
+        .word-list-table-work16 td:first-child,
+        .word-list-table-work16 th:first-child {
+          text-align: center;
+          width: 15%;
+        }
+        .word-list-table-work16 td:nth-child(2),
+        .word-list-table-work16 th:nth-child(2),
+        .word-list-table-work16 td:nth-child(3),
+        .word-list-table-work16 th:nth-child(3) {
+          width: 42.5%;
+        }
+        .word-list-table-work16 tr:nth-child(even) {
+          background: #f8f9fa;
+        }
+        .word-list-table-work16 tr:nth-child(odd) {
+          background: #ffffff;
+        }
+        .word-list-table-work16 .answer-cell {
+          color: #1976d2 !important;
+          font-weight: 700 !important;
+          background: #f0f8ff !important;
+        }
+        @media screen {
+          #work16-print-overlay,
+          #work16-print-overlay-answer {
+            display: none !important;
+            visibility: hidden !important;
+            left: -9999px !important;
+            opacity: 0 !important;
+            z-index: -1 !important;
+            position: absolute !important;
+          }
+        }
+        @media print {
+          body#work16-print-active * {
+            visibility: visible !important;
+          }
+          .only-print-work16 {
+            display: block !important;
+          }
+          #work16-print-overlay,
+          #work16-print-overlay-answer {
+            display: block !important;
+            visibility: visible !important;
+            left: 0 !important;
+            opacity: 1 !important;
+            z-index: 9999 !important;
+            position: fixed !important;
+          }
+        }
+      `;
+      
+      // React 컴포넌트를 정적 HTML로 렌더링
+      const markup = ReactDOMServer.renderToStaticMarkup(
+        <HistoryPrintWork16 data={{ quizzes: rawQuizzes }} isAnswerMode={false} />
+      );
+      
+      console.log('🖨️ [QuizDisplayPage] 유형#16 인쇄(문제) - 여러 문제 렌더링된 마크업 길이:', markup.length);
+      
+      // 기존 printContainer 제거
+      if (printContainer && printContainer.parentNode) {
+        printContainer.parentNode.removeChild(printContainer);
+      }
+      
+      // 오버레이 생성
+      const overlayId = 'work16-print-overlay';
+      const existingOverlay = document.getElementById(overlayId);
+      if (existingOverlay && existingOverlay.parentNode) {
+        existingOverlay.parentNode.removeChild(existingOverlay);
+      }
+      
+      const overlay = document.createElement('div');
+      overlay.id = overlayId;
+      Object.assign(overlay.style, {
+        position: 'fixed',
+        inset: '0',
+        backgroundColor: '#ffffff',
+        zIndex: '9999',
+        overflow: 'auto'
+      } as Partial<CSSStyleDeclaration>);
+      
+      // 오버레이에 인쇄용 스타일 + 마크업 주입
+      overlay.innerHTML = `
+        <style>${PRINT_STYLES_MULTI}</style>
+        ${markup}
+      `;
+      
+      document.body.appendChild(overlay);
+      
+      // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+      const prevBodyId = document.body.getAttribute('id');
+      document.body.setAttribute('id', 'work16-print-active');
+      
+      // 약간의 지연 후 인쇄 실행
+      setTimeout(() => {
+        window.print();
+        
+        // window.print() 호출 직후 즉시 오버레이 숨기기
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+        overlay.style.left = '-9999px';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+        
+        // 인쇄 후 오버레이 정리
+        setTimeout(() => {
+          const ov = document.getElementById(overlayId);
+          if (ov && ov.parentNode) {
+            ov.parentNode.removeChild(ov);
+          }
+          
+          // body id 되돌리기
+          if (prevBodyId) {
+            document.body.setAttribute('id', prevBodyId);
+          } else {
+            document.body.removeAttribute('id');
+          }
+          
+          // appRoot 다시 표시
+          if (appRoot) {
+            appRoot.style.display = '';
+          }
+        }, 100);
+      }, 300);
+      
+      return; // 오버레이 방식 사용 시 root.render 호출하지 않음
     } else {
       root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
     }
 
     // 유형#07, #08, #09, #10, #13, #14는 원래 인쇄 방식과 동일하게 처리
     // 단, DOC 저장인 경우에는 파일 생성 로직을 실행해야 하므로 return하지 않음
-    const shouldUseQuickPrint = (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '13' || typeId === '14') || packageType === '14') && fileFormat === 'pdf';
+    const shouldUseQuickPrint = (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '12' || typeId === '13' || typeId === '14' || typeId === '16') || packageType === '14' || packageType === '16') && fileFormat === 'pdf';
     
     if (shouldUseQuickPrint) {
       // 원래 방식: activatePrintContainer 후 바로 인쇄 (PDF만)
@@ -743,6 +1372,8 @@ const QuizDisplayPage: React.FC = () => {
           elementId = 'print-root-work13-new';
         } else if (packageType === '14' || (isSingleWork && typeId === '14')) {
           elementId = 'print-root-work14-new';
+        } else if (packageType === '16' || (isSingleWork && typeId === '16')) {
+          elementId = 'print-root-work16-new';
         }
         const element = document.getElementById(elementId);
         if (element) {
@@ -826,8 +1457,9 @@ const QuizDisplayPage: React.FC = () => {
                               packageType === '10' ? '유형#10_문제' :
                               packageType === '13' ? '유형#13_문제' :
                               packageType === '14' ? '유형#14_문제' :
+                              packageType === '16' ? '유형#16_문제' :
                               '문제';
-          
+
           const result = await generateAndUploadFile(
             element as HTMLElement,
             userData.uid,
@@ -1052,6 +1684,8 @@ const QuizDisplayPage: React.FC = () => {
                                 ? 'print-root-work13-new-answer'
                                 : packageType === '14' || (isSingleWork && typeId === '14')
                                   ? 'print-root-work14-new-answer'
+                                  : packageType === '16' || (isSingleWork && typeId === '16')
+                                    ? 'print-root-work16-new-answer'
             : 'print-root-package02-answer';
     printContainer.id = containerId;
     document.body.appendChild(printContainer);
@@ -1082,6 +1716,297 @@ const QuizDisplayPage: React.FC = () => {
       if (typeId === '12') {
         const data: any = first.work12Data || first.data?.work12Data || first.data || first;
         root.render(<HistoryPrintWork12 data={data} isAnswerMode={true} />);
+      } else if (typeId === '16') {
+        const work16Data = first.work16Data || first.data?.work16Data || first.data || first;
+        console.log('🔍 [QuizDisplayPage] 유형#16 인쇄(정답) - 단일 문제:', {
+          firstKeys: Object.keys(first || {}),
+          hasWork16Data: !!work16Data,
+          work16DataKeys: work16Data ? Object.keys(work16Data) : [],
+          hasWords: !!work16Data?.words,
+          wordsCount: work16Data?.words?.length || 0,
+          hasQuizzes: !!work16Data?.quizzes,
+          quizzesCount: work16Data?.quizzes?.length || 0,
+          work16DataType: typeof work16Data,
+          work16DataIsArray: Array.isArray(work16Data)
+        });
+        
+        // work16Data가 WordQuiz 객체인 경우 quizzes 배열로 변환
+        let data: any;
+        if (work16Data?.words && Array.isArray(work16Data.words) && work16Data.words.length > 0) {
+          // 단일 WordQuiz 객체인 경우 quizzes 배열로 변환
+          data = {
+            quizzes: [{
+              words: work16Data.words,
+              quizType: work16Data.quizType || 'english-to-korean',
+              totalQuestions: work16Data.totalQuestions || work16Data.words.length,
+              passage: work16Data.passage
+            }]
+          };
+        } else if (work16Data?.quizzes && Array.isArray(work16Data.quizzes)) {
+          // 이미 quizzes 배열인 경우
+          data = work16Data;
+        } else {
+          // 그 외의 경우 원본 데이터 사용
+          data = work16Data;
+        }
+        
+        console.log('🔍 [QuizDisplayPage] 유형#16 인쇄(정답) - 변환된 데이터:', {
+          hasQuizzes: !!data?.quizzes,
+          quizzesCount: data?.quizzes?.length || 0,
+          firstQuizWordsCount: data?.quizzes?.[0]?.words?.length || 0,
+          firstQuizSample: data?.quizzes?.[0]?.words?.slice(0, 2)
+        });
+        
+        // 유형#16은 오버레이 방식 사용 (인쇄(문제)와 동일)
+        // PRINT_STYLES는 인쇄(문제) 부분에서 이미 정의됨
+        const PRINT_STYLES_ANSWER = `
+          @page {
+            size: A4 landscape;
+            margin: 0;
+          }
+          html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+            width: 29.7cm !important;
+            height: 21cm !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          @media print {
+            html, body {
+              overflow: hidden;
+            }
+          }
+          
+          .only-print-work16 {
+            display: block !important;
+          }
+          .a4-landscape-page-template-work16 {
+            width: 29.7cm;
+            height: 21cm;
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            box-sizing: border-box;
+            page-break-inside: avoid;
+            position: relative;
+            display: flex !important;
+            flex-direction: column;
+            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+          }
+          .a4-landscape-page-template-work16:not(:last-child) {
+            page-break-after: always;
+            break-after: page;
+          }
+          .a4-landscape-page-header-work16 {
+            width: 100%;
+            height: 1.5cm;
+            flex-shrink: 0;
+            padding: 0.5cm 0.8cm 0 0.8cm;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+          }
+          .print-header-work16 {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .print-header-text-work16 {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #000;
+          }
+          .print-header-work16::after {
+            content: '';
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+            margin-top: 0.3cm;
+          }
+          .a4-landscape-page-content-work16 {
+            width: 100%;
+            flex: 1;
+            padding: 0.4cm 0.8cm 1cm 0.8cm;
+            box-sizing: border-box;
+            overflow: visible;
+          }
+          .quiz-content-work16 {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          .problem-instruction-work16 {
+            font-weight: 800;
+            font-size: 11pt;
+            background: #F0F0F0;
+            color: #000000;
+            padding: 0.7rem 0.6rem;
+            border-radius: 8px;
+            margin: 0 0 0.8rem 0;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .problem-instruction-text-work16 {
+            flex: 1 1 auto;
+          }
+          .problem-type-label-work16 {
+            margin-left: 0.5cm;
+            font-size: 10pt;
+            font-weight: 700;
+            color: #000000;
+          }
+          .word-list-container-work16 {
+            display: flex;
+            gap: 0.5cm;
+            width: 100%;
+            margin: 1rem 0;
+          }
+          .word-list-column-work16 {
+            flex: 1 1 50%;
+            width: 50%;
+          }
+          .word-list-table-work16 {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            font-size: 9pt;
+            background: #ffffff;
+            border: 2px solid #000000;
+          }
+          .word-list-table-work16 th {
+            background: #e3f2fd;
+            color: #000000;
+            font-weight: 700;
+            font-size: 9pt;
+            padding: 0.35rem;
+            text-align: center;
+            border: 1px solid #000000;
+          }
+          .word-list-table-work16 td {
+            border: 1px solid #000000;
+            padding: 0.35rem;
+            text-align: left;
+            font-size: 9pt;
+            font-weight: 500;
+            color: #000000;
+          }
+          .word-list-table-work16 td:first-child,
+          .word-list-table-work16 th:first-child {
+            text-align: center;
+            width: 15%;
+          }
+          .word-list-table-work16 td:nth-child(2),
+          .word-list-table-work16 th:nth-child(2),
+          .word-list-table-work16 td:nth-child(3),
+          .word-list-table-work16 th:nth-child(3) {
+            width: 42.5%;
+          }
+          .word-list-table-work16 tr:nth-child(even) {
+            background: #f8f9fa;
+          }
+          .word-list-table-work16 tr:nth-child(odd) {
+            background: #ffffff;
+          }
+          .word-list-table-work16 .answer-cell {
+            color: #1976d2 !important;
+            font-weight: 700 !important;
+            background: #f0f8ff !important;
+          }
+          @media print {
+            body#work16-print-active * {
+              visibility: visible !important;
+            }
+            .only-print-work16 {
+              display: block !important;
+            }
+          }
+        `;
+        
+        // React 컴포넌트를 정적 HTML로 렌더링
+        const markup = ReactDOMServer.renderToStaticMarkup(
+          <HistoryPrintWork16 data={data} isAnswerMode={true} />
+        );
+        
+        console.log('🖨️ [QuizDisplayPage] 유형#16 인쇄(정답) - 단일 문제 렌더링된 마크업 길이:', markup.length);
+        
+        // 기존 printContainer 제거
+        if (printContainer && printContainer.parentNode) {
+          printContainer.parentNode.removeChild(printContainer);
+        }
+        
+        // 오버레이 생성
+        const overlayId = 'work16-print-overlay-answer';
+        const existingOverlay = document.getElementById(overlayId);
+        if (existingOverlay && existingOverlay.parentNode) {
+          existingOverlay.parentNode.removeChild(existingOverlay);
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.id = overlayId;
+        Object.assign(overlay.style, {
+          position: 'fixed',
+          inset: '0',
+          backgroundColor: '#ffffff',
+          zIndex: '9999',
+          overflow: 'auto'
+        } as Partial<CSSStyleDeclaration>);
+        
+        // 오버레이에 인쇄용 스타일 + 마크업 주입
+        overlay.innerHTML = `
+          <style>${PRINT_STYLES_ANSWER}</style>
+          ${markup}
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+        const prevBodyId = document.body.getAttribute('id');
+        document.body.setAttribute('id', 'work16-print-active');
+        
+        // 약간의 지연 후 인쇄 실행
+        setTimeout(() => {
+          window.print();
+          
+          // window.print() 호출 직후 즉시 오버레이 숨기기
+          overlay.style.display = 'none';
+          overlay.style.visibility = 'hidden';
+          overlay.style.left = '-9999px';
+          overlay.style.opacity = '0';
+          overlay.style.zIndex = '-1';
+          
+          // 인쇄 후 오버레이 정리
+          setTimeout(() => {
+            const ov = document.getElementById(overlayId);
+            if (ov && ov.parentNode) {
+              ov.parentNode.removeChild(ov);
+            }
+            
+            // body id 되돌리기
+            if (prevBodyId) {
+              document.body.setAttribute('id', prevBodyId);
+            } else {
+              document.body.removeAttribute('id');
+            }
+            
+            // appRoot 다시 표시
+            if (appRoot) {
+              appRoot.style.display = '';
+            }
+          }, 100);
+        }, 300);
+        
+        return; // 오버레이 방식 사용 시 root.render 호출하지 않음
       } else if (typeId === '01') {
         // 유형#01은 PrintFormatWork01New 사용
         const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
@@ -1357,6 +2282,340 @@ const QuizDisplayPage: React.FC = () => {
       console.log('🖨️ 유형#14 인쇄(정답) 최종 rawQuizzes (packageType=14):', rawQuizzes);
       // 나의문제목록에서 불러온 경우에만 디버그 테두리 표시
       root.render(<PrintFormatWork14New quizzes={rawQuizzes} isAnswerMode={true} showDebugBorders={true} />);
+    } else if (packageType === '16') {
+      // 유형#16 (여러 문제일 때) - 나의문제목록에서 불러온 경우
+      console.log('🔍 유형#16 인쇄(정답) - 여러 문제 (packageType=16):', {
+        packageQuizLength: packageQuiz.length,
+        firstItem: packageQuiz[0],
+        firstItemKeys: packageQuiz[0] ? Object.keys(packageQuiz[0]) : []
+      });
+      
+      const rawQuizzes = packageQuiz.map((item: any, index: number) => {
+        // 여러 방법으로 work16Data 찾기
+        const work16Data = item.work16Data || item.quiz || item.data?.work16Data || item.data || item;
+        
+        console.log(`🔍 유형#16 Quiz ${index + 1} 데이터 추출 (packageType=16, 정답):`, {
+          itemKeys: Object.keys(item || {}),
+          hasWork16Data: !!item.work16Data,
+          work16DataKeys: work16Data ? Object.keys(work16Data) : [],
+          work16DataType: typeof work16Data,
+          work16DataIsArray: Array.isArray(work16Data),
+          hasWords: !!work16Data?.words,
+          wordsCount: work16Data?.words?.length || 0,
+          wordsType: Array.isArray(work16Data?.words) ? 'array' : typeof work16Data?.words,
+          quizType: work16Data?.quizType,
+          sampleWords: work16Data?.words?.slice(0, 2)
+        });
+        
+        // work16Data가 WordQuiz 객체인 경우 words 배열 추출
+        const words = Array.isArray(work16Data?.words) ? work16Data.words : [];
+        
+        if (words.length === 0) {
+          console.warn(`⚠️ 유형#16 Quiz ${index + 1}에 단어가 없습니다. (정답)`, {
+            work16Data,
+            work16DataKeys: work16Data ? Object.keys(work16Data) : []
+          });
+        }
+        
+        const extracted = {
+          words: words,
+          quizType: work16Data?.quizType || 'english-to-korean',
+          totalQuestions: work16Data?.totalQuestions || words.length || 0,
+          passage: work16Data?.passage || ''
+        };
+        
+        console.log(`✅ 유형#16 Quiz ${index + 1} 추출 결과 (packageType=16, 정답):`, {
+          wordsCount: extracted.words.length,
+          quizType: extracted.quizType,
+          sampleWords: extracted.words.slice(0, 2).map((w: any) => ({
+            english: w.english,
+            korean: w.korean,
+            partOfSpeech: w.partOfSpeech
+          }))
+        });
+        
+        return extracted;
+      });
+      
+      console.log('🖨️ 유형#16 인쇄(정답) 최종 rawQuizzes (packageType=16):', rawQuizzes);
+      console.log('🔍 [QuizDisplayPage] 유형#16 인쇄(정답) - 여러 문제 데이터 확인:', {
+        quizzesCount: rawQuizzes.length,
+        quizzesWithWords: rawQuizzes.filter((q: any) => q.words && q.words.length > 0).length,
+        firstQuizWordsCount: rawQuizzes[0]?.words?.length || 0,
+        secondQuizWordsCount: rawQuizzes[1]?.words?.length || 0,
+        allQuizzesHaveWords: rawQuizzes.every((q: any) => q.words && q.words.length > 0)
+      });
+      
+      // 유형#16은 오버레이 방식 사용 (인쇄(문제)와 동일)
+      // PRINT_STYLES_MULTI는 인쇄(문제) 여러 문제 부분에서 이미 정의됨
+      const PRINT_STYLES_MULTI_ANSWER = `
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
+        html, body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+          width: 29.7cm !important;
+          height: 21cm !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        @media print {
+          html, body {
+            overflow: hidden;
+          }
+        }
+        
+        .only-print-work16 {
+          display: block !important;
+        }
+        .a4-landscape-page-template-work16 {
+          width: 29.7cm;
+          height: 21cm;
+          margin: 0;
+          padding: 0;
+          background: #ffffff;
+          box-sizing: border-box;
+          page-break-inside: avoid;
+          position: relative;
+          display: flex !important;
+          flex-direction: column;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+        }
+        .a4-landscape-page-template-work16:not(:last-child) {
+          page-break-after: always;
+          break-after: page;
+        }
+        .a4-landscape-page-header-work16 {
+          width: 100%;
+          height: 1.5cm;
+          flex-shrink: 0;
+          padding: 0.5cm 0.8cm 0 0.8cm;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+        .print-header-work16 {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .print-header-text-work16 {
+          font-size: 11pt;
+          font-weight: 700;
+          color: #000;
+        }
+        .print-header-work16::after {
+          content: '';
+          width: 100%;
+          height: 1px;
+          background-color: #333;
+          margin-top: 0.3cm;
+        }
+        .a4-landscape-page-content-work16 {
+          width: 100%;
+          flex: 1;
+          padding: 0.4cm 0.8cm 1cm 0.8cm;
+          box-sizing: border-box;
+          overflow: visible;
+        }
+        .quiz-content-work16 {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .problem-instruction-work16 {
+          font-weight: 800;
+          font-size: 11pt;
+          background: #F0F0F0;
+          color: #000000;
+          padding: 0.7rem 0.6rem;
+          border-radius: 8px;
+          margin: 0 0 0.8rem 0;
+          width: 100%;
+          box-sizing: border-box;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .problem-instruction-text-work16 {
+          flex: 1 1 auto;
+        }
+        .problem-type-label-work16 {
+          margin-left: 0.5cm;
+          font-size: 10pt;
+          font-weight: 700;
+          color: #000000;
+        }
+        .word-list-container-work16 {
+          display: flex;
+          gap: 0.5cm;
+          width: 100%;
+          margin: 1rem 0;
+        }
+        .word-list-column-work16 {
+          flex: 1 1 50%;
+          width: 50%;
+        }
+        .word-list-table-work16 {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 0;
+          font-size: 9pt;
+          background: #ffffff;
+          border: 2px solid #000000;
+        }
+        .word-list-table-work16 th {
+          background: #e3f2fd;
+          color: #000000;
+          font-weight: 700;
+          font-size: 9pt;
+          padding: 0.35rem;
+          text-align: center;
+          border: 1px solid #000000;
+        }
+        .word-list-table-work16 td {
+          border: 1px solid #000000;
+          padding: 0.35rem;
+          text-align: left;
+          font-size: 9pt;
+          font-weight: 500;
+          color: #000000;
+        }
+        .word-list-table-work16 td:first-child,
+        .word-list-table-work16 th:first-child {
+          text-align: center;
+          width: 15%;
+        }
+        .word-list-table-work16 td:nth-child(2),
+        .word-list-table-work16 th:nth-child(2),
+        .word-list-table-work16 td:nth-child(3),
+        .word-list-table-work16 th:nth-child(3) {
+          width: 42.5%;
+        }
+        .word-list-table-work16 tr:nth-child(even) {
+          background: #f8f9fa;
+        }
+        .word-list-table-work16 tr:nth-child(odd) {
+          background: #ffffff;
+        }
+        .word-list-table-work16 .answer-cell {
+          color: #1976d2 !important;
+          font-weight: 700 !important;
+          background: #f0f8ff !important;
+        }
+        @media screen {
+          #work16-print-overlay,
+          #work16-print-overlay-answer {
+            display: none !important;
+            visibility: hidden !important;
+            left: -9999px !important;
+            opacity: 0 !important;
+            z-index: -1 !important;
+            position: absolute !important;
+          }
+        }
+        @media print {
+          body#work16-print-active * {
+            visibility: visible !important;
+          }
+          .only-print-work16 {
+            display: block !important;
+          }
+          #work16-print-overlay,
+          #work16-print-overlay-answer {
+            display: block !important;
+            visibility: visible !important;
+            left: 0 !important;
+            opacity: 1 !important;
+            z-index: 9999 !important;
+            position: fixed !important;
+          }
+        }
+      `;
+      
+      // React 컴포넌트를 정적 HTML로 렌더링
+      const markup = ReactDOMServer.renderToStaticMarkup(
+        <HistoryPrintWork16 data={{ quizzes: rawQuizzes }} isAnswerMode={true} />
+      );
+      
+      console.log('🖨️ [QuizDisplayPage] 유형#16 인쇄(정답) - 여러 문제 렌더링된 마크업 길이:', markup.length);
+      
+      // 기존 printContainer 제거
+      if (printContainer && printContainer.parentNode) {
+        printContainer.parentNode.removeChild(printContainer);
+      }
+      
+      // 오버레이 생성
+      const overlayId = 'work16-print-overlay-answer';
+      const existingOverlay = document.getElementById(overlayId);
+      if (existingOverlay && existingOverlay.parentNode) {
+        existingOverlay.parentNode.removeChild(existingOverlay);
+      }
+      
+      const overlay = document.createElement('div');
+      overlay.id = overlayId;
+      Object.assign(overlay.style, {
+        position: 'fixed',
+        inset: '0',
+        backgroundColor: '#ffffff',
+        zIndex: '9999',
+        overflow: 'auto'
+      } as Partial<CSSStyleDeclaration>);
+      
+      // 오버레이에 인쇄용 스타일 + 마크업 주입
+      overlay.innerHTML = `
+        <style>${PRINT_STYLES_MULTI_ANSWER}</style>
+        ${markup}
+      `;
+      
+      document.body.appendChild(overlay);
+      
+      // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+      const prevBodyId = document.body.getAttribute('id');
+      document.body.setAttribute('id', 'work16-print-active');
+      
+      // 약간의 지연 후 인쇄 실행
+      setTimeout(() => {
+        window.print();
+        
+        // window.print() 호출 직후 즉시 오버레이 숨기기
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+        overlay.style.left = '-9999px';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+        
+        // 인쇄 후 오버레이 정리
+        setTimeout(() => {
+          const ov = document.getElementById(overlayId);
+          if (ov && ov.parentNode) {
+            ov.parentNode.removeChild(ov);
+          }
+          
+          // body id 되돌리기
+          if (prevBodyId) {
+            document.body.setAttribute('id', prevBodyId);
+          } else {
+            document.body.removeAttribute('id');
+          }
+          
+          // appRoot 다시 표시
+          if (appRoot) {
+            appRoot.style.display = '';
+          }
+        }, 100);
+      }, 300);
+      
+      return; // 오버레이 방식 사용 시 root.render 호출하지 않음
     } else if (packageType === '01') {
       const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
       root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={true} />);
@@ -1631,11 +2890,13 @@ const QuizDisplayPage: React.FC = () => {
           elementId = 'print-root-work13-new-answer';
         } else if (packageType === '14' || (isSingleWork && typeId === '14')) {
           elementId = 'print-root-work14-new-answer';
+        } else if (packageType === '16' || (isSingleWork && typeId === '16')) {
+          elementId = 'print-root-work16-new-answer';
         }
         const element = document.getElementById(elementId);
         if (element) {
           // 디버깅: 실제 DOM에 렌더링된 페이지 요소 확인
-          const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page');
+          const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page, .a4-landscape-page-template-work16');
           console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 정답):', {
             totalPages: pageElements.length,
             containerId: elementId,
@@ -1712,6 +2973,8 @@ const QuizDisplayPage: React.FC = () => {
           packageType === '09' ? '유형#09_정답' :
           packageType === '10' ? '유형#10_정답' :
           packageType === '13' ? '유형#13_정답' :
+          packageType === '14' ? '유형#14_정답' :
+          packageType === '16' ? '유형#16_정답' :
           '정답';
           
           const result = await generateAndUploadFile(

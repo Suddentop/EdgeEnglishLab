@@ -90,6 +90,92 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           );
         }
 
+        // Work_16: 본문 단어 학습 문제
+        if (quizItem.workTypeId === '16') {
+          const work16Data = quizItem.work16Data || quizItem.data?.work16Data || quizItem.data;
+          console.log('🔍 [SimpleQuizDisplay] 유형#16 데이터 확인:', {
+            workTypeId: quizItem.workTypeId,
+            hasWork16Data: !!work16Data,
+            work16DataKeys: work16Data ? Object.keys(work16Data) : [],
+            wordsCount: work16Data?.words?.length || 0,
+            sampleWord: work16Data?.words?.[0]
+          });
+          const words: any[] = Array.isArray(work16Data?.words) ? work16Data.words : [];
+          const half = Math.ceil(words.length / 2);
+          const left = words.slice(0, half);
+          const right = words.slice(half);
+          
+          return (
+            <div key={`quiz-16-${index}`} className="quiz-item">
+              <h3>문제 {index + 1} : 본문 단어 학습</h3>
+              <div className="instruction">다음 영어 단어의 한글 뜻을 고르시오.</div>
+              <div style={{ border: '1px solid #e3e6f0', borderRadius: 8, padding: '0.8rem', background: '#fff' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: words.length > 10 ? '1fr 1fr' : '1fr', gap: '1rem' }}>
+                  {words.length > 10 ? (
+                    [left, right].map((col, ci) => (
+                      <table key={ci} style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr>
+                            <th style={{ width: 60, padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>No.</th>
+                            <th style={{ padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>영어 단어</th>
+                            <th style={{ padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>한글 뜻</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {col.map((w: any, wi: number) => {
+                            // 품사가 있으면 품사+한글뜻 표시 (항상 표시)
+                            const partOfSpeech = w.partOfSpeech?.trim();
+                            const hasPartOfSpeech = partOfSpeech && partOfSpeech.length > 0;
+                            const displayKorean = hasPartOfSpeech && w.korean
+                              ? `${partOfSpeech} ${w.korean}`
+                              : (w.korean || '');
+                            
+                            return (
+                              <tr key={wi}>
+                                <td style={{ textAlign: 'center', border: '1px solid #e3e6f0', padding: '6px 8px' }}>{ci === 0 ? wi + 1 : half + wi + 1}</td>
+                                <td style={{ border: '1px solid #e3e6f0', padding: '6px 8px' }}>{w.english}</td>
+                                <td style={{ border: '1px solid #e3e6f0', padding: '6px 8px' }}>{displayKorean}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    ))
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ width: 60, padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>No.</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>영어 단어</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #e3e6f0', background: '#f7f8fc' }}>한글 뜻</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {words.map((w: any, wi: number) => {
+                          // 품사가 있으면 품사+한글뜻 표시 (항상 표시)
+                          const partOfSpeech = w.partOfSpeech?.trim();
+                          const hasPartOfSpeech = partOfSpeech && partOfSpeech.length > 0;
+                          const displayKorean = hasPartOfSpeech && w.korean
+                            ? `${partOfSpeech} ${w.korean}`
+                            : (w.korean || '');
+                          
+                          return (
+                            <tr key={wi}>
+                              <td style={{ textAlign: 'center', border: '1px solid #e3e6f0', padding: '6px 8px' }}>{wi + 1}</td>
+                              <td style={{ border: '1px solid #e3e6f0', padding: '6px 8px' }}>{w.english}</td>
+                              <td style={{ border: '1px solid #e3e6f0', padding: '6px 8px' }}>{displayKorean}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         // Work_02: 유사단어 독해
         if (quizItem.workTypeId === '02') {
           const work02Data = (quizItem.work02Data || quizItem.quiz || quizItem.data?.work02Data || quizItem.data?.quiz || quizItem.data) as any;

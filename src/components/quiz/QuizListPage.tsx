@@ -122,9 +122,9 @@ const QuizListPage: React.FC = () => {
           }
         });
       } else {
-        // 단일 유형(01~14)도 패키지 표시 페이지를 재사용해 동일한 인쇄 버튼 동작 제공
+        // 단일 유형(01~14, 16)도 패키지 표시 페이지를 재사용해 동일한 인쇄 버튼 동작 제공
         const numId = historyItem.workTypeId?.toString()?.padStart(2, '0');
-        const isSingleWork = /^(01|02|03|04|05|06|07|08|09|10|11|12|13|14)$/.test(numId || '');
+        const isSingleWork = /^(01|02|03|04|05|06|07|08|09|10|11|12|13|14|16)$/.test(numId || '');
 
         if (isSingleWork) {
           // generatedData를 패키지 프린트 컴포넌트가 인식하는 구조로 변환
@@ -581,6 +581,55 @@ const QuizListPage: React.FC = () => {
               const quizInner = parsed?.quiz || parsed?.data?.quiz;
               const merged = { ...d, ...(quizInner || {}) };
               quizItem[nestedKey] = merged;
+            }
+          } else if (numId === '16') {
+            // 유형#16는 여러 문제를 배열로 저장할 수 있음 (유형#12와 유사한 구조)
+            // parsed가 배열인 경우 (여러 문제)
+            if (Array.isArray(parsed)) {
+              // 배열인 경우: 각 항목을 work16Data 필드로 변환하여 패키지 형태로 처리
+              const quizzes = parsed.map((quiz, index) => ({
+                workTypeId: '16',
+                workTypeName: historyItem.workTypeName,
+                work16Data: quiz
+              }));
+              
+              const wrapped = {
+                ...historyItem,
+                generatedData: {
+                  isPackage: true,
+                  quizzes: quizzes
+                }
+              } as any;
+
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              return;
+            } else if (parsed && typeof parsed === 'object') {
+              // 단일 문제인 경우 또는 객체인 경우
+              // parsed가 { words: [...], quizType: '...', ... } 형태인지 확인
+              if (parsed.words && Array.isArray(parsed.words)) {
+                // WordQuiz 객체인 경우
+                if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
+                  quizItem[nestedKey] = parsed[nestedKey];
+                } else {
+                  quizItem[nestedKey] = parsed;
+                }
+              } else if (parsed[nestedKey]) {
+                // work16Data 필드가 있는 경우
+                quizItem[nestedKey] = parsed[nestedKey];
+              } else {
+                // 그 외의 경우 parsed를 그대로 사용
+                quizItem[nestedKey] = parsed;
+              }
+
+              // 유형별 데이터 정규화
+              const d: any = quizItem[nestedKey] || {};
+              // 저장이 { quiz: {...} } 로 된 케이스 흡수
+              const quizInner = parsed?.quiz || parsed?.data?.quiz;
+              const merged = { ...d, ...(quizInner || {}) };
+              quizItem[nestedKey] = merged;
+            } else {
+              // parsed가 null이거나 다른 타입인 경우
+              quizItem[nestedKey] = parsed;
             }
           } else {
             // work02Data, work03Data ... work14Data 로 매핑
