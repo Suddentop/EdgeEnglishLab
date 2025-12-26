@@ -376,14 +376,15 @@ ${englishText}`;
       // 문제 생성 내역 저장 (여러 퀴즈를 배열로 저장)
       if (userData?.uid && workTypePoints.length > 0) {
         try {
-          const workTypePoint = workTypePoints.find(wt => wt.id === '4');
+          const workType = workTypePoints.find(wt => wt.id === '4');
+          const requiredPoints = workType ? workType.points * validItems.length : 0;
           await saveQuizWithPDF({
             userId: userData.uid,
             userName: userData.name || '사용자',
             userNickname: userData.nickname || '사용자',
             workTypeId: '04',
             workTypeName: getWorkTypeName('04'),
-            points: workTypePoint?.points || 0,
+            points: requiredPoints, // 실제 차감된 포인트 (workType.points * validItems.length)
             inputText: validItems.map(item => item.text.trim()).join('\n\n---\n\n'),
             quizData: generatedQuizzes, // 배열로 저장
             status: 'success'

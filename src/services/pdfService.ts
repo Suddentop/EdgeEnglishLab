@@ -52,6 +52,7 @@ export const generateAndUploadPDF = async (
     }
     
     // PDF 생성
+    // orientation 파라미터를 강제로 적용 (요소 크기와 무관하게)
     const pdf = new jsPDF({
       orientation: orientation,
       unit: 'mm',
@@ -60,6 +61,17 @@ export const generateAndUploadPDF = async (
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // 디버깅: PDF 크기 확인
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📄 PDF 생성 설정:', {
+        orientation,
+        pdfWidth,
+        pdfHeight,
+        expectedPortrait: orientation === 'portrait' ? '210mm x 297mm' : '297mm x 210mm',
+        actualSize: `${pdfWidth}mm x ${pdfHeight}mm`
+      });
+    }
     
     if (hasMultiplePages) {
       // 여러 페이지가 있는 경우 (Package#02): 각 페이지를 개별 PDF 페이지로 추가
@@ -269,10 +281,55 @@ export const generateAndUploadPDF = async (
     } else {
       // 단일 페이지인 경우: 기존 로직 사용
       // 요소 크기 확인 및 조정
-      const elementWidth = element.scrollWidth || element.offsetWidth || 800;
-      const elementHeight = element.scrollHeight || element.offsetHeight || 600;
+      let elementWidth = element.scrollWidth || element.offsetWidth || 800;
+      let elementHeight = element.scrollHeight || element.offsetHeight || 600;
       
-      console.log('📏 요소 크기:', { width: elementWidth, height: elementHeight });
+      // orientation 파라미터를 기반으로 크기 조정
+      // portrait인 경우: width < height가 되도록 보장
+      // landscape인 경우: width > height가 되도록 보장
+      if (orientation === 'portrait' && elementWidth > elementHeight) {
+        // 가로가 더 긴 경우, 세로로 강제 변환
+        // A4 세로: 21cm x 29.7cm (794px x 1123px at 96 DPI)
+        const A4_PORTRAIT_WIDTH_PX = 794; // 21cm
+        
+        // 요소의 실제 내용 높이를 기준으로 조정
+        // scrollHeight를 사용하여 실제 내용 높이 확인
+        const actualContentHeight = element.scrollHeight || elementHeight;
+        
+        // 너비를 A4 세로 기준으로 고정
+        elementWidth = A4_PORTRAIT_WIDTH_PX;
+        // 높이는 실제 내용 높이 사용 (최소값 보장)
+        elementHeight = Math.max(actualContentHeight, 600);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Portrait 모드: 요소 크기 조정', {
+            original: { width: element.scrollWidth || element.offsetWidth, height: element.scrollHeight || element.offsetHeight },
+            adjusted: { width: elementWidth, height: elementHeight },
+            actualContentHeight
+          });
+        }
+      } else if (orientation === 'landscape' && elementWidth < elementHeight) {
+        // 세로가 더 긴 경우, 가로로 강제 변환
+        // A4 가로: 29.7cm x 21cm (1123px x 794px at 96 DPI)
+        const A4_LANDSCAPE_WIDTH_PX = 1123; // 29.7cm
+        
+        const actualContentWidth = element.scrollWidth || elementWidth;
+        
+        // 너비를 A4 가로 기준으로 고정
+        elementWidth = A4_LANDSCAPE_WIDTH_PX;
+        // 높이는 실제 내용 높이 사용 (최대값 제한)
+        elementHeight = Math.min(element.scrollHeight || elementHeight, 794);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Landscape 모드: 요소 크기 조정', {
+            original: { width: element.scrollWidth || element.offsetWidth, height: element.scrollHeight || element.offsetHeight },
+            adjusted: { width: elementWidth, height: elementHeight },
+            actualContentWidth
+          });
+        }
+      }
+      
+      console.log('📏 요소 크기:', { width: elementWidth, height: elementHeight, orientation });
 
       // HTML을 Canvas로 변환
       const canvas = await html2canvas(element, {
@@ -289,8 +346,27 @@ export const generateAndUploadPDF = async (
           // 복제된 문서에서 요소가 제대로 렌더링되도록 보장
           const clonedElement = clonedDoc.querySelector(`#${element.id}`) || clonedDoc.body;
           if (clonedElement) {
-            (clonedElement as HTMLElement).style.width = `${elementWidth}px`;
-            (clonedElement as HTMLElement).style.height = `${elementHeight}px`;
+            const clonedEl = clonedElement as HTMLElement;
+            clonedEl.style.width = `${elementWidth}px`;
+            clonedEl.style.height = `${elementHeight}px`;
+            clonedEl.style.maxWidth = `${elementWidth}px`;
+            clonedEl.style.minWidth = `${elementWidth}px`;
+            clonedEl.style.boxSizing = 'border-box';
+            
+            // 패키지#01인 경우 추가 스타일 적용
+            if (element.id === 'print-root-package01' || element.id === 'print-root-package01-answer') {
+              clonedEl.style.width = '794px'; // 21cm
+              clonedEl.style.maxWidth = '794px';
+              clonedEl.style.minWidth = '794px';
+              
+              // 내부 .print-container도 조정
+              const printContainer = clonedEl.querySelector('.print-container');
+              if (printContainer) {
+                (printContainer as HTMLElement).style.width = '794px';
+                (printContainer as HTMLElement).style.maxWidth = '794px';
+                (printContainer as HTMLElement).style.minWidth = '794px';
+              }
+            }
           }
         }
       } as any);
@@ -1026,6 +1102,22 @@ const extractTextRunsByLine = (element: HTMLElement): TextRun[][] => {
 const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   const paragraphs: (Paragraph | Table)[] = [];
   
+  // 디버깅: 요소 구조 확인
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 htmlToDocxParagraphs 시작:', {
+      elementId: element.id,
+      elementClass: element.className,
+      elementTag: element.tagName,
+      hasPrintQuestionCard: element.querySelector('.print-question-card') !== null,
+      printQuestionCardCount: element.querySelectorAll('.print-question-card').length,
+      hasA4LandscapeTemplate: element.querySelector('.a4-landscape-page-template') !== null,
+      a4LandscapeTemplateCount: element.querySelectorAll('.a4-landscape-page-template').length,
+      hasPrintColumn: element.querySelector('.print-column') !== null,
+      printColumnCount: element.querySelectorAll('.print-column').length,
+      textContentLength: element.textContent?.trim().length || 0
+    });
+  }
+  
   // 헤더 찾기 (가로선 포함) - PDF와 동일한 구조
   // 패키지#02: .print-header-package02 > .print-header-text-package02
   // 유형#01-15: .a4-page-header > .print-header-text-work01
@@ -1070,17 +1162,35 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   // 유형#05, #06: .a4-landscape-page-template 사용
   const allCards = element.querySelectorAll('.print-question-card, .quiz-content, .work-11-print, .a4-page-template, .a4-landscape-page-template, [data-work-type]');
   
+  // 디버깅: 찾은 카드 확인
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 htmlToDocxParagraphs - 찾은 카드:', {
+      totalCards: allCards.length,
+      cards: Array.from(allCards).map((card, idx) => ({
+        index: idx,
+        tagName: card.tagName,
+        className: card.className,
+        id: (card as HTMLElement).id,
+        dataWorkType: (card as HTMLElement).getAttribute('data-work-type'),
+        hasPrintQuestionCard: card.querySelector('.print-question-card') !== null,
+        textContentPreview: card.textContent?.trim().substring(0, 50) || ''
+      }))
+    });
+  }
+  
   // 중복 제거 및 필터링 강화
   const uniqueCards: Element[] = [];
   const processedSet = new Set<Element>();
 
   // 1. 템플릿 클래스 우선 수집 (가장 확실한 페이지 단위)
   const templates: Element[] = [];
+  const templatesWithCards: Element[] = []; // 내부에 .print-question-card가 있는 템플릿
   allCards.forEach((card) => {
     if (card.classList.contains('a4-page-template') || card.classList.contains('a4-landscape-page-template')) {
       // 내부에 print-question-card가 있으면 템플릿 수집 제외 (카드 단위로 처리하기 위해)
       // 이렇게 해야 다단 컬럼 등의 복잡한 레이아웃에서 카드별로 정확히 분리됨
       if (card.querySelector('.print-question-card')) {
+        templatesWithCards.push(card);
         return;
       }
       templates.push(card);
@@ -1110,6 +1220,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
     }
 
     // 이미 처리된 요소의 자손인지 확인 (템플릿 내부에 있는 요소면 제외)
+    // 단, 템플릿이 제외된 경우(내부에 .print-question-card가 있는 경우)에는 카드를 포함해야 함
     let isInsideProcessed = false;
     for (const processed of uniqueCards) {
       if (processed.contains(card)) {
@@ -1117,7 +1228,21 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         break;
       }
     }
-    if (isInsideProcessed) return;
+    // 템플릿 내부에 .print-question-card가 있는 경우, 템플릿은 제외되었으므로 카드는 포함해야 함
+    // templatesWithCards에 있는 템플릿 내부의 카드는 포함
+    if (isInsideProcessed) {
+      let isInsideTemplateWithCards = false;
+      for (const templateWithCards of templatesWithCards) {
+        if (templateWithCards.contains(card)) {
+          isInsideTemplateWithCards = true;
+          break;
+        }
+      }
+      // 템플릿 내부에 카드가 있는 경우가 아니면 제외
+      if (!isInsideTemplateWithCards) {
+        return;
+      }
+    }
 
     // 이미 처리된 요소가 이 요소의 내부에 있는지 확인 (Wrapper인 경우 제외)
     let containsProcessed = false;
@@ -1140,6 +1265,21 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
   });
   
   const questionCards = uniqueCards;
+  
+  // 디버깅: 최종 선택된 카드 확인
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 htmlToDocxParagraphs - 최종 선택된 카드:', {
+      totalQuestionCards: questionCards.length,
+      questionCards: Array.from(questionCards).map((card, idx) => ({
+        index: idx,
+        tagName: card.tagName,
+        className: card.className,
+        id: (card as HTMLElement).id,
+        dataWorkType: (card as HTMLElement).getAttribute('data-work-type'),
+        textContentPreview: card.textContent?.trim().substring(0, 100) || ''
+      }))
+    });
+  }
   
   // 패키지#02인지 확인 (헤더 또는 .print-question-card 존재 여부)
   const isPackage02 = element.querySelector('.print-header-package02') !== null || 
@@ -3160,6 +3300,15 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
     }
   }
   
+  // 디버깅: 최종 결과 확인
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 htmlToDocxParagraphs 최종 결과:', {
+      totalParagraphs: paragraphs.length,
+      hasContent: paragraphs.length > 0,
+      paragraphTypes: paragraphs.map(p => p.constructor.name)
+    });
+  }
+  
   return paragraphs;
 };
 
@@ -3191,8 +3340,27 @@ export const generateAndUploadDOC = async (
   try {
     const { isAnswerMode = false } = options;
     
+    // 디버깅: DOC 생성 시작
+    console.log('📄 generateAndUploadDOC 시작:', {
+      elementId: element.id,
+      elementClass: element.className,
+      workTypeName,
+      isAnswerMode,
+      hasPrintQuestionCard: element.querySelector('.print-question-card') !== null,
+      printQuestionCardCount: element.querySelectorAll('.print-question-card').length,
+      hasA4LandscapeTemplate: element.querySelector('.a4-landscape-page-template') !== null,
+      a4LandscapeTemplateCount: element.querySelectorAll('.a4-landscape-page-template').length,
+      textContentLength: element.textContent?.trim().length || 0
+    });
+    
     // HTML을 구조화된 DOCX Paragraph로 변환 (PDF 디자인과 동일하게)
     const paragraphs = htmlToDocxParagraphs(element);
+    
+    // 디버깅: 변환 결과 확인
+    console.log('📄 htmlToDocxParagraphs 결과:', {
+      totalParagraphs: paragraphs.length,
+      hasContent: paragraphs.length > 0
+    });
     
     // DOCX 문서 생성 (제목/생성일 없이 PDF와 동일한 구조, Noto Sans KR 폰트)
     const doc = new DocxDocument({

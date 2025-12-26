@@ -328,7 +328,10 @@ const PrintFormatWork02New: React.FC<PrintFormatWork02NewProps> = ({ quizzes, is
   };
 
   return (
-    <div className={isAnswerMode ? "print-container-answer work02-print" : "print-container work02-print"}>
+    <div 
+      id={isAnswerMode ? "print-root-work02-new-answer" : "print-root-work02-new"}
+      className={isAnswerMode ? "print-container-answer work02-print" : "print-container work02-print"}
+    >
         {/* 가로 모드 강제 스타일 */}
         <style>{`
             @page {

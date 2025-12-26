@@ -2,15 +2,17 @@
   min-height: 100vh;
   background: transparent;
   padding: 0.2rem 0 1rem 0;
+  border: 3px solid #ff0000; /* 빨간색 테두리 - 최상위 컨테이너 */
 }
 
 .quiz-list-container {
-  max-width: 1000px;
+  max-width: 1200px; /* 1000px에서 20% 증가 (1000 * 1.2 = 1200) */
   margin: 0 auto;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  border: 3px solid #0000ff; /* 파란색 테두리 - 메인 컨테이너 */
 }
 
 .quiz-list-header {
@@ -20,6 +22,7 @@
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #d1d5db;
   background: white;
+  border: 3px solid #ff00ff; /* 마젠타색 테두리 - 액션 헤더 */
 }
 
 .quiz-list-header h1 {
@@ -54,6 +57,7 @@
 
 .quiz-list-table {
   padding: 0 1rem;
+  border: 3px solid #ffa500; /* 주황색 테두리 - 테이블 컨테이너 */
 }
 
 .table-header {
@@ -61,6 +65,7 @@
   padding: 2rem 1.5rem 1.5rem 1.5rem;
   border-bottom: 1px solid #e5e7eb;
   background: white;
+  border: 3px solid #00ff00; /* 초록색 테두리 - 상단 헤더 */
 }
 
 .table-header h2 {
@@ -91,6 +96,7 @@
 .quiz-list-table table {
   width: 100%;
   border-collapse: collapse;
+  border: 3px solid #ffff00; /* 노란색 테두리 - 테이블 */
 }
 
 .quiz-list-table th,
@@ -99,6 +105,12 @@
   text-align: center;
   border-bottom: 1px solid #e5e7eb;
   border-right: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+/* 메모 셀은 왼쪽 정렬 */
+.quiz-list-table td.memo-cell {
+  text-align: left !important;
 }
 
 .quiz-list-table th {
@@ -121,6 +133,113 @@
 /* 유형명 컬럼만 왼쪽 정렬 */
 .quiz-list-table .type-name {
   text-align: left;
+}
+
+/* 메모 셀 스타일 */
+.memo-cell {
+  min-width: 250px;
+  max-width: 400px;
+  word-wrap: break-word;
+  word-break: break-word;
+  text-align: left;
+}
+
+.memo-display-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.memo-text {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #1f2937;
+  line-height: 1.4;
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: none;
+  min-width: 0;
+  text-align: left;
+}
+
+.memo-placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.memo-edit-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.memo-edit-btn:hover {
+  opacity: 1;
+}
+
+.memo-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.memo-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.memo-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.memo-actions {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: flex-end;
+}
+
+.memo-save-btn,
+.memo-cancel-btn {
+  padding: 0.2rem 0.5rem;
+  border: none;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.memo-save-btn {
+  background: #10b981;
+  color: white;
+}
+
+.memo-save-btn:hover {
+  background: #059669;
+}
+
+.memo-cancel-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.memo-cancel-btn:hover {
+  background: #dc2626;
 }
 
 /* 차감 포인트 스타일 */
@@ -191,6 +310,7 @@
   gap: 0.3rem;
   padding: 1rem;
   background: white;
+  border: 3px solid #00ffff; /* 청록색 테두리 - 페이지네이션 */
 }
 
 .pagination-btn {
@@ -243,6 +363,7 @@
   padding: 3rem;
   color: #6b7280;
   font-size: 1rem;
+  border: 3px solid #800080; /* 보라색 테두리 - 로딩/빈 데이터 */
 }
 
 .loading {

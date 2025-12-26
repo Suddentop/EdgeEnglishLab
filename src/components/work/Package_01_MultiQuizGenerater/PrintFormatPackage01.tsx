@@ -149,6 +149,18 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
           // 각 Work 유형별 렌더링 로직
           // Package#01의 경우 각 유형별로 workXXData 필드에 데이터가 저장됨
           // 유형#01만 quiz 필드 사용, 나머지는 workXXData 필드 사용
+          // Firebase에서 불러온 데이터는 data 필드로 저장될 수 있으므로 확인 필요
+          const normalizedWorkTypeId = quizItem.workTypeId?.toString().padStart(2, '0') || '';
+          
+          // data 필드가 있으면 workTypeId에 따라 적절한 필드명으로 변환
+          if (quizItem.data && !quizItem.quiz && !quizItem[`work${normalizedWorkTypeId}Data`]) {
+            if (normalizedWorkTypeId === '01') {
+              quizItem.quiz = quizItem.data;
+            } else {
+              quizItem[`work${normalizedWorkTypeId}Data`] = quizItem.data;
+            }
+          }
+          
           const quizData = quizItem.quiz || 
                           quizItem.work02Data || 
                           quizItem.work03Data || 
@@ -161,7 +173,8 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                           quizItem.work10Data || 
                           quizItem.work11Data || 
                           quizItem.work13Data || 
-                          quizItem.work14Data;
+                          quizItem.work14Data ||
+                          quizItem.data;
           
           // translatedText를 여러 소스에서 찾기 (보강)
           // 다양한 저장 키를 폭넓게 지원
@@ -192,6 +205,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
           console.log(`🔍 Package#01 아이템 ${index} 전체 구조:`, {
             quizItem: quizItem,
             workTypeId: quizItem.workTypeId,
+            normalizedWorkTypeId: normalizedWorkTypeId,
             hasQuiz: !!quizItem.quiz,
             hasWork02Data: !!quizItem.work02Data,
             hasWork03Data: !!quizItem.work03Data,
@@ -217,13 +231,11 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
             dataTranslation: quizItem.data?.translation,
             hasDataTranslation: !!quizItem.data?.translation,
             finalTranslatedText: translatedText,
-            hasFinalTranslatedText: !!translatedText
+            hasFinalTranslatedText: !!translatedText,
+            hasQuizData: !!quizData
           });
           
-          // workTypeId가 문자열인 경우 숫자로 변환 (예: '1' -> '01')
-          const normalizedWorkTypeId = quizItem.workTypeId?.toString().padStart(2, '0') || '';
-          
-          if ((normalizedWorkTypeId === '01' || quizItem.workTypeId === '1' || quizItem.workTypeId === 1) && quizItem.quiz) {
+          if ((normalizedWorkTypeId === '01' || quizItem.workTypeId === '1' || quizItem.workTypeId === 1) && (quizItem.quiz || quizItem.data)) {
             // Work_01: 직접 렌더링 (재귀 호출 방지)
             const quiz01 = quizData;
             
@@ -303,18 +315,18 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                 </div>
               </div>
             );
-          } else if ((normalizedWorkTypeId === '02' || quizItem.workTypeId === '2' || quizItem.workTypeId === 2) && quizItem.work02Data) {
+          } else if ((normalizedWorkTypeId === '02' || quizItem.workTypeId === '2' || quizItem.workTypeId === 2) && (quizItem.work02Data || quizItem.data)) {
               return (
                 <div key={`work-02-wrapper-${index}`} data-work-type="02">
                   <PrintFormatPackage01Work02 
-                    work02Data={quizItem.work02Data}
+                    work02Data={quizItem.work02Data || quizItem.data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '03' || quizItem.workTypeId === '3' || quizItem.workTypeId === 3) && quizItem.work03Data) {
-              const w3 = quizItem.work03Data as any;
+            } else if ((normalizedWorkTypeId === '03' || quizItem.workTypeId === '3' || quizItem.workTypeId === 3) && (quizItem.work03Data || quizItem.data)) {
+              const w3 = (quizItem.work03Data || quizItem.data) as any;
               console.log('🧩 Work03 인쇄 데이터 확인:', {
                 keys: Object.keys(w3),
                 sample: w3,
@@ -332,105 +344,105 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
               return (
                 <div key={`work-03-wrapper-${index}`} data-work-type="03">
                   <PrintFormatPackage01Work03 
-                    work03Data={quizItem.work03Data}
+                    work03Data={quizItem.work03Data || quizItem.data}
                     translatedText={computedTranslatedText}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '04' || quizItem.workTypeId === '4' || quizItem.workTypeId === 4) && quizItem.work04Data) {
+            } else if ((normalizedWorkTypeId === '04' || quizItem.workTypeId === '4' || quizItem.workTypeId === 4) && (quizItem.work04Data || quizItem.data)) {
               return (
                 <div key={`work-04-wrapper-${index}`} data-work-type="04">
                   <PrintFormatPackage01Work04 
-                    work04Data={quizItem.work04Data}
+                    work04Data={quizItem.work04Data || quizItem.data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '05' || quizItem.workTypeId === '5' || quizItem.workTypeId === 5) && quizItem.work05Data) {
+            } else if ((normalizedWorkTypeId === '05' || quizItem.workTypeId === '5' || quizItem.workTypeId === 5) && (quizItem.work05Data || quizItem.data)) {
               return (
                 <div key={`work-05-wrapper-${index}`} data-work-type="05">
                   <PrintFormatPackage01Work05 
-                    work05Data={quizItem.work05Data}
+                    work05Data={quizItem.work05Data || quizItem.data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '06' || quizItem.workTypeId === '6' || quizItem.workTypeId === 6) && quizItem.work06Data) {
+            } else if ((normalizedWorkTypeId === '06' || quizItem.workTypeId === '6' || quizItem.workTypeId === 6) && (quizItem.work06Data || quizItem.data)) {
               return (
                 <div key={`work-06-wrapper-${index}`} data-work-type="06">
                   <PrintFormatPackage01Work06 
-                    work06Data={quizItem.work06Data}
+                    work06Data={quizItem.work06Data || quizItem.data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '07' || quizItem.workTypeId === '7' || quizItem.workTypeId === 7) && quizItem.work07Data) {
+            } else if ((normalizedWorkTypeId === '07' || quizItem.workTypeId === '7' || quizItem.workTypeId === 7) && (quizItem.work07Data || quizItem.data)) {
               return (
                 <div key={`work-07-wrapper-${index}`} data-work-type="07">
                   <PrintFormatPackage01Work07 
-                    work07Data={quizItem.work07Data}
+                    work07Data={quizItem.work07Data || quizItem.data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '08' || quizItem.workTypeId === '8' || quizItem.workTypeId === 8) && quizItem.work08Data) {
+            } else if ((normalizedWorkTypeId === '08' || quizItem.workTypeId === '8' || quizItem.workTypeId === 8) && (quizItem.work08Data || quizItem.data)) {
               return (
                 <div key={`work-08-wrapper-${index}`} data-work-type="08">
                   <PrintFormatPackage01Work08 
-                    work08Data={quizItem.work08Data}
+                    work08Data={quizItem.work08Data || quizItem.data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '09' || quizItem.workTypeId === '9' || quizItem.workTypeId === 9) && quizItem.work09Data) {
+            } else if ((normalizedWorkTypeId === '09' || quizItem.workTypeId === '9' || quizItem.workTypeId === 9) && (quizItem.work09Data || quizItem.data)) {
               return (
                 <div key={`work-09-wrapper-${index}`} data-work-type="09">
                   <PrintFormatPackage01Work09 
-                    work09Data={quizItem.work09Data}
+                    work09Data={quizItem.work09Data || quizItem.data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '10' || quizItem.workTypeId === '10') && quizItem.work10Data) {
+            } else if ((normalizedWorkTypeId === '10' || quizItem.workTypeId === '10') && (quizItem.work10Data || quizItem.data)) {
               return (
                 <div key={`work-10-wrapper-${index}`} data-work-type="10">
                   <PrintFormatPackage01Work10 
-                    work10Data={quizItem.work10Data}
+                    work10Data={quizItem.work10Data || quizItem.data}
                     translatedText={computedTranslatedText || ''}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '11' || quizItem.workTypeId === '11') && quizItem.work11Data) {
+            } else if ((normalizedWorkTypeId === '11' || quizItem.workTypeId === '11') && (quizItem.work11Data || quizItem.data)) {
               return (
                 <div key={`work-11-wrapper-${index}`} data-work-type="11">
                   <PrintFormatPackage01Work11 
-                    work11Data={quizItem.work11Data}
+                    work11Data={quizItem.work11Data || quizItem.data}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '13' || quizItem.workTypeId === '13') && quizItem.work13Data) {
+            } else if ((normalizedWorkTypeId === '13' || quizItem.workTypeId === '13') && (quizItem.work13Data || quizItem.data)) {
               return (
                 <div key={`work-13-wrapper-${index}`} data-work-type="13">
                   <PrintFormatPackage01Work13 
-                    work13Data={quizItem.work13Data}
+                    work13Data={quizItem.work13Data || quizItem.data}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>
               );
-            } else if ((normalizedWorkTypeId === '14' || quizItem.workTypeId === '14') && quizItem.work14Data) {
+            } else if ((normalizedWorkTypeId === '14' || quizItem.workTypeId === '14') && (quizItem.work14Data || quizItem.data)) {
               return (
                 <div key={`work-14-wrapper-${index}`} data-work-type="14">
                   <PrintFormatPackage01Work14 
-                    work14Data={quizItem.work14Data}
+                    work14Data={quizItem.work14Data || quizItem.data}
                     printMode={isAnswerMode ? 'with-answer' : 'no-answer'}
                   />
                 </div>

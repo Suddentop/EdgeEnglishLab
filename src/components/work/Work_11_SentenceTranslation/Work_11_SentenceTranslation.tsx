@@ -436,12 +436,14 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
       const workType = workTypePoints.find(wt => wt.id === '11');
       if (!workType) throw new Error('포인트 설정을 찾을 수 없습니다.');
 
+      const requiredPoints = workType.points * validItems.length;
       const deductionResult = await deductUserPoints(
         userData.uid,
         '11',
         workType.name,
         userData.name || '사용자',
-        userData.nickname || '사용자'
+        userData.nickname || '사용자',
+        requiredPoints
       );
 
       if (!deductionResult.success) {
@@ -490,14 +492,15 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
       // 문제 생성 내역 저장 (배열로)
       if (userData?.uid && workTypePoints.length > 0) {
         try {
-          const workTypePoint = workTypePoints.find(wt => wt.id === '11');
+          const workType = workTypePoints.find(wt => wt.id === '11');
+          const requiredPoints = workType ? workType.points * validItems.length : 0;
           await saveQuizWithPDF({
             userId: userData.uid,
             userName: userData.name || '사용자',
             userNickname: userData.nickname || '사용자',
             workTypeId: '11',
             workTypeName: getWorkTypeName('11'),
-            points: workTypePoint?.points || 0,
+            points: requiredPoints, // 실제 차감된 포인트 (workType.points * validItems.length)
             inputText: validItems.map(item => item.text.trim()).join('\n\n---\n\n'),
             quizData: generatedQuizzes,
             status: 'success'

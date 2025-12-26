@@ -23,6 +23,8 @@ export interface QuizHistoryItem {
   // 패키지 정보 (패키지인 경우)
   isPackage?: boolean; // 패키지 여부
   packageWorkTypes?: string[]; // 패키지에 포함된 유형들
+  // 메모
+  memo?: string; // 사용자 메모
 }
 
 export interface QuizHistorySearchParams {
@@ -172,7 +174,8 @@ export const getQuizHistory = async (
                   answerFileName: data.answerFileName,
                   expiresAt: data.expiresAt?.toDate() || date,
                   isPackage: data.isPackage || false,
-                  packageWorkTypes: data.packageWorkTypes || []
+                  packageWorkTypes: data.packageWorkTypes || [],
+                  memo: data.memo || ''
                 };
                 history.push(historyItem);
                 return;
@@ -211,7 +214,8 @@ export const getQuizHistory = async (
           answerFileName: data.answerFileName,
           expiresAt: data.expiresAt?.toDate() || createdAt,
           isPackage: data.isPackage || false,
-          packageWorkTypes: data.packageWorkTypes || []
+          packageWorkTypes: data.packageWorkTypes || [],
+          memo: data.memo || ''
         });
       } catch (parseError) {
         console.error('❌ 문서 파싱 오류:', doc.id, parseError);
@@ -291,7 +295,8 @@ export const getQuizHistoryItem = async (historyId: string): Promise<QuizHistory
         answerFileName: data.answerFileName,
         expiresAt: data.expiresAt.toDate(),
         isPackage: data.isPackage || false,
-        packageWorkTypes: data.packageWorkTypes || []
+        packageWorkTypes: data.packageWorkTypes || [],
+        memo: data.memo || ''
       };
     }
 
@@ -336,6 +341,22 @@ export const updateQuizHistoryFile = async (
     await updateDoc(docRef, updateData);
   } catch (error) {
     console.error('파일 URL 업데이트 실패:', error);
+    throw error;
+  }
+};
+
+// 메모 업데이트
+export const updateQuizHistoryMemo = async (
+  historyId: string,
+  memo: string
+): Promise<void> => {
+  try {
+    const docRef = doc(db, 'quizHistory', historyId);
+    await updateDoc(docRef, {
+      memo: memo.trim()
+    });
+  } catch (error) {
+    console.error('메모 업데이트 실패:', error);
     throw error;
   }
 };

@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { getQuizHistory, QuizHistoryItem } from '../../services/quizHistoryService';
+import { getQuizHistory, QuizHistoryItem, updateQuizHistoryMemo } from '../../services/quizHistoryService';
 import './QuizListPage.css';
 import SEO from '../common/SEO';
 
 const QuizListPage: React.FC = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
+  const [memoValues, setMemoValues] = useState<Record<string, string>>({});
 
   // 문제 생성 내역 로드
   const loadQuizHistory = async () => {
@@ -103,17 +106,19 @@ const QuizListPage: React.FC = () => {
     try {
       // 패키지 퀴즈인지 확인
       if (historyItem.workTypeId.startsWith('P') && historyItem.generatedData?.isPackage) {
-        // 새 페이지로 이동하면서 데이터 전달
+        // 새 페이지로 이동하면서 데이터와 현재 페이지 정보 전달
         navigate('/quiz-display', {
           state: {
-            quizData: historyItem
+            quizData: historyItem,
+            returnPage: currentPage
           }
         });
       } else if (historyItem.workTypeId === '15') {
         // 유형#15 전용 표시 페이지로 이동 (원래 인쇄 페이지)
         navigate('/work-15-display', {
           state: {
-            quizData: historyItem
+            quizData: historyItem,
+            returnPage: currentPage
           }
         });
       } else {
@@ -153,7 +158,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -177,7 +182,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -221,7 +226,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -265,7 +270,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
           } else {
               // 단일 문제인 경우
@@ -309,7 +314,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -346,7 +351,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -383,7 +388,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -420,7 +425,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -455,7 +460,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -490,7 +495,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -525,7 +530,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -560,7 +565,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
               return;
             } else {
               // 단일 문제인 경우
@@ -639,7 +644,7 @@ const QuizListPage: React.FC = () => {
             }
           } as any;
 
-          navigate('/quiz-display', { state: { quizData: wrapped } });
+          navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
           return;
         }
         alert('패키지 퀴즈만 불러올 수 있습니다.');
@@ -670,6 +675,73 @@ const QuizListPage: React.FC = () => {
       default: return '알수없음';
     }
   };
+
+  // 메모 편집 시작
+  const handleMemoEditStart = (itemId: string, currentMemo: string) => {
+    setEditingMemoId(itemId);
+    setMemoValues(prev => ({
+      ...prev,
+      [itemId]: currentMemo || ''
+    }));
+  };
+
+  // 메모 편집 취소 (메모 삭제)
+  const handleMemoEditCancel = async (itemId: string) => {
+    try {
+      // 메모를 빈 문자열로 저장하여 삭제
+      await updateQuizHistoryMemo(itemId, '');
+      // 로컬 상태 업데이트
+      setQuizHistory(prev => prev.map(item => 
+        item.id === itemId ? { ...item, memo: '' } : item
+      ));
+      setEditingMemoId(null);
+      setMemoValues(prev => {
+        const newValues = { ...prev };
+        delete newValues[itemId];
+        return newValues;
+      });
+    } catch (error) {
+      console.error('메모 삭제 실패:', error);
+      alert('메모 삭제에 실패했습니다.');
+    }
+  };
+
+  // 메모 저장
+  const handleMemoSave = async (itemId: string) => {
+    const memo = memoValues[itemId] || '';
+    try {
+      await updateQuizHistoryMemo(itemId, memo);
+      // 로컬 상태 업데이트
+      setQuizHistory(prev => prev.map(item => 
+        item.id === itemId ? { ...item, memo: memo.trim() } : item
+      ));
+      setEditingMemoId(null);
+      setMemoValues(prev => {
+        const newValues = { ...prev };
+        delete newValues[itemId];
+        return newValues;
+      });
+    } catch (error) {
+      console.error('메모 저장 실패:', error);
+      alert('메모 저장에 실패했습니다.');
+    }
+  };
+
+  // 메모 입력 변경
+  const handleMemoChange = (itemId: string, value: string) => {
+    setMemoValues(prev => ({
+      ...prev,
+      [itemId]: value
+    }));
+  };
+
+  // location.state에서 페이지 정보 확인 및 설정
+  useEffect(() => {
+    const state = location.state as any;
+    if (state && state.returnPage) {
+      setCurrentPage(state.returnPage);
+    }
+  }, [location]);
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
@@ -725,6 +797,7 @@ const QuizListPage: React.FC = () => {
                     <th>날짜</th>
                     <th>유형번호</th>
                     <th>유형명</th>
+                    <th>메모</th>
                     <th>차감</th>
                     <th>성공/실패</th>
                     <th>불러오기</th>
@@ -743,6 +816,59 @@ const QuizListPage: React.FC = () => {
                       }).replace(/(\d{4})\. (\d{2})\. (\d{2})\. (\d{2}:\d{2})/, '$1-$2-$3 $4')}</td>
                       <td>{item.workTypeId}</td>
                       <td className="type-name">{getDisplayWorkTypeName(item.workTypeId, item.workTypeName)}</td>
+                      <td className="memo-cell">
+                        {editingMemoId === item.id ? (
+                          <div className="memo-edit-container">
+                            <input
+                              type="text"
+                              className="memo-input"
+                              value={memoValues[item.id] || ''}
+                              onChange={(e) => handleMemoChange(item.id, e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleMemoSave(item.id);
+                                } else if (e.key === 'Escape') {
+                                  e.preventDefault();
+                                  handleMemoEditCancel(item.id);
+                                }
+                              }}
+                              placeholder="메모를 입력하세요"
+                              maxLength={100}
+                              autoFocus
+                            />
+                            <div className="memo-actions">
+                              <button
+                                className="memo-save-btn"
+                                onClick={() => handleMemoSave(item.id)}
+                                title="저장"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                className="memo-cancel-btn"
+                                onClick={() => handleMemoEditCancel(item.id)}
+                                title="취소"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="memo-display-container">
+                            <span className="memo-text" title={item.memo || ''}>
+                              {item.memo || <span className="memo-placeholder">메모 없음</span>}
+                            </span>
+                            <button
+                              className="memo-edit-btn"
+                              onClick={() => handleMemoEditStart(item.id, item.memo || '')}
+                              title="메모 편집"
+                            >
+                              ✏️
+                            </button>
+                          </div>
+                        )}
+                      </td>
                       <td className="deduction">-{item.pointsDeducted.toLocaleString()}</td>
                       <td>
                         <span className={`status ${item.status}`}>
