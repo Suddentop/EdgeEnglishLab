@@ -2,7 +2,6 @@
   min-height: 100vh;
   background: transparent;
   padding: 0.2rem 0 1rem 0;
-  border: 3px solid #ff0000; /* 빨간색 테두리 - 최상위 컨테이너 */
 }
 
 .quiz-list-container {
@@ -12,7 +11,6 @@
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border: 3px solid #0000ff; /* 파란색 테두리 - 메인 컨테이너 */
 }
 
 .quiz-list-header {
@@ -22,7 +20,6 @@
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #d1d5db;
   background: white;
-  border: 3px solid #ff00ff; /* 마젠타색 테두리 - 액션 헤더 */
 }
 
 .quiz-list-header h1 {
@@ -57,7 +54,6 @@
 
 .quiz-list-table {
   padding: 0 1rem;
-  border: 3px solid #ffa500; /* 주황색 테두리 - 테이블 컨테이너 */
 }
 
 .table-header {
@@ -65,7 +61,6 @@
   padding: 2rem 1.5rem 1.5rem 1.5rem;
   border-bottom: 1px solid #e5e7eb;
   background: white;
-  border: 3px solid #00ff00; /* 초록색 테두리 - 상단 헤더 */
 }
 
 .table-header h2 {
@@ -96,7 +91,6 @@
 .quiz-list-table table {
   width: 100%;
   border-collapse: collapse;
-  border: 3px solid #ffff00; /* 노란색 테두리 - 테이블 */
 }
 
 .quiz-list-table th,
@@ -310,7 +304,6 @@
   gap: 0.3rem;
   padding: 1rem;
   background: white;
-  border: 3px solid #00ffff; /* 청록색 테두리 - 페이지네이션 */
 }
 
 .pagination-btn {
@@ -363,7 +356,6 @@
   padding: 3rem;
   color: #6b7280;
   font-size: 1rem;
-  border: 3px solid #800080; /* 보라색 테두리 - 로딩/빈 데이터 */
 }
 
 .loading {
