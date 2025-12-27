@@ -36,11 +36,12 @@ export const generateAndUploadPDF = async (
         elementTag: element.tagName,
         hasPrintPage: element.querySelector('.print-page') !== null,
         hasA4Template: element.querySelector('.a4-landscape-page-template') !== null,
+        hasA4TemplateWork16: element.querySelector('.a4-landscape-page-template-work16') !== null,
         isAnswerMode
       });
     }
     
-    const pageElements = element.querySelectorAll('.print-page, .a4-landscape-page-template');
+    const pageElements = element.querySelectorAll('.print-page, .a4-landscape-page-template, .a4-landscape-page-template-work16');
     const hasMultiplePages = pageElements.length > 0;
     
     if (process.env.NODE_ENV === 'development') {
@@ -312,13 +313,14 @@ export const generateAndUploadPDF = async (
         // 세로가 더 긴 경우, 가로로 강제 변환
         // A4 가로: 29.7cm x 21cm (1123px x 794px at 96 DPI)
         const A4_LANDSCAPE_WIDTH_PX = 1123; // 29.7cm
+        const A4_LANDSCAPE_HEIGHT_PX = 794; // 21cm
         
         const actualContentWidth = element.scrollWidth || elementWidth;
         
         // 너비를 A4 가로 기준으로 고정
         elementWidth = A4_LANDSCAPE_WIDTH_PX;
         // 높이는 실제 내용 높이 사용 (최대값 제한)
-        elementHeight = Math.min(element.scrollHeight || elementHeight, 794);
+        elementHeight = Math.min(element.scrollHeight || elementHeight, A4_LANDSCAPE_HEIGHT_PX);
         
         if (process.env.NODE_ENV === 'development') {
           console.log('🔄 Landscape 모드: 요소 크기 조정', {
@@ -328,6 +330,10 @@ export const generateAndUploadPDF = async (
           });
         }
       }
+      
+      // A4 가로 크기 상수 정의 (유형#16용)
+      const A4_LANDSCAPE_WIDTH_PX = 1123; // 29.7cm
+      const A4_LANDSCAPE_HEIGHT_PX = 794; // 21cm
       
       console.log('📏 요소 크기:', { width: elementWidth, height: elementHeight, orientation });
 
@@ -352,6 +358,21 @@ export const generateAndUploadPDF = async (
             clonedEl.style.maxWidth = `${elementWidth}px`;
             clonedEl.style.minWidth = `${elementWidth}px`;
             clonedEl.style.boxSizing = 'border-box';
+            clonedEl.style.overflow = 'hidden'; // 스크롤바 방지
+            
+            // body와 html 요소도 스크롤바 방지
+            const body = clonedDoc.body;
+            if (body) {
+              body.style.overflow = 'hidden';
+              body.style.margin = '0';
+              body.style.padding = '0';
+            }
+            const html = clonedDoc.documentElement;
+            if (html) {
+              html.style.overflow = 'hidden';
+              html.style.margin = '0';
+              html.style.padding = '0';
+            }
             
             // 패키지#01인 경우 추가 스타일 적용
             if (element.id === 'print-root-package01' || element.id === 'print-root-package01-answer') {
@@ -366,6 +387,30 @@ export const generateAndUploadPDF = async (
                 (printContainer as HTMLElement).style.maxWidth = '794px';
                 (printContainer as HTMLElement).style.minWidth = '794px';
               }
+            }
+            
+            // 유형#16인 경우 추가 스타일 적용
+            if (element.id === 'print-root-work16-new' || element.id === 'print-root-work16-new-answer') {
+              clonedEl.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`; // 29.7cm
+              clonedEl.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`; // 21cm
+              clonedEl.style.maxWidth = `${A4_LANDSCAPE_WIDTH_PX}px`;
+              clonedEl.style.minWidth = `${A4_LANDSCAPE_WIDTH_PX}px`;
+              clonedEl.style.maxHeight = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+              clonedEl.style.minHeight = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+              clonedEl.style.overflow = 'hidden';
+              
+              // 내부 .a4-landscape-page-template-work16 요소도 조정
+              const work16Pages = clonedEl.querySelectorAll('.a4-landscape-page-template-work16');
+              work16Pages.forEach((page) => {
+                const pageEl = page as HTMLElement;
+                pageEl.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`;
+                pageEl.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+                pageEl.style.maxWidth = `${A4_LANDSCAPE_WIDTH_PX}px`;
+                pageEl.style.minWidth = `${A4_LANDSCAPE_WIDTH_PX}px`;
+                pageEl.style.maxHeight = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+                pageEl.style.minHeight = `${A4_LANDSCAPE_HEIGHT_PX}px`;
+                pageEl.style.overflow = 'hidden';
+              });
             }
           }
         }

@@ -469,12 +469,36 @@ const QuizDisplayPage: React.FC = () => {
             font-weight: 700 !important;
             background: #f0f8ff !important;
           }
+          @media screen {
+            #work16-print-overlay,
+            #work16-print-overlay-answer {
+              display: none !important;
+              visibility: hidden !important;
+              left: -9999px !important;
+              opacity: 0 !important;
+              z-index: -1 !important;
+              position: absolute !important;
+              overflow: hidden !important;
+            }
+          }
           @media print {
             body#work16-print-active * {
               visibility: visible !important;
             }
             .only-print-work16 {
               display: block !important;
+            }
+            #work16-print-overlay,
+            #work16-print-overlay-answer {
+              display: block !important;
+              visibility: visible !important;
+              left: 0 !important;
+              opacity: 1 !important;
+              z-index: 9999 !important;
+              position: fixed !important;
+              overflow: hidden !important;
+              width: 100% !important;
+              height: 100% !important;
             }
           }
         `;
@@ -505,16 +529,30 @@ const QuizDisplayPage: React.FC = () => {
           inset: '0',
           backgroundColor: '#ffffff',
           zIndex: '9999',
-          overflow: 'auto'
+          overflow: 'hidden',
+          width: '100%',
+          height: '100%'
         } as Partial<CSSStyleDeclaration>);
         
         // 오버레이에 인쇄용 스타일 + 마크업 주입
         overlay.innerHTML = `
           <style>${PRINT_STYLES}</style>
-          ${markup}
+          <div style="width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0;">
+            ${markup}
+          </div>
         `;
         
         document.body.appendChild(overlay);
+        
+        // 오버레이 내부의 모든 요소에 스크롤바 방지 스타일 적용
+        const overlayContent = overlay.querySelector('div');
+        if (overlayContent) {
+          overlayContent.style.overflow = 'hidden';
+          overlayContent.style.width = '100%';
+          overlayContent.style.height = '100%';
+          overlayContent.style.margin = '0';
+          overlayContent.style.padding = '0';
+        }
         
         // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
         const prevBodyId = document.body.getAttribute('id');
@@ -1030,11 +1068,28 @@ const QuizDisplayPage: React.FC = () => {
           height: 21cm !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
+          overflow: hidden !important;
         }
         @media print {
           html, body {
-            overflow: hidden;
+            overflow: hidden !important;
           }
+        }
+        #work16-print-overlay,
+        #work16-print-overlay-answer {
+          overflow: hidden !important;
+        }
+        #work16-print-overlay > *:not(style),
+        #work16-print-overlay-answer > *:not(style) {
+          overflow: hidden !important;
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #work16-print-overlay *,
+        #work16-print-overlay-answer * {
+          box-sizing: border-box;
         }
         
         .only-print-work16 {
@@ -1190,6 +1245,7 @@ const QuizDisplayPage: React.FC = () => {
             opacity: 0 !important;
             z-index: -1 !important;
             position: absolute !important;
+            overflow: hidden !important;
           }
         }
         @media print {
@@ -1207,6 +1263,9 @@ const QuizDisplayPage: React.FC = () => {
             opacity: 1 !important;
             z-index: 9999 !important;
             position: fixed !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            height: 100% !important;
           }
         }
       `;
@@ -1237,16 +1296,30 @@ const QuizDisplayPage: React.FC = () => {
         inset: '0',
         backgroundColor: '#ffffff',
         zIndex: '9999',
-        overflow: 'auto'
+        overflow: 'hidden',
+        width: '100%',
+        height: '100%'
       } as Partial<CSSStyleDeclaration>);
       
       // 오버레이에 인쇄용 스타일 + 마크업 주입
       overlay.innerHTML = `
         <style>${PRINT_STYLES_MULTI}</style>
-        ${markup}
+        <div style="width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0;">
+          ${markup}
+        </div>
       `;
       
       document.body.appendChild(overlay);
+      
+      // 오버레이 내부의 모든 요소에 스크롤바 방지 스타일 적용
+      const overlayContent = overlay.querySelector('div');
+      if (overlayContent) {
+        overlayContent.style.overflow = 'hidden';
+        overlayContent.style.width = '100%';
+        overlayContent.style.height = '100%';
+        overlayContent.style.margin = '0';
+        overlayContent.style.padding = '0';
+      }
       
       // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
       const prevBodyId = document.body.getAttribute('id');
@@ -1923,12 +1996,36 @@ const QuizDisplayPage: React.FC = () => {
             font-weight: 700 !important;
             background: #f0f8ff !important;
           }
+          @media screen {
+            #work16-print-overlay,
+            #work16-print-overlay-answer {
+              display: none !important;
+              visibility: hidden !important;
+              left: -9999px !important;
+              opacity: 0 !important;
+              z-index: -1 !important;
+              position: absolute !important;
+              overflow: hidden !important;
+            }
+          }
           @media print {
             body#work16-print-active * {
               visibility: visible !important;
             }
             .only-print-work16 {
               display: block !important;
+            }
+            #work16-print-overlay,
+            #work16-print-overlay-answer {
+              display: block !important;
+              visibility: visible !important;
+              left: 0 !important;
+              opacity: 1 !important;
+              z-index: 9999 !important;
+              position: fixed !important;
+              overflow: hidden !important;
+              width: 100% !important;
+              height: 100% !important;
             }
           }
         `;
@@ -1959,16 +2056,30 @@ const QuizDisplayPage: React.FC = () => {
           inset: '0',
           backgroundColor: '#ffffff',
           zIndex: '9999',
-          overflow: 'auto'
+          overflow: 'hidden',
+          width: '100%',
+          height: '100%'
         } as Partial<CSSStyleDeclaration>);
         
         // 오버레이에 인쇄용 스타일 + 마크업 주입
         overlay.innerHTML = `
           <style>${PRINT_STYLES_ANSWER}</style>
-          ${markup}
+          <div style="width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0;">
+            ${markup}
+          </div>
         `;
         
         document.body.appendChild(overlay);
+        
+        // 오버레이 내부의 모든 요소에 스크롤바 방지 스타일 적용
+        const overlayContent = overlay.querySelector('div');
+        if (overlayContent) {
+          overlayContent.style.overflow = 'hidden';
+          overlayContent.style.width = '100%';
+          overlayContent.style.height = '100%';
+          overlayContent.style.margin = '0';
+          overlayContent.style.padding = '0';
+        }
         
         // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
         const prevBodyId = document.body.getAttribute('id');
@@ -2361,11 +2472,28 @@ const QuizDisplayPage: React.FC = () => {
           height: 21cm !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
+          overflow: hidden !important;
         }
         @media print {
           html, body {
-            overflow: hidden;
+            overflow: hidden !important;
           }
+        }
+        #work16-print-overlay,
+        #work16-print-overlay-answer {
+          overflow: hidden !important;
+        }
+        #work16-print-overlay > *:not(style),
+        #work16-print-overlay-answer > *:not(style) {
+          overflow: hidden !important;
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #work16-print-overlay *,
+        #work16-print-overlay-answer * {
+          box-sizing: border-box;
         }
         
         .only-print-work16 {
@@ -2521,6 +2649,7 @@ const QuizDisplayPage: React.FC = () => {
             opacity: 0 !important;
             z-index: -1 !important;
             position: absolute !important;
+            overflow: hidden !important;
           }
         }
         @media print {
@@ -2538,6 +2667,9 @@ const QuizDisplayPage: React.FC = () => {
             opacity: 1 !important;
             z-index: 9999 !important;
             position: fixed !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            height: 100% !important;
           }
         }
       `;
@@ -2568,16 +2700,30 @@ const QuizDisplayPage: React.FC = () => {
         inset: '0',
         backgroundColor: '#ffffff',
         zIndex: '9999',
-        overflow: 'auto'
+        overflow: 'hidden',
+        width: '100%',
+        height: '100%'
       } as Partial<CSSStyleDeclaration>);
       
       // 오버레이에 인쇄용 스타일 + 마크업 주입
       overlay.innerHTML = `
         <style>${PRINT_STYLES_MULTI_ANSWER}</style>
-        ${markup}
+        <div style="width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0;">
+          ${markup}
+        </div>
       `;
       
       document.body.appendChild(overlay);
+      
+      // 오버레이 내부의 모든 요소에 스크롤바 방지 스타일 적용
+      const overlayContent = overlay.querySelector('div');
+      if (overlayContent) {
+        overlayContent.style.overflow = 'hidden';
+        overlayContent.style.width = '100%';
+        overlayContent.style.height = '100%';
+        overlayContent.style.margin = '0';
+        overlayContent.style.padding = '0';
+      }
       
       // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
       const prevBodyId = document.body.getAttribute('id');
