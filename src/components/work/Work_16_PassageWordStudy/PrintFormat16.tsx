@@ -24,18 +24,21 @@ interface A4PageTemplateWork16Props {
 export const A4PageTemplateWork16: React.FC<A4PageTemplateWork16Props> = ({ 
   children, 
   className = '' 
-}) => (
-  <div className={`a4-landscape-page-template-work16 ${className}`}>
-    <div className="a4-landscape-page-header-work16">
-      <PrintHeaderWork16 />
-    </div>
-    <div className="a4-landscape-page-content-work16">
-      <div className="quiz-content-work16">
-        {children}
+}) => {
+  const finalClassName = `a4-landscape-page-template-work16 ${className}`.trim();
+  return (
+    <div className={finalClassName}>
+      <div className="a4-landscape-page-header-work16">
+        <PrintHeaderWork16 />
+      </div>
+      <div className="a4-landscape-page-content-work16">
+        <div className="quiz-content-work16">
+          {children}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // 유형#16 전용 문제 지시문 컴포넌트
 interface ProblemInstructionWork16Props {

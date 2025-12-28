@@ -1245,7 +1245,7 @@ ${englishWords.join(', ')}
     // 최소 지연 후 인쇄 실행 (렌더링 완료 대기)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        window.print();
+      window.print();
 
         // window.print() 호출 직후 즉시 오버레이 숨기기
         overlay.style.display = 'none';
@@ -1259,20 +1259,20 @@ ${englishWords.join(', ')}
         overlay.style.height = '0';
         overlay.style.overflow = 'hidden';
 
-        // 인쇄 후 오버레이 정리
-        setTimeout(() => {
-          const ov = document.getElementById(overlayId);
-          if (ov && ov.parentNode) {
-            ov.parentNode.removeChild(ov);
-          }
+      // 인쇄 후 오버레이 정리
+      setTimeout(() => {
+        const ov = document.getElementById(overlayId);
+        if (ov && ov.parentNode) {
+          ov.parentNode.removeChild(ov);
+        }
 
-           // body id 되돌리기
-          if (prevBodyId) {
-            document.body.setAttribute('id', prevBodyId);
-          } else {
-            document.body.removeAttribute('id');
-          }
-        }, 100);
+         // body id 되돌리기
+        if (prevBodyId) {
+          document.body.setAttribute('id', prevBodyId);
+        } else {
+          document.body.removeAttribute('id');
+        }
+      }, 100);
       });
     });
   };

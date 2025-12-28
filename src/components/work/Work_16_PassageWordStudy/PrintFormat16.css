@@ -13,6 +13,43 @@
 
   /* .only-print-work16 / .a4-landscape-page-template-work16 는 화면에서도 보이도록 둠
      (인쇄용 루트에만 존재하므로 일반 화면에는 영향 없음) */
+  
+  /* DOC 저장 시에도 A4 가로형 2단 배열 유지 */
+  .only-print-work16 {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  .a4-landscape-page-template-work16 {
+    width: 29.7cm !important;
+    height: 21cm !important;
+    min-height: 21cm !important;
+    max-height: 21cm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
+    overflow: hidden !important;
+  }
+  
+  .word-list-container-work16 {
+    display: flex !important;
+    gap: 0.5cm !important;
+    width: 100% !important;
+    margin: 1rem 0 !important;
+    position: relative !important;
+  }
+  
+  .word-list-column-work16 {
+    flex: 1 1 50% !important;
+    width: 50% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
 }
 
 @media print {
@@ -28,31 +65,47 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     width: 29.7cm !important;
-    height: 21cm !important;
+    height: auto !important;
+    min-height: 21cm !important;
   }
 
   .only-print-work16 {
     display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 21cm !important;
   }
 
   /* A4 가로형 페이지 템플릿 */
   .a4-landscape-page-template-work16 {
-    width: 29.7cm;
-    height: 21cm;
-    margin: 0;
-    padding: 0;
-    background: #ffffff;
-    box-sizing: border-box;
-    page-break-inside: avoid;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+    width: 29.7cm !important;
+    height: 21cm !important;
+    min-height: 21cm !important;
+    max-height: 21cm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
+    overflow: hidden !important;
   }
 
+  /* 마지막 페이지를 제외한 모든 페이지에 페이지 분할 적용 (다른 유형과 동일한 패턴) */
   .a4-landscape-page-template-work16:not(:last-child) {
-    page-break-after: always;
-    break-after: page;
+    page-break-after: always !important;
+    break-after: page !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* 마지막 페이지는 페이지 분할 없음 */
+  .a4-landscape-page-template-work16:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   .a4-landscape-page-header-work16 {
@@ -138,11 +191,51 @@
     gap: 0.5cm;
     width: 100%;
     margin: 1rem 0;
+    position: relative;
+  }
+
+  /* 2단 사이 구분선 제거 */
+  .word-list-container-work16::after {
+    display: none !important;
+  }
+
+  /* DOC 저장용 헤더 플레이스홀더 */
+  .doc-header-placeholder-work16 {
+    width: 100%;
+    height: 100%;
+    min-height: 10cm;
   }
 
   .word-list-column-work16 {
     flex: 1 1 50%;
     width: 50%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 각 단에 배치되는 퀴즈 카드 */
+  .quiz-card-work16 {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* 홀수개 문제인 경우 마지막 페이지: 왼쪽 단에만 배치 */
+  .single-quiz-container {
+    justify-content: flex-start !important;
+  }
+
+  .single-quiz-column {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+    width: 50% !important;
+  }
+
+  /* 홀수개 문제인 경우 카드도 50% 너비로 제한 */
+  .single-quiz-column .quiz-card-work16 {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   /* 단어 목록 테이블 */

@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, UnderlineType, TabStopType, TabStopPosition } from 'docx';
+import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, UnderlineType, TabStopType, TabStopPosition, PageOrientation, convertInchesToTwip } from 'docx';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase/config';
 
@@ -1173,6 +1173,357 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
     });
   }
   
+  // 유형#16 특별 처리 (패키지#02와 동일한 방식)
+  // 여러 페이지가 있을 수 있으므로 모든 페이지 템플릿을 찾아서 처리
+  // .only-print-work16은 최상위 컨테이너이므로 제외하고 .a4-landscape-page-template-work16만 찾기
+  const work16Templates = element.querySelectorAll('.a4-landscape-page-template-work16');
+  if (work16Templates.length > 0) {
+    let globalProblemNumber = 1; // 전역 문제 번호 (각 페이지의 문제를 순차적으로 번호 매기기)
+    
+    // 각 페이지를 순회하면서 처리
+    work16Templates.forEach((work16Template, pageIndex) => {
+      
+      // 헤더는 첫 번째 페이지에만 표시
+      if (pageIndex === 0) {
+        const work16Header = work16Template.querySelector('.a4-landscape-page-header-work16, .print-header-work16');
+        if (work16Header) {
+          const headerText = work16Header.querySelector('.print-header-text-work16');
+          if (headerText) {
+            const text = headerText.textContent?.trim() || '';
+            if (text) {
+              // 헤더 텍스트 (중앙 정렬, 굵게, Noto Sans KR, 하단 가로선)
+              paragraphs.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: text,
+                      bold: true,
+                      size: 20, // 10pt
+                      font: 'Noto Sans KR'
+                    })
+                  ],
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 100 },
+                  border: {
+                    bottom: {
+                      color: '000000',
+                      size: 20, // 1pt
+                      style: BorderStyle.SINGLE
+                    }
+                  }
+                })
+              );
+            }
+          }
+        }
+      }
+    
+    // 단어 테이블 찾기 (2단 레이아웃 처리)
+    const wordListContainer = work16Template.querySelector('.word-list-container-work16');
+    if (wordListContainer) {
+      const columns = wordListContainer.querySelectorAll('.word-list-column-work16');
+      
+      // 각 컬럼(단)을 순회하면서 처리
+      columns.forEach((column, columnIndex) => {
+        const quizCard = column.querySelector('.quiz-card-work16');
+        if (!quizCard) return; // 카드가 없으면 건너뛰기
+        
+        // 문제 지시문 찾기 (각 카드마다)
+        const problemInstruction = quizCard.querySelector('.problem-instruction-work16');
+        let instruction = '다음 영어 단어의 한글 뜻을 고르시오.'; // 기본값
+        let typeBadge = '유형#16';
+        
+        if (problemInstruction) {
+          const instructionText = problemInstruction.querySelector('.problem-instruction-text-work16');
+          const typeLabel = problemInstruction.querySelector('.problem-type-label-work16');
+          
+          if (instructionText) {
+            // "문제 N. " 부분을 제거하고 지시문만 추출
+            const fullText = instructionText.textContent?.trim() || '';
+            const match = fullText.match(/문제\s+\d+\.\s*(.+)/);
+            instruction = match ? match[1] : fullText.replace(/^문제\s+\d+\.\s*/, '');
+          }
+          typeBadge = typeLabel?.textContent?.trim() || typeBadge;
+        }
+        
+        // 문제 제목 추가: "문제 N. 다음 영어 단어의 한글 뜻을 고르시오.   유형#16"
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `문제 ${globalProblemNumber}. ${instruction}`,
+                font: 'Noto Sans KR',
+                size: 22, // 11pt
+                color: '000000' // 검은색
+              }),
+              new TextRun({
+                text: '\t',
+                font: 'Noto Sans KR'
+              }),
+              new TextRun({
+                text: typeBadge,
+                font: 'Noto Sans KR',
+                size: 22,
+                bold: true,
+                color: '000000' // 검은색
+              })
+            ],
+            spacing: { before: 100, after: 100 },
+            tabStops: [
+              {
+                type: TabStopType.RIGHT,
+                position: TabStopPosition.MAX
+              }
+            ],
+            shading: {
+              type: ShadingType.SOLID,
+              color: 'F0F0F0', // 연한 회색 배경 (패키지#02와 동일)
+              fill: 'F0F0F0' // 연한 회색 배경
+            }
+          })
+        );
+        
+        // 문제 번호 증가
+        globalProblemNumber++;
+        
+        // 테이블 찾기
+        const table = quizCard.querySelector('.word-list-table-work16');
+        if (!table) return; // 테이블이 없으면 건너뛰기
+        
+        // 테이블 처리
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        
+        if (thead && tbody) {
+          const headerRow = thead.querySelector('tr');
+          if (headerRow) {
+            const headerCells = Array.from(headerRow.querySelectorAll('th')).map((th) => {
+              const text = th.textContent?.trim() || '';
+              return new TableCell({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: text,
+                        bold: true,
+                        font: 'Noto Sans KR',
+                        size: 20, // 10pt
+                        color: '000000' // 검은색
+                      })
+                    ],
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 40, after: 40 }
+                  })
+                ],
+                margins: {
+                  top: 60,
+                  bottom: 60,
+                  left: 100,
+                  right: 100
+                },
+                shading: {
+                  type: ShadingType.SOLID,
+                  color: 'E3F2FD', // 연한 파란색 배경
+                  fill: 'E3F2FD'
+                }
+              });
+            });
+            
+            const bodyRows = Array.from(tbody.querySelectorAll('tr')).map((row) => {
+              const cells = Array.from(row.querySelectorAll('td')).map((td, cellIndex) => {
+                const text = td.textContent?.trim() || '';
+                const isAnswerCell = td.classList.contains('answer-cell');
+                
+                return new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: text,
+                          font: 'Noto Sans KR',
+                          size: 20, // 10pt
+                          bold: isAnswerCell,
+                          color: isAnswerCell ? '1976D2' : '000000' // 정답 셀은 파란색
+                        })
+                      ],
+                      alignment: cellIndex === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
+                      spacing: { before: 20, after: 20 }
+                    })
+                  ],
+                  margins: {
+                    top: 40,
+                    bottom: 40,
+                    left: 100,
+                    right: 100
+                  },
+                  shading: isAnswerCell ? {
+                    type: ShadingType.SOLID,
+                    color: 'F0F8FF', // 연한 파란색 배경 (정답 셀)
+                    fill: 'F0F8FF'
+                  } : undefined
+                });
+              });
+              
+              return new TableRow({
+                children: cells
+              });
+            });
+            
+            // 테이블 추가 (페이지 전체 폭 사용)
+            paragraphs.push(
+              new Table({
+                rows: [
+                  new TableRow({
+                    children: headerCells
+                  }),
+                  ...bodyRows
+                ],
+                width: {
+                  size: 100, // 페이지 전체 폭 사용
+                  type: WidthType.PERCENTAGE
+                },
+                columnWidths: [300, 4450, 4450] // No.: 최소 폭, 영어단어: 48.9%, 한글뜻: 48.9% (5:5 비율)
+              })
+            );
+          }
+        }
+        
+        // 테이블 후 간격 추가 (마지막 컬럼이 아닌 경우)
+        if (columnIndex < columns.length - 1) {
+          paragraphs.push(
+            new Paragraph({
+              text: '',
+              spacing: { before: 200, after: 200 }
+            })
+          );
+        }
+      });
+      } else {
+        // 단일 컬럼인 경우: 기존 로직 사용
+        const wordTables = work16Template.querySelectorAll('.word-list-table-work16');
+        if (wordTables.length > 0) {
+          wordTables.forEach((table) => {
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            
+            if (thead && tbody) {
+              const headerRow = thead.querySelector('tr');
+              if (headerRow) {
+                const headerCells = Array.from(headerRow.querySelectorAll('th')).map((th) => {
+                  const text = th.textContent?.trim() || '';
+                  return new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: text,
+                            bold: true,
+                            font: 'Noto Sans KR',
+                            size: 20, // 10pt
+                            color: '000000' // 검은색
+                          })
+                        ],
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 40, after: 40 }
+                      })
+                    ],
+                    margins: {
+                      top: 60,
+                      bottom: 60,
+                      left: 100,
+                      right: 100
+                    },
+                    shading: {
+                      type: ShadingType.SOLID,
+                      color: 'E3F2FD', // 연한 파란색 배경 (패키지#02와 동일)
+                      fill: 'E3F2FD' // 연한 파란색 배경
+                    }
+                  });
+                });
+                
+                const bodyRows = Array.from(tbody.querySelectorAll('tr')).map((tr) => {
+                  const cells = Array.from(tr.querySelectorAll('td')).map((td, cellIndex) => {
+                    const text = td.textContent?.trim() || '';
+                    const isAnswerCell = td.classList.contains('answer-cell');
+                    
+                    return new TableCell({
+                      children: [
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: text,
+                              font: 'Noto Sans KR',
+                              size: 20, // 10pt
+                              bold: isAnswerCell,
+                              color: isAnswerCell ? '1976D2' : '000000' // 정답 셀은 파란색
+                            })
+                          ],
+                          alignment: cellIndex === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
+                          spacing: { before: 20, after: 20 }
+                        })
+                      ],
+                      margins: {
+                        top: 40,
+                        bottom: 40,
+                        left: 100,
+                        right: 100
+                      },
+                      shading: isAnswerCell ? {
+                        type: ShadingType.SOLID,
+                        color: 'F0F8FF', // 연한 파란색 배경 (정답 셀)
+                        fill: 'F0F8FF' // 연한 파란색 배경
+                      } : undefined
+                    });
+                  });
+                  
+                  return new TableRow({
+                    children: cells
+                  });
+                });
+                
+                paragraphs.push(
+                  new Table({
+                    rows: [
+                      new TableRow({
+                        children: headerCells
+                      }),
+                      ...bodyRows
+                    ],
+                    width: {
+                      size: 100,
+                      type: WidthType.PERCENTAGE
+                    },
+                    columnWidths: [300, 4450, 4450] // No.: 최소 폭, 영어단어: 48.9%, 한글뜻: 48.9% (5:5 비율)
+                  })
+                );
+              }
+            }
+          });
+        }
+      }
+      
+      // 페이지 간 간격 추가 (마지막 페이지가 아닌 경우)
+      if (pageIndex < work16Templates.length - 1) {
+        paragraphs.push(
+          new Paragraph({
+            text: '',
+            spacing: { before: 400, after: 400 }
+          })
+        );
+      }
+    });
+    
+    // 유형#16 처리가 완료되었으므로 여기서 반환
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 htmlToDocxParagraphs - 유형#16 처리 완료:', {
+        totalPages: work16Templates.length,
+        totalParagraphs: paragraphs.length
+      });
+    }
+    
+    return paragraphs;
+  }
+  
   // 유형#12 특별 처리
   const work12Template = element.querySelector('.a4-page-template-work12, .only-print-work12');
   if (work12Template) {
@@ -1642,11 +1993,13 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
   
   // 헤더 찾기 (가로선 포함) - PDF와 동일한 구조
   // 패키지#02: .print-header-package02 > .print-header-text-package02
+  // 패키지#03: .a4-landscape-page-header > .print-header-package03 > .print-header-text-package03
+  // 유형#16: .a4-landscape-page-header-work16 > .print-header-work16 > .print-header-text-work16
   // 유형#01-15: .a4-page-header > .print-header-text-work01
-  const header = element.querySelector('.a4-landscape-page-header, .a4-page-header, .print-header-package02');
+  const header = element.querySelector('.a4-landscape-page-header, .a4-page-header, .print-header-package02, .print-header-package03, .a4-landscape-page-header-work16');
   if (header) {
     // 여러 헤더 텍스트 셀렉터 시도
-    const headerText = header.querySelector('.print-header-text-package02, .print-header-text-work01, .print-header-text');
+    const headerText = header.querySelector('.print-header-text-package02, .print-header-text-package03, .print-header-text-work01, .print-header-text-work16, .print-header-text');
     if (headerText) {
       const text = headerText.textContent?.trim() || '';
       if (text) {
@@ -2087,15 +2440,15 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
         
         if (!isLandscapeTemplate) {
           // .a4-landscape-page-template이 아닌 경우에만 유형#15 체크
-          const cardWork15Content = card.querySelector('.quiz-content') || card.querySelector('.a4-page-content');
-          const cardHasPrintContentSection = cardWork15Content?.querySelector('.print-content-section') !== null;
+      const cardWork15Content = card.querySelector('.quiz-content') || card.querySelector('.a4-page-content');
+      const cardHasPrintContentSection = cardWork15Content?.querySelector('.print-content-section') !== null;
           // 내부에 .print-question-card가 없는 경우만 유형#15로 판단
           const cardHasQuestionCardInside = card.querySelector('.print-question-card') !== null;
           if (cardHasPrintContentSection && !cardHasQuestionCardInside) {
             if (process.env.NODE_ENV === 'development') {
               console.log(`⏭️ 카드 ${cardIndex + 1} 건너뛰기 (유형#15)`);
             }
-            return; // 유형#15는 별도 처리되므로 건너뛰기
+        return; // 유형#15는 별도 처리되므로 건너뛰기
           }
         }
       }
@@ -2229,7 +2582,7 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
             
             if (!groupedByProblemNumber.has(problemNumber)) {
               groupedByProblemNumber.set(problemNumber, []);
-            }
+                  }
             groupedByProblemNumber.get(problemNumber)!.push(cardGroup);
           });
           
@@ -2275,8 +2628,8 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
             mergedCardGroups.forEach((cardGroup, cardGroupIndex) => {
               // 첫 번째 문제가 아니면 위에 간격 추가
               if (cardGroupIndex > 0) {
-                paragraphs.push(
-                  new Paragraph({
+              paragraphs.push(
+                new Paragraph({
                     text: '',
                     spacing: { before: 400, after: 0 }
                   })
@@ -2286,11 +2639,11 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
               // 카드 제목 표시 (제목과 "유형#11"을 탭으로 분리하여 우측 정렬)
               if (cardGroup.cardTitle) {
                 const titleChildren: TextRun[] = [
-                  new TextRun({
+                    new TextRun({
                     text: cardGroup.cardTitle,
-                    bold: true,
-                    font: 'Noto Sans KR'
-                  })
+                      bold: true,
+                      font: 'Noto Sans KR'
+                    })
                 ];
                 
                 // 타입 뱃지가 있으면 탭 문자 후 우측에 배치
@@ -2324,125 +2677,125 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
               
               // 지시문 표시 (제목과 별도로)
               if (cardGroup.instruction) {
-                paragraphs.push(
-                  new Paragraph({
-                    children: [
-                      new TextRun({
+              paragraphs.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
                         text: cardGroup.instruction,
-                        font: 'Noto Sans KR'
-                      })
-                    ],
+                      font: 'Noto Sans KR'
+                    })
+                  ],
                     spacing: { before: 0, after: 200 }
-                  })
-                );
-              }
-              
+                })
+              );
+            }
+            
               // 각 카드의 문장 처리 (각 문제별로 문장 번호 1부터 시작)
               cardGroup.sentences.forEach((sentence, sentenceIndex) => {
                 const isFirstSentence = sentenceIndex === 0;
                 const isLastSentence = sentenceIndex === cardGroup.sentences.length - 1;
-                
-                const borderConfig: any = {
-                  left: {
-                    color: '000000',
-                    size: 6,
-                    style: BorderStyle.SINGLE,
-                    space: DOCX_BORDER_SPACE
-                  },
-                  right: {
-                    color: '000000',
-                    size: 6,
-                    style: BorderStyle.SINGLE,
-                    space: DOCX_BORDER_SPACE
-                  }
+              
+              const borderConfig: any = {
+                left: {
+                  color: '000000',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                },
+                right: {
+                  color: '000000',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                }
+              };
+              
+              if (isFirstSentence) {
+                borderConfig.top = {
+                  color: '000000',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
                 };
-                
-                if (isFirstSentence) {
-                  borderConfig.top = {
-                    color: '000000',
-                    size: 6,
-                    style: BorderStyle.SINGLE,
-                    space: DOCX_BORDER_SPACE
-                  };
-                }
-                
-                if (isLastSentence) {
-                  borderConfig.bottom = {
-                    color: '000000',
-                    size: 6,
-                    style: BorderStyle.SINGLE,
-                    space: DOCX_BORDER_SPACE
-                  };
-                }
-                
+              }
+              
+              if (isLastSentence) {
+                borderConfig.bottom = {
+                  color: '000000',
+                  size: 6,
+                  style: BorderStyle.SINGLE,
+                  space: DOCX_BORDER_SPACE
+                };
+              }
+              
                 // 문제 모드 또는 정답 모드: 각 문장 앞에 "문장 1. ", "문장 2. " 등 추가 (진하게)
                 // 각 문제별로 문장 번호가 1부터 시작하도록 sentenceIndex + 1 사용
                 const isProblemMode = !sentence.koreanText; // 한글 해석이 없으면 문제 모드
                 // 정답 모드이거나 문제 모드일 때 문장 번호 추가
                 const sentenceLabel = (actualIsAnswerMode || isProblemMode) ? `문장 ${sentenceIndex + 1}. ` : '';
-                
-                const children: TextRun[] = [];
-                
-                // 문장 레이블이 있으면 진하게 추가
-                if (sentenceLabel) {
-                  children.push(
-                    new TextRun({
-                      text: sentenceLabel,
-                      font: 'Noto Sans KR',
-                      bold: true
-                    })
-                  );
-                }
-                
-                // 영어 문장 추가
+              
+              const children: TextRun[] = [];
+              
+              // 문장 레이블이 있으면 진하게 추가
+              if (sentenceLabel) {
                 children.push(
                   new TextRun({
+                    text: sentenceLabel,
+                    font: 'Noto Sans KR',
+                    bold: true
+                  })
+                );
+              }
+              
+              // 영어 문장 추가
+              children.push(
+                new TextRun({
                     text: sentence.englishText,
+                  font: 'Noto Sans KR'
+                })
+              );
+              
+                if (sentence.koreanText) {
+                children.push(
+                  new TextRun({
+                    break: 1,
+                      text: sentence.koreanText,
+                    font: 'Noto Sans KR',
+                    italics: true,
+                    color: '444444'
+                  })
+                );
+              } else {
+                children.push(
+                  new TextRun({
+                    break: 1,
+                    text: '',
                     font: 'Noto Sans KR'
                   })
                 );
-                
-                if (sentence.koreanText) {
-                  children.push(
-                    new TextRun({
-                      break: 1,
-                      text: sentence.koreanText,
-                      font: 'Noto Sans KR',
-                      italics: true,
-                      color: '444444'
-                    })
-                  );
-                } else {
-                  children.push(
-                    new TextRun({
-                      break: 1,
-                      text: '',
-                      font: 'Noto Sans KR'
-                    })
-                  );
-                }
-                
+              }
+              
+              paragraphs.push(
+                new Paragraph({
+                  children,
+                  spacing: {
+                    before: isFirstSentence ? 200 : 160,
+                    after: isLastSentence ? 0 : 400  // 각 문장 아래 두 줄 띄기 (마지막 문장 제외)
+                  },
+                  indent: { left: 0, right: 0 },
+                  border: borderConfig
+                })
+              );
+              
+              // 마지막 문장 아래에 빈 줄 추가 (두 줄 띄기)
+              if (isLastSentence) {
                 paragraphs.push(
                   new Paragraph({
-                    children,
-                    spacing: {
-                      before: isFirstSentence ? 200 : 160,
-                      after: isLastSentence ? 0 : 400  // 각 문장 아래 두 줄 띄기 (마지막 문장 제외)
-                    },
-                    indent: { left: 0, right: 0 },
-                    border: borderConfig
+                    text: '',
+                    spacing: { before: 0, after: 0 }
                   })
                 );
-                
-                // 마지막 문장 아래에 빈 줄 추가 (두 줄 띄기)
-                if (isLastSentence) {
-                  paragraphs.push(
-                    new Paragraph({
-                      text: '',
-                      spacing: { before: 0, after: 0 }
-                    })
-                  );
-                }
+              }
               });
             });
             
@@ -4495,6 +4848,7 @@ export const generateAndUploadDOC = async (
       elementClass: element.className,
       workTypeName,
       isAnswerMode,
+      orientation: options.orientation,
       hasPrintQuestionCard: element.querySelector('.print-question-card') !== null,
       printQuestionCardCount: element.querySelectorAll('.print-question-card').length,
       hasA4LandscapeTemplate: element.querySelector('.a4-landscape-page-template') !== null,
@@ -4512,9 +4866,117 @@ export const generateAndUploadDOC = async (
     });
     
     // DOCX 문서 생성 (제목/생성일 없이 PDF와 동일한 구조, Noto Sans KR 폰트)
+    // 여백을 "좁게"로 설정 (상하좌우 모두 1.27cm = 0.5인치 = 720 twips)
+    // A4 크기: Portrait - 8.27인치 x 11.69인치, Landscape - 11.69인치 x 8.27인치
+    const orientation = options.orientation === 'landscape' ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT;
+    const isLandscape = orientation === PageOrientation.LANDSCAPE;
+    
+    // A4 크기 계산 (인치 단위)
+    // Portrait: 8.27인치 x 11.69인치
+    // Landscape: 11.69인치 x 8.27인치
+    const widthInches = isLandscape ? 11.69 : 8.27;
+    const heightInches = isLandscape ? 8.27 : 11.69;
+    const widthTwips = convertInchesToTwip(widthInches);
+    const heightTwips = convertInchesToTwip(heightInches);
+    
+    console.log('📄 DOC orientation 설정:', {
+      optionsOrientation: options.orientation,
+      finalOrientation: orientation === PageOrientation.LANDSCAPE ? 'LANDSCAPE' : 'PORTRAIT',
+      isLandscape,
+      widthInches,
+      heightInches,
+      widthTwips,
+      heightTwips,
+      PageOrientation_LANDSCAPE: PageOrientation.LANDSCAPE,
+      PageOrientation_PORTRAIT: PageOrientation.PORTRAIT,
+      orientationValue: orientation,
+      orientationType: typeof orientation,
+      orientationString: String(orientation)
+    });
+    
+    // docx 라이브러리에서 landscape를 설정하는 방법
+    // docx v9.x에서는 orientation을 size 객체 안에 넣어야 하지만,
+    // 실제로는 width와 height만 올바르게 설정하면 방향이 결정됩니다.
+    // 하지만 명시적으로 orientation을 포함시키는 것이 좋습니다.
+    
+    // page size 객체 생성
+    // docx 라이브러리에서 landscape를 설정하는 방법:
+    // width와 height를 올바르게 설정하고, orientation을 size 객체 안에 포함
+    // docx 라이브러리에서 landscape를 설정하는 방법
+    // 중요: docx 라이브러리 v9.5.1에서는 orientation 속성이 실제로 작동하지 않을 수 있습니다.
+    // 하지만 width와 height를 올바르게 설정하면 방향이 결정될 수 있습니다.
+    // A4 Landscape: width > height (11.69인치 > 8.27인치)
+    const pageSizeObj: any = {
+      width: widthTwips,  // A4 너비 (landscape: 11.69인치 = 16833 TWIP)
+      height: heightTwips, // A4 높이 (landscape: 8.27인치 = 11908 TWIP)
+      // orientation을 size 객체에 추가 시도
+      // 참고: docx 라이브러리에서 orientation이 실제로 지원되지 않을 수 있으므로,
+      // width와 height만으로는 방향이 결정되지 않을 수 있습니다.
+      orientation: orientation
+    };
+    
+    console.log('📄 DOC page size 객체:', {
+      pageSizeObj,
+      hasOrientation: 'orientation' in pageSizeObj,
+      orientationInObj: pageSizeObj.orientation,
+      width: pageSizeObj.width,
+      height: pageSizeObj.height,
+      widthInches: pageSizeObj.width / 1440,
+      heightInches: pageSizeObj.height / 1440,
+      pageSizeObjKeys: Object.keys(pageSizeObj),
+      pageSizeObjStringified: JSON.stringify(pageSizeObj, null, 2)
+    });
+    
+    // page 객체 생성
+    // docx 라이브러리 v9.x에서는 orientation을 size 객체 안에 넣어야 합니다.
+    // 하지만 일부 버전에서는 page 객체에도 orientation을 추가해야 할 수 있습니다.
+    const pageObj: any = {
+      size: pageSizeObj,
+      margin: {
+        top: 720,    // 0.5인치 (좁게)
+        right: 720,  // 0.5인치 (좁게)
+        bottom: 720, // 0.5인치 (좁게)
+        left: 720    // 0.5인치 (좁게)
+      }
+    };
+    
+    // orientation을 page 객체에도 추가 (일부 버전에서 필요할 수 있음)
+    pageObj.orientation = orientation;
+    
+    console.log('📄 DOC page 객체:', {
+      pageObj,
+      hasOrientation: 'orientation' in pageObj,
+      orientationInPageObj: pageObj.orientation,
+      pageObjKeys: Object.keys(pageObj),
+      pageObjStringified: JSON.stringify(pageObj, null, 2)
+    });
+    
+    // docx 라이브러리에서 orientation을 설정하는 방법
+    // SectionProperties에 직접 orientation을 설정해야 할 수 있습니다.
+    // docx 라이브러리 v9.5.1에서는 orientation이 실제로 작동하지 않을 수 있습니다.
+    // 이 경우 width와 height만으로는 방향이 결정되지 않을 수 있습니다.
+    // 웹 검색 결과에 따르면 pageSize를 직접 사용해야 할 수도 있습니다.
+    const sectionProperties: any = {
+      page: pageObj,
+      // SectionProperties에 orientation 추가 시도
+      orientation: orientation,
+      // pageSize를 직접 사용하는 방법 시도 (웹 검색 결과)
+      pageSize: pageSizeObj
+    };
+    
+    console.log('📄 DOC section properties:', {
+      hasOrientation: 'orientation' in sectionProperties,
+      orientationInSection: sectionProperties.orientation,
+      hasPage: 'page' in sectionProperties,
+      pageSizeOrientation: sectionProperties.page?.size?.orientation,
+      pageSizeWidth: sectionProperties.page?.size?.width,
+      pageSizeHeight: sectionProperties.page?.size?.height,
+      sectionPropertiesKeys: Object.keys(sectionProperties)
+    });
+    
     const doc = new DocxDocument({
       sections: [{
-        properties: {},
+        properties: sectionProperties,
         children: paragraphs.length > 0 ? paragraphs : [
           new Paragraph({
             children: [
@@ -4529,8 +4991,124 @@ export const generateAndUploadDOC = async (
       }]
     });
     
+    // docx 라이브러리에서 orientation이 작동하지 않을 수 있으므로
+    // 문서 생성 후 섹션의 페이지 속성을 직접 수정 시도
+    // 중요: docx 라이브러리에서 Document 객체는 생성 직후에는 내부 구조가 완전히 초기화되지 않을 수 있습니다.
+    // 하지만 Packer.toBlob 호출 전에 설정하면 적용될 수 있습니다.
+    try {
+      const docAny = doc as any;
+      
+      // Document 객체의 내부 구조 확인
+      console.log('📄 DOC Document 객체 내부 구조 확인:', {
+        hasSections: 'sections' in docAny,
+        sectionsType: typeof docAny.sections,
+        sectionsIsArray: Array.isArray(docAny.sections),
+        docKeys: Object.keys(docAny),
+        docConstructor: docAny.constructor?.name
+      });
+      
+      // sections에 접근 시도 (다양한 방법)
+      let sections: any[] = [];
+      if (Array.isArray(docAny.sections)) {
+        sections = docAny.sections;
+      } else if (docAny.sections && typeof docAny.sections === 'object') {
+        sections = Object.values(docAny.sections) as any[];
+      } else if (docAny._sections) {
+        sections = Array.isArray(docAny._sections) ? docAny._sections : Object.values(docAny._sections) as any[];
+      }
+      
+      console.log('📄 DOC sections 접근 결과:', {
+        sectionsLength: sections.length,
+        sectionsType: typeof sections,
+        sectionsIsArray: Array.isArray(sections),
+        firstSection: sections[0] ? {
+          hasProperties: 'properties' in sections[0],
+          propertiesKeys: sections[0].properties ? Object.keys(sections[0].properties) : [],
+          hasPage: sections[0].properties && 'page' in sections[0].properties
+        } : null
+      });
+      
+      if (sections.length > 0 && sections[0].properties && sections[0].properties.page) {
+        const pageProps = sections[0].properties.page;
+        if (pageProps.size) {
+          // orientation을 다시 설정
+          pageProps.size.orientation = orientation;
+          console.log('📄 DOC 문서 생성 후 orientation 재설정 (size):', {
+            orientation: pageProps.size.orientation,
+            width: pageProps.size.width,
+            height: pageProps.size.height,
+            widthInches: pageProps.size.width / 1440,
+            heightInches: pageProps.size.height / 1440
+          });
+        }
+        // page 객체에도 orientation 추가
+        pageProps.orientation = orientation;
+        console.log('📄 DOC 문서 생성 후 orientation 재설정 (page):', {
+          pageOrientation: pageProps.orientation,
+          pageKeys: Object.keys(pageProps)
+        });
+      } else {
+        console.warn('📄 DOC 문서 생성 후 orientation 재설정 실패: sections 또는 page 속성에 접근할 수 없음');
+      }
+    } catch (error) {
+      console.warn('📄 DOC 문서 생성 후 orientation 재설정 실패:', error);
+    }
+    
+    // DOCX 문서 구조 확인 (디버깅) - Packer.toBlob 호출 전
+    try {
+      const docAny = doc as any;
+      let sections: any[] = [];
+      if (Array.isArray(docAny.sections)) {
+        sections = docAny.sections;
+      } else if (docAny.sections && typeof docAny.sections === 'object') {
+        sections = Object.values(docAny.sections) as any[];
+      } else if (docAny._sections) {
+        sections = Array.isArray(docAny._sections) ? docAny._sections : Object.values(docAny._sections) as any[];
+      }
+      
+      const section = sections[0];
+      if (section && section.properties && section.properties.page) {
+        const pageProps = section.properties.page;
+        const sizeObj = pageProps.size as any;
+        console.log('📄 DOC 문서 구조 확인 (최종):', {
+          sectionsCount: sections.length,
+          hasSection: !!section,
+          hasProperties: !!section.properties,
+          hasPage: !!pageProps,
+          pageSize: sizeObj ? {
+            width: sizeObj.width,
+            height: sizeObj.height,
+            orientation: sizeObj.orientation,
+            sizeKeys: Object.keys(sizeObj || {}),
+            sizeStringified: JSON.stringify(sizeObj, null, 2),
+            widthInches: sizeObj.width ? sizeObj.width / 1440 : null,
+            heightInches: sizeObj.height ? sizeObj.height / 1440 : null,
+            isLandscape: sizeObj.width > sizeObj.height
+          } : null,
+          pageMargin: pageProps.margin,
+          pageOrientation: pageProps.orientation
+        });
+      } else {
+        console.warn('📄 DOC 문서 구조 확인 실패:', {
+          sectionsCount: sections.length,
+          hasSection: !!section,
+          hasProperties: section ? !!section.properties : false,
+          hasPage: section && section.properties ? !!section.properties.page : false,
+          docAnyKeys: Object.keys(docAny),
+          docAnySectionsType: typeof docAny.sections
+        });
+      }
+    } catch (error) {
+      console.error('📄 DOC 문서 구조 확인 중 오류:', error);
+    }
+    
     // DOCX를 Blob으로 변환
     const blob = await Packer.toBlob(doc);
+    
+    console.log('📄 DOC Blob 생성 완료:', {
+      blobSize: blob.size,
+      blobType: blob.type
+    });
     
     // 파일명 생성
     const now = new Date();

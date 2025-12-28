@@ -22,6 +22,7 @@ import PrintFormatWork13New from '../work/Work_13_BlankFillWord/PrintFormatWork1
 import PrintFormatWork14New from '../work/Work_14_BlankFillSentence/PrintFormatWork14New';
 import HistoryPrintWork12 from '../work/Work_12_WordStudy/HistoryPrintWork12';
 import HistoryPrintWork16 from '../work/Work_16_PassageWordStudy/HistoryPrintWork16';
+import HistoryPrintWork16Doc from '../work/Work_16_PassageWordStudy/HistoryPrintWork16Doc';
 import SimpleQuizDisplay from './SimpleQuizDisplay';
 import FileFormatSelector from '../work/shared/FileFormatSelector';
 import { FileFormat, generateAndUploadFile } from '../../services/pdfService';
@@ -290,21 +291,33 @@ const QuizDisplayPage: React.FC = () => {
             : 'print-root-package02';
     printContainer.id = containerId;
     
-    // 유형#12인 경우 인쇄용 컨테이너 스타일 명시적 설정
-    if (isSingleWork && typeId === '12') {
-      printContainer.style.display = 'block';
-      printContainer.style.visibility = 'visible';
-      printContainer.style.position = 'relative';
-      printContainer.style.width = 'auto';
-      printContainer.style.height = 'auto';
-      printContainer.style.overflow = 'visible';
+    // DOC 저장인 경우 화면에 보이지 않도록 설정
+    if (fileFormat === 'doc') {
+      printContainer.style.display = 'none';
+      printContainer.style.visibility = 'hidden';
+      printContainer.style.position = 'absolute';
+      printContainer.style.left = '-9999px';
+      printContainer.style.top = '-9999px';
+      printContainer.style.width = '1px';
+      printContainer.style.height = '1px';
+      printContainer.style.overflow = 'hidden';
+    } else {
+      // 유형#12인 경우 인쇄용 컨테이너 스타일 명시적 설정
+      if (isSingleWork && typeId === '12') {
+        printContainer.style.display = 'block';
+        printContainer.style.visibility = 'visible';
+        printContainer.style.position = 'relative';
+        printContainer.style.width = 'auto';
+        printContainer.style.height = 'auto';
+        printContainer.style.overflow = 'visible';
+      }
     }
     
     document.body.appendChild(printContainer);
 
-    // 기존 화면 숨기기
+    // 기존 화면 숨기기 (DOC 저장인 경우에는 숨기지 않음)
     const appRoot = document.getElementById('root');
-    if (appRoot) {
+    if (appRoot && fileFormat !== 'doc') {
       appRoot.style.display = 'none';
     }
 
@@ -778,8 +791,14 @@ const QuizDisplayPage: React.FC = () => {
           });
         });
       } else if (typeId === '16') {
-        // 유형#16은 Work_16_PassageWordStudy.tsx와 동일한 방식으로 오버레이 사용
-        const work16Data = first.work16Data || first.data?.work16Data || first.data || first;
+        // 유형#16 DOC 저장은 별도 처리 (오버레이 방식 사용하지 않음)
+        if (fileFormat === 'doc') {
+          // DOC 저장은 아래 setTimeout 내부에서 처리됨
+          // 여기서는 오버레이 방식을 사용하지 않고 일반 방식으로 처리
+          // root.render는 아래에서 처리됨
+        } else if (fileFormat === 'pdf') {
+          // 유형#16 PDF 저장은 Work_16_PassageWordStudy.tsx와 동일한 방식으로 오버레이 사용
+          const work16Data = first.work16Data || first.data?.work16Data || first.data || first;
         console.log('🔍 [QuizDisplayPage] 유형#16 인쇄(문제) - 단일 문제:', {
           firstKeys: Object.keys(first || {}),
           hasWork16Data: !!work16Data,
@@ -1106,6 +1125,10 @@ const QuizDisplayPage: React.FC = () => {
         }, 300);
         
         return; // 오버레이 방식 사용 시 root.render 호출하지 않음
+        } else if (fileFormat === 'doc') {
+          // DOC 저장은 일반 방식으로 처리 (아래 setTimeout 내부에서 root.render 호출)
+          // 여기서는 root.render를 호출하지 않음 (setTimeout 내부에서 처리)
+        }
       } else if (typeId === '01') {
         // 유형#01은 PrintFormatWork01New 사용
         const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
@@ -1506,13 +1529,30 @@ const QuizDisplayPage: React.FC = () => {
       root.render(<PrintFormatWork14New quizzes={rawQuizzes} isAnswerMode={false} />);
     } else if (packageType === '16') {
       // 유형#16 (여러 문제일 때) - 나의문제목록에서 불러온 경우
-      console.log('🔍 유형#16 인쇄(문제) - 여러 문제 (packageType=16):', {
-        packageQuizLength: packageQuiz.length,
-        firstItem: packageQuiz[0],
-        firstItemKeys: packageQuiz[0] ? Object.keys(packageQuiz[0]) : []
-      });
-      
-      const rawQuizzes = packageQuiz.map((item: any, index: number) => {
+      // DOC 저장은 별도 처리 (오버레이 방식 사용하지 않음)
+      if (fileFormat === 'doc') {
+        // DOC 저장은 일반 방식으로 처리 (root.render 먼저 호출)
+        const rawQuizzes = packageQuiz.map((item: any) => {
+          const work16Data = item.work16Data || item.quiz || item.data?.work16Data || item.data || item;
+          return {
+            words: Array.isArray(work16Data?.words) ? work16Data.words : [],
+            quizType: work16Data?.quizType || 'english-to-korean',
+            totalQuestions: work16Data?.totalQuestions || (work16Data?.words?.length || 0),
+            passage: work16Data?.passage || ''
+          };
+        });
+        
+        root.render(<HistoryPrintWork16 data={{ quizzes: rawQuizzes }} isAnswerMode={false} />);
+        // DOC 저장은 아래 setTimeout 내부에서 처리됨
+      } else if (fileFormat === 'pdf') {
+        // PDF 저장은 오버레이 방식 사용
+        console.log('🔍 유형#16 인쇄(문제) - 여러 문제 (packageType=16):', {
+          packageQuizLength: packageQuiz.length,
+          firstItem: packageQuiz[0],
+          firstItemKeys: packageQuiz[0] ? Object.keys(packageQuiz[0]) : []
+        });
+        
+        const rawQuizzes = packageQuiz.map((item: any, index: number) => {
         // 여러 방법으로 work16Data 찾기
         const work16Data = item.work16Data || item.quiz || item.data?.work16Data || item.data || item;
         
@@ -1580,25 +1620,27 @@ const QuizDisplayPage: React.FC = () => {
           padding: 0;
           font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
           width: 29.7cm !important;
-          height: 21cm !important;
+          height: auto !important;
+          min-height: 21cm !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
-          overflow: hidden !important;
         }
         @media print {
           html, body {
-            overflow: hidden !important;
+            overflow: visible !important;
+            height: auto !important;
           }
         }
         #work16-print-overlay,
         #work16-print-overlay-answer {
-          overflow: hidden !important;
+          overflow: visible !important;
         }
         #work16-print-overlay > *:not(style),
         #work16-print-overlay-answer > *:not(style) {
-          overflow: hidden !important;
+          overflow: visible !important;
           width: 100% !important;
-          height: 100% !important;
+          height: auto !important;
+          min-height: 21cm !important;
           margin: 0 !important;
           padding: 0 !important;
         }
@@ -1611,21 +1653,30 @@ const QuizDisplayPage: React.FC = () => {
           display: block !important;
         }
         .a4-landscape-page-template-work16 {
-          width: 29.7cm;
-          height: 21cm;
-          margin: 0;
-          padding: 0;
-          background: #ffffff;
-          box-sizing: border-box;
-          page-break-inside: avoid;
-          position: relative;
+          width: 29.7cm !important;
+          height: 21cm !important;
+          min-height: 21cm !important;
+          max-height: 21cm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #ffffff !important;
+          box-sizing: border-box !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+          position: relative !important;
           display: flex !important;
-          flex-direction: column;
-          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+          flex-direction: column !important;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
+          overflow: hidden !important;
         }
         .a4-landscape-page-template-work16:not(:last-child) {
-          page-break-after: always;
-          break-after: page;
+          page-break-after: always !important;
+          break-after: page !important;
+          margin-bottom: 0 !important;
+        }
+        .a4-landscape-page-template-work16:last-child {
+          page-break-after: avoid !important;
+          break-after: avoid !important;
         }
         .a4-landscape-page-header-work16 {
           width: 100%;
@@ -1699,10 +1750,32 @@ const QuizDisplayPage: React.FC = () => {
           gap: 0.5cm;
           width: 100%;
           margin: 1rem 0;
+          position: relative;
         }
         .word-list-column-work16 {
           flex: 1 1 50%;
           width: 50%;
+          display: flex;
+          flex-direction: column;
+        }
+        .quiz-card-work16 {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        /* 홀수개 문제인 경우 마지막 페이지: 왼쪽 단에만 배치 */
+        .single-quiz-container {
+          justify-content: flex-start !important;
+        }
+        .single-quiz-column {
+          flex: 0 0 50% !important;
+          max-width: 50% !important;
+          width: 50% !important;
+        }
+        .single-quiz-column .quiz-card-work16 {
+          width: 100% !important;
+          max-width: 100% !important;
         }
         .word-list-table-work16 {
           width: 100%;
@@ -1769,18 +1842,57 @@ const QuizDisplayPage: React.FC = () => {
           }
           .only-print-work16 {
             display: block !important;
+            visibility: visible !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+          .a4-landscape-page-template-work16 {
+            display: flex !important;
+            visibility: visible !important;
+            width: 29.7cm !important;
+            height: 21cm !important;
+            min-height: 21cm !important;
+            max-height: 21cm !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .a4-landscape-page-template-work16:not(:last-child) {
+            page-break-after: always !important;
+            break-after: page !important;
+          }
+          .a4-landscape-page-template-work16:last-child {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
           #work16-print-overlay,
           #work16-print-overlay-answer {
             display: block !important;
             visibility: visible !important;
             left: 0 !important;
+            top: 0 !important;
             opacity: 1 !important;
             z-index: 9999 !important;
-            position: fixed !important;
-            overflow: hidden !important;
+            position: relative !important; /* fixed에서 relative로 변경 */
+            overflow: visible !important;
             width: 100% !important;
-            height: 100% !important;
+            height: auto !important;
+            min-height: 42cm !important; /* 2페이지 = 21cm * 2 */
+          }
+          #work16-print-overlay .only-print-work16,
+          #work16-print-overlay-answer .only-print-work16 {
+            display: block !important;
+            visibility: visible !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+          #work16-print-overlay .a4-landscape-page-template-work16,
+          #work16-print-overlay-answer .a4-landscape-page-template-work16 {
+            display: flex !important;
+            visibility: visible !important;
+            width: 29.7cm !important;
+            height: 21cm !important;
+            min-height: 21cm !important;
+            max-height: 21cm !important;
           }
         }
       `;
@@ -1811,68 +1923,61 @@ const QuizDisplayPage: React.FC = () => {
         inset: '0',
         backgroundColor: '#ffffff',
         zIndex: '9999',
-        overflow: 'hidden',
+        overflow: 'visible', // hidden에서 visible로 변경
         width: '100%',
-        height: '100%'
+        height: 'auto', // 100%에서 auto로 변경
+        minHeight: '42cm' // 2페이지 = 21cm * 2
       } as Partial<CSSStyleDeclaration>);
       
       // 오버레이에 인쇄용 스타일 + 마크업 주입
       overlay.innerHTML = `
         <style>${PRINT_STYLES_MULTI}</style>
-        <div style="width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0;">
-          ${markup}
-        </div>
+        ${markup}
       `;
       
       document.body.appendChild(overlay);
       
-      // 오버레이 내부의 모든 요소에 스크롤바 방지 스타일 적용
-      const overlayContent = overlay.querySelector('div');
-      if (overlayContent) {
-        overlayContent.style.overflow = 'hidden';
-        overlayContent.style.width = '100%';
-        overlayContent.style.height = '100%';
-        overlayContent.style.margin = '0';
-        overlayContent.style.padding = '0';
-      }
-      
-      // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
-      const prevBodyId = document.body.getAttribute('id');
-      document.body.setAttribute('id', 'work16-print-active');
-      
-      // 약간의 지연 후 인쇄 실행
-      setTimeout(() => {
-        window.print();
+        // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+        const prevBodyId = document.body.getAttribute('id');
+        document.body.setAttribute('id', 'work16-print-active');
         
-        // window.print() 호출 직후 즉시 오버레이 숨기기
-        overlay.style.display = 'none';
-        overlay.style.visibility = 'hidden';
-        overlay.style.left = '-9999px';
-        overlay.style.opacity = '0';
-        overlay.style.zIndex = '-1';
-        
-        // 인쇄 후 오버레이 정리
+        // 약간의 지연 후 인쇄 실행
         setTimeout(() => {
-          const ov = document.getElementById(overlayId);
-          if (ov && ov.parentNode) {
-            ov.parentNode.removeChild(ov);
-          }
+          window.print();
           
-          // body id 되돌리기
-          if (prevBodyId) {
-            document.body.setAttribute('id', prevBodyId);
-          } else {
-            document.body.removeAttribute('id');
-          }
+          // window.print() 호출 직후 즉시 오버레이 숨기기
+          overlay.style.display = 'none';
+          overlay.style.visibility = 'hidden';
+          overlay.style.left = '-9999px';
+          overlay.style.opacity = '0';
+          overlay.style.zIndex = '-1';
           
-          // appRoot 다시 표시
-          if (appRoot) {
-            appRoot.style.display = '';
-          }
-        }, 100);
-      }, 300);
-      
-      return; // 오버레이 방식 사용 시 root.render 호출하지 않음
+          // 인쇄 후 오버레이 정리
+          setTimeout(() => {
+            const ov = document.getElementById(overlayId);
+            if (ov && ov.parentNode) {
+              ov.parentNode.removeChild(ov);
+            }
+            
+            // body id 되돌리기
+            if (prevBodyId) {
+              document.body.setAttribute('id', prevBodyId);
+            } else {
+              document.body.removeAttribute('id');
+            }
+            
+            // appRoot 다시 표시
+            if (appRoot) {
+              appRoot.style.display = '';
+            }
+          }, 100);
+        }, 300);
+        
+        return; // 오버레이 방식 사용 시 root.render 호출하지 않음
+      } else if (fileFormat === 'doc') {
+        // DOC 저장은 일반 방식으로 처리 (아래 setTimeout 내부에서 root.render 호출)
+        // 여기서는 root.render를 호출하지 않음 (setTimeout 내부에서 처리)
+      }
     } else if (typeId === '11' || packageType === '11') {
       // 유형#11는 PrintFormatWork11New 사용 (여러 문제인 경우에도)
       const rawQuizzes = packageQuiz.map((item: any) => {
@@ -2085,8 +2190,12 @@ const QuizDisplayPage: React.FC = () => {
         }
         
         // DOM 요소가 실제로 내용을 가지고 있는지 확인 (특히 DOC 저장 시)
-        if (fileFormat === 'doc') {
-          const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page');
+        // packageType === '16'인 경우 DOC 저장은 별도 로직에서 처리하므로 여기서는 건너뜀
+        if (fileFormat === 'doc' && packageType === '16') {
+          // packageType === '16'인 경우 DOC 저장은 아래 별도 로직에서 처리
+          // 여기서는 내용 체크를 건너뜀
+        } else if (fileFormat === 'doc') {
+          const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page, .a4-landscape-page-template-work16');
           const hasContent = pageElements.length > 0 || (element.textContent && element.textContent.trim().length > 50);
           if (!hasContent) {
             console.error(`❌ 인쇄 컨테이너에 내용이 없습니다: ${elementId}`, {
@@ -2097,7 +2206,7 @@ const QuizDisplayPage: React.FC = () => {
             setTimeout(async () => {
               const retryElement = document.getElementById(elementId);
               if (retryElement && userData?.uid) {
-                const pageElementsRetry = retryElement.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page');
+                const pageElementsRetry = retryElement.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page, .a4-landscape-page-template-work16');
                 const hasContentRetry = pageElementsRetry.length > 0 || (retryElement.textContent && retryElement.textContent.trim().length > 50);
                 if (hasContentRetry) {
                   console.log('✅ 재시도 성공: 내용이 렌더링되었습니다');
@@ -2160,6 +2269,78 @@ const QuizDisplayPage: React.FC = () => {
             );
             
             console.log(`📁 ${workTypeName} DOC 저장 완료:`, result.fileName);
+          } else if ((typeId === '16' || packageType === '16') && fileFormat === 'doc') {
+            // 유형#16 DOC 저장: 헤더만 표시하는 전용 컴포넌트 사용
+            const workTypeName = '유형#16_문제';
+            
+            // packageType === '16'인 경우 여러 문제 처리
+            if (packageType === '16') {
+              const rawQuizzes = packageQuiz.map((item: any) => {
+                const work16Data = item.work16Data || item.quiz || item.data?.work16Data || item.data || item;
+                return {
+                  words: Array.isArray(work16Data?.words) ? work16Data.words : [],
+                  quizType: work16Data?.quizType || 'english-to-korean',
+                  totalQuestions: work16Data?.totalQuestions || (work16Data?.words?.length || 0),
+                  passage: work16Data?.passage || ''
+                };
+              });
+              
+              root.render(<HistoryPrintWork16 data={{ quizzes: rawQuizzes }} isAnswerMode={false} />);
+            } else {
+              // typeId === '16'인 경우 단일 문제 처리
+              root.render(<HistoryPrintWork16Doc />);
+            }
+            
+            // 렌더링 대기 (여러 문제인 경우 더 긴 대기 시간 필요)
+            const renderWaitTime = packageType === '16' ? 2000 : 1000;
+            await new Promise(resolve => setTimeout(resolve, renderWaitTime));
+            
+            // 렌더링 완료 확인
+            const docElement = document.getElementById(containerId) || printContainer;
+            if (!docElement) {
+              console.error(`❌ DOC 저장 컨테이너를 찾을 수 없습니다: ${containerId}`);
+              alert('문서 내용을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+              return;
+            }
+            
+            // 페이지 요소 확인
+            const pageElements = docElement.querySelectorAll('.a4-landscape-page-template-work16, .a4-page-template, .print-page');
+            const hasContent = pageElements.length > 0 || (docElement.textContent && docElement.textContent.trim().length > 50);
+            
+            if (!hasContent) {
+              console.error(`❌ DOC 저장 컨테이너에 내용이 없습니다: ${containerId}`, {
+                pageElementsCount: pageElements.length,
+                textContentLength: docElement.textContent?.trim().length || 0
+              });
+              
+              // 추가 대기 후 재시도
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              const retryPageElements = docElement.querySelectorAll('.a4-landscape-page-template-work16, .a4-page-template, .print-page');
+              const retryHasContent = retryPageElements.length > 0 || (docElement.textContent && docElement.textContent.trim().length > 50);
+              
+              if (!retryHasContent) {
+                console.error('❌ 재시도 실패: 여전히 내용이 없습니다');
+                alert('문서 내용을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+                return;
+              }
+            }
+            
+            console.log(`✅ DOC 저장 컨테이너 확인: ${containerId}, 페이지 수: ${pageElements.length}`);
+            
+            // DOC 저장
+            const result = await generateAndUploadFile(
+              docElement as HTMLElement,
+              userData.uid,
+              `${packageType.toLowerCase() || 'quiz'}_problem_${Date.now()}`,
+              workTypeName,
+              { 
+                isAnswerMode: false, 
+                orientation: 'landscape',
+                fileFormat: 'doc'
+              }
+            );
+            
+            console.log(`📁 ${workTypeName} DOC 저장 완료:`, result.fileName);
           } else {
             // 다른 유형은 기존 로직 사용
             const result = await generateAndUploadFile(
@@ -2214,7 +2395,7 @@ const QuizDisplayPage: React.FC = () => {
       return;
     }
 
-    console.log('🖨️ 인쇄(정답) 시작');
+    console.log('🖨️ 인쇄(정답) 시작', { fileFormat });
     
     // 패키지/단일 유형에 따른 페이지 스타일 동적 추가
     const style = document.createElement('style');
@@ -2442,21 +2623,33 @@ const QuizDisplayPage: React.FC = () => {
             : 'print-root-package02-answer';
     printContainer.id = containerId;
     
-    // 유형#12인 경우 인쇄용 컨테이너 스타일 명시적 설정
-    if (isSingleWork && typeId === '12') {
-      printContainer.style.display = 'block';
-      printContainer.style.visibility = 'visible';
-      printContainer.style.position = 'relative';
-      printContainer.style.width = 'auto';
-      printContainer.style.height = 'auto';
-      printContainer.style.overflow = 'visible';
+    // DOC 저장인 경우 화면에 보이지 않도록 설정
+    if (fileFormat === 'doc') {
+      printContainer.style.display = 'none';
+      printContainer.style.visibility = 'hidden';
+      printContainer.style.position = 'absolute';
+      printContainer.style.left = '-9999px';
+      printContainer.style.top = '-9999px';
+      printContainer.style.width = '1px';
+      printContainer.style.height = '1px';
+      printContainer.style.overflow = 'hidden';
+    } else {
+      // 유형#12인 경우 인쇄용 컨테이너 스타일 명시적 설정
+      if (isSingleWork && typeId === '12') {
+        printContainer.style.display = 'block';
+        printContainer.style.visibility = 'visible';
+        printContainer.style.position = 'relative';
+        printContainer.style.width = 'auto';
+        printContainer.style.height = 'auto';
+        printContainer.style.overflow = 'visible';
+      }
     }
     
     document.body.appendChild(printContainer);
 
-    // 기존 화면 숨기기
+    // 기존 화면 숨기기 (DOC 저장인 경우에는 숨기지 않음)
     const appRoot = document.getElementById('root');
-    if (appRoot) {
+    if (appRoot && fileFormat !== 'doc') {
       appRoot.style.display = 'none';
     }
 
@@ -3579,7 +3772,14 @@ const QuizDisplayPage: React.FC = () => {
       root.render(<PrintFormatWork14New quizzes={rawQuizzes} isAnswerMode={true} showDebugBorders={true} />);
     } else if (packageType === '16') {
       // 유형#16 (여러 문제일 때) - 나의문제목록에서 불러온 경우
-      console.log('🔍 유형#16 인쇄(정답) - 여러 문제 (packageType=16):', {
+      // DOC 저장인 경우 오버레이 렌더링을 건너뛰고 setTimeout 안의 DOC 저장 로직으로 이동
+      console.log('🔍 유형#16 fileFormat 확인:', { fileFormat, isDoc: fileFormat === 'doc', isPdf: fileFormat === 'pdf' });
+      if (fileFormat === 'doc') {
+        // DOC 저장은 setTimeout 안에서 처리하므로 여기서는 건너뜀
+        console.log('🔍 유형#16 DOC 저장(정답) - 오버레이 렌더링 건너뜀, setTimeout 안에서 처리');
+      } else {
+        // PDF 저장인 경우에만 오버레이 방식으로 렌더링
+        console.log('🔍 유형#16 인쇄(정답) - 여러 문제 (packageType=16):', {
         packageQuizLength: packageQuiz.length,
         firstItem: packageQuiz[0],
         firstItemKeys: packageQuiz[0] ? Object.keys(packageQuiz[0]) : []
@@ -3653,25 +3853,27 @@ const QuizDisplayPage: React.FC = () => {
           padding: 0;
           font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
           width: 29.7cm !important;
-          height: 21cm !important;
+          height: auto !important;
+          min-height: 21cm !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
-          overflow: hidden !important;
         }
         @media print {
           html, body {
-            overflow: hidden !important;
+            overflow: visible !important;
+            height: auto !important;
           }
         }
         #work16-print-overlay,
         #work16-print-overlay-answer {
-          overflow: hidden !important;
+          overflow: visible !important;
         }
         #work16-print-overlay > *:not(style),
         #work16-print-overlay-answer > *:not(style) {
-          overflow: hidden !important;
+          overflow: visible !important;
           width: 100% !important;
-          height: 100% !important;
+          height: auto !important;
+          min-height: 21cm !important;
           margin: 0 !important;
           padding: 0 !important;
         }
@@ -3684,21 +3886,30 @@ const QuizDisplayPage: React.FC = () => {
           display: block !important;
         }
         .a4-landscape-page-template-work16 {
-          width: 29.7cm;
-          height: 21cm;
-          margin: 0;
-          padding: 0;
-          background: #ffffff;
-          box-sizing: border-box;
-          page-break-inside: avoid;
-          position: relative;
+          width: 29.7cm !important;
+          height: 21cm !important;
+          min-height: 21cm !important;
+          max-height: 21cm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #ffffff !important;
+          box-sizing: border-box !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+          position: relative !important;
           display: flex !important;
-          flex-direction: column;
-          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+          flex-direction: column !important;
+          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
+          overflow: hidden !important;
         }
         .a4-landscape-page-template-work16:not(:last-child) {
-          page-break-after: always;
-          break-after: page;
+          page-break-after: always !important;
+          break-after: page !important;
+          margin-bottom: 0 !important;
+        }
+        .a4-landscape-page-template-work16:last-child {
+          page-break-after: avoid !important;
+          break-after: avoid !important;
         }
         .a4-landscape-page-header-work16 {
           width: 100%;
@@ -3772,10 +3983,32 @@ const QuizDisplayPage: React.FC = () => {
           gap: 0.5cm;
           width: 100%;
           margin: 1rem 0;
+          position: relative;
         }
         .word-list-column-work16 {
           flex: 1 1 50%;
           width: 50%;
+          display: flex;
+          flex-direction: column;
+        }
+        .quiz-card-work16 {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        /* 홀수개 문제인 경우 마지막 페이지: 왼쪽 단에만 배치 */
+        .single-quiz-container {
+          justify-content: flex-start !important;
+        }
+        .single-quiz-column {
+          flex: 0 0 50% !important;
+          max-width: 50% !important;
+          width: 50% !important;
+        }
+        .single-quiz-column .quiz-card-work16 {
+          width: 100% !important;
+          max-width: 100% !important;
         }
         .word-list-table-work16 {
           width: 100%;
@@ -3842,18 +4075,57 @@ const QuizDisplayPage: React.FC = () => {
           }
           .only-print-work16 {
             display: block !important;
+            visibility: visible !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+          .a4-landscape-page-template-work16 {
+            display: flex !important;
+            visibility: visible !important;
+            width: 29.7cm !important;
+            height: 21cm !important;
+            min-height: 21cm !important;
+            max-height: 21cm !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .a4-landscape-page-template-work16:not(:last-child) {
+            page-break-after: always !important;
+            break-after: page !important;
+          }
+          .a4-landscape-page-template-work16:last-child {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
           #work16-print-overlay,
           #work16-print-overlay-answer {
             display: block !important;
             visibility: visible !important;
             left: 0 !important;
+            top: 0 !important;
             opacity: 1 !important;
             z-index: 9999 !important;
-            position: fixed !important;
-            overflow: hidden !important;
+            position: relative !important; /* fixed에서 relative로 변경 */
+            overflow: visible !important;
             width: 100% !important;
-            height: 100% !important;
+            height: auto !important;
+            min-height: 42cm !important; /* 2페이지 = 21cm * 2 */
+          }
+          #work16-print-overlay .only-print-work16,
+          #work16-print-overlay-answer .only-print-work16 {
+            display: block !important;
+            visibility: visible !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+          #work16-print-overlay .a4-landscape-page-template-work16,
+          #work16-print-overlay-answer .a4-landscape-page-template-work16 {
+            display: flex !important;
+            visibility: visible !important;
+            width: 29.7cm !important;
+            height: 21cm !important;
+            min-height: 21cm !important;
+            max-height: 21cm !important;
           }
         }
       `;
@@ -3884,68 +4156,66 @@ const QuizDisplayPage: React.FC = () => {
         inset: '0',
         backgroundColor: '#ffffff',
         zIndex: '9999',
-        overflow: 'hidden',
+        overflow: 'visible', // hidden에서 visible로 변경
         width: '100%',
-        height: '100%'
+        height: 'auto', // 100%에서 auto로 변경
+        minHeight: '42cm' // 2페이지 = 21cm * 2
       } as Partial<CSSStyleDeclaration>);
       
       // 오버레이에 인쇄용 스타일 + 마크업 주입
       overlay.innerHTML = `
         <style>${PRINT_STYLES_MULTI_ANSWER}</style>
-        <div style="width: 100%; height: 100%; overflow: hidden; margin: 0; padding: 0;">
-          ${markup}
-        </div>
+        ${markup}
       `;
       
       document.body.appendChild(overlay);
       
-      // 오버레이 내부의 모든 요소에 스크롤바 방지 스타일 적용
-      const overlayContent = overlay.querySelector('div');
-      if (overlayContent) {
-        overlayContent.style.overflow = 'hidden';
-        overlayContent.style.width = '100%';
-        overlayContent.style.height = '100%';
-        overlayContent.style.margin = '0';
-        overlayContent.style.padding = '0';
+        // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+        const prevBodyId = document.body.getAttribute('id');
+        document.body.setAttribute('id', 'work16-print-active');
+        
+        // 약간의 지연 후 인쇄 실행 (PDF인 경우에만)
+        if (fileFormat === 'pdf') {
+          setTimeout(() => {
+            window.print();
+          
+          // window.print() 호출 직후 즉시 오버레이 숨기기
+          overlay.style.display = 'none';
+          overlay.style.visibility = 'hidden';
+          overlay.style.left = '-9999px';
+          overlay.style.opacity = '0';
+          overlay.style.zIndex = '-1';
+          
+          // 인쇄 후 오버레이 정리
+          setTimeout(() => {
+            const ov = document.getElementById(overlayId);
+            if (ov && ov.parentNode) {
+              ov.parentNode.removeChild(ov);
+            }
+            
+            // body id 되돌리기
+            if (prevBodyId) {
+              document.body.setAttribute('id', prevBodyId);
+            } else {
+              document.body.removeAttribute('id');
+            }
+            
+            // appRoot 다시 표시
+            if (appRoot) {
+              appRoot.style.display = '';
+            }
+          }, 100);
+        }, 300);
+        }
       }
       
-      // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
-      const prevBodyId = document.body.getAttribute('id');
-      document.body.setAttribute('id', 'work16-print-active');
+      // DOC 저장인 경우 오버레이 렌더링을 건너뛰었지만 setTimeout이 실행되도록 return하지 않음
+      // PDF 저장인 경우에만 return (오버레이 방식 사용 시 root.render 호출하지 않음)
+      if (fileFormat === 'pdf') {
+        return; // 오버레이 방식 사용 시 root.render 호출하지 않음
+      }
       
-      // 약간의 지연 후 인쇄 실행
-      setTimeout(() => {
-        window.print();
-        
-        // window.print() 호출 직후 즉시 오버레이 숨기기
-        overlay.style.display = 'none';
-        overlay.style.visibility = 'hidden';
-        overlay.style.left = '-9999px';
-        overlay.style.opacity = '0';
-        overlay.style.zIndex = '-1';
-        
-        // 인쇄 후 오버레이 정리
-        setTimeout(() => {
-          const ov = document.getElementById(overlayId);
-          if (ov && ov.parentNode) {
-            ov.parentNode.removeChild(ov);
-          }
-          
-          // body id 되돌리기
-          if (prevBodyId) {
-            document.body.setAttribute('id', prevBodyId);
-          } else {
-            document.body.removeAttribute('id');
-          }
-          
-          // appRoot 다시 표시
-          if (appRoot) {
-            appRoot.style.display = '';
-          }
-        }, 100);
-      }, 300);
-      
-      return; // 오버레이 방식 사용 시 root.render 호출하지 않음
+      // DOC 저장인 경우 setTimeout이 실행되도록 계속 진행 (return하지 않음)
     } else if (packageType === '01') {
       const rawQuizzes = packageQuiz.map((item: any) => item.quiz || item);
       root.render(<PrintFormatWork01New quizzes={rawQuizzes} isAnswerMode={true} />);
@@ -4198,13 +4468,16 @@ const QuizDisplayPage: React.FC = () => {
     }
 
     // 렌더링 완료 후 인쇄 및 파일 생성
-    // DOC 저장은 렌더링 시간이 더 필요함 (특히 Work_06, Work_02)
+    // DOC 저장은 렌더링 시간이 더 필요함 (특히 Work_06, Work_02, Work_16)
     const renderDelay = fileFormat === 'doc' 
       ? ((packageType === '06' || (isSingleWork && typeId === '06')) ? 2000 : 
-         (packageType === '02' || (isSingleWork && typeId === '02')) ? 2000 : 1500)
+         (packageType === '02' || (isSingleWork && typeId === '02')) ? 2000 :
+         (packageType === '16' || (isSingleWork && typeId === '16')) ? 2000 : 1500)
       : ((packageType === '01' || isType01Single) ? 1000 : 500);
     
+    console.log('⏰ setTimeout 실행 예정 (정답):', { renderDelay, fileFormat, packageType, typeId });
     setTimeout(async () => {
+      console.log('⏰ setTimeout 실행됨 (정답):', { fileFormat, packageType, typeId });
       // 파일 생성 및 Firebase Storage 업로드
       try {
         // 유형#01, #02, #03의 경우 실제 렌더링된 컨테이너 ID 사용
@@ -4341,8 +4614,12 @@ const QuizDisplayPage: React.FC = () => {
         }
         
         // DOM 요소가 실제로 내용을 가지고 있는지 확인 (특히 DOC 저장 시)
-        if (fileFormat === 'doc') {
-          const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page');
+        // packageType === '16'인 경우 DOC 저장은 별도 로직에서 처리하므로 여기서는 건너뜀
+        if (fileFormat === 'doc' && packageType === '16') {
+          // packageType === '16'인 경우 DOC 저장은 아래 별도 로직에서 처리
+          // 여기서는 내용 체크를 건너뜀
+        } else if (fileFormat === 'doc') {
+          const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page, .a4-landscape-page-template-work16');
           const hasContent = pageElements.length > 0 || (element.textContent && element.textContent.trim().length > 50);
           if (!hasContent) {
             console.error(`❌ 인쇄 컨테이너에 내용이 없습니다: ${elementId}`, {
@@ -4353,7 +4630,7 @@ const QuizDisplayPage: React.FC = () => {
             setTimeout(async () => {
               const retryElement = document.getElementById(elementId);
               if (retryElement && userData?.uid) {
-                const pageElementsRetry = retryElement.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page');
+                const pageElementsRetry = retryElement.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page, .a4-landscape-page-template-work16');
                 const hasContentRetry = pageElementsRetry.length > 0 || (retryElement.textContent && retryElement.textContent.trim().length > 50);
                 if (hasContentRetry) {
                   console.log('✅ 재시도 성공: 내용이 렌더링되었습니다');
@@ -4389,8 +4666,83 @@ const QuizDisplayPage: React.FC = () => {
           packageType === '16' ? '유형#16_정답' :
           '정답';
           
-          // 유형#12는 인쇄 미리보기를 먼저 실행한 후 PDF 저장
-          if (typeId === '12' && fileFormat === 'pdf') {
+          // 유형#16 DOC 저장: 저장(문제)와 동일한 방식으로 처리
+          console.log('🔍 setTimeout 안에서 유형#16 DOC 저장 확인:', { typeId, packageType, fileFormat, isDoc: fileFormat === 'doc', condition: (typeId === '16' || packageType === '16') && fileFormat === 'doc' });
+          if ((typeId === '16' || packageType === '16') && fileFormat === 'doc') {
+            // 유형#16 DOC 저장: 헤더만 표시하는 전용 컴포넌트 사용
+            console.log('✅ 유형#16 DOC 저장(정답) 로직 실행 시작');
+            const workTypeName = '유형#16_정답';
+            
+            // packageType === '16'인 경우 여러 문제 처리
+            if (packageType === '16') {
+              const rawQuizzes = packageQuiz.map((item: any) => {
+                const work16Data = item.work16Data || item.quiz || item.data?.work16Data || item.data || item;
+                return {
+                  words: Array.isArray(work16Data?.words) ? work16Data.words : [],
+                  quizType: work16Data?.quizType || 'english-to-korean',
+                  totalQuestions: work16Data?.totalQuestions || (work16Data?.words?.length || 0),
+                  passage: work16Data?.passage || ''
+                };
+              });
+              
+              root.render(<HistoryPrintWork16 data={{ quizzes: rawQuizzes }} isAnswerMode={true} />);
+            } else {
+              // typeId === '16'인 경우 단일 문제 처리
+              root.render(<HistoryPrintWork16Doc />);
+            }
+            
+            // 렌더링 대기 (여러 문제인 경우 더 긴 대기 시간 필요)
+            const renderWaitTime = packageType === '16' ? 2000 : 1000;
+            await new Promise(resolve => setTimeout(resolve, renderWaitTime));
+            
+            // 렌더링 완료 확인
+            const docElement = document.getElementById(containerId) || printContainer;
+            if (!docElement) {
+              console.error(`❌ DOC 저장 컨테이너를 찾을 수 없습니다: ${containerId}`);
+              alert('문서 내용을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+              return;
+            }
+            
+            // 페이지 요소 확인
+            const pageElements = docElement.querySelectorAll('.a4-landscape-page-template-work16, .a4-page-template, .print-page');
+            const hasContent = pageElements.length > 0 || (docElement.textContent && docElement.textContent.trim().length > 50);
+            
+            if (!hasContent) {
+              console.error(`❌ DOC 저장 컨테이너에 내용이 없습니다: ${containerId}`, {
+                pageElementsCount: pageElements.length,
+                textContentLength: docElement.textContent?.trim().length || 0
+              });
+              
+              // 추가 대기 후 재시도
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              const retryPageElements = docElement.querySelectorAll('.a4-landscape-page-template-work16, .a4-page-template, .print-page');
+              const retryHasContent = retryPageElements.length > 0 || (docElement.textContent && docElement.textContent.trim().length > 50);
+              
+              if (!retryHasContent) {
+                console.error('❌ 재시도 실패: 여전히 내용이 없습니다');
+                alert('문서 내용을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+                return;
+              }
+            }
+            
+            console.log(`✅ DOC 저장 컨테이너 확인: ${containerId}, 페이지 수: ${pageElements.length}`);
+            
+            // DOC 저장
+            const result = await generateAndUploadFile(
+              docElement as HTMLElement,
+              userData.uid,
+              `${packageType.toLowerCase() || 'quiz'}_answer_${Date.now()}`,
+              workTypeName,
+              { 
+                isAnswerMode: true, 
+                orientation: 'landscape',
+                fileFormat: 'doc'
+              }
+            );
+            
+            console.log(`📁 ${workTypeName} DOC 저장 완료:`, result.fileName);
+          } else if (typeId === '12' && fileFormat === 'pdf') {
+            // 유형#12는 인쇄 미리보기를 먼저 실행한 후 PDF 저장
             // 인쇄 미리보기 먼저 실행
             // 충분한 렌더링 시간 확보
             requestAnimationFrame(() => {
@@ -4665,7 +5017,10 @@ const QuizDisplayPage: React.FC = () => {
             {fileFormat === 'pdf' ? '🖨️인쇄(문제)' : '💾저장(문제)'}
           </button>
           <button
-            onClick={handlePrintAnswer}
+            onClick={() => {
+              console.log('🔘 저장(정답) 버튼 클릭:', { fileFormat, buttonText: fileFormat === 'pdf' ? '🖨️인쇄(정답)' : '💾저장(정답)' });
+              handlePrintAnswer();
+            }}
             className="print-btn answer-btn"
           >
             {fileFormat === 'pdf' ? '🖨️인쇄(정답)' : '💾저장(정답)'}

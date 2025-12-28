@@ -133,8 +133,52 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
     const quizzesPerPage = 2;
     const pages: typeof quizzes[] = [];
     
+    // 디버깅: 퀴즈 데이터 확인
+    console.log('🖨️ [Work16] 페이지 생성 전 퀴즈 확인:', {
+      totalQuizzes: quizzes.length,
+      quizzes: quizzes.map((q: any, idx: number) => ({
+        index: idx,
+        wordsCount: q.words?.length || 0,
+        hasWords: Array.isArray(q.words) && q.words.length > 0,
+        words: q.words?.slice(0, 3).map((w: any) => w.english) || []
+      }))
+    });
+    
     for (let i = 0; i < quizzes.length; i += quizzesPerPage) {
-      pages.push(quizzes.slice(i, i + quizzesPerPage));
+      const pageQuizzes = quizzes.slice(i, i + quizzesPerPage);
+      // 빈 배열이 아닌 경우에만 추가
+      if (pageQuizzes.length > 0) {
+        pages.push(pageQuizzes);
+        console.log(`🖨️ [Work16] 페이지 ${pages.length - 1} 생성:`, {
+          startIndex: i,
+          endIndex: i + pageQuizzes.length,
+          quizzesCount: pageQuizzes.length,
+          quizzes: pageQuizzes.map((q: any) => ({
+            wordsCount: q.words?.length || 0,
+            hasWords: Array.isArray(q.words) && q.words.length > 0
+          }))
+        });
+      }
+    }
+    
+    console.log('🖨️ [Work16] 전체 페이지 정보:', {
+      totalQuizzes: quizzes.length,
+      totalPages: pages.length,
+      expectedPages: Math.ceil(quizzes.length / quizzesPerPage),
+      pages: pages.map((p, idx) => ({
+        pageIndex: idx,
+        quizzesCount: p.length,
+        quizzes: p.map((q: any) => ({
+          wordsCount: q.words?.length || 0,
+          hasWords: Array.isArray(q.words) && q.words.length > 0
+        }))
+      }))
+    });
+    
+    // 페이지가 예상보다 적으면 경고
+    const expectedPages = Math.ceil(quizzes.length / quizzesPerPage);
+    if (pages.length !== expectedPages) {
+      console.error(`🖨️ [Work16] 페이지 수 불일치! 예상: ${expectedPages}, 실제: ${pages.length}`);
     }
 
     // 단일 퀴즈 테이블 렌더링 함수 (각 단별로 독립적 번호)
@@ -196,42 +240,102 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
       );
     };
 
+    // 렌더링 전 최종 확인
+    console.log('🖨️ [Work16] 렌더링 시작:', {
+      totalPages: pages.length,
+      pages: pages.map((p, idx) => ({
+        pageIndex: idx,
+        quizzesCount: p.length,
+        quiz1Words: p[0]?.words?.length || 0,
+        quiz2Words: p[1]?.words?.length || 0
+      }))
+    });
+    
     return (
       <div className="only-print-work16">
-        {pages.map((pageQuizzes, pageIndex) => (
-          <A4PageTemplateWork16 key={pageIndex}>
-            <div className="print-content-work16">
-              <div className="word-list-container-work16">
-                {/* 왼쪽 단: 첫 번째 퀴즈 */}
-                <div className="word-list-column-work16">
-                  {pageQuizzes[0] && pageQuizzes[0].words && pageQuizzes[0].words.length > 0 && (
-                    <>
-                      <ProblemInstructionWork16>
-                        {instructionText}
-                      </ProblemInstructionWork16>
-                      {renderSingleQuizTable(
-                        pageQuizzes[0].words,
-                        pageQuizzes[0].quizType || quizType
-                      )}
-                    </>
-                  )}
+        {pages.map((pageQuizzes, pageIndex) => {
+          // 안전하게 퀴즈 데이터 확인
+          const leftQuiz = pageQuizzes[0];
+          const rightQuiz = pageQuizzes[1];
+          const hasLeftQuiz = leftQuiz && Array.isArray(leftQuiz.words) && leftQuiz.words.length > 0;
+          const hasRightQuiz = rightQuiz && Array.isArray(rightQuiz.words) && rightQuiz.words.length > 0;
+          
+          console.log(`🖨️ [Work16] 페이지 ${pageIndex} 렌더링:`, {
+            pageIndex,
+            pageQuizzesCount: pageQuizzes.length,
+            hasLeftQuiz,
+            hasRightQuiz,
+            leftQuizWordsCount: hasLeftQuiz ? leftQuiz.words.length : 0,
+            rightQuizWordsCount: hasRightQuiz ? rightQuiz.words.length : 0,
+            leftQuizExists: !!leftQuiz,
+            rightQuizExists: !!rightQuiz
+          });
+          
+          // 페이지에 퀴즈가 하나도 없으면 빈 페이지라도 렌더링 (디버깅용)
+          if (!hasLeftQuiz && !hasRightQuiz) {
+            console.warn(`🖨️ [Work16] 페이지 ${pageIndex}에 유효한 퀴즈가 없습니다.`, {
+              leftQuiz: leftQuiz ? { hasWords: Array.isArray(leftQuiz.words), wordsLength: leftQuiz.words?.length } : null,
+              rightQuiz: rightQuiz ? { hasWords: Array.isArray(rightQuiz.words), wordsLength: rightQuiz.words?.length } : null
+            });
+            // 빈 페이지도 렌더링하여 문제 확인
+            return (
+              <A4PageTemplateWork16 key={pageIndex}>
+                <div className="print-content-work16">
+                  <div className="word-list-container-work16">
+                    <div className="word-list-column-work16">
+                      <div style={{ padding: '2rem', color: '#666', textAlign: 'center' }}>
+                        페이지 {pageIndex + 1}: 퀴즈 데이터 없음
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                {/* 오른쪽 단: 두 번째 퀴즈 */}
-                {pageQuizzes[1] && pageQuizzes[1].words && pageQuizzes[1].words.length > 0 && (
-                  <div className="word-list-column-work16">
-                    <ProblemInstructionWork16>
-                      {instructionText}
-                    </ProblemInstructionWork16>
-                    {renderSingleQuizTable(
-                      pageQuizzes[1].words,
-                      pageQuizzes[1].quizType || quizType
+              </A4PageTemplateWork16>
+            );
+          }
+          
+          // 홀수개인 경우 마지막 페이지 처리: 왼쪽 단에만 배치
+          const isLastPageWithSingleQuiz = !hasRightQuiz && hasLeftQuiz;
+          
+          return (
+            <A4PageTemplateWork16 
+              key={`work16-page-${pageIndex}`}
+              className={`work16-page-${pageIndex} ${isLastPageWithSingleQuiz ? 'single-quiz-page' : ''}`}
+            >
+              <div className="print-content-work16">
+                <div className={`word-list-container-work16 ${isLastPageWithSingleQuiz ? 'single-quiz-container' : ''}`}>
+                  {/* 왼쪽 단: 첫 번째 퀴즈 카드 */}
+                  <div className={`word-list-column-work16 ${isLastPageWithSingleQuiz ? 'single-quiz-column' : ''}`}>
+                    {hasLeftQuiz && (
+                      <div className="quiz-card-work16">
+                        <ProblemInstructionWork16>
+                          문제 {pageIndex * 2 + 1}. {instructionText}
+                        </ProblemInstructionWork16>
+                        {renderSingleQuizTable(
+                          leftQuiz.words,
+                          leftQuiz.quizType || quizType
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
+                  {/* 오른쪽 단: 두 번째 퀴즈 카드 (있을 때만 표시) */}
+                  {hasRightQuiz && (
+                    <div className="word-list-column-work16">
+                      <div className="quiz-card-work16">
+                        <ProblemInstructionWork16>
+                          문제 {pageIndex * 2 + 2}. {instructionText}
+                        </ProblemInstructionWork16>
+                        {renderSingleQuizTable(
+                          rightQuiz.words,
+                          rightQuiz.quizType || quizType
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </A4PageTemplateWork16>
-        ))}
+            </A4PageTemplateWork16>
+          );
+        })}
       </div>
     );
   }

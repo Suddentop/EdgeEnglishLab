@@ -67,7 +67,7 @@
     print-color-adjust: exact;
     overflow: visible !important;
   }
-  
+
   /* #root는 인쇄 시 숨기기 */
   #root {
     display: none !important;

@@ -351,13 +351,15 @@ const Work_16_PassageWordStudy: React.FC = () => {
       padding: 0;
       font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
       width: 29.7cm !important;
-      height: 21cm !important;
+      height: auto !important;
+      min-height: 21cm !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     @media print {
       html, body {
-        overflow: hidden;
+        overflow: visible !important;
+        height: auto !important;
       }
     }
     
@@ -458,6 +460,27 @@ const Work_16_PassageWordStudy: React.FC = () => {
     .word-list-column-work16 {
       flex: 1 1 50%;
       width: 50%;
+      display: flex;
+      flex-direction: column;
+    }
+    .quiz-card-work16 {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    /* 홀수개 문제인 경우 마지막 페이지: 왼쪽 단에만 배치 */
+    .single-quiz-container {
+      justify-content: flex-start !important;
+    }
+    .single-quiz-column {
+      flex: 0 0 50% !important;
+      max-width: 50% !important;
+      width: 50% !important;
+    }
+    .single-quiz-column .quiz-card-work16 {
+      width: 100% !important;
+      max-width: 100% !important;
     }
     .word-list-table-work16 {
       width: 100%;
@@ -528,17 +551,54 @@ const Work_16_PassageWordStudy: React.FC = () => {
       }
       .only-print-work16 {
         display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        height: auto !important;
       }
       .a4-landscape-page-template-work16 {
         display: flex !important;
+        visibility: visible !important;
+        width: 29.7cm !important;
+        height: 21cm !important;
+        min-height: 21cm !important;
+        max-height: 21cm !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .a4-landscape-page-template-work16:not(:last-child) {
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+      .a4-landscape-page-template-work16:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
       }
       #work16-print-overlay {
         display: block !important;
         visibility: visible !important;
         left: 0 !important;
+        top: 0 !important;
         opacity: 1 !important;
         z-index: 9999 !important;
-        position: fixed !important;
+        position: relative !important; /* fixed에서 relative로 변경 */
+        width: 100% !important;
+        height: auto !important;
+        min-height: 42cm !important; /* 2페이지 = 21cm * 2 */
+        overflow: visible !important;
+      }
+      #work16-print-overlay .only-print-work16 {
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+      #work16-print-overlay .a4-landscape-page-template-work16 {
+        display: flex !important;
+        visibility: visible !important;
+        width: 29.7cm !important;
+        height: 21cm !important;
+        min-height: 21cm !important;
+        max-height: 21cm !important;
       }
     }
   `;
@@ -605,6 +665,37 @@ const Work_16_PassageWordStudy: React.FC = () => {
 
     console.log('🖨️ [Work16] 렌더링된 마크업 길이:', markup.length);
     console.log('🖨️ [Work16] 마크업 샘플:', markup.substring(0, 500));
+    
+    // 렌더링된 페이지 수 확인
+    const pageCount = (markup.match(/a4-landscape-page-template-work16/g) || []).length;
+    const expectedPageCount = Math.ceil(quizzes.length / 2);
+    console.log('🖨️ [Work16] 렌더링된 페이지 수:', pageCount);
+    console.log('🖨️ [Work16] 예상 페이지 수:', expectedPageCount);
+    
+    // 각 페이지의 내용 확인
+    const pageMatches = markup.match(/<div class="a4-landscape-page-template-work16[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/g);
+    if (pageMatches) {
+      console.log('🖨️ [Work16] 페이지별 마크업 확인:', {
+        pageCount: pageMatches.length,
+        pageLengths: pageMatches.map((p, i) => ({
+          pageIndex: i,
+          length: p.length,
+          hasContent: p.includes('word-list-table-work16'),
+          sample: p.substring(0, 200)
+        }))
+      });
+    }
+    
+    // 문제 번호 확인
+    const problemMatches = markup.match(/문제 \d+\./g);
+    console.log('🖨️ [Work16] 마크업에 포함된 문제 번호:', problemMatches);
+    
+    if (pageCount !== expectedPageCount) {
+      console.error(`🖨️ [Work16] 페이지 수 불일치! 예상: ${expectedPageCount}, 실제: ${pageCount}`);
+      console.log('🖨️ [Work16] 전체 마크업:', markup);
+    } else {
+      console.log('🖨️ [Work16] 모든 페이지가 마크업에 포함되었습니다.');
+    }
 
     // 현재 창 위에 전체 화면 오버레이 컨테이너 생성
     const overlayId = 'work16-print-overlay';
@@ -620,7 +711,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
       inset: '0',
       backgroundColor: '#ffffff',
       zIndex: '9999',
-      overflow: 'auto'
+      overflow: 'visible' // auto에서 visible로 변경하여 모든 페이지가 보이도록
     } as Partial<CSSStyleDeclaration>);
 
     // 오버레이에 인쇄용 스타일 + 마크업 주입
@@ -630,6 +721,15 @@ const Work_16_PassageWordStudy: React.FC = () => {
     `;
 
     document.body.appendChild(overlay);
+    
+    // 인쇄 스타일이 제대로 주입되었는지 확인
+    const styleElement = overlay.querySelector('style');
+    console.log('🖨️ [Work16] 인쇄 스타일 확인:', {
+      styleElementExists: !!styleElement,
+      styleContentLength: styleElement ? styleElement.textContent?.length || 0 : 0,
+      styleContentSample: styleElement ? styleElement.textContent?.substring(0, 200) : null,
+      printStylesLength: PRINT_STYLES.length
+    });
 
     // 디버깅: 오버레이 내용 확인
     console.log('🖨️ [Work16] 오버레이 추가 완료', {
@@ -637,37 +737,268 @@ const Work_16_PassageWordStudy: React.FC = () => {
       hasContent: overlay.innerHTML.length > 0,
       childrenCount: overlay.children.length
     });
+    
+    // 실제 DOM에서 페이지 수 확인 (더 상세한 정보)
+    setTimeout(() => {
+      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work16');
+      const onlyPrintDiv = overlay.querySelector('.only-print-work16');
+      
+      // 오버레이 스타일 확인
+      const overlayStyle = window.getComputedStyle(overlay);
+      console.log('🖨️ [Work16] 오버레이 스타일 확인:', {
+        display: overlayStyle.display,
+        visibility: overlayStyle.visibility,
+        position: overlayStyle.position,
+        width: overlayStyle.width,
+        height: overlayStyle.height,
+        overflow: overlayStyle.overflow,
+        zIndex: overlayStyle.zIndex
+      });
+      
+      // only-print-work16 스타일 확인
+      if (onlyPrintDiv) {
+        const onlyPrintStyle = window.getComputedStyle(onlyPrintDiv);
+        const onlyPrintRect = onlyPrintDiv.getBoundingClientRect();
+        console.log('🖨️ [Work16] only-print-work16 스타일 확인:', {
+          display: onlyPrintStyle.display,
+          visibility: onlyPrintStyle.visibility,
+          width: onlyPrintStyle.width,
+          height: onlyPrintStyle.height,
+          rect: {
+            top: onlyPrintRect.top,
+            left: onlyPrintRect.left,
+            width: onlyPrintRect.width,
+            height: onlyPrintRect.height
+          },
+          childrenCount: onlyPrintDiv.children.length,
+          innerHTMLLength: onlyPrintDiv.innerHTML.length
+        });
+      }
+      
+      // 각 페이지 요소 상세 확인
+      const pageDetails = Array.from(pageElements).map((el, idx) => {
+        const rect = el.getBoundingClientRect();
+        const computed = window.getComputedStyle(el);
+        const parent = el.parentElement;
+        const parentRect = parent ? parent.getBoundingClientRect() : null;
+        const parentComputed = parent ? window.getComputedStyle(parent) : null;
+        
+        return {
+          index: idx,
+          className: el.className,
+          id: el.id,
+          childrenCount: el.children.length,
+          textContentLength: el.textContent ? el.textContent.length : 0,
+          innerHTMLLength: el.innerHTML.length,
+          rect: {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            bottom: rect.bottom,
+            right: rect.right
+          },
+          computedStyle: {
+            display: computed.display,
+            visibility: computed.visibility,
+            width: computed.width,
+            height: computed.height,
+            minHeight: computed.minHeight,
+            maxHeight: computed.maxHeight,
+            position: computed.position,
+            pageBreakAfter: computed.pageBreakAfter,
+            breakAfter: computed.breakAfter
+          },
+          parent: parent ? {
+            tagName: parent.tagName,
+            className: parent.className,
+            rect: parentRect,
+            computedStyle: {
+              display: parentComputed?.display,
+              width: parentComputed?.width,
+              height: parentComputed?.height
+            }
+          } : null
+        };
+      });
+      
+      console.log('🖨️ [Work16] 실제 DOM 페이지 수 확인 (상세):', {
+        pageElementsCount: pageElements.length,
+        expectedPages: Math.ceil(quizzes.length / 2),
+        onlyPrintDivExists: !!onlyPrintDiv,
+        onlyPrintDivChildren: onlyPrintDiv ? onlyPrintDiv.children.length : 0,
+        pageDetails
+      });
+      
+      // 마크업에서 두 번째 페이지 확인
+      const markupContainsPage1 = markup.includes('work16-page-1');
+      const markupContainsProblem3 = markup.includes('문제 3.');
+      const markupContainsProblem4 = markup.includes('문제 4.');
+      console.log('🖨️ [Work16] 마크업 내용 확인:', {
+        markupLength: markup.length,
+        containsPage1: markupContainsPage1,
+        containsProblem3: markupContainsProblem3,
+        containsProblem4: markupContainsProblem4,
+        page0Index: markup.indexOf('work16-page-0'),
+        page1Index: markup.indexOf('work16-page-1'),
+        problem3Index: markup.indexOf('문제 3.'),
+        problem4Index: markup.indexOf('문제 4.')
+      });
+      
+      // 두 번째 페이지의 마크업 샘플
+      if (markupContainsPage1) {
+        const page1Start = markup.indexOf('work16-page-1');
+        const page1Sample = markup.substring(page1Start, Math.min(page1Start + 500, markup.length));
+        console.log('🖨️ [Work16] 두 번째 페이지 마크업 샘플:', page1Sample);
+      }
+    }, 100);
 
     // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
     const prevBodyId = document.body.getAttribute('id');
     document.body.setAttribute('id', 'work16-print-active');
 
-    // 약간의 지연 후 인쇄 실행
-    setTimeout(() => {
-      window.print();
+    // 모든 페이지가 렌더링되었는지 확인하는 함수
+    const checkAllPagesRendered = (): boolean => {
+      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work16');
+      const expectedPages = Math.ceil(quizzes.length / 2);
+      const actualPages = pageElements.length;
+      
+      // 각 페이지의 높이 확인
+      const pageHeights = Array.from(pageElements).map((el, idx) => {
+        const rect = el.getBoundingClientRect();
+        const computed = window.getComputedStyle(el);
+        return {
+          index: idx,
+          height: rect.height,
+          computedHeight: computed.height,
+          hasContent: el.textContent && el.textContent.trim().length > 100
+        };
+      });
+      
+      console.log('🖨️ [Work16] 페이지 렌더링 확인:', {
+        expectedPages,
+        actualPages,
+        allRendered: actualPages === expectedPages,
+        pageHeights
+      });
+      
+      return actualPages === expectedPages;
+    };
 
-      // window.print() 호출 직후 즉시 오버레이 숨기기
-      overlay.style.display = 'none';
-      overlay.style.visibility = 'hidden';
-      overlay.style.left = '-9999px';
-      overlay.style.opacity = '0';
-      overlay.style.zIndex = '-1';
+    // 약간의 지연 후 인쇄 실행 (모든 페이지가 렌더링될 때까지 대기)
+    const startPrint = () => {
+      // 페이지 렌더링 확인
+      if (!checkAllPagesRendered()) {
+        console.warn('🖨️ [Work16] 일부 페이지가 아직 렌더링되지 않았습니다. 추가 대기...');
+        setTimeout(startPrint, 200);
+        return;
+      }
 
-      // 인쇄 후 오버레이 정리
+      console.log('🖨️ [Work16] 모든 페이지가 렌더링되었습니다. 인쇄를 시작합니다.');
+      
+      // 모든 페이지가 보이도록 스크롤 확인 (더 상세한 정보)
+      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work16');
+      pageElements.forEach((page, idx) => {
+        const rect = page.getBoundingClientRect();
+        const computed = window.getComputedStyle(page);
+        const parent = page.parentElement;
+        const parentRect = parent ? parent.getBoundingClientRect() : null;
+        const parentComputed = parent ? window.getComputedStyle(parent) : null;
+        
+        // 페이지 내부 콘텐츠 확인
+        const content = page.querySelector('.print-content-work16');
+        const contentRect = content ? content.getBoundingClientRect() : null;
+        const contentComputed = content ? window.getComputedStyle(content) : null;
+        
+        // 테이블 확인
+        const tables = page.querySelectorAll('.word-list-table-work16');
+        const tableCount = tables.length;
+        const tableRects = Array.from(tables).map(t => t.getBoundingClientRect());
+        
+        console.log(`🖨️ [Work16] 페이지 ${idx} 상세 정보:`, {
+          element: {
+            rect: {
+              top: rect.top,
+              left: rect.left,
+              height: rect.height,
+              width: rect.width,
+              bottom: rect.bottom,
+              right: rect.right
+            },
+            computed: {
+              display: computed.display,
+              visibility: computed.visibility,
+              width: computed.width,
+              height: computed.height,
+              minHeight: computed.minHeight,
+              maxHeight: computed.maxHeight,
+              position: computed.position,
+              pageBreakAfter: computed.pageBreakAfter,
+              breakAfter: computed.breakAfter
+            },
+            isVisible: rect.height > 0 && rect.width > 0,
+            textContentLength: page.textContent ? page.textContent.length : 0,
+            innerHTMLLength: page.innerHTML.length
+          },
+          parent: parent ? {
+            tagName: parent.tagName,
+            className: parent.className,
+            rect: parentRect,
+            computed: {
+              display: parentComputed?.display,
+              width: parentComputed?.width,
+              height: parentComputed?.height
+            }
+          } : null,
+          content: content ? {
+            exists: true,
+            rect: contentRect,
+            computed: {
+              display: contentComputed?.display,
+              width: contentComputed?.width,
+              height: contentComputed?.height
+            }
+          } : null,
+          tables: {
+            count: tableCount,
+            rects: tableRects
+          }
+        });
+      });
+      
+      // 추가 대기 시간 (브라우저가 모든 스타일을 적용할 시간)
       setTimeout(() => {
-        const ov = document.getElementById(overlayId);
-        if (ov && ov.parentNode) {
-          ov.parentNode.removeChild(ov);
-        }
+        // 인쇄 전 모든 페이지가 보이도록 스크롤
+        overlay.scrollTop = 0;
+        
+        window.print();
 
-         // body id 되돌리기
-        if (prevBodyId) {
-          document.body.setAttribute('id', prevBodyId);
-        } else {
-          document.body.removeAttribute('id');
-        }
-      }, 100);
-    }, 300);
+        // window.print() 호출 직후 즉시 오버레이 숨기기
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+        overlay.style.left = '-9999px';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+
+        // 인쇄 후 오버레이 정리
+        setTimeout(() => {
+          const ov = document.getElementById(overlayId);
+          if (ov && ov.parentNode) {
+            ov.parentNode.removeChild(ov);
+          }
+
+           // body id 되돌리기
+          if (prevBodyId) {
+            document.body.setAttribute('id', prevBodyId);
+          } else {
+            document.body.removeAttribute('id');
+          }
+        }, 100);
+      }, 500);
+    };
+
+    // 초기 대기 후 인쇄 시작
+    setTimeout(startPrint, 300);
   };
 
   const handlePrintNoAnswer = () => {
