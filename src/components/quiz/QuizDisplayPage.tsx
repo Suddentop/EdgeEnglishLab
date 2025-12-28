@@ -97,6 +97,29 @@ const QuizDisplayPage: React.FC = () => {
             }
           }
         `;
+      } else if (packageType === 'P01') {
+        // 패키지#01: 유형#12와 동일하게 명시적인 크기 설정
+        style.textContent = `
+          @page {
+            margin: 0;
+            size: A4 portrait;
+          }
+          @media print {
+            html, body {
+              width: 21cm !important;
+              height: 29.7cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            #root {
+              display: none !important;
+            }
+            .a4-page-template {
+              width: 21cm !important;
+              height: 29.7cm !important;
+            }
+          }
+        `;
       } else {
         style.textContent = `
           @page {
@@ -1958,29 +1981,98 @@ const QuizDisplayPage: React.FC = () => {
         if (element) {
           // 디버깅: 실제 DOM에 렌더링된 페이지 요소 확인
           // 유형#12는 .a4-page-template-work12를 사용
+          // 패키지#01은 .a4-page-template를 사용
           const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .a4-page-template-work12, .print-page');
-          console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 문제):', {
-            totalPages: pageElements.length,
-            containerId: elementId,
-            hasOnlyPrintWork12: element.querySelector('.only-print-work12') !== null,
-            hasA4PageTemplateWork12: element.querySelector('.a4-page-template-work12') !== null,
-            pages: Array.from(pageElements).map((page, idx) => {
-              const rect = page.getBoundingClientRect();
-              const computedStyle = window.getComputedStyle(page);
-              return {
-                index: idx,
-                id: page.id,
-                className: page.className,
-                height: rect.height,
-                computedHeight: computedStyle.height,
-                pageBreakAfter: computedStyle.pageBreakAfter,
-                breakAfter: computedStyle.breakAfter,
-                isLastPage: page.classList.contains('last-page'),
-                marginBottom: computedStyle.marginBottom,
-                paddingBottom: computedStyle.paddingBottom
-              };
-            })
-          });
+          
+          // 패키지#01 전용 디버깅 정보
+          if (packageType === 'P01') {
+            const htmlElement = document.documentElement;
+            const bodyElement = document.body;
+            const htmlRect = htmlElement.getBoundingClientRect();
+            const bodyRect = bodyElement.getBoundingClientRect();
+            const htmlComputed = window.getComputedStyle(htmlElement);
+            const bodyComputed = window.getComputedStyle(bodyElement);
+            const containerRect = element.getBoundingClientRect();
+            const containerComputed = window.getComputedStyle(element);
+            const firstPageTemplate = element.querySelector('.a4-page-template');
+            const firstPageRect = firstPageTemplate?.getBoundingClientRect();
+            const firstPageComputed = firstPageTemplate ? window.getComputedStyle(firstPageTemplate) : null;
+            
+            console.log('🔍 [패키지#01] 인쇄(문제) 상세 디버깅:', {
+              '@page 설정': 'A4 portrait',
+              'html 크기': {
+                width: htmlRect.width,
+                height: htmlRect.height,
+                computedWidth: htmlComputed.width,
+                computedHeight: htmlComputed.height,
+                expectedWidth: '21cm',
+                expectedHeight: '29.7cm'
+              },
+              'body 크기': {
+                width: bodyRect.width,
+                height: bodyRect.height,
+                computedWidth: bodyComputed.width,
+                computedHeight: bodyComputed.height
+              },
+              'container 크기': {
+                id: elementId,
+                width: containerRect.width,
+                height: containerRect.height,
+                computedWidth: containerComputed.width,
+                computedHeight: containerComputed.height,
+                display: containerComputed.display,
+                visibility: containerComputed.visibility,
+                position: containerComputed.position
+              },
+              '첫 번째 페이지 템플릿': firstPageTemplate ? {
+                width: firstPageRect?.width,
+                height: firstPageRect?.height,
+                computedWidth: firstPageComputed?.width,
+                computedHeight: firstPageComputed?.height,
+                expectedWidth: '21cm',
+                expectedHeight: '29.7cm'
+              } : null,
+              'totalPages': pageElements.length,
+              'pageTemplates': Array.from(pageElements).map((page, idx) => {
+                const rect = page.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(page);
+                return {
+                  index: idx,
+                  id: page.id,
+                  className: page.className,
+                  width: rect.width,
+                  height: rect.height,
+                  computedWidth: computedStyle.width,
+                  computedHeight: computedStyle.height,
+                  pageBreakAfter: computedStyle.pageBreakAfter,
+                  breakAfter: computedStyle.breakAfter
+                };
+              })
+            });
+          } else {
+            console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 문제):', {
+              totalPages: pageElements.length,
+              containerId: elementId,
+              hasOnlyPrintWork12: element.querySelector('.only-print-work12') !== null,
+              hasA4PageTemplateWork12: element.querySelector('.a4-page-template-work12') !== null,
+              pages: Array.from(pageElements).map((page, idx) => {
+                const rect = page.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(page);
+                return {
+                  index: idx,
+                  id: page.id,
+                  className: page.className,
+                  height: rect.height,
+                  computedHeight: computedStyle.height,
+                  pageBreakAfter: computedStyle.pageBreakAfter,
+                  breakAfter: computedStyle.breakAfter,
+                  isLastPage: page.classList.contains('last-page'),
+                  marginBottom: computedStyle.marginBottom,
+                  paddingBottom: computedStyle.paddingBottom
+                };
+              })
+            });
+          }
         }
         if (!element) {
           console.error(`❌ 인쇄 컨테이너를 찾을 수 없습니다: ${elementId}`);
@@ -2156,6 +2248,29 @@ const QuizDisplayPage: React.FC = () => {
             }
             #root {
               display: none !important;
+            }
+          }
+        `;
+      } else if (packageType === 'P01') {
+        // 패키지#01: 유형#12와 동일하게 명시적인 크기 설정
+        style.textContent = `
+          @page {
+            margin: 0;
+            size: A4 portrait;
+          }
+          @media print {
+            html, body {
+              width: 21cm !important;
+              height: 29.7cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            #root {
+              display: none !important;
+            }
+            .a4-page-template {
+              width: 21cm !important;
+              height: 29.7cm !important;
             }
           }
         `;
@@ -4124,27 +4239,96 @@ const QuizDisplayPage: React.FC = () => {
         const element = document.getElementById(elementId);
         if (element) {
           // 디버깅: 실제 DOM에 렌더링된 페이지 요소 확인
+          // 패키지#01은 .a4-page-template를 사용
           const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page, .a4-landscape-page-template-work16');
-          console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 정답):', {
-            totalPages: pageElements.length,
-            containerId: elementId,
-            pages: Array.from(pageElements).map((page, idx) => {
-              const rect = page.getBoundingClientRect();
-              const computedStyle = window.getComputedStyle(page);
-              return {
-                index: idx,
-                id: page.id,
-                className: page.className,
-                height: rect.height,
-                computedHeight: computedStyle.height,
-                pageBreakAfter: computedStyle.pageBreakAfter,
-                breakAfter: computedStyle.breakAfter,
-                isLastPage: page.classList.contains('last-page'),
-                marginBottom: computedStyle.marginBottom,
-                paddingBottom: computedStyle.paddingBottom
-              };
-            })
-          });
+          
+          // 패키지#01 전용 디버깅 정보
+          if (packageType === 'P01') {
+            const htmlElement = document.documentElement;
+            const bodyElement = document.body;
+            const htmlRect = htmlElement.getBoundingClientRect();
+            const bodyRect = bodyElement.getBoundingClientRect();
+            const htmlComputed = window.getComputedStyle(htmlElement);
+            const bodyComputed = window.getComputedStyle(bodyElement);
+            const containerRect = element.getBoundingClientRect();
+            const containerComputed = window.getComputedStyle(element);
+            const firstPageTemplate = element.querySelector('.a4-page-template');
+            const firstPageRect = firstPageTemplate?.getBoundingClientRect();
+            const firstPageComputed = firstPageTemplate ? window.getComputedStyle(firstPageTemplate) : null;
+            
+            console.log('🔍 [패키지#01] 인쇄(정답) 상세 디버깅:', {
+              '@page 설정': 'A4 portrait',
+              'html 크기': {
+                width: htmlRect.width,
+                height: htmlRect.height,
+                computedWidth: htmlComputed.width,
+                computedHeight: htmlComputed.height,
+                expectedWidth: '21cm',
+                expectedHeight: '29.7cm'
+              },
+              'body 크기': {
+                width: bodyRect.width,
+                height: bodyRect.height,
+                computedWidth: bodyComputed.width,
+                computedHeight: bodyComputed.height
+              },
+              'container 크기': {
+                id: elementId,
+                width: containerRect.width,
+                height: containerRect.height,
+                computedWidth: containerComputed.width,
+                computedHeight: containerComputed.height,
+                display: containerComputed.display,
+                visibility: containerComputed.visibility,
+                position: containerComputed.position
+              },
+              '첫 번째 페이지 템플릿': firstPageTemplate ? {
+                width: firstPageRect?.width,
+                height: firstPageRect?.height,
+                computedWidth: firstPageComputed?.width,
+                computedHeight: firstPageComputed?.height,
+                expectedWidth: '21cm',
+                expectedHeight: '29.7cm'
+              } : null,
+              'totalPages': pageElements.length,
+              'pageTemplates': Array.from(pageElements).map((page, idx) => {
+                const rect = page.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(page);
+                return {
+                  index: idx,
+                  id: page.id,
+                  className: page.className,
+                  width: rect.width,
+                  height: rect.height,
+                  computedWidth: computedStyle.width,
+                  computedHeight: computedStyle.height,
+                  pageBreakAfter: computedStyle.pageBreakAfter,
+                  breakAfter: computedStyle.breakAfter
+                };
+              })
+            });
+          } else {
+            console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 정답):', {
+              totalPages: pageElements.length,
+              containerId: elementId,
+              pages: Array.from(pageElements).map((page, idx) => {
+                const rect = page.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(page);
+                return {
+                  index: idx,
+                  id: page.id,
+                  className: page.className,
+                  height: rect.height,
+                  computedHeight: computedStyle.height,
+                  pageBreakAfter: computedStyle.pageBreakAfter,
+                  breakAfter: computedStyle.breakAfter,
+                  isLastPage: page.classList.contains('last-page'),
+                  marginBottom: computedStyle.marginBottom,
+                  paddingBottom: computedStyle.paddingBottom
+                };
+              })
+            });
+          }
         }
         if (!element) {
           console.error(`❌ 인쇄 컨테이너를 찾을 수 없습니다: ${elementId}`);

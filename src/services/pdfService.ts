@@ -2058,6 +2058,9 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
     return cardGroups;
   };
   
+  // 본문해석 섹션이 카드 처리 루프에서 처리되었는지 추적
+  let translationProcessedInCardLoop = false;
+  
   if (questionCards.length > 0) {
     questionCards.forEach((card, cardIndex) => {
       if (process.env.NODE_ENV === 'development') {
@@ -2137,6 +2140,29 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
           const instruction = pageContent.querySelector('.problem-instruction[data-work-type]');
           if (instruction) {
             workType = instruction.getAttribute('data-work-type') || '';
+          }
+        }
+      }
+      
+      // 패키지#03: workType이 없으면 타입 뱃지나 제목에서 추출 시도
+      if (!workType) {
+        const typeBadge = actualCard.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
+        const typeBadgeText = typeBadge?.textContent?.trim() || '';
+        if (typeBadgeText) {
+          // "유형#01" 형식에서 "01" 추출
+          const match = typeBadgeText.match(/유형#?(\d+)/);
+          if (match) {
+            workType = match[1];
+          }
+        }
+        
+        // 여전히 없으면 제목에서 추출
+        if (!workType) {
+          const title = actualCard.querySelector('.print-question-title, .question-title');
+          const titleText = title?.textContent?.trim() || '';
+          const titleMatch = titleText.match(/유형#?(\d+)/);
+          if (titleMatch) {
+            workType = titleMatch[1];
           }
         }
       }
@@ -2646,6 +2672,32 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
       for (const selector of passageSelectors) {
         const found = actualCard.querySelector(selector) as HTMLElement | null;
         if (found) {
+          // 패키지#03: .print-shuffled-paragraphs를 찾았을 때 내부의 .print-paragraph-item 확인
+          // 유형#01인 경우 .print-shuffled-paragraphs는 단락 처리에서 사용하므로 본문으로 처리하지 않음
+          if (selector === '.print-shuffled-paragraphs' && !workType) {
+            const paragraphItems = found.querySelectorAll('.print-paragraph-item');
+            if (paragraphItems.length > 0) {
+              // 첫 번째 .print-paragraph-item의 레이블 확인
+              const firstItem = paragraphItems[0] as HTMLElement;
+              const labelElement = firstItem.querySelector('strong');
+              const label = labelElement?.textContent?.trim() || '';
+              const isWork01Label = /^[A-D][:：]?$/.test(label.replace(/\s/g, ''));
+              
+              if (isWork01Label) {
+                // 유형#01로 판단, workType 설정
+                workType = '01';
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`🔍 카드 ${cardIndex + 1} 유형#01 감지 (.print-shuffled-paragraphs 내부 레이블 확인):`, {
+                    label,
+                    paragraphItemsCount: paragraphItems.length
+                  });
+                }
+                // .print-shuffled-paragraphs는 본문으로 처리하지 않음 (단락 처리에서 사용)
+                continue;
+              }
+            }
+          }
+          
           passage = found;
           if (process.env.NODE_ENV === 'development') {
             console.log(`🔍 카드 ${cardIndex + 1} 본문 찾음:`, {
@@ -2679,6 +2731,47 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
               workType,
               cardHTML: (actualCard as HTMLElement).innerHTML.substring(0, 200)
             });
+          }
+        }
+      }
+      
+      // 패키지#01: 페이지 분할로 인해 본문이 다른 페이지에 있을 수 있음
+      // 같은 유형의 다른 페이지에서 본문 찾기 시도 (유형#03, 04, 05, 07, 08, 13, 14)
+      if (!passage && workType && (workType === '03' || workType === '04' || workType === '05' || workType === '07' || workType === '08' || workType === '13' || workType === '14')) {
+        // 같은 유형의 다른 .a4-page-template 찾기
+        const allTemplates = element.querySelectorAll('.a4-page-template');
+        for (const template of Array.from(allTemplates)) {
+          if (template === card) continue; // 현재 카드는 이미 확인했으므로 스킵
+          
+          // 같은 유형인지 확인 (data-work-type 또는 instruction 내부의 유형#XX 확인)
+          const templateWorkType = (template as HTMLElement).getAttribute('data-work-type');
+          const templateInstruction = template.querySelector('.problem-instruction');
+          const templateInstructionText = templateInstruction?.textContent || '';
+          const isSameWorkType = templateWorkType === workType || 
+                                 templateInstructionText.includes(`유형#${workType.padStart(2, '0')}`) ||
+                                 templateInstructionText.includes(`유형#${workType}`);
+          
+          if (isSameWorkType) {
+            const templatePageContent = template.querySelector('.a4-page-content');
+            if (templatePageContent) {
+              for (const selector of passageSelectors) {
+                const found = templatePageContent.querySelector(selector) as HTMLElement | null;
+                if (found && found.textContent?.trim()) {
+                  passage = found;
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log(`🔍 카드 ${cardIndex + 1} 본문 찾음 (다른 페이지에서):`, {
+                      selector,
+                      className: found.className,
+                      textLength: found.textContent?.trim().length || 0,
+                      workType,
+                      templateIndex: Array.from(allTemplates).indexOf(template)
+                    });
+                  }
+                  break;
+                }
+              }
+              if (passage) break;
+            }
           }
         }
       }
@@ -2740,13 +2833,68 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
       let shuffledParagraphsProcessed = false;
       
       // 유형#01인 경우 무조건 .shuffled-paragraph 또는 .print-paragraph-item을 찾기 (passage 조건 무시)
+      // workType이 본문 찾기 로직에서 설정되었을 수 있으므로 다시 확인
       const isWork01 = workType === '01' || workType === '1';
-      if (isWork01 || !passage) {
+      
+      // 패키지#03: workType이 아직 설정되지 않았고 .print-shuffled-paragraphs가 있는 경우
+      // 내부의 .print-paragraph-item 레이블을 확인하여 유형#01인지 판단
+      if (!isWork01 && !workType && passage && passage.classList.contains('print-shuffled-paragraphs')) {
+        const paragraphItems = passage.querySelectorAll('.print-paragraph-item');
+        if (paragraphItems.length > 0) {
+          const firstItem = paragraphItems[0] as HTMLElement;
+          const labelElement = firstItem.querySelector('strong');
+          const label = labelElement?.textContent?.trim() || '';
+          const isWork01Label = /^[A-D][:：]?$/.test(label.replace(/\s/g, ''));
+          
+          if (isWork01Label) {
+            workType = '01';
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`🔍 카드 ${cardIndex + 1} 유형#01 감지 (passage 확인 후):`, {
+                label,
+                paragraphItemsCount: paragraphItems.length
+              });
+            }
+          }
+        }
+      }
+      
+      // isWork01 재계산 (workType이 설정된 후)
+      const finalIsWork01 = workType === '01' || workType === '1';
+      
+      // 패키지#02: 유형#03, 04, 05, 07, 08, 13, 14도 .print-paragraph-item을 사용하지만 본문으로 처리해야 함
+      // 유형#01이 아니고 passage가 없으면 .print-paragraph-item을 본문으로 처리
+      if (!isWork01 && !passage) {
+        const paragraphItems = actualCard.querySelectorAll('.print-paragraph-item');
+        if (paragraphItems.length > 0) {
+          // 레이블이 A, B, C, D가 아닌 경우 본문으로 처리
+          const firstItem = paragraphItems[0] as HTMLElement;
+          const labelElement = firstItem.querySelector('strong');
+          const label = labelElement?.textContent?.trim() || '';
+          const isWork01Label = /^[A-D][:：]?$/.test(label.replace(/\s/g, ''));
+          
+          if (!isWork01Label) {
+            // 본문으로 처리
+            passage = firstItem;
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`🔍 카드 ${cardIndex + 1} 본문 찾음 (.print-paragraph-item, 유형#${workType}):`, {
+                selector: '.print-paragraph-item',
+                className: firstItem.className,
+                textLength: firstItem.textContent?.trim().length || 0,
+                workType,
+                label
+              });
+            }
+          }
+        }
+      }
+      
+      // 유형#01인 경우에만 단락 처리 로직 실행
+      if (finalIsWork01) {
         // 먼저 .shuffled-paragraph 찾기 (패키지#01)
         let shuffledParagraphs = actualCard.querySelectorAll('.shuffled-paragraph');
         
         // .shuffled-paragraph가 없으면 .print-paragraph-item 찾기 (단일 유형#01)
-        if (shuffledParagraphs.length === 0 && isWork01) {
+        if (shuffledParagraphs.length === 0) {
           shuffledParagraphs = actualCard.querySelectorAll('.print-paragraph-item');
         }
         
@@ -2924,12 +3072,23 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
         }
       }
       
-      if (passage && !passage.classList.contains('shuffled-paragraph') && !passage.classList.contains('print-paragraph-item')) {
+      // 본문 처리: shuffled-paragraph는 이미 처리했으므로 제외
+      // print-paragraph-item은 유형#01인 경우 이미 처리했으므로 제외
+      // 하지만 유형#03, 04, 05, 07, 08, 13, 14의 경우 print-paragraph-item이 본문이므로 처리해야 함
+      // finalIsWork01 사용 (workType이 설정된 후)
+      const shouldProcessPassage = passage && 
+        !passage.classList.contains('shuffled-paragraph') && 
+        (!passage.classList.contains('print-paragraph-item') || !finalIsWork01) &&
+        !passage.classList.contains('print-shuffled-paragraphs');
+      
+      if (shouldProcessPassage && passage) {
         if (process.env.NODE_ENV === 'development') {
           console.log(`🔍 카드 ${cardIndex + 1} 본문 처리 시작:`, {
             workType,
             className: passage.className,
-            textLength: passage.textContent?.trim().length || 0
+            textLength: passage.textContent?.trim().length || 0,
+            isPrintParagraphItem: passage.classList.contains('print-paragraph-item'),
+            isWork01
           });
         }
         const lineRuns = extractTextRunsByLine(passage);
@@ -3037,6 +3196,13 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
           Array.from(allPassages).slice(1).forEach((additionalPassage) => {
             // .shuffled-paragraph는 이미 처리했으므로 건너뛰기
             if ((additionalPassage as HTMLElement).classList.contains('shuffled-paragraph')) {
+              return;
+            }
+            // 유형#01의 경우 .print-shuffled-paragraphs와 .print-paragraph-item은 이미 처리했으므로 건너뛰기
+            if (isWork01 && (
+              (additionalPassage as HTMLElement).classList.contains('print-shuffled-paragraphs') ||
+              (additionalPassage as HTMLElement).classList.contains('print-paragraph-item')
+            )) {
               return;
             }
           const lineRuns = extractTextRunsByLine(additionalPassage as HTMLElement);
@@ -3758,6 +3924,15 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
       // 해석 섹션
       const translation = actualCard.querySelector('.print-translation-section, .translation');
       if (translation) {
+        translationProcessedInCardLoop = true;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔍 카드 ${cardIndex + 1} 본문해석 섹션 발견:`, {
+            hasTranslation: !!translation,
+            className: translation.className,
+            cardTextPreview: actualCard.textContent?.trim().substring(0, 100) || ''
+          });
+        }
+        
         // 마지막 본문해석(print-translation-last)인 경우, 이전 유형과의 간격 추가
         const isLastTranslation = translation.classList.contains('print-translation-last');
         if (isLastTranslation) {
@@ -4091,6 +4266,166 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
         }
       }
     });
+  }
+  
+  // 패키지#03: 인쇄(정답) 모드일 때 마지막 문제 다음에 본문해석 추가
+  // 단, 카드 처리 루프에서 이미 처리된 경우 중복 처리 방지
+  if (actualIsAnswerMode && !translationProcessedInCardLoop) {
+    // 모든 카드에서 본문해석 섹션 찾기 (마지막 것만 처리)
+    const translationSections = element.querySelectorAll('.print-translation-section');
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 패키지#03 본문해석 섹션 검색:', {
+        isAnswerMode: actualIsAnswerMode,
+        translationSectionsCount: translationSections.length,
+        translationProcessedInCardLoop,
+        elementId: element.id,
+        elementClass: element.className,
+        elementTag: element.tagName
+      });
+      
+      if (translationSections.length > 0) {
+        Array.from(translationSections).forEach((section, idx) => {
+          const title = (section as HTMLElement).querySelector('.print-translation-title');
+          const content = (section as HTMLElement).querySelector('.print-translation-content');
+          console.log(`🔍 본문해석 섹션 ${idx + 1}:`, {
+            hasTitle: !!title,
+            titleText: title?.textContent?.trim(),
+            hasContent: !!content,
+            contentLength: content?.textContent?.trim().length || 0,
+            contentPreview: content?.textContent?.trim().substring(0, 100) || ''
+          });
+        });
+      } else {
+        // 본문해석 섹션을 찾지 못한 경우, print-question-card 내부에서 translation 관련 요소 찾기
+        const allCards = element.querySelectorAll('.print-question-card');
+        console.log('🔍 print-question-card 검색:', {
+          totalCards: allCards.length,
+          cardsWithTranslation: Array.from(allCards).filter(card => 
+            card.querySelector('.print-translation-section, .translation')
+          ).length
+        });
+      }
+    }
+    
+    if (translationSections.length > 0) {
+      // 마지막 본문해석 섹션 처리
+      const lastTranslationSection = translationSections[translationSections.length - 1] as HTMLElement;
+      
+      // 이전 내용과의 간격 추가
+      paragraphs.push(
+        new Paragraph({
+          text: '',
+          spacing: { before: 0, after: 200 }
+        })
+      );
+      paragraphs.push(
+        new Paragraph({
+          text: '',
+          spacing: { before: 0, after: 200 }
+        })
+      );
+
+      const translationTitle = lastTranslationSection.querySelector('.print-translation-title, h3');
+      if (translationTitle) {
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: translationTitle.textContent?.trim() || '본문 해석:',
+                bold: true,
+                color: '1565c0',
+                font: 'Noto Sans KR',
+                size: 24 // 12pt
+              })
+            ],
+            spacing: { after: 150 }
+          })
+        );
+      }
+      
+      const translationContent = lastTranslationSection.querySelector('.print-translation-content, p');
+      if (translationContent) {
+        const contentText = translationContent.textContent?.trim() || '';
+        if (contentText) {
+          const lines = contentText.split(/\n+/).filter(line => line.trim());
+          lines.forEach((line, lineIndex) => {
+            const isFirstLine = lineIndex === 0;
+            const isLastLine = lineIndex === lines.length - 1;
+            
+            const borderConfig: any = {
+              left: {
+                color: 'C4C7CE',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              },
+              right: {
+                color: 'C4C7CE',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              }
+            };
+            
+            if (isFirstLine) {
+              borderConfig.top = {
+                color: 'C4C7CE',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              };
+            }
+            
+            if (isLastLine) {
+              borderConfig.bottom = {
+                color: 'C4C7CE',
+                size: 6,
+                style: BorderStyle.SINGLE,
+                space: DOCX_BORDER_SPACE
+              };
+            }
+            
+            const paragraph = new Paragraph({
+              children: [
+                new TextRun({
+                  text: line.trim(),
+                  font: 'Noto Sans KR',
+                  size: 22 // 11pt
+                })
+              ],
+              spacing: {
+                before: isFirstLine ? 160 : 100,
+                after: isLastLine ? 200 : 100
+              },
+              shading: {
+                type: ShadingType.CLEAR,
+                color: 'auto',
+                fill: 'F3F4F6'
+              },
+              indent: { left: 0, right: 0 },
+              border: borderConfig
+            });
+            
+            paragraphs.push(paragraph);
+          });
+        }
+      }
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ 패키지#03 본문해석 추가 완료:', {
+          translationSectionsCount: translationSections.length,
+          hasTitle: !!translationTitle,
+          hasContent: !!translationContent,
+          contentLength: translationContent?.textContent?.trim().length || 0
+        });
+      }
+    } else {
+      // 본문해석 섹션을 찾지 못한 경우, 카드 처리 루프에서 이미 처리되었는지 확인
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ 패키지#03 본문해석 섹션을 찾지 못했습니다. 카드 처리 루프에서 이미 처리되었을 수 있습니다.');
+      }
+    }
   }
   
   // 모든 텍스트 콘텐츠가 없으면 기본 텍스트 추출

@@ -145,11 +145,9 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
     }
     
     // 마지막 유형의 translation 수집 (인쇄 정답 모드일 때만)
-    // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 마지막에 전체 translation을 추가하지 않음
-    const hasWork01 = packageQuiz.some(item => item.workTypeId === '01');
-    
+    // 모든 경우에 마지막 문제의 translation을 추가 (유형#01이 있어도 마지막 문제의 translation 추가)
     let lastTranslation: string | null = null;
-    if (isAnswerMode && packageQuiz.length > 0 && !hasWork01) {
+    if (isAnswerMode && packageQuiz.length > 0) {
       const lastQuizItem = packageQuiz[packageQuiz.length - 1];
       let lastQuizData: any;
       if (lastQuizItem.workTypeId === '01') {
@@ -171,12 +169,30 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
       const translation = lastQuizItem.translatedText || lastQuizData?.translation;
       if (translation && translation.trim()) {
         lastTranslation = translation;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 패키지#03 마지막 문제 translation 수집:', {
+            workTypeId: lastQuizItem.workTypeId,
+            hasTranslatedText: !!lastQuizItem.translatedText,
+            hasTranslation: !!lastQuizData?.translation,
+            translationLength: translation.trim().length,
+            translationPreview: translation.trim().substring(0, 100)
+          });
+        }
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ 패키지#03 마지막 문제에 translation이 없습니다:', {
+            workTypeId: lastQuizItem.workTypeId,
+            hasTranslatedText: !!lastQuizItem.translatedText,
+            hasTranslation: !!lastQuizData?.translation,
+            lastQuizDataKeys: lastQuizData ? Object.keys(lastQuizData) : []
+          });
+        }
       }
     }
     
     // 마지막 유형 다음 단에 translation 섹션 추가
-    // 유형#01의 경우 각 문제마다 이미 translation이 포함되어 있으므로 추가하지 않음
-    if (isAnswerMode && lastTranslation && !hasWork01 && distributedItems.length > 0) {
+    // 모든 경우에 마지막 문제의 translation 추가
+    if (isAnswerMode && lastTranslation && distributedItems.length > 0) {
       const lastPage = distributedItems[distributedItems.length - 1];
       const lastPageItemCount = lastPage.length;
       
