@@ -17,6 +17,7 @@ import PrintFormatWork07New from '../work/Work_07_MainIdeaInference/PrintFormatW
 import PrintFormatWork08New from '../work/Work_08_TitleInference/PrintFormatWork08New';
 import PrintFormatWork09New from '../work/Work_09_GrammarError/PrintFormatWork09New';
 import PrintFormatWork10New from '../work/Work_10_MultiGrammarError/PrintFormatWork10New';
+import PrintFormatWork11New from '../work/Work_11_SentenceTranslation/PrintFormatWork11New';
 import PrintFormatWork13New from '../work/Work_13_BlankFillWord/PrintFormatWork13New';
 import PrintFormatWork14New from '../work/Work_14_BlankFillSentence/PrintFormatWork14New';
 import HistoryPrintWork12 from '../work/Work_12_WordStudy/HistoryPrintWork12';
@@ -77,22 +78,43 @@ const QuizDisplayPage: React.FC = () => {
     
     if (packageType === 'P01' || (isSingleWork && !isLandscapeType)) {
       // Package#01 또는 단일 유형(가로 유형 제외): A4 세로
-      style.textContent = `
-        @page {
-          margin: 0;
-          size: A4 portrait;
-        }
-        @media print {
-          body {
+      // 유형#12는 HistoryPrintWork12가 자체 스타일을 가지고 있으므로 명시적인 크기 설정
+      if (isSingleWork && typeId === '12') {
+        style.textContent = `
+          @page {
             margin: 0;
-            padding: 0;
+            size: A4 portrait;
           }
-        }
-      `;
+          @media print {
+            html, body {
+              width: 21cm !important;
+              height: 29.7cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            #root {
+              display: none !important;
+            }
+          }
+        `;
+      } else {
+        style.textContent = `
+          @page {
+            margin: 0;
+            size: A4 portrait;
+          }
+          @media print {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+          }
+        `;
+      }
     } else {
       // Package#02, #03, 유형#01, #02, #03, #04, #05, #06, #07, #08, #13, #14: A4 가로
-      // 유형#07, #08, #09, #10, #13, #14는 PrintFormatWork07New, PrintFormatWork08New, PrintFormatWork09New, PrintFormatWork10New, PrintFormatWork13New, PrintFormatWork14New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
-      if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '13' || typeId === '14')) {
+      // 유형#07, #08, #09, #10, #11, #13, #14는 PrintFormatWork07New, PrintFormatWork08New, PrintFormatWork09New, PrintFormatWork10New, PrintFormatWork11New, PrintFormatWork13New, PrintFormatWork14New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
+      if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '11' || typeId === '13' || typeId === '14')) {
         // 유형#07, #08: 원래 인쇄 방식과 동일하게 간단한 스타일만 적용
         style.textContent = `
           @page {
@@ -206,7 +228,7 @@ const QuizDisplayPage: React.FC = () => {
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
     // first, typeId, isType01Single은 위에서 이미 선언됨
-    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09')
+    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '11' && typeId !== '12')
       ? 'print-root-package01' 
       : packageType === 'P02' 
         ? 'print-root-package02' 
@@ -232,14 +254,29 @@ const QuizDisplayPage: React.FC = () => {
                             ? 'print-root-work09-new'
                         : packageType === '10' || (isSingleWork && typeId === '10')
                             ? 'print-root-work10-new'
-                            : packageType === '13' || (isSingleWork && typeId === '13')
-                              ? 'print-root-work13-new'
-                              : packageType === '14' || (isSingleWork && typeId === '14')
-                                ? 'print-root-work14-new'
-                                : packageType === '16' || (isSingleWork && typeId === '16')
-                                  ? 'print-root-work16-new'
+                            : packageType === '11' || (isSingleWork && typeId === '11')
+                              ? 'print-root-work11-new'
+                              : (isSingleWork && typeId === '12')
+                                ? 'print-root-work12-new'
+                                : packageType === '13' || (isSingleWork && typeId === '13')
+                                  ? 'print-root-work13-new'
+                                  : packageType === '14' || (isSingleWork && typeId === '14')
+                                    ? 'print-root-work14-new'
+                                    : packageType === '16' || (isSingleWork && typeId === '16')
+                                      ? 'print-root-work16-new'
             : 'print-root-package02';
     printContainer.id = containerId;
+    
+    // 유형#12인 경우 인쇄용 컨테이너 스타일 명시적 설정
+    if (isSingleWork && typeId === '12') {
+      printContainer.style.display = 'block';
+      printContainer.style.visibility = 'visible';
+      printContainer.style.position = 'relative';
+      printContainer.style.width = 'auto';
+      printContainer.style.height = 'auto';
+      printContainer.style.overflow = 'visible';
+    }
+    
     document.body.appendChild(printContainer);
 
     // 기존 화면 숨기기
@@ -261,7 +298,462 @@ const QuizDisplayPage: React.FC = () => {
       // 유형별 포맷 선택
       if (typeId === '12') {
         const data: any = first.work12Data || first.data?.work12Data || first.data || first;
-        root.render(<HistoryPrintWork12 data={data} />);
+        console.log('🖨️ [QuizDisplayPage] 유형#12 인쇄(문제) 데이터:', {
+          hasWork12Data: !!first.work12Data,
+          hasData: !!first.data,
+          dataKeys: data ? Object.keys(data) : [],
+          wordsCount: data?.words?.length || 0,
+          sampleWords: data?.words?.slice(0, 3),
+          quizType: data?.quizType
+        });
+        
+        // 유형#12는 오버레이 방식 사용 (PDF만)
+        if (fileFormat === 'pdf') {
+          const workTypeName = '유형#12_문제';
+          
+          // React 컴포넌트를 정적 HTML로 렌더링
+          const markup = ReactDOMServer.renderToStaticMarkup(
+            <HistoryPrintWork12 data={data} isAnswerMode={false} />
+          );
+          
+          console.log('🖨️ [QuizDisplayPage] 유형#12 인쇄(문제) - 렌더링된 마크업 길이:', markup.length);
+          console.log('🖨️ [QuizDisplayPage] 유형#12 인쇄(문제) - 마크업 샘플:', markup.substring(0, 500));
+          
+          // 기존 printContainer 제거
+          if (printContainer && printContainer.parentNode) {
+            printContainer.parentNode.removeChild(printContainer);
+          }
+          
+          // 오버레이 생성
+          const overlayId = 'work12-print-overlay';
+          const existingOverlay = document.getElementById(overlayId);
+          if (existingOverlay && existingOverlay.parentNode) {
+            existingOverlay.parentNode.removeChild(existingOverlay);
+          }
+          
+          const overlay = document.createElement('div');
+          overlay.id = overlayId;
+          Object.assign(overlay.style, {
+            position: 'fixed',
+            inset: '0',
+            backgroundColor: '#ffffff',
+            zIndex: '9999',
+            overflow: 'hidden',
+            width: '100%',
+            height: '100%'
+          } as Partial<CSSStyleDeclaration>);
+          
+          // PrintFormat12.css의 스타일을 가져와서 오버레이에 주입
+          const PRINT_STYLES = `
+            @page {
+              size: A4 portrait !important;
+              margin: 0 !important;
+            }
+            html, body {
+              width: 21cm !important;
+              height: 29.7cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            @media print {
+              html, body {
+                width: 21cm !important;
+                height: 29.7cm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+              }
+              .a4-page-template-work12 {
+                width: 21cm !important;
+                max-width: 21cm !important;
+                height: 29.7cm !important;
+                max-height: 29.7cm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: column !important;
+              }
+            }
+            .a4-page-template-work12 {
+              width: 21cm !important;
+              max-width: 21cm !important;
+              height: 29.7cm !important;
+              max-height: 29.7cm !important;
+              box-sizing: border-box;
+              padding: 0;
+              margin: 0;
+              display: flex;
+              flex-direction: column;
+            }
+            .a4-page-header-work12 {
+              width: 100%;
+              margin-bottom: 0.4cm;
+              text-align: center;
+            }
+            .print-header-text-work12 {
+              font-size: 11pt;
+              font-weight: 700;
+            }
+            .a4-page-content-work12 {
+              width: 100% !important;
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              min-height: 0;
+            }
+            .problem-instruction-work12 {
+              font-weight: 800;
+              font-size: 11pt;
+              background: #F0F0F0;
+              color: #000000;
+              padding: 0.6rem 0.5rem;
+              border-radius: 6px;
+              margin: 0 0 0.6rem 0;
+              box-sizing: border-box;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .problem-instruction-text-work12 {
+              flex: 1 1 auto;
+            }
+            .problem-type-label-work12 {
+              margin-left: 0.5cm;
+              font-size: 10pt;
+              font-weight: 700;
+              color: #000000;
+            }
+            .word-list-container-work12 {
+              display: flex !important;
+              gap: 0.5cm;
+              width: 100% !important;
+              margin: 0;
+              flex: 1;
+              min-height: 0;
+              align-items: stretch;
+            }
+            .word-list-column-work12 {
+              flex: 1 1 50% !important;
+              width: 50% !important;
+              min-width: 0;
+            }
+            .word-list-table-work12 {
+              width: 100% !important;
+              max-width: 100% !important;
+              border-collapse: collapse;
+              margin: 0;
+              font-size: 10pt;
+              background: #ffffff;
+              border: 2px solid #000000;
+            }
+            .word-list-table-work12 th {
+              background: #e3f2fd;
+              color: #000000;
+              font-weight: 700;
+              font-size: 10pt;
+              padding: 0.35rem 0.5rem;
+              text-align: center;
+              border: 1px solid #000000;
+            }
+            .word-list-table-work12 td {
+              border: 1px solid #000000;
+              padding: 0.35rem 0.5rem;
+              text-align: left;
+              font-size: 10pt;
+              font-weight: 500;
+              color: #000000;
+            }
+            .word-list-table-work12 td:first-child,
+            .word-list-table-work12 th:first-child {
+              text-align: center;
+              width: 10% !important;
+            }
+            .word-list-table-work12 th:nth-child(2),
+            .word-list-table-work12 td:nth-child(2) {
+              width: 36% !important;
+            }
+            .word-list-table-work12 th:nth-child(3),
+            .word-list-table-work12 td:nth-child(3) {
+              width: 54% !important;
+            }
+            .word-list-table-work12 tr:nth-child(even) {
+              background: #f8f9fa;
+            }
+            .word-list-table-work12 tr:nth-child(odd) {
+              background: #ffffff;
+            }
+            .word-list-table-work12 .answer-cell {
+              color: #1976d2 !important;
+              font-weight: 700 !important;
+              background: #f0f8ff !important;
+            }
+            @media screen {
+              #work12-print-overlay {
+                display: none !important;
+                visibility: hidden !important;
+                position: absolute !important;
+                left: -9999px !important;
+                top: -9999px !important;
+                opacity: 0 !important;
+                z-index: -1 !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+              }
+            }
+            @media print {
+              body#work12-print-active * {
+                visibility: visible !important;
+              }
+              .only-print-work12 {
+                display: block !important;
+              }
+              #work12-print-overlay {
+                display: block !important;
+                visibility: visible !important;
+                left: 0 !important;
+                opacity: 1 !important;
+                z-index: 9999 !important;
+                position: fixed !important;
+                overflow: hidden !important;
+                width: 100% !important;
+                height: 100% !important;
+              }
+            }
+          `;
+          
+          // 오버레이에 인쇄용 스타일 + 마크업 주입
+          overlay.innerHTML = `
+            <style>${PRINT_STYLES}</style>
+            ${markup}
+          `;
+          
+          document.body.appendChild(overlay);
+          
+          // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+          const prevBodyId = document.body.getAttribute('id');
+          document.body.setAttribute('id', 'work12-print-active');
+          
+          console.log('🖨️ [QuizDisplayPage] 유형#12 오버레이 추가 완료', {
+            overlayId,
+            hasContent: overlay.innerHTML.length > 0,
+            childrenCount: overlay.children.length,
+            markupLength: markup.length
+          });
+          
+          // 오버레이가 완전히 렌더링될 때까지 충분한 시간 대기
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                // 오버레이 내용이 제대로 렌더링되었는지 확인
+                const overlayContent = overlay.querySelector('.only-print-work12');
+                console.log('🖨️ [QuizDisplayPage] 인쇄 전 오버레이 확인:', {
+                  overlayExists: !!overlay,
+                  overlayContentExists: !!overlayContent,
+                  overlayDisplay: window.getComputedStyle(overlay).display,
+                  overlayVisibility: window.getComputedStyle(overlay).visibility,
+                  overlayRect: overlay.getBoundingClientRect()
+                });
+                
+                window.print();
+                
+                // 인쇄 다이얼로그가 열린 후 오버레이 숨기기 (더 긴 지연)
+                setTimeout(() => {
+                  overlay.style.display = 'none';
+                  overlay.style.visibility = 'hidden';
+                  overlay.style.position = 'absolute';
+                  overlay.style.left = '-9999px';
+                  overlay.style.top = '-9999px';
+                  overlay.style.opacity = '0';
+                  overlay.style.zIndex = '-1';
+                  overlay.style.width = '0';
+                  overlay.style.height = '0';
+                  overlay.style.overflow = 'hidden';
+                }, 500); // 인쇄 다이얼로그가 열릴 시간 확보
+              
+              // 인쇄 후 오버레이 정리
+              setTimeout(() => {
+                const ov = document.getElementById(overlayId);
+                if (ov && ov.parentNode) {
+                  ov.parentNode.removeChild(ov);
+                }
+                
+                // body id 되돌리기
+                if (prevBodyId) {
+                  document.body.setAttribute('id', prevBodyId);
+                } else {
+                  document.body.removeAttribute('id');
+                }
+                
+                // appRoot 다시 표시
+                if (appRoot) {
+                  appRoot.style.display = '';
+                }
+                
+                // PDF 저장 (인쇄 미리보기 창이 닫힌 후 실행)
+                setTimeout(async () => {
+                  console.log('📄 [QuizDisplayPage] PDF 저장 시작 (2초 후)');
+                  
+                  // DOM 변경 감지: 화면에 나타나는 요소 추적
+                  const domObserver = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                      mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element node
+                          const el = node as HTMLElement;
+                          const rect = el.getBoundingClientRect();
+                          const computed = window.getComputedStyle(el);
+                          // 화면에 보이는 요소 감지 (rect가 화면 범위 내에 있고, display가 none이 아니고, opacity가 0이 아닌 경우)
+                          if (rect.width > 0 && rect.height > 0 && 
+                              computed.display !== 'none' && 
+                              computed.visibility !== 'hidden' &&
+                              parseFloat(computed.opacity) > 0 &&
+                              (rect.top >= 0 || rect.left >= 0 || rect.bottom <= window.innerHeight || rect.right <= window.innerWidth)) {
+                            console.warn('⚠️ [QuizDisplayPage] 화면에 나타난 요소 감지:', {
+                              id: el.id,
+                              className: el.className,
+                              tagName: el.tagName,
+                              display: computed.display,
+                              visibility: computed.visibility,
+                              opacity: computed.opacity,
+                              position: computed.position,
+                              zIndex: computed.zIndex,
+                              rect: rect,
+                              innerHTML: el.innerHTML.substring(0, 200)
+                            });
+                          }
+                        }
+                      });
+                    });
+                  });
+                  domObserver.observe(document.body, { 
+                    childList: true, 
+                    subtree: true, 
+                    attributes: true, 
+                    attributeFilter: ['style', 'class', 'id'] 
+                  });
+                  
+                  try {
+                    console.log('📄 [QuizDisplayPage] PDF 저장용 컨테이너 생성 시작');
+                    
+                    // printContainer를 다시 생성하여 PDF 저장에 사용 (화면에 보이지 않도록 설정)
+                    const pdfContainer = document.createElement('div');
+                    pdfContainer.id = 'print-root-work12-new';
+                    // display: none으로 시작하여 완전히 숨김 (모든 속성을 !important로 설정)
+                    pdfContainer.style.cssText = 'display: none !important; position: fixed !important; left: -99999px !important; top: -99999px !important; width: 21cm !important; height: 29.7cm !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -9999 !important; visibility: hidden !important; transform: scale(0) !important;';
+                    document.body.appendChild(pdfContainer);
+                    
+                    console.log('📄 [QuizDisplayPage] PDF 저장용 컨테이너 생성 완료:', {
+                      id: pdfContainer.id,
+                      display: window.getComputedStyle(pdfContainer).display,
+                      visibility: window.getComputedStyle(pdfContainer).visibility,
+                      opacity: window.getComputedStyle(pdfContainer).opacity,
+                      position: window.getComputedStyle(pdfContainer).position,
+                      rect: pdfContainer.getBoundingClientRect()
+                    });
+                    
+                    // React 렌더링 중에도 계속 숨김 상태 유지
+                    const observer = new MutationObserver(() => {
+                      if (pdfContainer.style.display !== 'none') {
+                        pdfContainer.style.cssText = 'display: none !important; position: fixed !important; left: -99999px !important; top: -99999px !important; width: 21cm !important; height: 29.7cm !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -9999 !important; visibility: hidden !important; transform: scale(0) !important;';
+                      }
+                    });
+                    observer.observe(pdfContainer, { attributes: true, attributeFilter: ['style', 'class'] });
+                    
+                    const pdfRoot = ReactDOM.createRoot(pdfContainer);
+                    pdfRoot.render(<HistoryPrintWork12 data={data} isAnswerMode={false} />);
+                    
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // 렌더링 후 상태 확인
+                    console.log('📄 [QuizDisplayPage] React 렌더링 후 상태:', {
+                      id: pdfContainer.id,
+                      display: window.getComputedStyle(pdfContainer).display,
+                      visibility: window.getComputedStyle(pdfContainer).visibility,
+                      opacity: window.getComputedStyle(pdfContainer).opacity,
+                      rect: pdfContainer.getBoundingClientRect(),
+                      innerHTML: pdfContainer.innerHTML.substring(0, 200)
+                    });
+                    
+                    // PDF 생성 직전에만 display: block으로 변경 (하지만 여전히 화면 밖에 있고 opacity: 0)
+                    observer.disconnect(); // 관찰 중지
+                    pdfContainer.style.cssText = 'display: block !important; position: fixed !important; left: -99999px !important; top: -99999px !important; width: 21cm !important; height: 29.7cm !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -9999 !important; visibility: visible !important; transform: scale(1) !important;';
+                    
+                    console.log('📄 [QuizDisplayPage] PDF 생성 직전 상태:', {
+                      id: pdfContainer.id,
+                      display: window.getComputedStyle(pdfContainer).display,
+                      visibility: window.getComputedStyle(pdfContainer).visibility,
+                      opacity: window.getComputedStyle(pdfContainer).opacity,
+                      rect: pdfContainer.getBoundingClientRect()
+                    });
+                    
+                    // html2canvas는 opacity: 0인 요소도 캡처할 수 있으므로 visibility 변경 불필요
+                    const result = await generateAndUploadFile(
+                      pdfContainer as HTMLElement,
+                      userData.uid,
+                      `${packageType.toLowerCase() || 'quiz'}_problem_${Date.now()}`,
+                      workTypeName,
+                      { 
+                        isAnswerMode: false, 
+                        orientation: 'portrait',
+                        fileFormat 
+                      }
+                    );
+                    console.log(`📁 ${workTypeName} PDF 저장 완료:`, result.fileName);
+                    
+                    // PDF 저장 후 즉시 다시 숨기기
+                    pdfContainer.style.cssText = 'display: none !important; position: fixed !important; left: -99999px !important; top: -99999px !important; width: 21cm !important; height: 29.7cm !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -9999 !important; visibility: hidden !important; transform: scale(0) !important;';
+                    
+                    // PDF 저장 후 정리
+                    pdfRoot.unmount();
+                    if (pdfContainer.parentNode) {
+                      pdfContainer.parentNode.removeChild(pdfContainer);
+                    }
+                    
+                    // DOM 관찰 중지
+                    domObserver.disconnect();
+                    console.log('✅ [QuizDisplayPage] PDF 저장 완료 및 DOM 관찰 중지');
+                  } catch (error) {
+                    console.error(`❌ PDF 저장 실패:`, error);
+                    // 에러 발생 시에도 DOM 관찰 중지
+                    domObserver.disconnect();
+                  }
+                }, 2000); // 인쇄 미리보기 창이 닫힐 시간 확보
+              }, 100);
+              }, 300); // 오버레이 렌더링 대기 시간
+            });
+          });
+          
+          return; // 오버레이 방식 사용 시 root.render 호출하지 않음
+        } else {
+          // DOC 저장은 기존 방식 사용
+          root.render(<HistoryPrintWork12 data={data} />);
+        }
+        
+        // 렌더링 완료 확인 및 디버깅
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const onlyPrintElement = printContainer.querySelector('.only-print-work12');
+            const pageTemplate = printContainer.querySelector('.a4-page-template-work12');
+            const wordTable = printContainer.querySelector('.word-list-table-work12');
+            console.log('🔍 [QuizDisplayPage] 유형#12 렌더링 확인:', {
+              containerId: containerId,
+              containerExists: !!printContainer,
+              containerDisplay: getComputedStyle(printContainer).display,
+              containerVisibility: getComputedStyle(printContainer).visibility,
+              onlyPrintElementExists: !!onlyPrintElement,
+              onlyPrintElementDisplay: onlyPrintElement ? getComputedStyle(onlyPrintElement as HTMLElement).display : null,
+              onlyPrintElementVisibility: onlyPrintElement ? getComputedStyle(onlyPrintElement as HTMLElement).visibility : null,
+              pageTemplateExists: !!pageTemplate,
+              wordTableExists: !!wordTable,
+              wordTableRows: wordTable ? (wordTable as HTMLTableElement).rows.length : 0,
+              containerInnerHTML: printContainer.innerHTML.substring(0, 200)
+            });
+          });
+        });
       } else if (typeId === '16') {
         // 유형#16은 Work_16_PassageWordStudy.tsx와 동일한 방식으로 오버레이 사용
         const work16Data = first.work16Data || first.data?.work16Data || first.data || first;
@@ -1358,13 +1850,27 @@ const QuizDisplayPage: React.FC = () => {
       }, 300);
       
       return; // 오버레이 방식 사용 시 root.render 호출하지 않음
+    } else if (typeId === '11' || packageType === '11') {
+      // 유형#11는 PrintFormatWork11New 사용 (여러 문제인 경우에도)
+      const rawQuizzes = packageQuiz.map((item: any) => {
+        const work11Data = item.work11Data || item.quiz || item.data?.work11Data || item.data || item;
+        
+        return {
+          id: item.id || work11Data.id,
+          sentences: work11Data.sentences || [],
+          translations: work11Data.translations || [],
+          quizText: work11Data.quizText || ''
+        };
+      });
+      root.render(<PrintFormatWork11New quizzes={rawQuizzes} isAnswerMode={false} />);
     } else {
       root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
     }
 
-    // 유형#07, #08, #09, #10, #13, #14는 원래 인쇄 방식과 동일하게 처리
+    // 유형#07, #08, #09, #10, #11, #13, #14는 원래 인쇄 방식과 동일하게 처리
     // 단, DOC 저장인 경우에는 파일 생성 로직을 실행해야 하므로 return하지 않음
-    const shouldUseQuickPrint = (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '12' || typeId === '13' || typeId === '14' || typeId === '16') || packageType === '14' || packageType === '16') && fileFormat === 'pdf';
+    // 유형#12는 HistoryPrintWork12를 사용하므로 quick print 로직에서 제외
+    const shouldUseQuickPrint = (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '11' || typeId === '13' || typeId === '14' || typeId === '16') || packageType === '14' || packageType === '16' || packageType === '11') && fileFormat === 'pdf';
     
     if (shouldUseQuickPrint) {
       // 원래 방식: activatePrintContainer 후 바로 인쇄 (PDF만)
@@ -1451,10 +1957,13 @@ const QuizDisplayPage: React.FC = () => {
         const element = document.getElementById(elementId);
         if (element) {
           // 디버깅: 실제 DOM에 렌더링된 페이지 요소 확인
-          const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page');
+          // 유형#12는 .a4-page-template-work12를 사용
+          const pageElements = element.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .a4-page-template-work12, .print-page');
           console.log('🔍 실제 DOM 페이지 요소 확인 (인쇄 문제):', {
             totalPages: pageElements.length,
             containerId: elementId,
+            hasOnlyPrintWork12: element.querySelector('.only-print-work12') !== null,
+            hasA4PageTemplateWork12: element.querySelector('.a4-page-template-work12') !== null,
             pages: Array.from(pageElements).map((page, idx) => {
               const rect = page.getBoundingClientRect();
               const computedStyle = window.getComputedStyle(page);
@@ -1533,34 +2042,67 @@ const QuizDisplayPage: React.FC = () => {
                               packageType === '16' ? '유형#16_문제' :
                               '문제';
 
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `${packageType.toLowerCase() || 'quiz'}_problem_${Date.now()}`,
-            workTypeName,
-            { 
-              isAnswerMode: false, 
-              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13' && typeId !== '14')) ? 'portrait' : 'landscape',
-              fileFormat 
+          // 유형#12는 PDF는 오버레이 방식, DOC는 기존 방식 사용
+          if (typeId === '12' && fileFormat === 'doc') {
+            // DOC 저장: HistoryPrintWork12를 printContainer에 렌더링
+            const data: any = first.work12Data || first.data?.work12Data || first.data || first;
+            const workTypeName = '유형#12_문제';
+            
+            root.render(<HistoryPrintWork12 data={data} isAnswerMode={false} />);
+            
+            // 렌더링 대기
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // DOC 저장
+            const docElement = document.getElementById(containerId) || printContainer;
+            const result = await generateAndUploadFile(
+              docElement as HTMLElement,
+              userData.uid,
+              `${packageType.toLowerCase() || 'quiz'}_problem_${Date.now()}`,
+              workTypeName,
+              { 
+                isAnswerMode: false, 
+                orientation: 'portrait',
+                fileFormat: 'doc'
+              }
+            );
+            
+            console.log(`📁 ${workTypeName} DOC 저장 완료:`, result.fileName);
+          } else {
+            // 다른 유형은 기존 로직 사용
+            const result = await generateAndUploadFile(
+              element as HTMLElement,
+              userData.uid,
+              `${packageType.toLowerCase() || 'quiz'}_problem_${Date.now()}`,
+              workTypeName,
+              { 
+                isAnswerMode: false, 
+                orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13' && typeId !== '14')) ? 'portrait' : 'landscape',
+                fileFormat 
+              }
+            );
+            
+            const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+            console.log(`📁 ${workTypeName} ${formatName} 저장 완료:`, result.fileName);
+            
+            // PDF인 경우에만 브라우저 인쇄
+            if (fileFormat === 'pdf') {
+              window.print();
             }
-          );
-          
-          const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-          console.log(`📁 ${workTypeName} ${formatName} 저장 완료:`, result.fileName);
+          }
         }
       } catch (error) {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
 
-      // PDF인 경우에만 브라우저 인쇄, DOC는 이미 다운로드됨
-      if (fileFormat === 'pdf') {
-        window.print();
-      }
-
       // 인쇄 후 정리
+      // 유형#12는 PDF 저장이 비동기로 실행되므로 더 긴 대기 시간 필요
+      const cleanupDelay = (typeId === '12' && fileFormat === 'pdf') ? 2000 : (fileFormat === 'pdf' ? 100 : 500);
       setTimeout(() => {
         root.unmount();
-        document.body.removeChild(printContainer);
+        if (printContainer.parentNode) {
+          document.body.removeChild(printContainer);
+        }
         if (appRoot) {
           appRoot.style.display = 'block';
         }
@@ -1569,8 +2111,8 @@ const QuizDisplayPage: React.FC = () => {
           document.head.removeChild(styleElement);
         }
         console.log('✅ 인쇄(문제) 완료');
-      }, fileFormat === 'pdf' ? 100 : 500);
-    }, (packageType === '01' || isType01Single) ? 1000 : 500); // 유형#01은 렌더링 시간이 더 필요할 수 있음
+      }, cleanupDelay);
+    }, (packageType === '01' || isType01Single || typeId === '12') ? 1000 : 500); // 유형#01, #12는 렌더링 시간이 더 필요할 수 있음
   };
 
   // 인쇄(정답) 핸들러
@@ -1598,18 +2140,39 @@ const QuizDisplayPage: React.FC = () => {
     
     if (packageType === 'P01' || (isSingleWork && !isLandscapeType)) {
       // Package#01 또는 단일 유형(가로 유형 제외): A4 세로
-      style.textContent = `
-        @page {
-          margin: 0;
-          size: A4 portrait;
-        }
-        @media print {
-          body {
+      // 유형#12는 HistoryPrintWork12가 자체 스타일을 가지고 있으므로 명시적인 크기 설정
+      if (isSingleWork && typeId === '12') {
+        style.textContent = `
+          @page {
             margin: 0;
-            padding: 0;
+            size: A4 portrait;
           }
-        }
-      `;
+          @media print {
+            html, body {
+              width: 21cm !important;
+              height: 29.7cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            #root {
+              display: none !important;
+            }
+          }
+        `;
+      } else {
+        style.textContent = `
+          @page {
+            margin: 0;
+            size: A4 portrait;
+          }
+          @media print {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+          }
+        `;
+      }
     } else {
       // Package#02, #03, 유형#01: A4 가로
       // 유형#07, #08, #09, #10는 PrintFormatWork07New, PrintFormatWork08New, PrintFormatWork09New, PrintFormatWork10New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
@@ -1727,7 +2290,7 @@ const QuizDisplayPage: React.FC = () => {
     // 인쇄용 컨테이너 생성
     const printContainer = document.createElement('div');
     // first, typeId, isType01Single은 위에서 이미 선언됨
-    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09')
+    const containerId = packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '11' && typeId !== '12')
       ? 'print-root-package01-answer' 
       : packageType === 'P02' 
         ? 'print-root-package02-answer' 
@@ -1753,14 +2316,27 @@ const QuizDisplayPage: React.FC = () => {
                             ? 'print-root-work09-new-answer'
                             : packageType === '10' || (isSingleWork && typeId === '10')
                               ? 'print-root-work10-new-answer'
-                              : packageType === '13' || (isSingleWork && typeId === '13')
-                                ? 'print-root-work13-new-answer'
-                                : packageType === '14' || (isSingleWork && typeId === '14')
-                                  ? 'print-root-work14-new-answer'
-                                  : packageType === '16' || (isSingleWork && typeId === '16')
-                                    ? 'print-root-work16-new-answer'
+                              : (isSingleWork && typeId === '12')
+                                ? 'print-root-work12-new-answer'
+                                : packageType === '13' || (isSingleWork && typeId === '13')
+                                  ? 'print-root-work13-new-answer'
+                                  : packageType === '14' || (isSingleWork && typeId === '14')
+                                    ? 'print-root-work14-new-answer'
+                                    : packageType === '16' || (isSingleWork && typeId === '16')
+                                      ? 'print-root-work16-new-answer'
             : 'print-root-package02-answer';
     printContainer.id = containerId;
+    
+    // 유형#12인 경우 인쇄용 컨테이너 스타일 명시적 설정
+    if (isSingleWork && typeId === '12') {
+      printContainer.style.display = 'block';
+      printContainer.style.visibility = 'visible';
+      printContainer.style.position = 'relative';
+      printContainer.style.width = 'auto';
+      printContainer.style.height = 'auto';
+      printContainer.style.overflow = 'visible';
+    }
+    
     document.body.appendChild(printContainer);
 
     // 기존 화면 숨기기
@@ -1788,7 +2364,487 @@ const QuizDisplayPage: React.FC = () => {
       }
       if (typeId === '12') {
         const data: any = first.work12Data || first.data?.work12Data || first.data || first;
-        root.render(<HistoryPrintWork12 data={data} isAnswerMode={true} />);
+        console.log('🖨️ [QuizDisplayPage] 유형#12 인쇄(정답) 데이터:', {
+          hasWork12Data: !!first.work12Data,
+          hasData: !!first.data,
+          dataKeys: data ? Object.keys(data) : [],
+          wordsCount: data?.words?.length || 0,
+          sampleWords: data?.words?.slice(0, 3),
+          quizType: data?.quizType
+        });
+        
+        // 유형#12는 PDF는 오버레이 방식, DOC는 기존 방식 사용
+        if (fileFormat === 'pdf') {
+          const workTypeName = '유형#12_정답';
+          
+          // React 컴포넌트를 정적 HTML로 렌더링
+          const markup = ReactDOMServer.renderToStaticMarkup(
+            <HistoryPrintWork12 data={data} isAnswerMode={true} />
+          );
+          
+          console.log('🖨️ [QuizDisplayPage] 유형#12 인쇄(정답) - 렌더링된 마크업 길이:', markup.length);
+          console.log('🖨️ [QuizDisplayPage] 유형#12 인쇄(정답) - 마크업 샘플:', markup.substring(0, 500));
+          
+          // 기존 printContainer 제거
+          if (printContainer && printContainer.parentNode) {
+            printContainer.parentNode.removeChild(printContainer);
+          }
+          
+          // 오버레이 생성
+          const overlayId = 'work12-print-overlay-answer';
+          const existingOverlay = document.getElementById(overlayId);
+          if (existingOverlay && existingOverlay.parentNode) {
+            existingOverlay.parentNode.removeChild(existingOverlay);
+          }
+          
+          const overlay = document.createElement('div');
+          overlay.id = overlayId;
+          Object.assign(overlay.style, {
+            position: 'fixed',
+            inset: '0',
+            backgroundColor: '#ffffff',
+            zIndex: '9999',
+            overflow: 'hidden',
+            width: '100%',
+            height: '100%'
+          } as Partial<CSSStyleDeclaration>);
+          
+          // PrintFormat12.css의 스타일을 가져와서 오버레이에 주입
+          const PRINT_STYLES = `
+            @page {
+              size: A4 portrait !important;
+              margin: 0 !important;
+            }
+            html, body {
+              width: 21cm !important;
+              height: 29.7cm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            @media print {
+              html, body {
+                width: 21cm !important;
+                height: 29.7cm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+              }
+              .a4-page-template-work12 {
+                width: 21cm !important;
+                max-width: 21cm !important;
+                height: 29.7cm !important;
+                max-height: 29.7cm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: column !important;
+              }
+            }
+            .a4-page-template-work12 {
+              width: 21cm !important;
+              max-width: 21cm !important;
+              height: 29.7cm !important;
+              max-height: 29.7cm !important;
+              box-sizing: border-box;
+              padding: 0;
+              margin: 0;
+              display: flex;
+              flex-direction: column;
+            }
+            .a4-page-header-work12 {
+              width: 100%;
+              margin-bottom: 0.4cm;
+              text-align: center;
+            }
+            .print-header-text-work12 {
+              font-size: 11pt;
+              font-weight: 700;
+            }
+            .a4-page-content-work12 {
+              width: 100% !important;
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              min-height: 0;
+            }
+            .problem-instruction-work12 {
+              font-weight: 800;
+              font-size: 11pt;
+              background: #F0F0F0;
+              color: #000000;
+              padding: 0.6rem 0.5rem;
+              border-radius: 6px;
+              margin: 0 0 0.6rem 0;
+              box-sizing: border-box;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .problem-instruction-text-work12 {
+              flex: 1 1 auto;
+            }
+            .problem-type-label-work12 {
+              margin-left: 0.5cm;
+              font-size: 10pt;
+              font-weight: 700;
+              color: #000000;
+            }
+            .word-list-container-work12 {
+              display: flex !important;
+              gap: 0.5cm;
+              width: 100% !important;
+              margin: 0;
+              flex: 1;
+              min-height: 0;
+              align-items: stretch;
+            }
+            .word-list-column-work12 {
+              flex: 1 1 50% !important;
+              width: 50% !important;
+              min-width: 0;
+            }
+            .word-list-table-work12 {
+              width: 100% !important;
+              max-width: 100% !important;
+              border-collapse: collapse;
+              margin: 0;
+              font-size: 10pt;
+              background: #ffffff;
+              border: 2px solid #000000;
+            }
+            .word-list-table-work12 th {
+              background: #e3f2fd;
+              color: #000000;
+              font-weight: 700;
+              font-size: 10pt;
+              padding: 0.35rem 0.5rem;
+              text-align: center;
+              border: 1px solid #000000;
+            }
+            .word-list-table-work12 td {
+              border: 1px solid #000000;
+              padding: 0.35rem 0.5rem;
+              text-align: left;
+              font-size: 10pt;
+              font-weight: 500;
+              color: #000000;
+            }
+            .word-list-table-work12 td:first-child,
+            .word-list-table-work12 th:first-child {
+              text-align: center;
+              width: 10% !important;
+            }
+            .word-list-table-work12 th:nth-child(2),
+            .word-list-table-work12 td:nth-child(2) {
+              width: 36% !important;
+            }
+            .word-list-table-work12 th:nth-child(3),
+            .word-list-table-work12 td:nth-child(3) {
+              width: 54% !important;
+            }
+            .word-list-table-work12 tr:nth-child(even) {
+              background: #f8f9fa;
+            }
+            .word-list-table-work12 tr:nth-child(odd) {
+              background: #ffffff;
+            }
+            .word-list-table-work12 .answer-cell {
+              color: #1976d2 !important;
+              font-weight: 700 !important;
+              background: #f0f8ff !important;
+            }
+            @media screen {
+              #work12-print-overlay-answer {
+                display: none !important;
+                visibility: hidden !important;
+                position: absolute !important;
+                left: -9999px !important;
+                top: -9999px !important;
+                opacity: 0 !important;
+                z-index: -1 !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+              }
+            }
+            @media print {
+              body#work12-print-active * {
+                visibility: visible !important;
+              }
+              .only-print-work12 {
+                display: block !important;
+              }
+              #work12-print-overlay-answer {
+                display: block !important;
+                visibility: visible !important;
+                left: 0 !important;
+                opacity: 1 !important;
+                z-index: 9999 !important;
+                position: fixed !important;
+                overflow: hidden !important;
+                width: 100% !important;
+                height: 100% !important;
+              }
+            }
+          `;
+          
+          // 오버레이에 인쇄용 스타일 + 마크업 주입
+          overlay.innerHTML = `
+            <style>${PRINT_STYLES}</style>
+            ${markup}
+          `;
+          
+          document.body.appendChild(overlay);
+          
+          // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
+          const prevBodyId = document.body.getAttribute('id');
+          document.body.setAttribute('id', 'work12-print-active');
+          
+          console.log('🖨️ [QuizDisplayPage] 유형#12 오버레이 추가 완료 (정답)', {
+            overlayId,
+            hasContent: overlay.innerHTML.length > 0,
+            childrenCount: overlay.children.length,
+            markupLength: markup.length
+          });
+          
+          // 오버레이가 완전히 렌더링될 때까지 충분한 시간 대기
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                // 오버레이 내용이 제대로 렌더링되었는지 확인
+                const overlayContent = overlay.querySelector('.only-print-work12');
+                console.log('🖨️ [QuizDisplayPage] 인쇄 전 오버레이 확인 (정답):', {
+                  overlayExists: !!overlay,
+                  overlayContentExists: !!overlayContent,
+                  overlayDisplay: window.getComputedStyle(overlay).display,
+                  overlayVisibility: window.getComputedStyle(overlay).visibility,
+                  overlayRect: overlay.getBoundingClientRect()
+                });
+                
+                window.print();
+                
+                // 인쇄 다이얼로그가 열린 후 오버레이 숨기기 (더 긴 지연)
+                setTimeout(() => {
+                  overlay.style.display = 'none';
+                  overlay.style.visibility = 'hidden';
+                  overlay.style.position = 'absolute';
+                  overlay.style.left = '-9999px';
+                  overlay.style.top = '-9999px';
+                  overlay.style.opacity = '0';
+                  overlay.style.zIndex = '-1';
+                  overlay.style.width = '0';
+                  overlay.style.height = '0';
+                  overlay.style.overflow = 'hidden';
+                }, 500); // 인쇄 다이얼로그가 열릴 시간 확보
+              
+              // 인쇄 후 오버레이 정리
+              setTimeout(() => {
+                // 디버깅: body의 모든 자식 요소 확인
+                const bodyChildren = Array.from(document.body.children).map(el => ({
+                  id: el.id,
+                  tagName: el.tagName,
+                  className: el.className,
+                  display: window.getComputedStyle(el).display,
+                  visibility: window.getComputedStyle(el).visibility,
+                  opacity: window.getComputedStyle(el).opacity,
+                  position: window.getComputedStyle(el).position,
+                  zIndex: window.getComputedStyle(el).zIndex,
+                  rect: el.getBoundingClientRect()
+                }));
+                console.log('🔍 [QuizDisplayPage] 인쇄 후 body 자식 요소 확인 (정답):', bodyChildren);
+                
+                // work12 관련 모든 요소 찾기
+                const work12Elements = document.querySelectorAll('[id*="work12"], [class*="work12"], [id*="print-root"]');
+                console.log('🔍 [QuizDisplayPage] work12 관련 요소 확인 (정답):', Array.from(work12Elements).map(el => ({
+                  id: el.id,
+                  className: el.className,
+                  tagName: el.tagName,
+                  display: window.getComputedStyle(el).display,
+                  visibility: window.getComputedStyle(el).visibility,
+                  opacity: window.getComputedStyle(el).opacity,
+                  position: window.getComputedStyle(el).position,
+                  rect: el.getBoundingClientRect()
+                })));
+                
+                const ov = document.getElementById(overlayId);
+                if (ov && ov.parentNode) {
+                  console.log('🗑️ [QuizDisplayPage] 오버레이 제거 (정답):', overlayId);
+                  ov.parentNode.removeChild(ov);
+                }
+                
+                // body id 되돌리기
+                if (prevBodyId) {
+                  document.body.setAttribute('id', prevBodyId);
+                } else {
+                  document.body.removeAttribute('id');
+                }
+                
+                // appRoot 다시 표시
+                if (appRoot) {
+                  appRoot.style.display = '';
+                }
+                
+                // PDF 저장 (인쇄 미리보기 창이 닫힌 후 실행)
+                setTimeout(async () => {
+                  console.log('📄 [QuizDisplayPage] PDF 저장 시작 (2초 후, 정답)');
+                  
+                  // DOM 변경 감지: 화면에 나타나는 요소 추적
+                  const domObserver = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                      mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element node
+                          const el = node as HTMLElement;
+                          const rect = el.getBoundingClientRect();
+                          const computed = window.getComputedStyle(el);
+                          // 화면에 보이는 요소 감지 (rect가 화면 범위 내에 있고, display가 none이 아니고, opacity가 0이 아닌 경우)
+                          if (rect.width > 0 && rect.height > 0 && 
+                              computed.display !== 'none' && 
+                              computed.visibility !== 'hidden' &&
+                              parseFloat(computed.opacity) > 0 &&
+                              (rect.top >= 0 || rect.left >= 0 || rect.bottom <= window.innerHeight || rect.right <= window.innerWidth)) {
+                            console.warn('⚠️ [QuizDisplayPage] 화면에 나타난 요소 감지 (정답):', {
+                              id: el.id,
+                              className: el.className,
+                              tagName: el.tagName,
+                              display: computed.display,
+                              visibility: computed.visibility,
+                              opacity: computed.opacity,
+                              position: computed.position,
+                              zIndex: computed.zIndex,
+                              rect: rect,
+                              innerHTML: el.innerHTML.substring(0, 200)
+                            });
+                          }
+                        }
+                      });
+                    });
+                  });
+                  domObserver.observe(document.body, { 
+                    childList: true, 
+                    subtree: true, 
+                    attributes: true, 
+                    attributeFilter: ['style', 'class', 'id'] 
+                  });
+                  
+                  try {
+                    // printContainer를 다시 생성하여 PDF 저장에 사용 (화면에 보이지 않도록 설정)
+                    const pdfContainer = document.createElement('div');
+                    pdfContainer.id = 'print-root-work12-new-answer';
+                    // display: none으로 시작하여 완전히 숨김 (모든 속성을 !important로 설정)
+                    pdfContainer.style.cssText = 'display: none !important; position: fixed !important; left: -99999px !important; top: -99999px !important; width: 21cm !important; height: 29.7cm !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -9999 !important; visibility: hidden !important; transform: scale(0) !important;';
+                    document.body.appendChild(pdfContainer);
+                    
+                    console.log('📄 [QuizDisplayPage] PDF 저장용 컨테이너 생성 완료 (정답):', {
+                      id: pdfContainer.id,
+                      display: window.getComputedStyle(pdfContainer).display,
+                      visibility: window.getComputedStyle(pdfContainer).visibility,
+                      opacity: window.getComputedStyle(pdfContainer).opacity,
+                      position: window.getComputedStyle(pdfContainer).position,
+                      rect: pdfContainer.getBoundingClientRect()
+                    });
+                    
+                    // React 렌더링 중에도 계속 숨김 상태 유지
+                    const observer = new MutationObserver(() => {
+                      if (pdfContainer.style.display !== 'none') {
+                        pdfContainer.style.cssText = 'display: none !important; position: fixed !important; left: -99999px !important; top: -99999px !important; width: 21cm !important; height: 29.7cm !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -9999 !important; visibility: hidden !important; transform: scale(0) !important;';
+                      }
+                    });
+                    observer.observe(pdfContainer, { attributes: true, attributeFilter: ['style', 'class'] });
+                    
+                    const pdfRoot = ReactDOM.createRoot(pdfContainer);
+                    pdfRoot.render(<HistoryPrintWork12 data={data} isAnswerMode={true} />);
+                    
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // 렌더링 후 상태 확인
+                    console.log('📄 [QuizDisplayPage] React 렌더링 후 상태 (정답):', {
+                      id: pdfContainer.id,
+                      display: window.getComputedStyle(pdfContainer).display,
+                      visibility: window.getComputedStyle(pdfContainer).visibility,
+                      opacity: window.getComputedStyle(pdfContainer).opacity,
+                      rect: pdfContainer.getBoundingClientRect(),
+                      innerHTML: pdfContainer.innerHTML.substring(0, 200)
+                    });
+                    
+                    // PDF 생성 직전에만 display: block으로 변경 (하지만 여전히 화면 밖에 있고 opacity: 0)
+                    observer.disconnect(); // 관찰 중지
+                    pdfContainer.style.cssText = 'display: block !important; position: fixed !important; left: -99999px !important; top: -99999px !important; width: 21cm !important; height: 29.7cm !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -9999 !important; visibility: visible !important; transform: scale(1) !important;';
+                    
+                    console.log('📄 [QuizDisplayPage] PDF 생성 직전 상태 (정답):', {
+                      id: pdfContainer.id,
+                      display: window.getComputedStyle(pdfContainer).display,
+                      visibility: window.getComputedStyle(pdfContainer).visibility,
+                      opacity: window.getComputedStyle(pdfContainer).opacity,
+                      rect: pdfContainer.getBoundingClientRect()
+                    });
+                    
+                    // html2canvas는 opacity: 0인 요소도 캡처할 수 있으므로 visibility 변경 불필요
+                    const result = await generateAndUploadFile(
+                      pdfContainer as HTMLElement,
+                      userData.uid,
+                      `${packageType.toLowerCase() || 'quiz'}_answer_${Date.now()}`,
+                      workTypeName,
+                      { 
+                        isAnswerMode: true, 
+                        orientation: 'portrait',
+                        fileFormat 
+                      }
+                    );
+                    console.log(`📁 ${workTypeName} PDF 저장 완료:`, result.fileName);
+                    
+                    // PDF 저장 후 즉시 다시 숨기기
+                    pdfContainer.style.cssText = 'display: none !important; position: fixed !important; left: -99999px !important; top: -99999px !important; width: 21cm !important; height: 29.7cm !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -9999 !important; visibility: hidden !important; transform: scale(0) !important;';
+                    
+                    // PDF 저장 후 정리
+                    pdfRoot.unmount();
+                    if (pdfContainer.parentNode) {
+                      pdfContainer.parentNode.removeChild(pdfContainer);
+                    }
+                    
+                    // DOM 관찰 중지
+                    domObserver.disconnect();
+                    console.log('✅ [QuizDisplayPage] PDF 저장 완료 및 DOM 관찰 중지 (정답)');
+                  } catch (error) {
+                    console.error(`❌ PDF 저장 실패:`, error);
+                    // 에러 발생 시에도 DOM 관찰 중지
+                    domObserver.disconnect();
+                  }
+                }, 2000); // 인쇄 미리보기 창이 닫힐 시간 확보
+              }, 100);
+              }, 300); // 오버레이 렌더링 대기 시간
+            });
+          });
+          
+          return; // 오버레이 방식 사용 시 root.render 호출하지 않음
+        } else if (fileFormat === 'doc') {
+          // DOC 저장: HistoryPrintWork12를 printContainer에 렌더링
+          const workTypeName = '유형#12_정답';
+          
+          root.render(<HistoryPrintWork12 data={data} isAnswerMode={true} />);
+          
+          // 렌더링 대기
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // DOC 저장
+          const docElement = document.getElementById(containerId) || printContainer;
+          const result = await generateAndUploadFile(
+            docElement as HTMLElement,
+            userData.uid,
+            `${packageType.toLowerCase() || 'quiz'}_answer_${Date.now()}`,
+            workTypeName,
+            { 
+              isAnswerMode: true, 
+              orientation: 'portrait',
+              fileFormat: 'doc'
+            }
+          );
+          
+          console.log(`📁 ${workTypeName} DOC 저장 완료:`, result.fileName);
+        }
       } else if (typeId === '16') {
         const work16Data = first.work16Data || first.data?.work16Data || first.data || first;
         console.log('🔍 [QuizDisplayPage] 유형#16 인쇄(정답) - 단일 문제:', {
@@ -2286,6 +3342,19 @@ const QuizDisplayPage: React.FC = () => {
           };
         });
         root.render(<PrintFormatWork10New quizzes={rawQuizzes} isAnswerMode={true} />);
+      } else if (typeId === '11') {
+        // 유형#11는 PrintFormatWork11New 사용
+        const rawQuizzes = packageQuiz.map((item: any) => {
+          const work11Data = item.work11Data || item.quiz || item.data?.work11Data || item.data || item;
+          
+          return {
+            id: item.id || work11Data.id,
+            sentences: work11Data.sentences || [],
+            translations: work11Data.translations || [],
+            quizText: work11Data.quizText || ''
+          };
+        });
+        root.render(<PrintFormatWork11New quizzes={rawQuizzes} isAnswerMode={true} />);
       } else if (typeId === '13') {
         // 유형#13는 PrintFormatWork13New 사용
         const rawQuizzes = packageQuiz.map((item: any) => {
@@ -2942,6 +4011,19 @@ const QuizDisplayPage: React.FC = () => {
         };
       });
       root.render(<PrintFormatWork10New quizzes={rawQuizzes} isAnswerMode={true} />);
+    } else if (packageType === '11') {
+      // 유형#11는 PrintFormatWork11New 사용
+      const rawQuizzes = packageQuiz.map((item: any) => {
+        const work11Data = item.work11Data || item.quiz || item.data?.work11Data || item.data || item;
+        
+        return {
+          id: item.id || work11Data.id,
+          sentences: work11Data.sentences || [],
+          translations: work11Data.translations || [],
+          quizText: work11Data.quizText || ''
+        };
+      });
+      root.render(<PrintFormatWork11New quizzes={rawQuizzes} isAnswerMode={true} />);
     } else if (packageType === '13') {
       // 유형#13는 PrintFormatWork13New 사용
       const rawQuizzes = packageQuiz.map((item: any) => {
@@ -2959,8 +4041,8 @@ const QuizDisplayPage: React.FC = () => {
       root.render(<SimplePrintFormatPackage02 packageQuiz={packageQuiz} />);
     }
 
-    // 유형#07, #08, #09, #10, #13, #14는 원래 인쇄 방식과 동일하게 처리
-    if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '13' || typeId === '14')) {
+    // 유형#07, #08, #09, #10, #11, #13, #14는 원래 인쇄 방식과 동일하게 처리
+    if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '11' || typeId === '13' || typeId === '14')) {
       // 원래 방식: activatePrintContainer 후 바로 인쇄
       const activatePrintContainer = () => {
         const inner = printContainer.querySelector('.print-container, .print-container-answer');
@@ -3123,34 +4205,216 @@ const QuizDisplayPage: React.FC = () => {
           packageType === '16' ? '유형#16_정답' :
           '정답';
           
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `${packageType.toLowerCase() || 'quiz'}_answer_${Date.now()}`,
-            workTypeName,
-            { 
-              isAnswerMode: true, 
-              orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13' && typeId !== '14')) ? 'portrait' : 'landscape',
-              fileFormat 
+          // 유형#12는 인쇄 미리보기를 먼저 실행한 후 PDF 저장
+          if (typeId === '12' && fileFormat === 'pdf') {
+            // 인쇄 미리보기 먼저 실행
+            // 충분한 렌더링 시간 확보
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                setTimeout(() => {
+                  const onlyPrintElement = printContainer.querySelector('.only-print-work12') as HTMLElement;
+                  const pageTemplate = printContainer.querySelector('.a4-page-template-work12') as HTMLElement;
+                  const wordTable = printContainer.querySelector('.word-list-table-work12') as HTMLElement;
+                  
+                  if (onlyPrintElement && pageTemplate) {
+                    // 인쇄 미리보기에서 보이도록 스타일 강제 적용 (화면과 인쇄 모두)
+                    onlyPrintElement.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; position: relative !important; left: auto !important; top: auto !important; width: auto !important; height: auto !important;';
+                    pageTemplate.style.cssText = 'display: flex !important; visibility: visible !important; opacity: 1 !important; position: relative !important; left: auto !important; top: auto !important; width: 21cm !important; height: 29.7cm !important;';
+                    
+                    // printContainer도 명시적으로 설정
+                    printContainer.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; position: relative !important; left: auto !important; top: auto !important; width: auto !important; height: auto !important; overflow: visible !important;';
+                    
+                    // 상세 디버깅: 요소의 실제 상태 확인
+                    const onlyPrintRect = onlyPrintElement.getBoundingClientRect();
+                    const pageTemplateRect = pageTemplate.getBoundingClientRect();
+                    const printContainerRect = printContainer.getBoundingClientRect();
+                    const onlyPrintComputed = window.getComputedStyle(onlyPrintElement);
+                    const pageTemplateComputed = window.getComputedStyle(pageTemplate);
+                    const printContainerComputed = window.getComputedStyle(printContainer);
+                    
+                    console.log('✅ 유형#12 인쇄 요소 확인 완료 (정답), 인쇄 시작', {
+                      onlyPrintElement: !!onlyPrintElement,
+                      pageTemplate: !!pageTemplate,
+                      wordTable: !!wordTable,
+                      printContainerInBody: document.body.contains(printContainer),
+                      onlyPrintRect: {
+                        width: onlyPrintRect.width,
+                        height: onlyPrintRect.height,
+                        top: onlyPrintRect.top,
+                        left: onlyPrintRect.left,
+                        visible: onlyPrintRect.width > 0 && onlyPrintRect.height > 0
+                      },
+                      pageTemplateRect: {
+                        width: pageTemplateRect.width,
+                        height: pageTemplateRect.height,
+                        top: pageTemplateRect.top,
+                        left: pageTemplateRect.left,
+                        visible: pageTemplateRect.width > 0 && pageTemplateRect.height > 0
+                      },
+                      printContainerRect: {
+                        width: printContainerRect.width,
+                        height: printContainerRect.height,
+                        top: printContainerRect.top,
+                        left: printContainerRect.left,
+                        visible: printContainerRect.width > 0 && printContainerRect.height > 0
+                      },
+                      onlyPrintComputed: {
+                        display: onlyPrintComputed.display,
+                        visibility: onlyPrintComputed.visibility,
+                        opacity: onlyPrintComputed.opacity,
+                        position: onlyPrintComputed.position
+                      },
+                      pageTemplateComputed: {
+                        display: pageTemplateComputed.display,
+                        visibility: pageTemplateComputed.visibility,
+                        opacity: pageTemplateComputed.opacity,
+                        position: pageTemplateComputed.position,
+                        width: pageTemplateComputed.width,
+                        height: pageTemplateComputed.height
+                      },
+                      printContainerComputed: {
+                        display: printContainerComputed.display,
+                        visibility: printContainerComputed.visibility,
+                        opacity: printContainerComputed.opacity,
+                        position: printContainerComputed.position
+                      },
+                      innerHTMLLength: printContainer.innerHTML.length,
+                      innerHTMLPreview: printContainer.innerHTML.substring(0, 500)
+                    });
+                    
+                    // 인쇄 미리보기에서 보이도록 #root를 일시적으로 표시
+                    const appRoot = document.getElementById('root');
+                    const originalRootDisplay = appRoot ? appRoot.style.display : '';
+                    if (appRoot) {
+                      appRoot.style.display = 'block';
+                      console.log('🔧 #root를 일시적으로 표시함 (정답):', {
+                        originalDisplay: originalRootDisplay,
+                        newDisplay: appRoot.style.display
+                      });
+                    }
+                    
+                    // 추가 대기 후 인쇄 (브라우저가 스타일을 적용할 시간 확보)
+                    setTimeout(() => {
+                      // 인쇄 전 최종 상태 확인
+                      const finalOnlyPrintRect = onlyPrintElement.getBoundingClientRect();
+                      const finalPageTemplateRect = pageTemplate.getBoundingClientRect();
+                      const finalPrintContainerRect = printContainer.getBoundingClientRect();
+                      
+                      console.log('🖨️ window.print() 호출 전 최종 상태 (정답):', {
+                        onlyPrintVisible: finalOnlyPrintRect.width > 0 && finalOnlyPrintRect.height > 0,
+                        pageTemplateVisible: finalPageTemplateRect.width > 0 && finalPageTemplateRect.height > 0,
+                        printContainerVisible: finalPrintContainerRect.width > 0 && finalPrintContainerRect.height > 0,
+                        onlyPrintSize: { width: finalOnlyPrintRect.width, height: finalOnlyPrintRect.height },
+                        pageTemplateSize: { width: finalPageTemplateRect.width, height: finalPageTemplateRect.height },
+                        printContainerSize: { width: finalPrintContainerRect.width, height: finalPrintContainerRect.height },
+                        bodyChildren: Array.from(document.body.children).map(el => ({
+                          id: el.id,
+                          tagName: el.tagName,
+                          className: el.className,
+                          display: window.getComputedStyle(el).display,
+                          visibility: window.getComputedStyle(el).visibility
+                        }))
+                      });
+                      
+                      window.print();
+                      
+                      // 인쇄 후 #root 다시 숨기기
+                      setTimeout(() => {
+                        if (appRoot) {
+                          appRoot.style.display = originalRootDisplay || 'none';
+                        }
+                      }, 100);
+                      
+                      // 인쇄 후 PDF 저장 (비동기로 실행하여 인쇄 미리보기가 먼저 열리도록)
+                      setTimeout(async () => {
+                        try {
+                          const result = await generateAndUploadFile(
+                            element as HTMLElement,
+                            userData.uid,
+                            `${packageType.toLowerCase() || 'quiz'}_answer_${Date.now()}`,
+                            workTypeName,
+                            { 
+                              isAnswerMode: true, 
+                              orientation: 'portrait',
+                              fileFormat 
+                            }
+                          );
+                          console.log(`📁 ${workTypeName} PDF 저장 완료:`, result.fileName);
+                        } catch (error) {
+                          console.error(`❌ PDF 저장 실패:`, error);
+                        }
+                      }, 1000);
+                    }, 300);
+                  } else {
+                    console.warn('⚠️ 유형#12 인쇄 요소를 찾을 수 없습니다 (정답).', {
+                      onlyPrintElement: !!onlyPrintElement,
+                      pageTemplate: !!pageTemplate,
+                      printContainerExists: !!printContainer,
+                      printContainerInBody: document.body.contains(printContainer),
+                      printContainerHTML: printContainer.innerHTML.substring(0, 200)
+                    });
+                    // 요소를 찾을 수 없어도 인쇄 시도
+                    setTimeout(() => {
+                      window.print();
+                      // PDF 저장도 시도
+                      setTimeout(async () => {
+                        try {
+                          const result = await generateAndUploadFile(
+                            element as HTMLElement,
+                            userData.uid,
+                            `${packageType.toLowerCase() || 'quiz'}_answer_${Date.now()}`,
+                            workTypeName,
+                            { 
+                              isAnswerMode: true, 
+                              orientation: 'portrait',
+                              fileFormat 
+                            }
+                          );
+                          console.log(`📁 ${workTypeName} PDF 저장 완료:`, result.fileName);
+                        } catch (error) {
+                          console.error(`❌ PDF 저장 실패:`, error);
+                        }
+                      }, 1000);
+                    }, 500);
+                  }
+                }, 500);
+              });
+            });
+          } else {
+            // 다른 유형은 기존 로직 사용
+            const result = await generateAndUploadFile(
+              element as HTMLElement,
+              userData.uid,
+              `${packageType.toLowerCase() || 'quiz'}_answer_${Date.now()}`,
+              workTypeName,
+              { 
+                isAnswerMode: true, 
+                orientation: (packageType === 'P01' || (isSingleWork && !isType01Single && typeId !== '02' && typeId !== '03' && typeId !== '04' && typeId !== '05' && typeId !== '06' && typeId !== '07' && typeId !== '08' && typeId !== '09' && typeId !== '10' && typeId !== '13' && typeId !== '14')) ? 'portrait' : 'landscape',
+                fileFormat 
+              }
+            );
+            
+            const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+            console.log(`📁 ${workTypeName} ${formatName} 저장 완료:`, result.fileName);
+            
+            // PDF인 경우에만 브라우저 인쇄
+            if (fileFormat === 'pdf') {
+              window.print();
             }
-          );
-          
-          const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-          console.log(`📁 ${workTypeName} ${formatName} 저장 완료:`, result.fileName);
+          }
         }
       } catch (error) {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
 
-      // PDF인 경우에만 브라우저 인쇄, DOC는 이미 다운로드됨
-      if (fileFormat === 'pdf') {
-        window.print();
-      }
-
       // 인쇄 후 정리
+      // 유형#12는 PDF 저장이 비동기로 실행되므로 더 긴 대기 시간 필요
+      const cleanupDelay = (typeId === '12' && fileFormat === 'pdf') ? 2000 : (fileFormat === 'pdf' ? 100 : 500);
       setTimeout(() => {
         root.unmount();
-        document.body.removeChild(printContainer);
+        if (printContainer.parentNode) {
+          document.body.removeChild(printContainer);
+        }
         if (appRoot) {
           appRoot.style.display = 'block';
         }
@@ -3159,8 +4423,8 @@ const QuizDisplayPage: React.FC = () => {
           document.head.removeChild(styleElement);
         }
         console.log('✅ 인쇄(정답) 완료');
-      }, fileFormat === 'pdf' ? 100 : 500);
-    }, (packageType === '01' || isType01Single) ? 1000 : 500); // 유형#01은 렌더링 시간이 더 필요할 수 있음
+      }, cleanupDelay);
+    }, (packageType === '01' || isType01Single || typeId === '12') ? 1000 : 500); // 유형#01, #12는 렌더링 시간이 더 필요할 수 있음
   };
 
   // 목록보기 버튼

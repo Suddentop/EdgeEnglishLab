@@ -113,6 +113,7 @@ interface WordListTableWork12Props {
   words: Array<{
     english: string;
     korean: string;
+    partOfSpeech?: string; // 품사 정보 (예: "명사", "동사", "형용사", "부사" 등)
     difficulty?: 'easy' | 'medium' | 'hard';
   }>;
   showDifficulty?: boolean;
@@ -148,7 +149,28 @@ export const WordListTableWork12: React.FC<WordListTableWork12Props> = ({
             <td>{quizType === 'english-to-korean' ? word.english : word.korean}</td>
             <td className={showAnswers ? 'answer-cell' : ''}>
               {showAnswers
-                ? (quizType === 'english-to-korean' ? word.korean : word.english)
+                ? (() => {
+                    const answer = quizType === 'english-to-korean' ? word.korean : word.english;
+                    // 품사 정보가 있으면 한글 뜻 앞에 영어 약어 형식으로 표시 (예: "n. 관리자")
+                    if (quizType === 'english-to-korean' && word.partOfSpeech) {
+                      // 품사가 이미 "n.", "v." 형식이면 그대로 사용, 아니면 변환
+                      const pos = word.partOfSpeech.trim();
+                      // 한국어 품사명을 영어 약어로 변환 (기존 데이터 호환성)
+                      const posMap: { [key: string]: string } = {
+                        '명사': 'n.',
+                        '동사': 'v.',
+                        '형용사': 'adj.',
+                        '부사': 'adv.',
+                        '전치사': 'prep.',
+                        '접속사': 'conj.',
+                        '대명사': 'pron.',
+                        '감탄사': 'interj.'
+                      };
+                      const normalizedPos = posMap[pos] || (pos.endsWith('.') ? pos : `${pos}.`);
+                      return `${normalizedPos} ${answer}`;
+                    }
+                    return answer;
+                  })()
                 : (word.korean.includes('_') || word.english.includes('_') ? '' : '')
               }
             </td>
@@ -237,6 +259,7 @@ export type PrintModeWork12 = 'none' | 'no-answer' | 'with-answer';
 export interface WordItemWork12 {
   english: string;
   korean: string;
+  partOfSpeech?: string; // 품사 정보 (예: "명사", "동사", "형용사", "부사" 등)
   difficulty?: 'easy' | 'medium' | 'hard';
 }
 

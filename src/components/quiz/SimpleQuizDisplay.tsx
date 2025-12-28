@@ -517,7 +517,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           const work11Data = quizItem.work11Data || quizItem.data?.work11Data || quizItem.data;
           return (
             <div key={`quiz-11-${index}`} className="quiz-item">
-              <h3>문제 {index + 1} : 본문 문장별 해석</h3>
+              <h3>문제 {index + 1} : 본문 문장별 해석                    유형#11</h3>
               <div className="instruction">다음 문장들의 해석을 고르세요</div>
               <div className="passage">
                 {work11Data?.sentences?.map((sentence: any, sIndex: number) => (

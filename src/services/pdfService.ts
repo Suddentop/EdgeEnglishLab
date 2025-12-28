@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, UnderlineType } from 'docx';
+import { Document as DocxDocument, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, UnderlineType, TabStopType, TabStopPosition } from 'docx';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase/config';
 
@@ -37,11 +37,12 @@ export const generateAndUploadPDF = async (
         hasPrintPage: element.querySelector('.print-page') !== null,
         hasA4Template: element.querySelector('.a4-landscape-page-template') !== null,
         hasA4TemplateWork16: element.querySelector('.a4-landscape-page-template-work16') !== null,
+        hasA4TemplateWork12: element.querySelector('.a4-page-template-work12') !== null,
         isAnswerMode
       });
     }
     
-    const pageElements = element.querySelectorAll('.print-page, .a4-landscape-page-template, .a4-landscape-page-template-work16');
+    const pageElements = element.querySelectorAll('.print-page, .a4-landscape-page-template, .a4-landscape-page-template-work16, .a4-page-template-work12');
     const hasMultiplePages = pageElements.length > 0;
     
     if (process.env.NODE_ENV === 'development') {
@@ -146,14 +147,18 @@ export const generateAndUploadPDF = async (
           // 현재 페이지 요소를 완전히 격리하기 위해 임시 컨테이너 생성
           tempContainer = document.createElement('div');
           tempContainer.id = `temp-pdf-page-${i}`;
+          // 화면에 보이지 않도록 완전히 숨김 (html2canvas는 opacity: 0인 요소도 캡처 가능)
           tempContainer.style.position = 'fixed';
-          tempContainer.style.top = '0px';
-          tempContainer.style.left = '0px';
+          tempContainer.style.top = '-99999px';
+          tempContainer.style.left = '-99999px';
           tempContainer.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`;
           tempContainer.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`;
           tempContainer.style.overflow = 'hidden';
           tempContainer.style.backgroundColor = '#ffffff';
-          tempContainer.style.zIndex = '99999';
+          tempContainer.style.opacity = '0';
+          tempContainer.style.visibility = 'hidden';
+          tempContainer.style.pointerEvents = 'none';
+          tempContainer.style.zIndex = '-9999';
           document.body.appendChild(tempContainer);
           
           // 현재 페이지 요소를 임시 컨테이너로 이동
@@ -1144,8 +1149,13 @@ const extractTextRunsByLine = (element: HTMLElement): TextRun[][] => {
   return lines.filter((line) => line.length > 0);
 };
 
-const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
+const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = false): (Paragraph | Table)[] => {
   const paragraphs: (Paragraph | Table)[] = [];
+  
+  // DOM에서 정답 모드 확인 (백업)
+  const isAnswerModeFromDOM = element.classList.contains('print-container-answer') || 
+                              element.querySelector('.print-container-answer') !== null;
+  const actualIsAnswerMode = isAnswerMode || isAnswerModeFromDOM;
   
   // 디버깅: 요소 구조 확인
   if (process.env.NODE_ENV === 'development') {
@@ -1161,6 +1171,473 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       printColumnCount: element.querySelectorAll('.print-column').length,
       textContentLength: element.textContent?.trim().length || 0
     });
+  }
+  
+  // 유형#12 특별 처리
+  const work12Template = element.querySelector('.a4-page-template-work12, .only-print-work12');
+  if (work12Template) {
+    // 유형#12 헤더 찾기
+    const work12Header = work12Template.querySelector('.a4-page-header-work12, .print-header-work12');
+    if (work12Header) {
+      const headerText = work12Header.querySelector('.print-header-text-work12');
+      if (headerText) {
+        const text = headerText.textContent?.trim() || '';
+        if (text) {
+          // 헤더 텍스트 (중앙 정렬, 굵게, Noto Sans KR, 하단 가로선)
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: text,
+                  bold: true,
+                  size: 20, // 10pt
+                  font: 'Noto Sans KR'
+                })
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 100 },
+              border: {
+                bottom: {
+                  color: '000000',
+                  size: 20, // 1pt
+                  style: BorderStyle.SINGLE
+                }
+              }
+            })
+          );
+        }
+      }
+    }
+    
+    // 문제 제목 및 유형번호 찾기
+    const problemInstruction = work12Template.querySelector('.problem-instruction-work12');
+    if (problemInstruction) {
+      const instructionText = problemInstruction.querySelector('.problem-instruction-text-work12');
+      const typeLabel = problemInstruction.querySelector('.problem-type-label-work12');
+      
+      const instruction = instructionText?.textContent?.trim() || '';
+      const typeBadge = typeLabel?.textContent?.trim() || '유형#12';
+      
+      if (instruction) {
+        // 문제 제목 (유형번호는 우측 정렬)
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: instruction,
+                font: 'Noto Sans KR',
+                size: 22, // 11pt
+                color: '000000' // 검은색
+              }),
+              new TextRun({
+                text: '\t',
+                font: 'Noto Sans KR'
+              }),
+              new TextRun({
+                text: typeBadge,
+                font: 'Noto Sans KR',
+                size: 22,
+                bold: true,
+                color: '000000' // 검은색
+              })
+            ],
+            spacing: { before: 100, after: 100 },
+            tabStops: [
+              {
+                type: TabStopType.RIGHT,
+                position: TabStopPosition.MAX
+              }
+            ],
+            shading: {
+              type: ShadingType.SOLID,
+              color: 'FFFFFF', // 흰색 배경
+              fill: 'FFFFFF' // 흰색 배경
+            }
+          })
+        );
+      }
+    }
+    
+    // 단어 테이블 찾기 (2단 레이아웃 처리)
+    const wordListContainer = work12Template.querySelector('.word-list-container-work12');
+    if (wordListContainer) {
+      const columns = wordListContainer.querySelectorAll('.word-list-column-work12');
+      
+      if (columns.length === 2) {
+        // 좌우 컬럼이 모두 있는 경우: 하나의 큰 테이블로 통합하여 2단 레이아웃 구현
+        const leftTable = columns[0].querySelector('.word-list-table-work12');
+        const rightTable = columns[1].querySelector('.word-list-table-work12');
+        
+        if (leftTable && rightTable) {
+          const leftThead = leftTable.querySelector('thead');
+          const leftTbody = leftTable.querySelector('tbody');
+          const rightThead = rightTable.querySelector('thead');
+          const rightTbody = rightTable.querySelector('tbody');
+          
+          if (leftThead && leftTbody && rightThead && rightTbody) {
+            // 왼쪽 테이블의 행 수와 오른쪽 테이블의 행 수 중 더 큰 값 사용
+            const leftRows = Array.from(leftTbody.querySelectorAll('tr'));
+            const rightRows = Array.from(rightTbody.querySelectorAll('tr'));
+            const maxRows = Math.max(leftRows.length, rightRows.length);
+            
+            // 헤더 행 생성 (좌우 각각)
+            const leftHeaderRow = leftThead.querySelector('tr');
+            const rightHeaderRow = rightThead.querySelector('tr');
+            
+            if (leftHeaderRow && rightHeaderRow) {
+              const leftHeaderCells = Array.from(leftHeaderRow.querySelectorAll('th')).map((th, index, array) => {
+                let text = th.textContent?.trim() || '';
+                // "한국어"를 "한글뜻"으로, "영어"를 "영어단어"로 변경
+                if (text === '한국어') {
+                  text = '한글뜻';
+                } else if (text === '영어') {
+                  text = '영어단어';
+                }
+                const isLastCell = index === array.length - 1;
+                return new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: text,
+                          bold: true,
+                          font: 'Noto Sans KR',
+                          size: 20, // 10pt
+                          color: '000000' // 검은색
+                        })
+                      ],
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 40, after: 40 }
+                    })
+                  ],
+                  margins: {
+                    top: 60,
+                    bottom: 60,
+                    left: 100,
+                    right: 100
+                  },
+                  shading: {
+                    type: ShadingType.SOLID,
+                    color: 'E0E0E0', // 연한 회색 배경
+                    fill: 'E0E0E0' // 연한 회색 배경
+                  },
+                  borders: isLastCell ? {
+                    right: {
+                      color: '000000',
+                      size: 40, // 2pt - 진한 테두리
+                      style: BorderStyle.SINGLE
+                    }
+                  } : undefined
+                });
+              });
+              
+              const rightHeaderCells = Array.from(rightHeaderRow.querySelectorAll('th')).map((th, index) => {
+                let text = th.textContent?.trim() || '';
+                // "한국어"를 "한글뜻"으로, "영어"를 "영어단어"로 변경
+                if (text === '한국어') {
+                  text = '한글뜻';
+                } else if (text === '영어') {
+                  text = '영어단어';
+                }
+                const isFirstCell = index === 0;
+                return new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: text,
+                          bold: true,
+                          font: 'Noto Sans KR',
+                          size: 20, // 10pt
+                          color: '000000' // 검은색
+                        })
+                      ],
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 40, after: 40 }
+                    })
+                  ],
+                  margins: {
+                    top: 60,
+                    bottom: 60,
+                    left: 100,
+                    right: 100
+                  },
+                  shading: {
+                    type: ShadingType.SOLID,
+                    color: 'E0E0E0', // 연한 회색 배경
+                    fill: 'E0E0E0' // 연한 회색 배경
+                  },
+                  borders: isFirstCell ? {
+                    left: {
+                      color: '000000',
+                      size: 40, // 2pt - 진한 테두리
+                      style: BorderStyle.SINGLE
+                    }
+                  } : undefined
+                });
+              });
+              
+              // 헤더 행: 왼쪽 컬럼 + 오른쪽 컬럼 (구분 열 제거)
+              const headerRow = new TableRow({
+                children: [
+                  ...leftHeaderCells,
+                  ...rightHeaderCells
+                ]
+              });
+              
+              // 바디 행들 생성
+              const bodyRows: TableRow[] = [];
+              for (let i = 0; i < maxRows; i++) {
+                const leftRow = leftRows[i];
+                const rightRow = rightRows[i];
+                
+                const leftCells = leftRow 
+                  ? Array.from(leftRow.querySelectorAll('td')).map((td, cellIndex, array) => {
+                      const text = td.textContent?.trim() || '';
+                      const isAnswerCell = td.classList.contains('answer-cell');
+                      const isLastCell = cellIndex === array.length - 1;
+                      
+                      return new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [
+                              new TextRun({
+                                text: text,
+                                font: 'Noto Sans KR',
+                                size: 20, // 10pt
+                                bold: isAnswerCell,
+                                color: isAnswerCell ? '1976D2' : '000000' // 정답 셀은 파란색
+                              })
+                            ],
+                            alignment: cellIndex === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
+                            spacing: { before: 20, after: 20 }
+                          })
+                        ],
+                        margins: {
+                          top: 40,
+                          bottom: 40,
+                          left: 100,
+                          right: 100
+                        },
+                        shading: undefined, // 정답 셀 배경색 제거
+                        borders: isLastCell ? {
+                          right: {
+                            color: '000000',
+                            size: 40, // 2pt - 진한 테두리
+                            style: BorderStyle.SINGLE
+                          }
+                        } : undefined
+                      });
+                    })
+                  : [
+                      new TableCell({ children: [new Paragraph({ text: '' })] }),
+                      new TableCell({ children: [new Paragraph({ text: '' })] }),
+                      new TableCell({ children: [new Paragraph({ text: '' })] })
+                    ];
+                
+                const rightCells = rightRow
+                  ? Array.from(rightRow.querySelectorAll('td')).map((td, cellIndex) => {
+                      const text = td.textContent?.trim() || '';
+                      const isAnswerCell = td.classList.contains('answer-cell');
+                      const isFirstCell = cellIndex === 0;
+                      
+                      return new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [
+                              new TextRun({
+                                text: text,
+                                font: 'Noto Sans KR',
+                                size: 20, // 10pt
+                                bold: isAnswerCell,
+                                color: isAnswerCell ? '1976D2' : '000000' // 정답 셀은 파란색
+                              })
+                            ],
+                            alignment: cellIndex === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
+                            spacing: { before: 20, after: 20 }
+                          })
+                        ],
+                        margins: {
+                          top: 40,
+                          bottom: 40,
+                          left: 100,
+                          right: 100
+                        },
+                        shading: undefined, // 정답 셀 배경색 제거
+                        borders: isFirstCell ? {
+                          left: {
+                            color: '000000',
+                            size: 40, // 2pt - 진한 테두리
+                            style: BorderStyle.SINGLE
+                          }
+                        } : undefined
+                      });
+                    })
+                  : [
+                      new TableCell({ children: [new Paragraph({ text: '' })] }),
+                      new TableCell({ children: [new Paragraph({ text: '' })] }),
+                      new TableCell({ children: [new Paragraph({ text: '' })] })
+                    ];
+                
+                bodyRows.push(
+                  new TableRow({
+                    children: [
+                      ...leftCells,
+                      ...rightCells
+                    ]
+                  })
+                );
+              }
+              
+              // 통합 테이블 생성 (2단 레이아웃)
+              paragraphs.push(
+                new Table({
+                  rows: [headerRow, ...bodyRows],
+                  width: {
+                    size: 100,
+                    type: WidthType.PERCENTAGE
+                  },
+                  columnWidths: [
+                    500, 2700, 1800, // 왼쪽: No. 5%, 한글뜻 27% (6), 영어단어 18% (4) - 6:4 비율, 전체의 50%
+                    500, 2700, 1800  // 오른쪽: No. 5%, 한글뜻 27% (6), 영어단어 18% (4) - 6:4 비율, 전체의 50%
+                  ]
+                })
+              );
+            }
+          }
+        }
+      } else {
+        // 단일 컬럼인 경우: 기존 로직 사용
+        const wordTables = work12Template.querySelectorAll('.word-list-table-work12');
+        if (wordTables.length > 0) {
+          wordTables.forEach((table) => {
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            
+            if (thead && tbody) {
+              const headerRow = thead.querySelector('tr');
+              if (headerRow) {
+                const headerCells = Array.from(headerRow.querySelectorAll('th')).map((th) => {
+                  let text = th.textContent?.trim() || '';
+                  // "한국어"를 "한글뜻"으로, "영어"를 "영어단어"로 변경
+                  if (text === '한국어') {
+                    text = '한글뜻';
+                  } else if (text === '영어') {
+                    text = '영어단어';
+                  }
+                  return new TableCell({
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: text,
+                            bold: true,
+                            font: 'Noto Sans KR',
+                            size: 20, // 10pt
+                            color: '000000' // 검은색
+                          })
+                        ],
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 40, after: 40 }
+                      })
+                    ],
+                    margins: {
+                      top: 60,
+                      bottom: 60,
+                      left: 100,
+                      right: 100
+                    },
+                    shading: {
+                      type: ShadingType.SOLID,
+                      color: 'E0E0E0', // 연한 회색 배경
+                      fill: 'E0E0E0' // 연한 회색 배경
+                    }
+                  });
+                });
+                
+                const bodyRows = Array.from(tbody.querySelectorAll('tr')).map((tr) => {
+                  const cells = Array.from(tr.querySelectorAll('td')).map((td, cellIndex) => {
+                    const text = td.textContent?.trim() || '';
+                    const isAnswerCell = td.classList.contains('answer-cell');
+                    
+                    return new TableCell({
+                      children: [
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: text,
+                              font: 'Noto Sans KR',
+                              size: 20, // 10pt
+                              bold: isAnswerCell,
+                              color: isAnswerCell ? '1976D2' : '000000' // 정답 셀은 파란색
+                            })
+                          ],
+                          alignment: cellIndex === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
+                          spacing: { before: 20, after: 20 }
+                        })
+                      ],
+                      margins: {
+                        top: 40,
+                        bottom: 40,
+                        left: 100,
+                        right: 100
+                      },
+                      shading: undefined // 정답 셀 배경색 제거
+                    });
+                  });
+                  
+                  return new TableRow({
+                    children: cells
+                  });
+                });
+                
+                paragraphs.push(
+                  new Table({
+                    rows: [
+                      new TableRow({
+                        children: headerCells
+                      }),
+                      ...bodyRows
+                    ],
+                    width: {
+                      size: 100,
+                      type: WidthType.PERCENTAGE
+                    },
+                    columnWidths: [1200, 4800, 3200] // No.: 12%, 한글뜻: 48% (6), 영어단어: 32% (4) - 6:4 비율
+                  })
+                );
+              }
+            }
+          });
+        }
+      }
+      
+      // 테이블 후 간격
+      paragraphs.push(
+        new Paragraph({
+          text: '',
+          spacing: { before: 100, after: 0 }
+        })
+      );
+    }
+    
+    // 유형#12 처리가 완료되었으므로 여기서 반환
+    if (process.env.NODE_ENV === 'development') {
+      const wordListContainer = work12Template.querySelector('.word-list-container-work12');
+      const tableCount = wordListContainer 
+        ? wordListContainer.querySelectorAll('.word-list-table-work12').length 
+        : 0;
+      
+      console.log('🔍 htmlToDocxParagraphs - 유형#12 처리 완료:', {
+        totalParagraphs: paragraphs.length,
+        hasHeader: !!work12Header,
+        hasInstruction: !!problemInstruction,
+        hasWordListContainer: !!wordListContainer,
+        tableCount: tableCount
+      });
+    }
+    
+    return paragraphs;
   }
   
   // 헤더 찾기 (가로선 포함) - PDF와 동일한 구조
@@ -1242,6 +1719,17 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
     }
   });
 
+  // 헬퍼 함수: 요소 간의 DOM 거리 계산 (깊이 기준)
+  const getElementDistance = (ancestor: Element, descendant: Element): number => {
+    let distance = 0;
+    let current: Element | null = descendant;
+    while (current && current !== ancestor) {
+      distance++;
+      current = current.parentElement;
+    }
+    return current === ancestor ? distance : Infinity;
+  };
+
   // 템플릿들 간의 중복(포함 관계) 제거
   templates.forEach(template => {
     let isChild = false;
@@ -1255,6 +1743,35 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       uniqueCards.push(template);
       processedSet.add(template);
     }
+  });
+
+  // 1.5. templatesWithCards에 있는 템플릿 내부의 .print-question-card 찾아서 추가
+  // 이렇게 해야 .a4-landscape-page-template 내부에 .print-question-card가 있는 경우 카드를 찾을 수 있음
+  templatesWithCards.forEach(template => {
+    const cardsInsideTemplate = template.querySelectorAll('.print-question-card');
+    cardsInsideTemplate.forEach(card => {
+      // 이미 추가된 카드인지 확인
+      if (!processedSet.has(card)) {
+        // 다른 템플릿 내부에 있는지 확인 (중복 방지)
+        let isInsideOtherTemplate = false;
+        for (const otherTemplate of templatesWithCards) {
+          if (otherTemplate !== template && otherTemplate.contains(card)) {
+            // 다른 템플릿도 이 카드를 포함하고 있으면, 더 가까운 템플릿만 사용
+            // (일반적으로는 발생하지 않지만 안전을 위해)
+            const templateDistance = getElementDistance(template, card);
+            const otherTemplateDistance = getElementDistance(otherTemplate, card);
+            if (otherTemplateDistance < templateDistance) {
+              isInsideOtherTemplate = true;
+              break;
+            }
+          }
+        }
+        if (!isInsideOtherTemplate) {
+          uniqueCards.push(card);
+          processedSet.add(card);
+        }
+      }
+    });
   });
 
   // 2. 나머지 요소 처리 (독립적인 카드이거나 컨텐츠인 경우)
@@ -1375,20 +1892,113 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
            titleText.includes('본문 문장별 해석');
   };
   
-  // 유형#11의 모든 문장을 수집하는 함수
-  const collectWork11Sentences = (allWork11Cards: Element[]): Array<{ englishText: string; koreanText: string }> => {
-    const allWork11Sentences: Array<{ englishText: string; koreanText: string }> = [];
+  // 유형#11의 모든 문장을 카드별로 수집하는 함수
+  const collectWork11SentencesByCard = (allWork11Cards: Element[]): Array<{
+    cardTitle: string;
+    typeBadge: string;
+    instruction: string;
+    sentences: Array<{ englishText: string; koreanText: string }>
+  }> => {
+    const cardGroups: Array<{
+      cardTitle: string;
+      typeBadge: string;
+      instruction: string;
+      sentences: Array<{ englishText: string; koreanText: string }>
+    }> = [];
     
     allWork11Cards.forEach((card, cardIdx) => {
+      // 카드 제목 추출
+      const titleElement = card.querySelector('.print-question-title, .question-title');
+      let cardTitle = titleElement?.textContent?.trim() || '';
+      // 제목에서 타입 뱃지 제거 (이미 포함되어 있을 수 있음)
+      cardTitle = cardTitle.replace(/\s*유형#\d+\s*/g, '').trim();
+      
+      // 타입 뱃지 추출
+      const typeBadgeElement = card.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
+      let typeBadgeText = typeBadgeElement?.textContent?.trim() || '';
+      // 타입 뱃지가 없으면 data-work-type에서 생성
+      if (!typeBadgeText) {
+        const workType = (card as HTMLElement).getAttribute('data-work-type');
+        if (workType === '11' || workType === '011') {
+          typeBadgeText = '유형#11';
+        }
+      }
+      
+      // 지시문 추출
+      const instructionElement = card.querySelector('.print-instruction, .problem-instruction');
+      let instruction = instructionElement?.textContent?.trim() || '';
+      // "문제: " 제거
+      if (instruction.startsWith('문제:')) {
+        instruction = instruction.replace(/^문제:\s*/, '').trim();
+      }
+      if (instruction.startsWith('문제 :')) {
+        instruction = instruction.replace(/^문제\s*:\s*/, '').trim();
+      }
+      // 지시문이 없으면 기본 지시문 사용
+      if (!instruction) {
+        instruction = '다음 본문의 각 문장을 한국어로 해석하세요.';
+      }
+      
+      // PrintFormatWork11New: .work11-sentence-item 사용
       // 패키지#01 유형#11: .work11-print-answer-sentence, .work11-print-problem-sentence도 포함
-      const sentenceItems = card.querySelectorAll('.print-sentence-item, .sentence-item, .work11-print-answer-sentence, .work11-print-problem-sentence');
+      // 패키지#02 유형#11: .print-sentence-item, .sentence-item도 포함
+      const sentenceItems = card.querySelectorAll('.work11-sentence-item, .print-sentence-item, .sentence-item, .work11-print-answer-sentence, .work11-print-problem-sentence');
       if (process.env.NODE_ENV === 'development') {
         console.log(`🔍 유형#11 카드 ${cardIdx + 1}에서 문장 ${sentenceItems.length}개 발견`);
       }
       
+      const sentences: Array<{ englishText: string; koreanText: string }> = [];
+      
       sentenceItems.forEach((item) => {
+        // PrintFormatWork11New: .work11-sentence-item 처리
+        if (item.classList.contains('work11-sentence-item')) {
+          const itemElement = item as HTMLElement;
+          
+          // 영어 문장 추출 (.work11-sentence-text 또는 .work11-sentence-english 내부)
+          const sentenceText = itemElement.querySelector('.work11-sentence-text');
+          const sentenceEnglish = itemElement.querySelector('.work11-sentence-english');
+          let englishText = '';
+          
+          if (sentenceText) {
+            englishText = sentenceText.textContent?.trim() || '';
+          } else if (sentenceEnglish) {
+            // .work11-sentence-english 내부에서 번호 제거
+            const englishClone = sentenceEnglish.cloneNode(true) as HTMLElement;
+            const numberSpan = englishClone.querySelector('.work11-sentence-number');
+            if (numberSpan) {
+              numberSpan.remove();
+            }
+            englishText = englishClone.textContent?.trim() || '';
+          } else {
+            // 폴백: 전체 텍스트에서 번호 제거
+            let fullText = itemElement.textContent?.trim() || '';
+            // 번호 제거 (예: "1. " 또는 "1.")
+            fullText = fullText.replace(/^\d+\.\s*/, '').trim();
+            // 해석 부분 제거 (": "로 시작하는 부분)
+            const translationIndex = fullText.indexOf(': ');
+            if (translationIndex > 0) {
+              englishText = fullText.substring(0, translationIndex).trim();
+            } else {
+              englishText = fullText;
+            }
+          }
+          
+          // 한국어 해석 추출 (.work11-sentence-translation)
+          const translationDiv = itemElement.querySelector('.work11-sentence-translation');
+          let koreanText = '';
+          if (translationDiv) {
+            let translationText = translationDiv.textContent?.trim() || '';
+            // ": " 제거
+            translationText = translationText.replace(/^:\s*/, '').trim();
+            koreanText = translationText;
+          }
+          
+          if (englishText) {
+            sentences.push({ englishText, koreanText });
+          }
+        }
         // 패키지#01 유형#11: .work11-print-answer-sentence, .work11-print-problem-sentence 처리
-        if (item.classList.contains('work11-print-answer-sentence') || item.classList.contains('work11-print-problem-sentence')) {
+        else if (item.classList.contains('work11-print-answer-sentence') || item.classList.contains('work11-print-problem-sentence')) {
           const itemElement = item as HTMLElement;
           // 첫 번째 div에 문장 번호와 영어 문장이 있음
           const firstDiv = itemElement.querySelector('div:first-child');
@@ -1405,7 +2015,7 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
             }
             
             if (englishText) {
-              allWork11Sentences.push({ englishText, koreanText });
+              sentences.push({ englishText, koreanText });
             }
           }
         } else {
@@ -1430,23 +2040,61 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
           }
           
           if (englishText) {
-            allWork11Sentences.push({ englishText, koreanText });
+            sentences.push({ englishText, koreanText });
           }
         }
       });
+      
+      if (sentences.length > 0) {
+        cardGroups.push({
+          cardTitle,
+          typeBadge: typeBadgeText,
+          instruction,
+          sentences
+        });
+      }
     });
     
-    return allWork11Sentences;
+    return cardGroups;
   };
   
   if (questionCards.length > 0) {
     questionCards.forEach((card, cardIndex) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔍 카드 ${cardIndex + 1}/${questionCards.length} 처리 시작:`, {
+          tagName: card.tagName,
+          className: card.className,
+          id: (card as HTMLElement).id,
+          dataWorkType: (card as HTMLElement).getAttribute('data-work-type'),
+          textContentLength: card.textContent?.trim().length || 0
+        });
+      }
+      
       // 유형#15인 경우 건너뛰기 (별도 처리됨)
-      const cardWork15Content = card.querySelector('.quiz-content') || card.querySelector('.a4-page-content');
-      const cardHasPrintContentSection = cardWork15Content?.querySelector('.print-content-section') !== null;
-      const cardHasQuestionCard = card.querySelector('.print-question-card') !== null;
-      if (cardHasPrintContentSection && !cardHasQuestionCard) {
-        return; // 유형#15는 별도 처리되므로 건너뛰기
+      // 유형#15는 .quiz-content 또는 .a4-page-content 내부에 .print-content-section이 있고,
+      // .print-question-card가 없는 구조입니다.
+      // 단, 카드 자체가 .print-question-card인 경우는 제외해야 합니다.
+      const isCardItselfQuestionCard = card.classList.contains('print-question-card');
+      
+      // 카드 자체가 .print-question-card인 경우는 유형#15가 아님 (건너뛰지 않음)
+      if (!isCardItselfQuestionCard) {
+        // 카드 자체가 .print-question-card가 아닌 경우에만 유형#15 체크
+        // 단, .a4-landscape-page-template은 유형#06 등 다른 유형에서도 사용하므로 제외
+        const isLandscapeTemplate = card.classList.contains('a4-landscape-page-template');
+        
+        if (!isLandscapeTemplate) {
+          // .a4-landscape-page-template이 아닌 경우에만 유형#15 체크
+          const cardWork15Content = card.querySelector('.quiz-content') || card.querySelector('.a4-page-content');
+          const cardHasPrintContentSection = cardWork15Content?.querySelector('.print-content-section') !== null;
+          // 내부에 .print-question-card가 없는 경우만 유형#15로 판단
+          const cardHasQuestionCardInside = card.querySelector('.print-question-card') !== null;
+          if (cardHasPrintContentSection && !cardHasQuestionCardInside) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`⏭️ 카드 ${cardIndex + 1} 건너뛰기 (유형#15)`);
+            }
+            return; // 유형#15는 별도 처리되므로 건너뛰기
+          }
+        }
       }
       
       // .a4-page-template인 경우 내부의 .a4-page-content를 찾아서 처리
@@ -1524,184 +2172,252 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
             console.log(`🔍 유형#11 카드 ${allWork11Cards.length}개 발견 (순서 유지)`);
           }
           
-          // 유형#11의 모든 문장 수집
-          const allWork11Sentences = collectWork11Sentences(allWork11Cards);
+          // 유형#11의 모든 문장을 카드별로 수집
+          const cardGroups = collectWork11SentencesByCard(allWork11Cards);
           
-          // 유형#11의 모든 문장을 하나의 박스로 처리
-          if (allWork11Sentences.length > 0) {
+          // 같은 문제 번호를 가진 카드들을 그룹화 (페이지 분할로 인해 여러 카드로 나뉜 경우 처리)
+          const groupedByProblemNumber = new Map<string, typeof cardGroups>();
+          let lastProblemNumber = '';
+          let problemIndex = 0;
+          
+          cardGroups.forEach((cardGroup, index) => {
+            // 제목에서 문제 번호 추출 (예: "문제 4 : 문장별 해석" -> "4")
+            const problemNumberMatch = cardGroup.cardTitle.match(/문제\s*(\d+)\s*[:：]/);
+            let problemNumber = problemNumberMatch ? problemNumberMatch[1] : '';
+            
+            // 제목이 없거나 문제 번호를 찾을 수 없는 경우 (분할된 부분일 수 있음)
+            if (!problemNumber) {
+              // 이전 카드의 문제 번호를 사용 (분할된 부분으로 간주)
+              if (lastProblemNumber) {
+                problemNumber = lastProblemNumber;
+              } else {
+                // 첫 번째 카드인데 문제 번호가 없으면 인덱스 기반으로 생성
+                problemNumber = `${problemIndex + 1}`;
+                problemIndex++;
+              }
+            } else {
+              // 새로운 문제 번호 발견
+              lastProblemNumber = problemNumber;
+              problemIndex = parseInt(problemNumber, 10);
+            }
+            
+            if (!groupedByProblemNumber.has(problemNumber)) {
+              groupedByProblemNumber.set(problemNumber, []);
+            }
+            groupedByProblemNumber.get(problemNumber)!.push(cardGroup);
+          });
+          
+          // 그룹화된 문제들을 하나의 문제로 병합
+          const mergedCardGroups: Array<{
+            cardTitle: string;
+            typeBadge: string;
+            instruction: string;
+            sentences: Array<{ englishText: string; koreanText: string }>
+          }> = [];
+          
+          groupedByProblemNumber.forEach((groups, problemNumber) => {
+            if (groups.length > 0) {
+              // 첫 번째 그룹의 제목, 타입 뱃지, 지시문 사용
+              const firstGroup = groups[0];
+              const allSentences: Array<{ englishText: string; koreanText: string }> = [];
+              
+              // 모든 그룹의 문장을 순서대로 합치기
+              groups.forEach((group) => {
+                allSentences.push(...group.sentences);
+              });
+              
+              mergedCardGroups.push({
+                cardTitle: firstGroup.cardTitle,
+                typeBadge: firstGroup.typeBadge,
+                instruction: firstGroup.instruction,
+                sentences: allSentences
+              });
+              
+              if (process.env.NODE_ENV === 'development' && groups.length > 1) {
+                console.log(`🔗 문제 ${problemNumber}: ${groups.length}개 카드를 하나로 병합 (총 ${allSentences.length}개 문장)`);
+              }
+            }
+          });
+          
+          // 각 카드(문제)별로 개별 처리
+          if (mergedCardGroups.length > 0) {
             if (process.env.NODE_ENV === 'development') {
-              console.log(`✅ 유형#11 총 ${allWork11Sentences.length}개 문장을 하나의 박스로 처리`);
-            }
-            // 첫 번째 카드의 제목과 지시문 처리
-            const firstCard = allWork11Cards[0];
-            const typeBadge = firstCard.querySelector('.print-question-type-badge, .question-type-badge, .problem-type-badge');
-            const rawTypeLabel = typeBadge?.textContent?.trim() || '';
-            let typeLabel = rawTypeLabel ? rawTypeLabel.replace(/\s+/g, '') : '';
-            
-            // 패키지#01 유형#11: data-work-type 속성에서 typeLabel 생성
-            if (!typeLabel) {
-              const workType = (firstCard as HTMLElement).getAttribute('data-work-type');
-              if (workType === '11' || workType === '011') {
-                typeLabel = '유형#11';
-              } else {
-                // 부모 요소에서 확인
-                let parent = (firstCard as HTMLElement).parentElement;
-                while (parent && !typeLabel) {
-                  const parentWorkType = parent.getAttribute('data-work-type');
-                  if (parentWorkType === '11' || parentWorkType === '011') {
-                    typeLabel = '유형#11';
-                    break;
-                  }
-                  parent = parent.parentElement;
-                }
-              }
+              console.log(`✅ 유형#11 총 ${mergedCardGroups.length}개 문제를 개별 처리`);
             }
             
-            const instruction = firstCard.querySelector('.print-instruction, .problem-instruction');
-            let instructionText = instruction?.textContent?.trim() || '';
-            
-            // 패키지#01: instructionText에서 "문제: " 제거
-            if (instructionText.startsWith('문제:')) {
-              instructionText = instructionText.replace(/^문제:\s*/, '').trim();
-            }
-            if (instructionText.startsWith('문제 :')) {
-              instructionText = instructionText.replace(/^문제\s*:\s*/, '').trim();
-            }
-            
-            if (typeLabel && instructionText) {
-              const combinedText = `${typeLabel}. ${instructionText}`;
-              paragraphs.push(
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: combinedText,
-                      bold: true,
-                      font: 'Noto Sans KR'
-                    })
-                  ],
-                  spacing: { before: cardIndex > 0 ? 400 : 200, after: 200 }
-                })
-              );
-            } else if (typeLabel) {
-              // instructionText가 없으면 typeLabel만 사용
-              paragraphs.push(
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `${typeLabel}. 다음 본문의 각 문장을 한국어로 해석하세요.`,
-                      bold: true,
-                      font: 'Noto Sans KR'
-                    })
-                  ],
-                  spacing: { before: cardIndex > 0 ? 400 : 200, after: 200 }
-                })
-              );
-            }
-            
-            // 모든 문장을 하나의 박스로 처리
-            allWork11Sentences.forEach((block, blockIndex) => {
-              const isFirstSentence = blockIndex === 0;
-              const isLastSentence = blockIndex === allWork11Sentences.length - 1;
-              
-              const borderConfig: any = {
-                left: {
-                  color: '000000',
-                  size: 6,
-                  style: BorderStyle.SINGLE,
-                  space: DOCX_BORDER_SPACE
-                },
-                right: {
-                  color: '000000',
-                  size: 6,
-                  style: BorderStyle.SINGLE,
-                  space: DOCX_BORDER_SPACE
-                }
-              };
-              
-              if (isFirstSentence) {
-                borderConfig.top = {
-                  color: '000000',
-                  size: 6,
-                  style: BorderStyle.SINGLE,
-                  space: DOCX_BORDER_SPACE
-                };
-              }
-              
-              if (isLastSentence) {
-                borderConfig.bottom = {
-                  color: '000000',
-                  size: 6,
-                  style: BorderStyle.SINGLE,
-                  space: DOCX_BORDER_SPACE
-                };
-              }
-              
-              // 패키지#02 문제 모드: 각 문장 앞에 "문장 1 :  ", "문장 2 :  " 등 추가 (진하게)
-              const isProblemMode = !block.koreanText; // 한글 해석이 없으면 문제 모드
-              const sentenceLabel = isPackage02 && isProblemMode ? `문장 ${blockIndex + 1} :  ` : '';
-              
-              const children: TextRun[] = [];
-              
-              // 문장 레이블이 있으면 진하게 추가
-              if (sentenceLabel) {
-                children.push(
-                  new TextRun({
-                    text: sentenceLabel,
-                    font: 'Noto Sans KR',
-                    bold: true
-                  })
-                );
-              }
-              
-              // 영어 문장 추가
-              children.push(
-                new TextRun({
-                  text: block.englishText,
-                  font: 'Noto Sans KR'
-                })
-              );
-              
-              if (block.koreanText) {
-                children.push(
-                  new TextRun({
-                    break: 1,
-                    text: block.koreanText,
-                    font: 'Noto Sans KR',
-                    italics: true,
-                    color: '444444'
-                  })
-                );
-              } else {
-                children.push(
-                  new TextRun({
-                    break: 1,
-                    text: '',
-                    font: 'Noto Sans KR'
-                  })
-                );
-              }
-              
-              paragraphs.push(
-                new Paragraph({
-                  children,
-                  spacing: {
-                    before: isFirstSentence ? 200 : 160,
-                    after: isLastSentence ? 0 : 400  // 각 문장 아래 두 줄 띄기 (마지막 문장 제외)
-                  },
-                  indent: { left: 0, right: 0 },
-                  border: borderConfig
-                })
-              );
-              
-              // 마지막 문장 아래에 빈 줄 추가 (두 줄 띄기)
-              if (isLastSentence) {
+            // 각 카드(문제)별로 처리
+            mergedCardGroups.forEach((cardGroup, cardGroupIndex) => {
+              // 첫 번째 문제가 아니면 위에 간격 추가
+              if (cardGroupIndex > 0) {
                 paragraphs.push(
                   new Paragraph({
                     text: '',
-                    spacing: { before: 0, after: 0 }
+                    spacing: { before: 400, after: 0 }
                   })
                 );
               }
+              
+              // 카드 제목 표시 (제목과 "유형#11"을 탭으로 분리하여 우측 정렬)
+              if (cardGroup.cardTitle) {
+                const titleChildren: TextRun[] = [
+                  new TextRun({
+                    text: cardGroup.cardTitle,
+                    bold: true,
+                    font: 'Noto Sans KR'
+                  })
+                ];
+                
+                // 타입 뱃지가 있으면 탭 문자 후 우측에 배치
+                if (cardGroup.typeBadge) {
+                  titleChildren.push(
+                    new TextRun({
+                      text: '\t' + cardGroup.typeBadge,
+                      bold: true,
+                      font: 'Noto Sans KR'
+                    })
+                  );
+                }
+                
+                paragraphs.push(
+                  new Paragraph({
+                    children: titleChildren,
+                    spacing: { before: cardGroupIndex > 0 ? 400 : 200, after: 200 },
+                    tabStops: [
+                      {
+                        type: TabStopType.RIGHT,
+                        position: 14400 // A4 용지 너비 (21cm ≈ 14400 twips, 우측 끝에 배치)
+                      }
+                    ],
+                    shading: {
+                      type: ShadingType.SOLID,
+                      color: 'E0E0E0' // 연한 회색 하이라이트
+                    }
+                  })
+                );
+              }
+              
+              // 지시문 표시 (제목과 별도로)
+              if (cardGroup.instruction) {
+                paragraphs.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: cardGroup.instruction,
+                        font: 'Noto Sans KR'
+                      })
+                    ],
+                    spacing: { before: 0, after: 200 }
+                  })
+                );
+              }
+              
+              // 각 카드의 문장 처리 (각 문제별로 문장 번호 1부터 시작)
+              cardGroup.sentences.forEach((sentence, sentenceIndex) => {
+                const isFirstSentence = sentenceIndex === 0;
+                const isLastSentence = sentenceIndex === cardGroup.sentences.length - 1;
+                
+                const borderConfig: any = {
+                  left: {
+                    color: '000000',
+                    size: 6,
+                    style: BorderStyle.SINGLE,
+                    space: DOCX_BORDER_SPACE
+                  },
+                  right: {
+                    color: '000000',
+                    size: 6,
+                    style: BorderStyle.SINGLE,
+                    space: DOCX_BORDER_SPACE
+                  }
+                };
+                
+                if (isFirstSentence) {
+                  borderConfig.top = {
+                    color: '000000',
+                    size: 6,
+                    style: BorderStyle.SINGLE,
+                    space: DOCX_BORDER_SPACE
+                  };
+                }
+                
+                if (isLastSentence) {
+                  borderConfig.bottom = {
+                    color: '000000',
+                    size: 6,
+                    style: BorderStyle.SINGLE,
+                    space: DOCX_BORDER_SPACE
+                  };
+                }
+                
+                // 문제 모드 또는 정답 모드: 각 문장 앞에 "문장 1. ", "문장 2. " 등 추가 (진하게)
+                // 각 문제별로 문장 번호가 1부터 시작하도록 sentenceIndex + 1 사용
+                const isProblemMode = !sentence.koreanText; // 한글 해석이 없으면 문제 모드
+                // 정답 모드이거나 문제 모드일 때 문장 번호 추가
+                const sentenceLabel = (actualIsAnswerMode || isProblemMode) ? `문장 ${sentenceIndex + 1}. ` : '';
+                
+                const children: TextRun[] = [];
+                
+                // 문장 레이블이 있으면 진하게 추가
+                if (sentenceLabel) {
+                  children.push(
+                    new TextRun({
+                      text: sentenceLabel,
+                      font: 'Noto Sans KR',
+                      bold: true
+                    })
+                  );
+                }
+                
+                // 영어 문장 추가
+                children.push(
+                  new TextRun({
+                    text: sentence.englishText,
+                    font: 'Noto Sans KR'
+                  })
+                );
+                
+                if (sentence.koreanText) {
+                  children.push(
+                    new TextRun({
+                      break: 1,
+                      text: sentence.koreanText,
+                      font: 'Noto Sans KR',
+                      italics: true,
+                      color: '444444'
+                    })
+                  );
+                } else {
+                  children.push(
+                    new TextRun({
+                      break: 1,
+                      text: '',
+                      font: 'Noto Sans KR'
+                    })
+                  );
+                }
+                
+                paragraphs.push(
+                  new Paragraph({
+                    children,
+                    spacing: {
+                      before: isFirstSentence ? 200 : 160,
+                      after: isLastSentence ? 0 : 400  // 각 문장 아래 두 줄 띄기 (마지막 문장 제외)
+                    },
+                    indent: { left: 0, right: 0 },
+                    border: borderConfig
+                  })
+                );
+                
+                // 마지막 문장 아래에 빈 줄 추가 (두 줄 띄기)
+                if (isLastSentence) {
+                  paragraphs.push(
+                    new Paragraph({
+                      text: '',
+                      spacing: { before: 0, after: 0 }
+                    })
+                  );
+                }
+              });
             });
             
             // 유형#11 블록과 다음 문제 사이 빈 줄
@@ -1931,6 +2647,14 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         const found = actualCard.querySelector(selector) as HTMLElement | null;
         if (found) {
           passage = found;
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`🔍 카드 ${cardIndex + 1} 본문 찾음:`, {
+              selector,
+              className: found.className,
+              textLength: found.textContent?.trim().length || 0,
+              workType
+            });
+          }
           break;
         }
       }
@@ -1941,6 +2665,21 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         const allPassages = actualCard.querySelectorAll(passageSelectors.join(', '));
         if (allPassages.length > 0) {
           passage = allPassages[0] as HTMLElement;
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`🔍 카드 ${cardIndex + 1} 본문 찾음 (fallback):`, {
+              totalFound: allPassages.length,
+              className: passage.className,
+              textLength: passage.textContent?.trim().length || 0,
+              workType
+            });
+          }
+        } else {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`⚠️ 카드 ${cardIndex + 1} 본문을 찾지 못했습니다:`, {
+              workType,
+              cardHTML: (actualCard as HTMLElement).innerHTML.substring(0, 200)
+            });
+          }
         }
       }
       
@@ -1997,19 +2736,31 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
       }
       
       // 패키지#01 Work_01: .shuffled-paragraph 요소들을 직접 찾기
+      // 단일 유형#01: .print-paragraph-item 요소들을 찾기
       let shuffledParagraphsProcessed = false;
       
-      // 유형#01인 경우 무조건 .shuffled-paragraph를 찾기 (passage 조건 무시)
+      // 유형#01인 경우 무조건 .shuffled-paragraph 또는 .print-paragraph-item을 찾기 (passage 조건 무시)
       const isWork01 = workType === '01' || workType === '1';
       if (isWork01 || !passage) {
-        const shuffledParagraphs = actualCard.querySelectorAll('.shuffled-paragraph');
+        // 먼저 .shuffled-paragraph 찾기 (패키지#01)
+        let shuffledParagraphs = actualCard.querySelectorAll('.shuffled-paragraph');
+        
+        // .shuffled-paragraph가 없으면 .print-paragraph-item 찾기 (단일 유형#01)
+        if (shuffledParagraphs.length === 0 && isWork01) {
+          shuffledParagraphs = actualCard.querySelectorAll('.print-paragraph-item');
+        }
+        
         if (shuffledParagraphs.length > 0) {
           shuffledParagraphsProcessed = true;
           
           // 디버깅: 모든 단락 레이블 확인
           const paragraphLabels = Array.from(shuffledParagraphs).map((p: any) => {
             const labelElement = p.querySelector('strong');
-            return labelElement ? labelElement.textContent?.trim() : 'unknown';
+            if (!labelElement) return 'unknown';
+            let label = labelElement.textContent?.trim() || 'unknown';
+            // "A:", "B:" 형식에서 콜론 제거
+            label = label.replace(/[:：]\s*$/, '');
+            return label;
           });
           console.log('🔍 유형#01 단락 확인:', {
             totalCount: shuffledParagraphs.length,
@@ -2017,12 +2768,13 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
             hasA: paragraphLabels.includes('A'),
             hasB: paragraphLabels.includes('B'),
             hasC: paragraphLabels.includes('C'),
-            hasD: paragraphLabels.includes('D')
+            hasD: paragraphLabels.includes('D'),
+            isPrintParagraphItem: shuffledParagraphs.length > 0 && (shuffledParagraphs[0] as HTMLElement).classList.contains('print-paragraph-item')
           });
           
-          // A 단락이 없으면 경고
-          if (!paragraphLabels.includes('A')) {
-            console.error('❌ 유형#01: A 단락이 없습니다!', {
+          // A 단락이 없으면 경고 (단, .print-paragraph-item의 경우 레이블이 없을 수 있으므로 경고만)
+          if (!paragraphLabels.includes('A') && !paragraphLabels.some(l => l === 'unknown' || l === '')) {
+            console.warn('⚠️ 유형#01: A 단락이 없습니다!', {
               foundLabels: paragraphLabels,
               totalCount: shuffledParagraphs.length
             });
@@ -2034,7 +2786,11 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
             
             // 디버깅: 각 단락의 레이블과 내용 확인
             const labelElement = para.querySelector('strong');
-            const label = labelElement ? labelElement.textContent?.trim() : 'unknown';
+            let label = labelElement ? (labelElement.textContent?.trim() || 'unknown') : 'unknown';
+            // "A:", "B:" 형식에서 콜론 제거
+            if (label && label !== 'unknown') {
+              label = label.replace(/[:：]\s*$/, '');
+            }
             const content = para.textContent?.trim() || '';
             
             if (process.env.NODE_ENV === 'development') {
@@ -2168,9 +2924,22 @@ const htmlToDocxParagraphs = (element: HTMLElement): (Paragraph | Table)[] => {
         }
       }
       
-      if (passage && !passage.classList.contains('shuffled-paragraph')) {
+      if (passage && !passage.classList.contains('shuffled-paragraph') && !passage.classList.contains('print-paragraph-item')) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🔍 카드 ${cardIndex + 1} 본문 처리 시작:`, {
+            workType,
+            className: passage.className,
+            textLength: passage.textContent?.trim().length || 0
+          });
+        }
         const lineRuns = extractTextRunsByLine(passage);
         if (lineRuns.length > 0) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ 카드 ${cardIndex + 1} 본문 lineRuns 생성:`, {
+              workType,
+              lineCount: lineRuns.length
+            });
+          }
           let isFirstPassage = true;
           lineRuns.forEach((runs, lineIndex) => {
             if (runs.length === 0) {
@@ -3399,7 +4168,7 @@ export const generateAndUploadDOC = async (
     });
     
     // HTML을 구조화된 DOCX Paragraph로 변환 (PDF 디자인과 동일하게)
-    const paragraphs = htmlToDocxParagraphs(element);
+    const paragraphs = htmlToDocxParagraphs(element, isAnswerMode);
     
     // 디버깅: 변환 결과 확인
     console.log('📄 htmlToDocxParagraphs 결과:', {

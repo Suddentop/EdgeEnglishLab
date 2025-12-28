@@ -68,24 +68,48 @@ const Work_12_WordStudy: React.FC = () => {
   // 인쇄용 최소 스타일 (A4 세로 + 2단 단어표)
   const PRINT_STYLES = `
     @page {
-      size: A4;
-      margin: 0;
+      size: A4 portrait !important;
+      margin: 0 !important;
     }
     html, body {
-      margin: 0;
-      padding: 0;
+      width: 21cm !important;
+      height: 29.7cm !important;
+      margin: 0 !important;
+      padding: 0 !important;
       font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     @media print {
       html, body {
-        overflow: hidden;
+        width: 21cm !important;
+        height: 29.7cm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+      .a4-page-template-work12 {
+        width: 21cm !important;
+        max-width: 21cm !important;
+        height: 29.7cm !important;
+        max-height: 29.7cm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
       }
     }
     .a4-page-template-work12 {
-      width: 21cm;
-      height: 29.7cm;
+      width: 21cm !important;
+      max-width: 21cm !important;
+      height: 29.7cm !important;
+      max-height: 29.7cm !important;
       box-sizing: border-box;
-      padding: 0.8cm 0.8cm 1cm 0.8cm;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
     }
     .a4-page-header-work12 {
       width: 100%;
@@ -97,7 +121,11 @@ const Work_12_WordStudy: React.FC = () => {
       font-weight: 700;
     }
     .a4-page-content-work12 {
-      width: 100%;
+      width: 100% !important;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
     .problem-instruction-work12 {
       font-weight: 800;
@@ -122,38 +150,66 @@ const Work_12_WordStudy: React.FC = () => {
       color: #000000;
     }
     .word-list-container-work12 {
-      display: flex;
+      display: flex !important;
       gap: 0.5cm;
-      width: 100%;
-      margin-top: 0.4cm;
+      width: 100% !important;
+      margin: 0;
+      flex: 1;
+      min-height: 0;
+      align-items: stretch;
     }
     .word-list-column-work12 {
-      flex: 1 1 50%;
-      width: 50%;
+      flex: 1 1 50% !important;
+      width: 50% !important;
+      min-width: 0;
     }
     .word-list-table-work12 {
-      width: 100%;
+      width: 100% !important;
+      max-width: 100% !important;
       border-collapse: collapse;
-      font-size: 9pt;
+      font-size: 10pt;
       background: #ffffff;
       border: 2px solid #000000;
+      table-layout: fixed;
+      height: 100%;
     }
     .word-list-table-work12 th {
       background: #e3f2fd;
       color: #000000;
       font-weight: 700;
-      padding: 0.3rem;
+      font-size: 10pt;
+      padding: 0.35rem 0.5rem;
       text-align: center;
       border: 1px solid #000000;
     }
     .word-list-table-work12 td {
       border: 1px solid #000000;
-      padding: 0.3rem;
-      font-size: 9pt;
+      padding: 0.35rem 0.5rem;
+      font-size: 10pt;
+      font-weight: 500;
+      line-height: 1.5;
     }
+    /* 번호 열: 두 자릿 수가 보일 정도로 고정 */
+    .word-list-table-work12 th:first-child,
     .word-list-table-work12 td:first-child {
       text-align: center;
-      width: 15%;
+      width: 10% !important;
+      min-width: 10% !important;
+      max-width: 10% !important;
+    }
+    /* 영어단어 열: 한글뜻 열과 4:6 비율 */
+    .word-list-table-work12 th:nth-child(2),
+    .word-list-table-work12 td:nth-child(2) {
+      width: 36% !important;
+      min-width: 36% !important;
+      max-width: 36% !important;
+    }
+    /* 한글뜻 열: 영어단어 열과 6:4 비율 */
+    .word-list-table-work12 th:nth-child(3),
+    .word-list-table-work12 td:nth-child(3) {
+      width: 54% !important;
+      min-width: 54% !important;
+      max-width: 54% !important;
     }
     .word-list-table-work12 tr:nth-child(even) {
       background: #f8f9fa;
@@ -667,20 +723,31 @@ const Work_12_WordStudy: React.FC = () => {
   async function generateKoreanMeanings(englishWords: string[]): Promise<WordItem[]> {
     const { callOpenAI } = await import('../../../services/common');
 
-    const prompt = `다음 영어 단어들의 한국어 뜻을 정확하게 번역해주세요. 각 단어의 가장 일반적이고 적절한 한국어 뜻을 제공해주세요.
+    const prompt = `다음 영어 단어들의 한국어 뜻과 품사를 정확하게 번역해주세요. 각 단어의 가장 일반적이고 적절한 한국어 뜻과 품사를 제공해주세요.
 
 영어 단어 목록:
 ${englishWords.join(', ')}
 
 응답 형식 (JSON 배열):
 [
-  {"english": "word1", "korean": "한글뜻1"},
-  {"english": "word2", "korean": "한글뜻2"},
+  {"english": "word1", "korean": "한글뜻1", "partOfSpeech": "n."},
+  {"english": "word2", "korean": "한글뜻2", "partOfSpeech": "v."},
   ...
 ]
 
+품사 표기 규칙 (영어 약어 사용):
+- 명사: "n."
+- 동사: "v."
+- 형용사: "adj."
+- 부사: "adv."
+- 전치사: "prep."
+- 접속사: "conj."
+- 대명사: "pron."
+- 감탄사: "interj."
+- 한 단어가 여러 품사로 사용될 수 있는 경우, 가장 일반적인 품사 하나만 제공해주세요
+
 주의사항:
-- 각 영어 단어에 대해 가장 적절한 한국어 뜻을 제공해주세요
+- 각 영어 단어에 대해 가장 적절한 한국어 뜻과 품사를 제공해주세요
 - 복합어나 구문이 아닌 단일 단어의 뜻을 제공해주세요
 - JSON 형식으로만 응답해주세요`;
 
@@ -766,16 +833,125 @@ ${englishWords.join(', ')}
     return options.sort(() => Math.random() - 0.5);
   }
 
+  // 단어 목록에 품사 정보 추가 (품사가 없는 경우)
+  async function addPartOfSpeechToWords(words: WordItem[]): Promise<WordItem[]> {
+    // 품사 정보가 없는 단어들만 필터링
+    const wordsWithoutPos = words.filter(word => !word.partOfSpeech);
+    
+    if (wordsWithoutPos.length === 0) {
+      console.log('📝 모든 단어에 품사 정보가 있습니다.');
+      return words;
+    }
+    
+    console.log(`📝 품사 정보 생성 중: ${wordsWithoutPos.length}개 단어`);
+    
+    const { callOpenAI } = await import('../../../services/common');
+    
+    const englishWords = wordsWithoutPos.map(w => w.english);
+    const prompt = `다음 영어 단어들의 품사를 정확하게 판단해주세요. 각 단어의 가장 일반적인 품사 하나만 제공해주세요.
+
+영어 단어 목록:
+${englishWords.join(', ')}
+
+응답 형식 (JSON 배열):
+[
+  {"english": "word1", "partOfSpeech": "n."},
+  {"english": "word2", "partOfSpeech": "v."},
+  ...
+]
+
+품사 표기 규칙 (영어 약어 사용):
+- 명사: "n."
+- 동사: "v."
+- 형용사: "adj."
+- 부사: "adv."
+- 전치사: "prep."
+- 접속사: "conj."
+- 대명사: "pron."
+- 감탄사: "interj."
+- 한 단어가 여러 품사로 사용될 수 있는 경우, 가장 일반적인 품사 하나만 제공해주세요
+
+주의사항:
+- 각 영어 단어에 대해 가장 일반적인 품사를 제공해주세요
+- JSON 형식으로만 응답해주세요`;
+
+    try {
+      const response = await callOpenAI({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 2048
+      });
+      
+      const data = await response.json();
+      const content = data.choices[0].message.content.trim();
+      
+      console.log('품사 생성 AI 응답:', content);
+      
+      // JSON 파싱 시도
+      let jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const posData = JSON.parse(jsonMatch[0]);
+        
+        // 품사 정보를 단어 목록에 매핑
+        const wordsWithPos = words.map(word => {
+          if (word.partOfSpeech) {
+            return word; // 이미 품사가 있으면 그대로
+          }
+          
+          // 품사 정보 찾기
+          const posInfo = posData.find((item: any) => 
+            item.english && item.english.toLowerCase() === word.english.toLowerCase()
+          );
+          
+          if (posInfo && posInfo.partOfSpeech) {
+            return {
+              ...word,
+              partOfSpeech: posInfo.partOfSpeech.trim()
+            };
+          }
+          
+          return word; // 품사를 찾지 못한 경우 그대로
+        });
+        
+        console.log(`✅ 품사 정보 추가 완료: ${wordsWithPos.filter(w => w.partOfSpeech).length}개 단어`);
+        return wordsWithPos;
+      }
+      
+      throw new Error('JSON 형식을 찾을 수 없습니다.');
+    } catch (error) {
+      console.error('품사 생성 오류:', error);
+      // 오류 발생 시 원본 단어 목록 반환 (품사 없이)
+      return words;
+    }
+  }
+
   // 단어 퀴즈 생성
   async function generateWordQuiz(words: WordItem[], quizType: 'english-to-korean' | 'korean-to-english'): Promise<WordQuiz> {
     console.log('📝 단어 퀴즈 생성 시작:', { wordsCount: words.length, quizType });
     
+    // 품사 정보가 없는 단어들에 품사 추가
+    const wordsWithPos = await addPartOfSpeechToWords(words);
+    
+    // 디버깅: 품사 정보 확인
+    console.log('📝 품사 정보 추가 후:', {
+      wordsCount: wordsWithPos.length,
+      wordsWithPosCount: wordsWithPos.filter(w => w.partOfSpeech).length,
+      wordsWithoutPosCount: wordsWithPos.filter(w => !w.partOfSpeech).length,
+      sampleWords: wordsWithPos.slice(0, 3).map(w => ({
+        english: w.english,
+        korean: w.korean,
+        partOfSpeech: w.partOfSpeech
+      }))
+    });
+    
     let questions: WordQuestion[];
     
     if (quizType === 'english-to-korean') {
-      questions = generateEnglishToKoreanQuiz(words);
+      questions = generateEnglishToKoreanQuiz(wordsWithPos);
     } else {
-      questions = generateKoreanToEnglishQuiz(words);
+      questions = generateKoreanToEnglishQuiz(wordsWithPos);
     }
     
     // 정답 인덱스 업데이트
@@ -788,13 +964,21 @@ ${englishWords.join(', ')}
     });
     
     const quiz: WordQuiz = {
-      words,
+      words: wordsWithPos, // 품사 정보가 포함된 단어 목록 사용
       quizType,
       questions,
       totalQuestions: questions.length
     };
     
-    console.log('✅ 단어 퀴즈 생성 완료:', quiz);
+    console.log('✅ 단어 퀴즈 생성 완료:', {
+      wordsCount: quiz.words.length,
+      wordsWithPosCount: quiz.words.filter(w => w.partOfSpeech).length,
+      sampleWords: quiz.words.slice(0, 3).map(w => ({
+        english: w.english,
+        korean: w.korean,
+        partOfSpeech: w.partOfSpeech
+      }))
+    });
     return quiz;
   }
 
@@ -964,7 +1148,7 @@ ${englishWords.join(', ')}
   };
 
   // 인쇄 트리거 - 새 창을 열어 그 안에서 렌더링/인쇄 (가장 안정적인 방식)
-  const triggerPrint = (mode: PrintMode) => {
+  const triggerPrint = async (mode: PrintMode) => {
     if (!quiz) {
       console.warn('🖨️ [Work12] triggerPrint 호출되었지만 quiz 데이터가 없습니다.', { mode });
       return;
@@ -978,14 +1162,48 @@ ${englishWords.join(', ')}
       locationHref: window.location.href
     });
 
+    // 품사 정보가 없는 단어들에 품사 추가 (비동기로 처리, 인쇄는 즉시 진행)
+    let wordsForPrint = quiz.words || [];
+    const wordsWithoutPos = wordsForPrint.filter(w => !w.partOfSpeech);
+    
+    // 품사 생성은 백그라운드에서 처리 (인쇄는 품사 없이도 진행)
+    if (wordsWithoutPos.length > 0) {
+      console.log(`🖨️ [Work12] 품사 정보가 없는 단어 ${wordsWithoutPos.length}개 발견, 품사 생성은 백그라운드에서 처리...`);
+      // 품사 생성은 비동기로 처리하되 인쇄는 기다리지 않음
+      addPartOfSpeechToWords(wordsForPrint).then(wordsWithPos => {
+        // 품사 생성 완료 후 quiz 상태 업데이트 (다음 인쇄 시 사용)
+        if (quiz) {
+          setQuiz({
+            ...quiz,
+            words: wordsWithPos
+          });
+        }
+        console.log(`🖨️ [Work12] 품사 정보 추가 완료 (백그라운드): ${wordsWithPos.filter(w => w.partOfSpeech).length}개 단어`);
+      }).catch(err => {
+        console.error('🖨️ [Work12] 품사 생성 오류 (백그라운드):', err);
+      });
+    }
+
     // HistoryPrintWork12에서 기대하는 데이터 형태로 변환
     const dataForPrint: any = {
-      words: quiz.words,
+      words: wordsForPrint,
       questions: quiz.questions,
       quizType: quiz.quizType,
       totalQuestions: quiz.totalQuestions
     };
-    console.log('🖨️ [Work12] 인쇄용 데이터 준비 완료 (새 창)', dataForPrint);
+    
+    // 디버깅: 품사 정보 확인
+    console.log('🖨️ [Work12] 인쇄용 데이터 준비 완료 (새 창)', {
+      wordsCount: dataForPrint.words?.length,
+      sampleWords: dataForPrint.words?.slice(0, 3).map((w: WordItem) => ({
+        english: w.english,
+        korean: w.korean,
+        partOfSpeech: w.partOfSpeech,
+        hasPartOfSpeech: !!w.partOfSpeech
+      })),
+      wordsWithPos: dataForPrint.words?.filter((w: WordItem) => w.partOfSpeech).length,
+      wordsWithoutPos: dataForPrint.words?.filter((w: WordItem) => !w.partOfSpeech).length
+    });
 
     // React 컴포넌트를 정적 HTML로 렌더링
     const markup = ReactDOMServer.renderToStaticMarkup(
@@ -1024,35 +1242,49 @@ ${englishWords.join(', ')}
     const prevBodyId = document.body.getAttribute('id');
     document.body.setAttribute('id', 'work12-print-active');
 
-    // 약간의 지연 후 인쇄 실행
-    setTimeout(() => {
-      window.print();
+    // 최소 지연 후 인쇄 실행 (렌더링 완료 대기)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
 
-      // 인쇄 후 오버레이 정리
-      setTimeout(() => {
-        const ov = document.getElementById(overlayId);
-        if (ov && ov.parentNode) {
-          ov.parentNode.removeChild(ov);
-        }
+        // window.print() 호출 직후 즉시 오버레이 숨기기
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+        overlay.style.position = 'absolute';
+        overlay.style.left = '-9999px';
+        overlay.style.top = '-9999px';
+        overlay.style.opacity = '0';
+        overlay.style.zIndex = '-1';
+        overlay.style.width = '0';
+        overlay.style.height = '0';
+        overlay.style.overflow = 'hidden';
 
-         // body id 되돌리기
-        if (prevBodyId) {
-          document.body.setAttribute('id', prevBodyId);
-        } else {
-          document.body.removeAttribute('id');
-        }
-      }, 100);
-    }, 300);
+        // 인쇄 후 오버레이 정리
+        setTimeout(() => {
+          const ov = document.getElementById(overlayId);
+          if (ov && ov.parentNode) {
+            ov.parentNode.removeChild(ov);
+          }
+
+           // body id 되돌리기
+          if (prevBodyId) {
+            document.body.setAttribute('id', prevBodyId);
+          } else {
+            document.body.removeAttribute('id');
+          }
+        }, 100);
+      });
+    });
   };
 
-  const handlePrintNoAnswer = () => {
+  const handlePrintNoAnswer = async () => {
     console.log('🖨️ [Work12] 인쇄(문제) 버튼 클릭');
-    triggerPrint('no-answer');
+    await triggerPrint('no-answer');
   };
   
-  const handlePrintWithAnswer = () => {
+  const handlePrintWithAnswer = async () => {
     console.log('🖨️ [Work12] 인쇄(정답) 버튼 클릭');
-    triggerPrint('with-answer');
+    await triggerPrint('with-answer');
   };
   // 리셋
   const resetQuiz = () => {

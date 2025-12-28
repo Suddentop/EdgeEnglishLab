@@ -512,8 +512,43 @@ const QuizListPage: React.FC = () => {
               const merged = { ...d, ...(quizInner || {}) };
               quizItem[nestedKey] = merged;
             }
+          } else if (numId === '11') {
+            // 유형#11는 여러 문제를 배열로 저장할 수 있음 (유형#07, #08, #09, #10, #13과 동일한 로직)
+            if (Array.isArray(parsed)) {
+              // 배열인 경우: 각 항목을 work11Data 필드로 변환하여 패키지 형태로 처리
+              const quizzes = parsed.map((quiz, index) => ({
+                workTypeId: '11',
+                workTypeName: historyItem.workTypeName,
+                work11Data: quiz
+              }));
+              
+              const wrapped = {
+                ...historyItem,
+                generatedData: {
+                  isPackage: true,
+                  quizzes: quizzes
+                }
+              } as any;
+
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              return;
+            } else {
+              // 단일 문제인 경우
+              if (parsed && typeof parsed === 'object' && parsed[nestedKey]) {
+                quizItem[nestedKey] = parsed[nestedKey];
+              } else {
+                quizItem[nestedKey] = parsed;
+              }
+
+              // 유형별 데이터 정규화
+              const d: any = quizItem[nestedKey] || {};
+              // 저장이 { quiz: {...} } 로 된 케이스 흡수
+              const quizInner = parsed?.quiz || parsed?.data?.quiz;
+              const merged = { ...d, ...(quizInner || {}) };
+              quizItem[nestedKey] = merged;
+            }
           } else if (numId === '13') {
-            // 유형#13는 여러 문제를 배열로 저장할 수 있음 (유형#07, #08, #09, #10과 동일한 로직)
+            // 유형#13는 여러 문제를 배열로 저장할 수 있음 (유형#07, #08, #09, #10, #11과 동일한 로직)
             if (Array.isArray(parsed)) {
               // 배열인 경우: 각 항목을 work13Data 필드로 변환하여 패키지 형태로 처리
               const quizzes = parsed.map((quiz, index) => ({

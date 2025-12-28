@@ -12,39 +12,146 @@
     display: none !important;
   }
 
+  /* 인쇄용 오버레이 컨테이너 완전히 숨기기 */
+  #work12-print-overlay {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    opacity: 0 !important;
+    z-index: -1 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
   /* .only-print-work12 / .a4-page-template-work12 는 화면에서도 보이도록 둠
      (인쇄용 루트에만 존재하므로 일반 화면에는 영향 없음) */
+  
+  /* QuizDisplayPage에서 사용하는 인쇄용 컨테이너는 화면에서 보이도록 */
+  #print-root-work12-new,
+  #print-root-work12-new-answer {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    opacity: 1 !important;
+    z-index: auto !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  #print-root-work12-new .only-print-work12,
+  #print-root-work12-new-answer .only-print-work12 {
+    display: block !important;
+    visibility: visible !important;
+  }
 }
 
 @media print {
   /* 브라우저 기본 여백 제거 및 A4 세로 고정 */
   @page {
-    size: A4;
+    size: A4 portrait;
     margin: 0;
   }
 
   html, body {
-    margin: 0;
-    padding: 0;
+    width: 21cm !important;
+    height: 29.7cm !important;
+    margin: 0 !important;
+    padding: 0 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    overflow: visible !important;
+  }
+  
+  /* #root는 인쇄 시 숨기기 */
+  #root {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* printContainer만 인쇄에 표시 */
+  #print-root-work12-new,
+  #print-root-work12-new-answer {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    page-break-inside: avoid !important;
   }
 
+  /* 모든 인쇄용 요소 강제 표시 */
   .only-print-work12 {
     display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  /* QuizDisplayPage에서 사용하는 인쇄용 컨테이너는 인쇄 미리보기에서도 보이도록 */
+  #print-root-work12-new,
+  #print-root-work12-new-answer {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  #print-root-work12-new .only-print-work12,
+  #print-root-work12-new-answer .only-print-work12 {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  #print-root-work12-new .a4-page-template-work12,
+  #print-root-work12-new-answer .a4-page-template-work12 {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 21cm !important;
+    height: 29.7cm !important;
   }
 
   /* A4 세로 페이지 템플릿 */
   .a4-page-template-work12 {
-    width: 21cm;
-    height: 29.7cm;
-    margin: 0;
-    padding: 0;
+    width: 21cm !important;
+    max-width: 21cm !important;
+    height: 29.7cm !important;
+    max-height: 29.7cm !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #ffffff;
     box-sizing: border-box;
     page-break-inside: avoid;
     position: relative;
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
   }
@@ -56,9 +163,9 @@
 
   .a4-page-header-work12 {
     width: 100%;
-    height: 1.5cm;
+    height: 1cm;
     flex-shrink: 0;
-    padding: 0.5cm 0.8cm 0 0.8cm;
+    padding: 0.2cm 0.8cm 0 0.8cm;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -90,18 +197,22 @@
   }
 
   .a4-page-content-work12 {
-    width: 100%;
+    width: 100% !important;
     flex: 1;
-    padding: 0.4cm 0.8cm 1cm 0.8cm;
+    padding: 0.3cm 0.8cm 0.3cm 0.8cm;
     box-sizing: border-box;
     overflow: visible;
+    display: flex !important;
+    flex-direction: column;
+    min-height: 0;
   }
 
   .quiz-content-work12 {
     width: 100%;
-    height: 100%;
+    flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
   }
 
   /* 문제 지시문: 다른 유형과 동일한 연한 회색 배경 */
@@ -110,14 +221,15 @@
     font-size: 11pt;
     background: #F0F0F0;
     color: #000000;
-    padding: 0.7rem 0.6rem;
+    padding: 0.4rem 0.6rem;
     border-radius: 8px;
-    margin: 0 0 0.8rem 0;
+    margin: 0 0 0.3rem 0;
     width: 100%;
     box-sizing: border-box;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
   }
 
   .problem-instruction-text-work12 {
@@ -133,49 +245,77 @@
 
   /* 단어표 2단 컨테이너 (좌/우 테이블) */
   .word-list-container-work12 {
-    display: flex;
+    display: flex !important;
     gap: 0.5cm;
-    width: 100%;
-    margin: 1rem 0;
+    width: 100% !important;
+    margin: 0;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
   }
 
   .word-list-column-work12 {
-    flex: 1 1 50%;
-    width: 50%;
+    flex: 1 1 50% !important;
+    width: 50% !important;
+    min-width: 0;
   }
 
   /* 단어 목록 테이블 */
   .word-list-table-work12 {
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     border-collapse: collapse;
     margin: 0;
-    font-size: 9pt;
+    font-size: 10pt;
     background: #ffffff;
     border: 2px solid #000000;
+    table-layout: fixed;
+    height: 100%;
   }
 
   .word-list-table-work12 th {
     background: #e3f2fd;
     color: #000000;
     font-weight: 700;
-    font-size: 9pt;
-    padding: 0.35rem;
+    font-size: 10pt;
+    padding: 0.35rem 0.5rem;
     text-align: center;
     border: 1px solid #000000;
   }
 
   .word-list-table-work12 td {
     border: 1px solid #000000;
-    padding: 0.35rem;
+    padding: 0.35rem 0.5rem;
     text-align: left;
-    font-size: 9pt;
+    font-size: 10pt;
     font-weight: 500;
     color: #000000;
+    line-height: 1.5;
   }
 
+  /* 번호 열: 두 자릿 수가 보일 정도로 고정 */
+  .word-list-table-work12 th:first-child,
   .word-list-table-work12 td:first-child {
     text-align: center;
-    width: 15%;
+    width: 10%;
+    min-width: 10%;
+    max-width: 10%;
+  }
+
+  /* 영어단어 열: 한글뜻 열과 4:6 비율 */
+  .word-list-table-work12 th:nth-child(2),
+  .word-list-table-work12 td:nth-child(2) {
+    width: 36%;
+    min-width: 36%;
+    max-width: 36%;
+  }
+
+  /* 한글뜻 열: 영어단어 열과 6:4 비율 */
+  .word-list-table-work12 th:nth-child(3),
+  .word-list-table-work12 td:nth-child(3) {
+    width: 54%;
+    min-width: 54%;
+    max-width: 54%;
   }
 
   .word-list-table-work12 tr:nth-child(even) {
