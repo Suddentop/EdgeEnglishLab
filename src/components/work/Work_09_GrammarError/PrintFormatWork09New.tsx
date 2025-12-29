@@ -373,6 +373,10 @@ const PrintFormatWork09New: React.FC<PrintFormatWork09NewProps> = ({ quizzes, is
             margin: 0 !important;
             gap: 0.3cm !important;
         }
+        /* 오른쪽 단: 왼쪽 패딩 제거, 오른쪽 패딩 추가 */
+        .work09-print.print-container-answer .print-column:nth-child(2) {
+            padding: 0.1cm 0.5cm 0 0 !important;
+        }
         .work09-print.print-container-answer .print-question-card {
             padding: 0.1cm 0 0 0 !important;
             margin: 0 !important;
@@ -382,6 +386,10 @@ const PrintFormatWork09New: React.FC<PrintFormatWork09NewProps> = ({ quizzes, is
             padding: 0.1cm 0 0 0.5cm !important;
             margin: 0 !important;
             gap: 0.3cm !important;
+        }
+        /* 오른쪽 단: 왼쪽 패딩 제거, 오른쪽 패딩 추가 */
+        .work09-print.print-container .print-column:nth-child(2) {
+            padding: 0.1cm 0.5cm 0 0 !important;
         }
         .work09-print.print-container .print-question-card {
             padding: 0.1cm 0 0 0 !important;
