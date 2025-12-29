@@ -146,54 +146,62 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
           <div className="pc-notice-box">
             <p className="pc-notice-text">이 웹사이트는 PC환경에 최적화 되어있습니다. 원활한 이용을 위해서는 PC(노트북)을 이용해 주세요</p>
           </div>
-          <div style={{
-            marginTop: '20px',
-            padding: '12px 20px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            border: '1px solid #e9ecef',
-            display: 'inline-block'
-          }}>
-            <a
-              href="https://blog.naver.com/jcombiz"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: '#495057',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              <span>📝</span>
-              <span>서비스 소개 및 활용 팁은 </span>
-              <img 
-                src="/naver-blog-logo.png" 
-                alt="네이버 블로그" 
-                style={{
-                  height: '18px',
-                  width: 'auto',
-                  verticalAlign: 'middle',
-                  marginRight: '6px',
-                  display: 'inline-block'
-                }}
-                onError={(e) => {
-                  // 이미지 로드 실패 시 이모지로 대체
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <strong style={{ fontWeight: '700', color: '#00C73C' }}>네이버 블로그</strong>
-              <span>에서 확인하세요</span>
-              <span style={{ color: '#007bff' }}>→</span>
-            </a>
-          </div>
         </div>
       </section>
 
-      <section className="cta-section">
+      <div style={{
+        marginTop: '0',
+        marginBottom: '2rem',
+        padding: '12px 20px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px',
+        border: '1px solid #ced4da',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+        display: 'flex',
+        justifyContent: 'center',
+        maxWidth: '1200px',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        boxSizing: 'border-box'
+      }}>
+        <a
+          href="https://blog.naver.com/jcombiz"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: '#495057',
+            textDecoration: 'none',
+            fontSize: '14px',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <span>📝</span>
+          <span>서비스 소개 및 활용 팁은 </span>
+          <img 
+            src="/naver-blog-logo.png" 
+            alt="네이버 블로그" 
+            style={{
+              height: '18px',
+              width: 'auto',
+              verticalAlign: 'middle',
+              marginRight: '6px',
+              display: 'inline-block'
+            }}
+            onError={(e) => {
+              // 이미지 로드 실패 시 이모지로 대체
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <strong style={{ fontWeight: '700', color: '#00C73C' }}>네이버 블로그</strong>
+          <span>에서 확인하세요</span>
+          <span style={{ color: '#007bff' }}>→</span>
+        </a>
+      </div>
+
+      <section className="cta-section" style={{ marginTop: '0' }}>
         <div className="cta-content">
           <h3>영어 학습 지도를 위한 새로운 툴을 경험해보세요</h3>
           <p>AI 모델링을 통해 특화된 영어 문제 생성으로 준비 시간을 단축하고 집중력 있는 학습을 유도합니다</p>
