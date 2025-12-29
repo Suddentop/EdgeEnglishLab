@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { generateWork16Quiz, WordQuiz } from '../../../services/work16Service';
+import { generateWork16Quiz, WordQuiz, WordItem, regenerateWork16QuizFromWords, generateSingleWordMeaning } from '../../../services/work16Service';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
@@ -111,6 +111,12 @@ const Work_16_PassageWordStudy: React.FC = () => {
   const [quizzes, setQuizzes] = useState<WordQuiz[]>([]); // 생성된 퀴즈 배열
   const quizType: 'english-to-korean' = 'english-to-korean'; // 고정: 영어→한글만 사용
   const [showScreenshotHelp, setShowScreenshotHelp] = useState(false);
+  
+  // 단어 편집 관련 상태
+  const [editingQuizIndex, setEditingQuizIndex] = useState<number | null>(null); // 편집 중인 퀴즈 인덱스
+  const [editingWords, setEditingWords] = useState<WordItem[]>([]); // 편집 중인 단어 목록
+  const [newWordEnglish, setNewWordEnglish] = useState<string>(''); // 새 단어 입력
+  const [isGeneratingMeaning, setIsGeneratingMeaning] = useState(false); // 한글뜻 생성 중
 
   // 포인트 관련 상태
   const { userData, loading } = useAuth();
@@ -1015,6 +1021,98 @@ const Work_16_PassageWordStudy: React.FC = () => {
   const resetAll = () => {
     setQuizzes([]);
     setItems([{ id: Date.now().toString(), inputType: 'clipboard', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '' }]);
+    setEditingQuizIndex(null);
+    setEditingWords([]);
+    setNewWordEnglish('');
+  };
+
+  // 단어 편집 모드 시작
+  const startEditingWords = (quizIndex: number) => {
+    setEditingQuizIndex(quizIndex);
+    setEditingWords([...quizzes[quizIndex].words]); // 현재 단어 목록 복사
+    setNewWordEnglish('');
+  };
+
+  // 단어 편집 취소
+  const cancelEditingWords = () => {
+    setEditingQuizIndex(null);
+    setEditingWords([]);
+    setNewWordEnglish('');
+  };
+
+  // 단어 수정
+  const updateWord = (index: number, field: 'english' | 'korean' | 'partOfSpeech', value: string) => {
+    const updated = [...editingWords];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditingWords(updated);
+  };
+
+  // 단어 삭제
+  const deleteWord = (index: number) => {
+    if (window.confirm('이 단어를 삭제하시겠습니까?')) {
+      const updated = editingWords.filter((_, i) => i !== index);
+      setEditingWords(updated);
+    }
+  };
+
+  // 단어 추가
+  const addWord = async () => {
+    const english = newWordEnglish.trim();
+    if (!english) {
+      alert('영어 단어를 입력해주세요.');
+      return;
+    }
+
+    // 중복 확인
+    if (editingWords.some(w => w.english.toLowerCase() === english.toLowerCase())) {
+      alert('이미 존재하는 단어입니다.');
+      setNewWordEnglish('');
+      return;
+    }
+
+    setIsGeneratingMeaning(true);
+    try {
+      const newWord = await generateSingleWordMeaning(english);
+      setEditingWords([...editingWords, newWord]);
+      setNewWordEnglish('');
+    } catch (error) {
+      console.error('단어 추가 실패:', error);
+      alert('단어 추가 중 오류가 발생했습니다.');
+    } finally {
+      setIsGeneratingMeaning(false);
+    }
+  };
+
+  // 수정된 단어 목록으로 퀴즈 재생성
+  const saveEditedWords = async (quizIndex: number) => {
+    if (editingWords.length === 0) {
+      alert('최소 1개 이상의 단어가 필요합니다.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const originalQuiz = quizzes[quizIndex];
+      const regeneratedQuiz = await regenerateWork16QuizFromWords(
+        editingWords,
+        quizType,
+        originalQuiz.passage
+      );
+
+      const updatedQuizzes = [...quizzes];
+      updatedQuizzes[quizIndex] = regeneratedQuiz;
+      setQuizzes(updatedQuizzes);
+
+      // 편집 모드 종료
+      cancelEditingWords();
+
+      alert('단어 목록이 업데이트되었습니다.');
+    } catch (error) {
+      console.error('퀴즈 재생성 실패:', error);
+      alert('퀴즈 재생성 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // 퀴즈 생성 완료 화면
@@ -1092,22 +1190,234 @@ const Work_16_PassageWordStudy: React.FC = () => {
           <div className="generated-quizzes-list">
             {quizzes.map((quiz, idx) => (
               <div key={idx} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
-                <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                  <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#16</span>
+                <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
+                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#16</span>
+                  </div>
+                  {editingQuizIndex !== idx && (
+                    <button
+                      onClick={() => startEditingWords(idx)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        fontSize: '0.9rem',
+                        fontWeight: '600',
+                        border: '2px solid #1976d2',
+                        borderRadius: '6px',
+                        background: '#fff',
+                        color: '#1976d2',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.background = '#1976d2';
+                        e.currentTarget.style.color = '#fff';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.background = '#fff';
+                        e.currentTarget.style.color = '#1976d2';
+                      }}
+                    >
+                      ✏️ 단어 편집
+                    </button>
+                  )}
                 </div>
 
                 <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.1rem', background:'#222', color:'#fff', padding:'0.7rem 0.8rem', borderRadius:'8px', marginBottom:'1rem'}}>
                   다음 영어 단어의 한글 뜻을 고르시오.
                 </div>
+
+                {/* 단어 편집 모드 */}
+                {editingQuizIndex === idx && (
+                  <div style={{
+                    background: '#fff3cd',
+                    border: '2px solid #ffc107',
+                    borderRadius: '8px',
+                    padding: '1.5rem',
+                    marginBottom: '1.5rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <h4 style={{ margin: 0, color: '#856404' }}>✏️ 단어 편집 모드</h4>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => saveEditedWords(idx)}
+                          disabled={isLoading}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            fontSize: '0.9rem',
+                            fontWeight: '600',
+                            border: 'none',
+                            borderRadius: '6px',
+                            background: '#28a745',
+                            color: '#fff',
+                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                            opacity: isLoading ? 0.6 : 1
+                          }}
+                        >
+                          {isLoading ? '저장 중...' : '💾 저장'}
+                        </button>
+                        <button
+                          onClick={cancelEditingWords}
+                          disabled={isLoading}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            fontSize: '0.9rem',
+                            fontWeight: '600',
+                            border: 'none',
+                            borderRadius: '6px',
+                            background: '#6c757d',
+                            color: '#fff',
+                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                            opacity: isLoading ? 0.6 : 1
+                          }}
+                        >
+                          ❌ 취소
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 단어 추가 입력 */}
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <input
+                        type="text"
+                        value={newWordEnglish}
+                        onChange={(e) => setNewWordEnglish(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !isGeneratingMeaning) {
+                            addWord();
+                          }
+                        }}
+                        placeholder="새 영어 단어 입력 후 Enter 또는 추가 버튼 클릭"
+                        disabled={isGeneratingMeaning}
+                        style={{
+                          flex: 1,
+                          padding: '0.6rem',
+                          fontSize: '0.95rem',
+                          border: '2px solid #ffc107',
+                          borderRadius: '6px',
+                          outline: 'none'
+                        }}
+                      />
+                      <button
+                        onClick={addWord}
+                        disabled={isGeneratingMeaning || !newWordEnglish.trim()}
+                        style={{
+                          padding: '0.6rem 1.2rem',
+                          fontSize: '0.95rem',
+                          fontWeight: '600',
+                          border: 'none',
+                          borderRadius: '6px',
+                          background: isGeneratingMeaning || !newWordEnglish.trim() ? '#ccc' : '#17a2b8',
+                          color: '#fff',
+                          cursor: isGeneratingMeaning || !newWordEnglish.trim() ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        {isGeneratingMeaning ? '생성 중...' : '➕ 추가'}
+                      </button>
+                    </div>
+
+                    {/* 편집 가능한 단어 목록 */}
+                    <div style={{
+                      maxHeight: '400px',
+                      overflowY: 'auto',
+                      border: '1px solid #ddd',
+                      borderRadius: '6px',
+                      background: '#fff'
+                    }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: '#f8f9fa' }}>
+                            <th style={{ padding: '0.6rem', border: '1px solid #ddd', textAlign: 'center', width: '5%' }}>No.</th>
+                            <th style={{ padding: '0.6rem', border: '1px solid #ddd', textAlign: 'center', width: '25%' }}>영어 단어</th>
+                            <th style={{ padding: '0.6rem', border: '1px solid #ddd', textAlign: 'center', width: '10%' }}>품사</th>
+                            <th style={{ padding: '0.6rem', border: '1px solid #ddd', textAlign: 'center', width: '50%' }}>한글 뜻</th>
+                            <th style={{ padding: '0.6rem', border: '1px solid #ddd', textAlign: 'center', width: '10%' }}>삭제</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {editingWords.map((word, wordIdx) => (
+                            <tr key={wordIdx} style={{ background: wordIdx % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                              <td style={{ padding: '0.6rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                                {wordIdx + 1}
+                              </td>
+                              <td style={{ padding: '0.6rem', border: '1px solid #ddd' }}>
+                                <input
+                                  type="text"
+                                  value={word.english}
+                                  onChange={(e) => updateWord(wordIdx, 'english', e.target.value)}
+                                  style={{
+                                    width: '100%',
+                                    padding: '0.4rem',
+                                    fontSize: '0.9rem',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    outline: 'none'
+                                  }}
+                                />
+                              </td>
+                              <td style={{ padding: '0.6rem', border: '1px solid #ddd' }}>
+                                <input
+                                  type="text"
+                                  value={word.partOfSpeech || ''}
+                                  onChange={(e) => updateWord(wordIdx, 'partOfSpeech', e.target.value)}
+                                  placeholder="n., v., adj., ..."
+                                  style={{
+                                    width: '100%',
+                                    padding: '0.4rem',
+                                    fontSize: '0.9rem',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    outline: 'none'
+                                  }}
+                                />
+                              </td>
+                              <td style={{ padding: '0.6rem', border: '1px solid #ddd' }}>
+                                <input
+                                  type="text"
+                                  value={word.korean}
+                                  onChange={(e) => updateWord(wordIdx, 'korean', e.target.value)}
+                                  style={{
+                                    width: '100%',
+                                    padding: '0.4rem',
+                                    fontSize: '0.9rem',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    outline: 'none'
+                                  }}
+                                />
+                              </td>
+                              <td style={{ padding: '0.6rem', border: '1px solid #ddd', textAlign: 'center' }}>
+                                <button
+                                  onClick={() => deleteWord(wordIdx)}
+                                  style={{
+                                    padding: '0.3rem 0.6rem',
+                                    fontSize: '0.85rem',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    background: '#dc3545',
+                                    color: '#fff',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  🗑️
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
                 
-                {/* 단어 테이블 표시 */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: quiz.words.length > 10 ? '1fr 1fr' : '1fr',
-                  gap: '2rem',
-                  marginTop: '1rem'
-                }}>
+                {/* 단어 테이블 표시 (편집 모드가 아닐 때만) */}
+                {editingQuizIndex !== idx && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: quiz.words.length > 10 ? '1fr 1fr' : '1fr',
+                    gap: '2rem',
+                    marginTop: '1rem'
+                  }}>
                   <div style={{
                     background: '#ffffff',
                     border: '2px solid #000000',
@@ -1193,7 +1503,8 @@ const Work_16_PassageWordStudy: React.FC = () => {
                       </table>
                     </div>
                   )}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

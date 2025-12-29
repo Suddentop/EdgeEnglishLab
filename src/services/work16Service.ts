@@ -187,6 +187,37 @@ ${passage}
 }
 
 /**
+ * 단일 영어 단어의 한글뜻 생성 (단어 추가 시 사용)
+ * @param englishWord - 영어 단어
+ * @returns 한글뜻이 포함된 단어 객체
+ */
+export async function generateSingleWordMeaning(englishWord: string): Promise<WordItem> {
+  console.log('🔍 단일 단어 한글뜻 생성:', englishWord);
+  
+  try {
+    const words = await generateKoreanMeanings([englishWord]);
+    if (words.length > 0) {
+      return words[0];
+    } else {
+      // 실패 시 기본값 반환
+      return {
+        english: englishWord,
+        korean: '(뜻 없음)',
+        partOfSpeech: 'n.'
+      };
+    }
+  } catch (error) {
+    console.error('❌ 단일 단어 한글뜻 생성 실패:', error);
+    // 실패 시 기본값 반환
+    return {
+      english: englishWord,
+      korean: '(뜻 없음)',
+      partOfSpeech: 'n.'
+    };
+  }
+}
+
+/**
  * 영어 단어들의 한글뜻 생성
  * @param englishWords - 영어 단어 배열
  * @returns 한글뜻이 포함된 단어 배열
@@ -446,6 +477,33 @@ ${wordsNeedingPartOfSpeech.join(', ')}
   } catch (parseError) {
     console.error('한글뜻 생성 파싱 오류:', parseError);
     throw new Error('한글뜻 생성 결과를 파싱할 수 없습니다.');
+  }
+}
+
+/**
+ * 단어 목록만으로 퀴즈 재생성 (단어 편집 후 사용)
+ * @param words - 수정된 단어 목록
+ * @param quizType - 퀴즈 타입
+ * @param passage - 본문 정보 (선택)
+ * @returns 단어 퀴즈
+ */
+export async function regenerateWork16QuizFromWords(
+  words: WordItem[],
+  quizType: 'english-to-korean' | 'korean-to-english' = 'english-to-korean',
+  passage?: string
+): Promise<WordQuiz> {
+  console.log('🔄 Work_16 퀴즈 재생성 시작 (단어 목록 기반)...');
+  console.log('📝 단어 수:', words.length);
+  
+  try {
+    const quiz = await generateWordQuiz(words, quizType);
+    return {
+      ...quiz,
+      passage: passage || quiz.passage
+    };
+  } catch (error) {
+    console.error('❌ Work_16 퀴즈 재생성 실패:', error);
+    throw error;
   }
 }
 
