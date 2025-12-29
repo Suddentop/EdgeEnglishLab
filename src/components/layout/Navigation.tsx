@@ -24,7 +24,7 @@ const WORK_MENUS = [
   { label: '12. 단어 학습', path: '/work_12_word-study' },
   { label: '13. 빈칸 채우기 (단어-주관식)', path: '/work_13_blank-fill-word' },
   { label: '14. 빈칸 채우기 (문장-주관식)', path: '/work_14_blank-fill-sentence' },
-  { label: '16. 본문 단어 학습', path: '/work_16_passage-word-study' }
+  { label: '15. 본문 영어단어 학습', path: '/work_16_passage-word-study' }
 ];
 
 const Navigation: React.FC = () => {

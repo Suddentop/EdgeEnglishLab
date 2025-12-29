@@ -480,6 +480,92 @@ ${passage}`;
       }
     }
     
+    // 빈칸이 없는 경우 강제로 빈칸 생성
+    const blankPattern = /\([\s_]+\)|\(_{5,}\)/g;
+    const existingBlanks = (result.blankedText.match(blankPattern) || []).length;
+    const expectedBlanks = result.correctAnswers?.length || 0;
+    
+    if (existingBlanks < expectedBlanks) {
+      console.warn(`⚠️ 빈칸 부족 감지: 기존 ${existingBlanks}개, 필요 ${expectedBlanks}개 - 강제로 빈칸 생성 시작`);
+      
+      let blankedText = result.blankedText || passage;
+      const answers = result.correctAnswers;
+      let blankIndex = 0;
+      
+      // 이미 생성된 빈칸을 임시 마커로 교체하여 중복 처리 방지
+      const tempMarkers: string[] = [];
+      blankedText = blankedText.replace(blankPattern, (match: string) => {
+        const marker = `__BLANK_MARKER_${blankIndex}__`;
+        tempMarkers.push(marker);
+        blankIndex++;
+        return marker;
+      });
+      
+      // 각 정답 단어를 원본 텍스트에서 찾아 빈칸으로 대체
+      for (let i = 0; i < answers.length; i++) {
+        const answer = answers[i];
+        
+        // 이미 빈칸이 생성된 경우 건너뛰기
+        if (i < tempMarkers.length) {
+          continue;
+        }
+        
+        // 단어 경계를 고려한 정규식으로 검색
+        const escapedAnswer = answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const wordBoundaryRegex = new RegExp(`\\b${escapedAnswer}\\b`, 'gi');
+        
+        // 빈칸 마커가 아닌 위치에서만 검색
+        const matches = [...blankedText.matchAll(wordBoundaryRegex)];
+        
+        if (matches.length > 0) {
+          // 빈칸 마커가 아닌 첫 번째 매치를 찾기
+          let targetMatch: RegExpMatchArray | null = null;
+          for (const match of matches) {
+            const matchIndex = match.index!;
+            // 마커 범위 내에 있는지 확인
+            let isInMarker = false;
+            for (let j = 0; j < tempMarkers.length; j++) {
+              const markerStart = blankedText.indexOf(tempMarkers[j]);
+              const markerEnd = markerStart + tempMarkers[j].length;
+              if (matchIndex >= markerStart && matchIndex < markerEnd) {
+                isInMarker = true;
+                break;
+              }
+            }
+            if (!isInMarker) {
+              targetMatch = match;
+              break;
+            }
+          }
+          
+          if (targetMatch) {
+            const beforeMatch = blankedText.substring(0, targetMatch.index);
+            const afterMatch = blankedText.substring(targetMatch.index! + targetMatch[0].length);
+            blankedText = beforeMatch + `(_______________)` + afterMatch;
+            
+            console.log(`✅ 빈칸 ${i + 1} 생성: "${answer}" → (_______________)`);
+          } else {
+            console.warn(`⚠️ 정답 "${answer}"의 모든 매치가 이미 빈칸 처리됨`);
+          }
+        } else {
+          console.warn(`⚠️ 정답 "${answer}"을 본문에서 찾을 수 없음`);
+        }
+      }
+      
+      // 임시 마커를 다시 빈칸으로 복원
+      tempMarkers.forEach((marker, index) => {
+        blankedText = blankedText.replace(marker, `(_______________)`);
+      });
+      
+      result.blankedText = blankedText;
+      console.log('✅ 강제 빈칸 생성 완료:', {
+        원본길이: passage.length,
+        빈칸본문길이: blankedText.length,
+        빈칸개수: (blankedText.match(/\(_______________\)/g) || []).length,
+        정답개수: answers.length
+      });
+    }
+    
     // 번역은 별도 함수로 처리
     console.log('번역 시작...');
     const translation = await translateToKorean(passage);

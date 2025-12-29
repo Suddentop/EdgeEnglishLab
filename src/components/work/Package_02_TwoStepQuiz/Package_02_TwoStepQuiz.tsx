@@ -2787,35 +2787,6 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         >
           {isLoading ? '생성 중...' : '문제 생성'}
       </button>
-        
-        <button
-          type="button"
-          onClick={() => navigate('/quiz-list')}
-          style={{
-            padding: '0.75rem 2.5rem',
-            fontSize: '1.18rem',
-            fontWeight: '700',
-            border: 'none',
-            borderRadius: '10px',
-            background: '#14b8a6',
-            color: 'white',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(20, 184, 166, 0.08)',
-            transition: 'all 0.2s ease',
-            minWidth: '180px',
-            height: '48px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#0d9488';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#14b8a6';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
-        >
-          문제생성 목록
-        </button>
       </div>
 
       {/* 포인트 차감 확인 모달 */}

@@ -124,8 +124,11 @@ const PrintFormatWork13New: React.FC<PrintFormatWork13NewProps> = ({ quizzes, is
         return part;
       }).join('');
     } else {
-      // 문제 모드: 빈칸 그대로 표시
-      passageHtml = quiz.blankedText || '';
+      // 문제 모드: 빈칸을 ( _ _ _ _ _ ) 형식으로 변환
+      passageHtml = formatBlankedText(
+        quiz.blankedText || '',
+        quiz.correctAnswers || []
+      );
     }
     
     // renderSectionNode가 이미 print-html-block 컨테이너를 추가하므로 외부 div 제거
