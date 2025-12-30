@@ -15,6 +15,7 @@ import {
   where 
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { isAdmin as checkIsAdmin } from '../../utils/adminUtils';
 import './Feedback.css';
 
 interface FeedbackPost {
@@ -35,6 +36,7 @@ interface FeedbackReply {
   authorId: string;
   authorName: string;
   createdAt: any;
+  updatedAt?: any;
   imageUrls?: string[];
 }
 
@@ -55,9 +57,14 @@ const Feedback: React.FC = () => {
   const [selectedReplyImages, setSelectedReplyImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [replyImageUrls, setReplyImageUrls] = useState<string[]>([]);
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editingReplyContent, setEditingReplyContent] = useState<string>('');
+  const [editingReplyImages, setEditingReplyImages] = useState<File[]>([]);
+  const [editingReplyImageUrls, setEditingReplyImageUrls] = useState<string[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replyFileInputRef = useRef<HTMLInputElement>(null);
+  const editingReplyFileInputRef = useRef<HTMLInputElement>(null);
 
   // 관리자 권한 확인
   useEffect(() => {
@@ -65,7 +72,7 @@ const Feedback: React.FC = () => {
     console.log('Feedback 컴포넌트 - userData:', userData);
     
     if (currentUser && userData) {
-      setIsAdmin(userData.isAdmin === true);
+      setIsAdmin(checkIsAdmin(userData));
     }
   }, [currentUser, userData]);
 
@@ -129,10 +136,18 @@ const Feedback: React.FC = () => {
           orderBy('createdAt', 'asc')
         );
         const repliesSnapshot = await getDocs(repliesQuery);
-        const replies: FeedbackReply[] = repliesSnapshot.docs.map(replyDoc => ({
-          id: replyDoc.id,
-          ...replyDoc.data()
-        } as FeedbackReply));
+        const replies: FeedbackReply[] = repliesSnapshot.docs.map(replyDoc => {
+          const data = replyDoc.data();
+          return {
+            id: replyDoc.id,
+            content: data.content || '',
+            authorId: data.authorId || '',
+            authorName: data.authorName || '',
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            imageUrls: data.imageUrls || []
+          } as FeedbackReply;
+        });
 
         postsData.push({
           id: doc.id,
@@ -241,15 +256,15 @@ const Feedback: React.FC = () => {
     }
   };
 
-  // 게시글 삭제
+  // 게시글 삭제 (작성자용)
   const handleDelete = async (postId: string) => {
     if (!currentUser) return;
     
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     
-    // 관리자이거나 본인이 작성한 글인지 확인
-    if (!isAdmin && currentUser.uid !== post.authorId) {
+    // 본인이 작성한 글인지 확인
+    if (currentUser.uid !== post.authorId) {
       alert('삭제 권한이 없습니다.');
       return;
     }
@@ -277,6 +292,79 @@ const Feedback: React.FC = () => {
       } catch (error) {
         console.error('게시글 삭제 오류:', error);
       }
+    }
+  };
+
+  // 게시글 삭제 (관리자용)
+  const handleAdminDelete = async (postId: string) => {
+    if (!currentUser || !checkIsAdmin(userData)) return;
+    
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    if (window.confirm('관리자 권한으로 이 게시글을 삭제하시겠습니까?')) {
+      try {
+        // 게시글의 이미지들 삭제
+        if (post?.imageUrls) {
+          for (const imageUrl of post.imageUrls) {
+            try {
+              const imageRef = ref(storage, imageUrl);
+              await deleteObject(imageRef);
+            } catch (error) {
+              console.error('이미지 삭제 오류:', error);
+            }
+          }
+        }
+
+        await deleteDoc(doc(db, 'feedback', postId));
+        fetchPosts();
+        if (selectedPost?.id === postId) {
+          setSelectedPost(null);
+        }
+      } catch (error) {
+        console.error('게시글 삭제 오류:', error);
+        alert('게시글 삭제에 실패했습니다.');
+      }
+    }
+  };
+
+  // 특정 게시글의 답글만 불러오기
+  const fetchRepliesForPost = async (postId: string) => {
+    try {
+      const repliesQuery = query(
+        collection(db, 'feedback', postId, 'replies'),
+        orderBy('createdAt', 'asc')
+      );
+      const repliesSnapshot = await getDocs(repliesQuery);
+      const replies: FeedbackReply[] = repliesSnapshot.docs.map(replyDoc => {
+        const data = replyDoc.data();
+        return {
+          id: replyDoc.id,
+          content: data.content || '',
+          authorId: data.authorId || '',
+          authorName: data.authorName || '',
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          imageUrls: data.imageUrls || []
+        } as FeedbackReply;
+      });
+
+      // selectedPost의 답글 목록 업데이트
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost({
+          ...selectedPost,
+          replies
+        });
+      }
+
+      // posts 목록도 업데이트
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.id === postId ? { ...post, replies } : post
+        )
+      );
+    } catch (error) {
+      console.error('답글 불러오기 오류:', error);
     }
   };
 
@@ -321,11 +409,155 @@ const Feedback: React.FC = () => {
       setReplyContent('');
       setSelectedReplyImages([]);
       setReplyImageUrls([]);
-      fetchPosts();
+      
+      // 답글 등록 후 현재 게시글의 답글만 다시 불러오기
+      await fetchRepliesForPost(selectedPost.id);
     } catch (error) {
       console.error('답글 작성 오류:', error);
     } finally {
       setUploadingReplyImages(false);
+    }
+  };
+
+  // 답글 수정 시작
+  const startReplyEdit = (reply: FeedbackReply) => {
+    setEditingReplyId(reply.id);
+    setEditingReplyContent(reply.content);
+    setEditingReplyImages([]);
+    setEditingReplyImageUrls(reply.imageUrls || []);
+  };
+
+  // 답글 수정 취소
+  const cancelReplyEdit = () => {
+    setEditingReplyId(null);
+    setEditingReplyContent('');
+    setEditingReplyImages([]);
+    setEditingReplyImageUrls([]);
+  };
+
+  // 답글 수정
+  const handleReplyEdit = async (e: React.FormEvent, replyId: string) => {
+    e.preventDefault();
+    if (!currentUser || !selectedPost || !editingReplyContent.trim()) return;
+
+    setUploadingReplyImages(true);
+    try {
+      let uploadedImageUrls: string[] = [...editingReplyImageUrls];
+      
+      if (editingReplyImages.length > 0) {
+        const newImageUrls = await uploadImages(editingReplyImages);
+        uploadedImageUrls = [...uploadedImageUrls, ...newImageUrls];
+      }
+
+      const replyRef = doc(db, 'feedback', selectedPost.id, 'replies', replyId);
+      await updateDoc(replyRef, {
+        content: editingReplyContent.trim(),
+        imageUrls: uploadedImageUrls,
+        updatedAt: serverTimestamp()
+      });
+
+      setEditingReplyId(null);
+      setEditingReplyContent('');
+      setEditingReplyImages([]);
+      setEditingReplyImageUrls([]);
+      
+      // 답글 수정 후 현재 게시글의 답글만 다시 불러오기
+      await fetchRepliesForPost(selectedPost.id);
+    } catch (error) {
+      console.error('답글 수정 오류:', error);
+      alert('답글 수정에 실패했습니다.');
+    } finally {
+      setUploadingReplyImages(false);
+    }
+  };
+
+  // 답글 삭제 (작성자용)
+  const handleReplyDelete = async (replyId: string) => {
+    if (!currentUser || !selectedPost) return;
+    
+    // 답글 정보 가져오기
+    const replyRef = doc(db, 'feedback', selectedPost.id, 'replies', replyId);
+    const replyDoc = await getDoc(replyRef);
+    
+    if (!replyDoc.exists()) {
+      alert('답글을 찾을 수 없습니다.');
+      return;
+    }
+    
+    const replyData = replyDoc.data();
+    
+    // 본인이 작성한 답글인지 확인
+    if (currentUser.uid !== replyData.authorId) {
+      alert('삭제 권한이 없습니다.');
+      return;
+    }
+    
+    if (!window.confirm('답글을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      // 답글의 이미지 삭제
+      if (replyData.imageUrls && replyData.imageUrls.length > 0) {
+        for (const imageUrl of replyData.imageUrls) {
+          try {
+            const imageRef = ref(storage, imageUrl);
+            await deleteObject(imageRef);
+          } catch (error) {
+            console.error('이미지 삭제 오류:', error);
+          }
+        }
+      }
+      
+      await deleteDoc(replyRef);
+      
+      // 답글 삭제 후 현재 게시글의 답글만 다시 불러오기
+      await fetchRepliesForPost(selectedPost.id);
+    } catch (error) {
+      console.error('답글 삭제 오류:', error);
+      alert('답글 삭제에 실패했습니다.');
+    }
+  };
+
+  // 답글 삭제 (관리자용)
+  const handleAdminReplyDelete = async (replyId: string) => {
+    if (!currentUser || !selectedPost || !checkIsAdmin(userData)) return;
+    
+    // 답글 정보 가져오기
+    const replyRef = doc(db, 'feedback', selectedPost.id, 'replies', replyId);
+    const replyDoc = await getDoc(replyRef);
+    
+    if (!replyDoc.exists()) {
+      alert('답글을 찾을 수 없습니다.');
+      return;
+    }
+    
+    const replyData = replyDoc.data();
+    
+    if (!window.confirm('관리자 권한으로 이 답글을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      // 답글의 이미지 삭제
+      if (replyData.imageUrls && replyData.imageUrls.length > 0) {
+        for (const imageUrl of replyData.imageUrls) {
+          try {
+            const imageRef = ref(storage, imageUrl);
+            await deleteObject(imageRef);
+          } catch (error) {
+            console.error('이미지 삭제 오류:', error);
+          }
+        }
+      }
+      
+      await deleteDoc(replyRef);
+      
+      // 답글 삭제 후 현재 게시글의 답글만 다시 불러오기
+      await fetchRepliesForPost(selectedPost.id);
+    } catch (error) {
+      console.error('답글 삭제 오류:', error);
+      alert('답글 삭제에 실패했습니다.');
     }
   };
 
@@ -343,6 +575,10 @@ const Feedback: React.FC = () => {
     setSelectedPost(post);
     setIsWriting(false);
     setIsEditing(false);
+    setEditingReplyId(null);
+    setEditingReplyContent('');
+    setEditingReplyImages([]);
+    setEditingReplyImageUrls([]);
   };
 
   // 목록으로 돌아가기
@@ -357,6 +593,10 @@ const Feedback: React.FC = () => {
     setSelectedReplyImages([]);
     setImageUrls([]);
     setReplyImageUrls([]);
+    setEditingReplyId(null);
+    setEditingReplyContent('');
+    setEditingReplyImages([]);
+    setEditingReplyImageUrls([]);
   };
 
   if (!currentUser) {
@@ -694,7 +934,7 @@ const Feedback: React.FC = () => {
                  수정
                </button>
              )}
-             {(isAdmin || (currentUser && currentUser.uid === selectedPost.authorId)) && (
+             {currentUser && currentUser.uid === selectedPost.authorId && (
                <button 
                  className="btn btn-danger"
                  onClick={() => handleDelete(selectedPost.id)}
@@ -708,6 +948,14 @@ const Feedback: React.FC = () => {
              >
                목록으로
              </button>
+             {isAdmin && (
+               <button 
+                 className="btn btn-danger btn-admin-delete-post"
+                 onClick={() => handleAdminDelete(selectedPost.id)}
+               >
+                 관리자삭제
+               </button>
+             )}
            </div>
 
           {/* 답글 섹션 */}
@@ -718,38 +966,194 @@ const Feedback: React.FC = () => {
               <div className="replies-list">
                 {selectedPost.replies.map((reply) => (
                   <div key={reply.id} className="reply-item">
-                    <div className="reply-header">
-                      <span className="reply-author">{reply.authorName}</span>
-                      <span className="reply-date">
-                        {reply.createdAt?.toDate?.() 
-                          ? reply.createdAt.toDate().toLocaleDateString()
-                          : '날짜 없음'
-                        }
-                      </span>
-                    </div>
-                    <div className="reply-content">
-                      {reply.content.split('\n').map((line, index) => (
-                        <p key={index}>{line}</p>
-                      ))}
-                      
-                      {/* 답글 이미지 표시 */}
-                      {reply.imageUrls && reply.imageUrls.length > 0 && (
-                        <div className="reply-images">
-                          <div className="image-grid">
-                            {reply.imageUrls.map((url, index) => (
-                              <div key={index} className="image-item">
-                                <img
-                                  src={url}
-                                  alt={`답글 이미지 ${index + 1}`}
-                                  className="reply-image"
-                                  onClick={() => window.open(url, '_blank')}
-                                />
-                              </div>
-                            ))}
-                          </div>
+                    {editingReplyId === reply.id ? (
+                      // 답글 수정 폼
+                      <form onSubmit={(e) => handleReplyEdit(e, reply.id)}>
+                        <div className="form-group">
+                          <textarea
+                            value={editingReplyContent}
+                            onChange={(e) => setEditingReplyContent(e.target.value)}
+                            placeholder="답글을 입력하세요"
+                            rows={4}
+                            required
+                            style={{
+                              width: '100%',
+                              padding: '0.875rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '8px',
+                              fontSize: '1rem',
+                              fontFamily: 'inherit',
+                              resize: 'vertical',
+                              minHeight: '100px'
+                            }}
+                          />
                         </div>
-                      )}
-                    </div>
+                        
+                        {/* 수정 중인 답글 이미지 업로드 */}
+                        <div className="form-group">
+                          <label>이미지 첨부</label>
+                          <input
+                            type="file"
+                            ref={editingReplyFileInputRef}
+                            onChange={(e) => {
+                              if (e.target.files) {
+                                const files = Array.from(e.target.files);
+                                setEditingReplyImages(prev => [...prev, ...files]);
+                              }
+                            }}
+                            accept="image/*"
+                            multiple
+                            style={{ display: 'none' }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => editingReplyFileInputRef.current?.click()}
+                          >
+                            이미지 추가
+                          </button>
+                          
+                          {/* 기존 이미지 표시 */}
+                          {editingReplyImageUrls.length > 0 && (
+                            <div className="image-preview-container" style={{ marginTop: '1rem' }}>
+                              <h4>기존 이미지</h4>
+                              <div className="image-preview-grid">
+                                {editingReplyImageUrls.map((url, index) => (
+                                  <div key={index} className="image-preview-item">
+                                    <img
+                                      src={url}
+                                      alt={`기존 이미지 ${index + 1}`}
+                                      className="image-preview"
+                                    />
+                                    <button
+                                      type="button"
+                                      className="btn btn-danger btn-sm"
+                                      onClick={() => {
+                                        setEditingReplyImageUrls(prev => prev.filter((_, i) => i !== index));
+                                      }}
+                                    >
+                                      삭제
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* 새로 선택한 이미지 미리보기 */}
+                          {editingReplyImages.length > 0 && (
+                            <div className="image-preview-container" style={{ marginTop: '1rem' }}>
+                              <h4>새로 추가할 이미지 ({editingReplyImages.length}개)</h4>
+                              <div className="image-preview-grid">
+                                {editingReplyImages.map((file, index) => (
+                                  <div key={index} className="image-preview-item">
+                                    <img
+                                      src={URL.createObjectURL(file)}
+                                      alt={`미리보기 ${index + 1}`}
+                                      className="image-preview"
+                                    />
+                                    <button
+                                      type="button"
+                                      className="btn btn-danger btn-sm"
+                                      onClick={() => {
+                                        setEditingReplyImages(prev => prev.filter((_, i) => i !== index));
+                                      }}
+                                    >
+                                      삭제
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="reply-form-actions">
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={cancelReplyEdit}
+                            disabled={uploadingReplyImages}
+                          >
+                            취소
+                          </button>
+                          <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={uploadingReplyImages}
+                          >
+                            {uploadingReplyImages ? '수정 중...' : '수정 완료'}
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      // 답글 표시
+                      <>
+                        <div className="reply-header">
+                          <span className="reply-author">{reply.authorName}</span>
+                          <span className="reply-date">
+                            {reply.createdAt?.toDate?.() 
+                              ? reply.createdAt.toDate().toLocaleDateString()
+                              : '날짜 없음'
+                            }
+                            {reply.updatedAt && (
+                              <span style={{ marginLeft: '0.5rem', color: '#9ca3af', fontSize: '0.8rem' }}>
+                                (수정됨)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="reply-content">
+                          {reply.content.split('\n').map((line, index) => (
+                            <p key={index}>{line}</p>
+                          ))}
+                          
+                          {/* 답글 이미지 표시 */}
+                          {reply.imageUrls && reply.imageUrls.length > 0 && (
+                            <div className="reply-images">
+                              <div className="image-grid">
+                                {reply.imageUrls.map((url, index) => (
+                                  <div key={index} className="image-item">
+                                    <img
+                                      src={url}
+                                      alt={`답글 이미지 ${index + 1}`}
+                                      className="reply-image"
+                                      onClick={() => window.open(url, '_blank')}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="reply-actions">
+                          {currentUser && currentUser.uid === reply.authorId && (
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => startReplyEdit(reply)}
+                            >
+                              수정
+                            </button>
+                          )}
+                          {currentUser && currentUser.uid === reply.authorId && (
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleReplyDelete(reply.id)}
+                            >
+                              삭제
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button
+                              className="btn btn-danger btn-sm btn-admin-delete"
+                              onClick={() => handleAdminReplyDelete(reply.id)}
+                            >
+                              관리자삭제
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

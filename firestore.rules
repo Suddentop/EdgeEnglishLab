@@ -17,17 +17,22 @@ service cloud.firestore {
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
     
-    // feedback 컬렉션: 로그인한 사용자만 읽기/쓰기 가능, 관리자는 삭제 가능
+    // feedback 컬렉션: 로그인한 사용자만 읽기/쓰기 가능, 관리자 또는 작성자는 삭제 가능
     match /feedback/{postId} {
       allow read, create, update: if request.auth != null;
       allow delete: if request.auth != null && 
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+        (resource.data.authorId == request.auth.uid ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
     }
     
-    // feedback 답글 컬렉션: 로그인한 사용자만 읽기/쓰기 가능
+    // feedback 답글 컬렉션: 로그인한 사용자만 읽기/쓰기 가능, 관리자 또는 작성자는 삭제 가능
     match /feedback/{postId}/replies/{replyId} {
       allow read, create, update: if request.auth != null;
+      allow delete: if request.auth != null && 
+        (resource.data.authorId == request.auth.uid ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
     }
     
     // pointHistory 컬렉션: 로그인한 사용자만 접근 가능
@@ -45,6 +50,14 @@ service cloud.firestore {
     
     // pointTransactions 컬렉션: 로그인한 사용자는 자신의 거래만, 관리자는 모든 거래 접근 가능
     match /pointTransactions/{transactionId} {
+      allow read, write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+    
+    // quizHistory 컬렉션: 로그인한 사용자는 자신의 내역만, 관리자는 모든 내역 접근 가능
+    match /quizHistory/{historyId} {
       allow read, write: if request.auth != null && 
         (resource.data.userId == request.auth.uid || 
          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 

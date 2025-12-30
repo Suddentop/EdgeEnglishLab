@@ -47,8 +47,8 @@ interface ProblemInstructionWork15Props {
 }
 
 export const ProblemInstructionWork15: React.FC<ProblemInstructionWork15Props> = ({
-  children,
-  className = ''
+  children, 
+  className = '' 
 }) => (
   <div className={`problem-instruction-work15 ${className}`}>
     <span className="problem-instruction-text-work15">{children}</span>

@@ -4967,8 +4967,12 @@ const QuizDisplayPage: React.FC = () => {
   const handleBackToList = () => {
     const state = location.state as any;
     const returnPage = state?.returnPage;
+    const filterUserId = state?.filterUserId;
     navigate('/quiz-list', {
-      state: returnPage ? { returnPage } : undefined
+      state: {
+        ...(returnPage && { returnPage }),
+        ...(filterUserId && { filterUserId })
+      }
     });
   };
 

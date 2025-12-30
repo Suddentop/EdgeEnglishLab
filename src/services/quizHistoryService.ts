@@ -448,3 +448,170 @@ export const deleteAllQuizHistoryForUser = async (userId: string): Promise<numbe
     throw error;
   }
 };
+
+// 관리자용: 모든 사용자의 문제 생성 내역 조회
+export const getAllQuizHistory = async (
+  searchParams?: QuizHistorySearchParams & { userId?: string }
+): Promise<QuizHistoryItem[]> => {
+  try {
+    const includeAll = (searchParams as any)?.includeAll === true;
+    
+    let q;
+    let querySnapshot;
+    
+    try {
+      if (searchParams?.userId) {
+        // 특정 사용자 필터링
+        if (includeAll) {
+          q = query(
+            collection(db, 'quizHistory'),
+            where('userId', '==', searchParams.userId),
+            orderBy('createdAt', 'desc')
+          );
+        } else {
+          const sixMonthsAgo = new Date();
+          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+          
+          q = query(
+            collection(db, 'quizHistory'),
+            where('userId', '==', searchParams.userId),
+            where('createdAt', '>=', Timestamp.fromDate(sixMonthsAgo)),
+            orderBy('createdAt', 'desc')
+          );
+        }
+      } else {
+        // 모든 사용자 조회
+        if (includeAll) {
+          q = query(
+            collection(db, 'quizHistory'),
+            orderBy('createdAt', 'desc')
+          );
+        } else {
+          const sixMonthsAgo = new Date();
+          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+          
+          q = query(
+            collection(db, 'quizHistory'),
+            where('createdAt', '>=', Timestamp.fromDate(sixMonthsAgo)),
+            orderBy('createdAt', 'desc')
+          );
+        }
+      }
+      querySnapshot = await getDocs(q);
+    } catch (queryError: any) {
+      if (process.env.NODE_ENV === 'development') {
+        if (queryError?.code === 'failed-precondition' || queryError?.message?.includes('index')) {
+          console.warn('⚠️ Firestore 인덱스가 필요합니다. orderBy 없이 재시도합니다:', queryError?.message);
+        } else {
+          console.warn('orderBy 쿼리 실패, orderBy 없이 재시도:', queryError?.code, queryError?.message);
+        }
+      }
+      
+      if (searchParams?.userId) {
+        if (includeAll) {
+          q = query(
+            collection(db, 'quizHistory'),
+            where('userId', '==', searchParams.userId)
+          );
+        } else {
+          const sixMonthsAgo = new Date();
+          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+          
+          q = query(
+            collection(db, 'quizHistory'),
+            where('userId', '==', searchParams.userId),
+            where('createdAt', '>=', Timestamp.fromDate(sixMonthsAgo))
+          );
+        }
+      } else {
+        if (includeAll) {
+          q = query(collection(db, 'quizHistory'));
+        } else {
+          const sixMonthsAgo = new Date();
+          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+          
+          q = query(
+            collection(db, 'quizHistory'),
+            where('createdAt', '>=', Timestamp.fromDate(sixMonthsAgo))
+          );
+        }
+      }
+      querySnapshot = await getDocs(q);
+    }
+    
+    const history: QuizHistoryItem[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      try {
+        const data = doc.data();
+        const createdAt = data.createdAt?.toDate();
+        
+        if (!createdAt) {
+          return;
+        }
+        
+        if (!includeAll) {
+          const sixMonthsAgoCheck = new Date();
+          sixMonthsAgoCheck.setMonth(sixMonthsAgoCheck.getMonth() - 6);
+          
+          if (createdAt < sixMonthsAgoCheck) {
+            return;
+          }
+        }
+        
+        history.push({
+          id: doc.id,
+          userId: data.userId,
+          userName: data.userName || '',
+          userNickname: data.userNickname || '',
+          createdAt: createdAt,
+          workTypeId: data.workTypeId || '',
+          workTypeName: data.workTypeName || '',
+          pointsDeducted: data.pointsDeducted || 0,
+          pointsRefunded: data.pointsRefunded || 0,
+          status: data.status || 'success',
+          inputText: data.inputText || '',
+          generatedData: typeof data.generatedData === 'string' ? JSON.parse(data.generatedData) : data.generatedData,
+          problemFileUrl: data.problemFileUrl,
+          problemFileName: data.problemFileName,
+          answerFileUrl: data.answerFileUrl,
+          answerFileName: data.answerFileName,
+          expiresAt: data.expiresAt?.toDate() || createdAt,
+          isPackage: data.isPackage || false,
+          packageWorkTypes: data.packageWorkTypes || [],
+          memo: data.memo || ''
+        });
+      } catch (parseError) {
+        console.error('❌ 문서 파싱 오류:', doc.id, parseError);
+      }
+    });
+    
+    // 클라이언트 사이드에서 정렬 및 필터링
+    let filteredHistory = history.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    if (searchParams?.workTypeId) {
+      filteredHistory = filteredHistory.filter(item => item.workTypeId === searchParams.workTypeId);
+    }
+    
+    if (searchParams?.status) {
+      filteredHistory = filteredHistory.filter(item => item.status === searchParams.status);
+    }
+    
+    if (searchParams?.startDate) {
+      filteredHistory = filteredHistory.filter(item => item.createdAt >= searchParams.startDate!);
+    }
+    
+    if (searchParams?.endDate) {
+      filteredHistory = filteredHistory.filter(item => item.createdAt <= searchParams.endDate!);
+    }
+    
+    if (searchParams?.limit) {
+      filteredHistory = filteredHistory.slice(0, searchParams.limit);
+    }
+    
+    return filteredHistory;
+  } catch (error: any) {
+    console.error('전체 문제 생성 내역 조회 실패:', error);
+    throw error;
+  }
+};

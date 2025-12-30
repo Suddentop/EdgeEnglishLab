@@ -419,6 +419,45 @@
   margin-right: 0 !important;
 }
 
+/* 게시글 "목록으로" 버튼 크기 및 스타일 */
+.post-actions .btn-primary {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  padding: 0.5rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  box-sizing: border-box !important;
+}
+
+/* 게시글 수정, 삭제 버튼 스타일 (목록으로 버튼과 동일) */
+.post-actions .btn-secondary,
+.post-actions .btn-danger:not(.btn-admin-delete-post) {
+  padding: 0.5rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  box-sizing: border-box !important;
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+/* 게시글 관리자삭제 버튼 스타일 */
+.post-actions .btn-admin-delete-post {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  padding: 0.5rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  box-sizing: border-box !important;
+}
+
+.post-actions .btn-admin-delete-post:hover {
+  background: #1f1f1f !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 /* 답글 스타일 */
 .replies-section {
   margin-top: 1.5rem;
@@ -542,6 +581,74 @@
 
 .reply-form-actions .btn:last-child {
   margin-right: 0 !important;
+}
+
+/* 댓글 폼의 이미지선택 버튼과 답글등록 버튼 크기 작게 */
+.reply-form .btn-secondary,
+.reply-form .btn-primary {
+  padding: 0.5rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  box-sizing: border-box !important;
+}
+
+/* 답글등록 버튼 오른쪽 정렬 */
+.reply-form button[type="submit"],
+.reply-form .btn-primary[type="submit"] {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
+  margin-top: 1rem;
+}
+
+/* 답글 액션 버튼 (수정/삭제) */
+.reply-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.reply-actions .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.reply-actions .btn-secondary,
+.reply-actions .btn-secondary.btn-sm {
+  width: 50px !important;
+  padding: 0.5rem 0.5rem !important;
+  box-sizing: border-box !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+}
+
+.reply-actions .btn-danger,
+.reply-actions .btn-danger.btn-sm {
+  width: 50px !important;
+  padding: 0.5rem 0.5rem !important;
+  box-sizing: border-box !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+}
+
+/* 관리자삭제 버튼 스타일 (댓글용) */
+.reply-actions .btn-danger.btn-admin-delete,
+.reply-actions .btn-danger.btn-sm.btn-admin-delete {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  padding: 0.5rem 1rem !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.reply-actions .btn-admin-delete:hover {
+  background: #1f1f1f !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* 반응형 디자인 */

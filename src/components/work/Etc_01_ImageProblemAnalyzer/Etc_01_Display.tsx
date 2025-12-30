@@ -351,8 +351,8 @@ const Etc_01_Display: React.FC = () => {
           printElement.style.opacity = '1';
         }
         
-        setTimeout(() => {
-          window.print();
+    setTimeout(() => {
+      window.print();
           
           if (printElement) {
             printElement.style.left = '-9999px';
@@ -373,14 +373,24 @@ const Etc_01_Display: React.FC = () => {
           document.head.removeChild(styleElement);
         }
       }, fileFormat === 'pdf' ? 2000 : 100);
-    }, 200);
+      }, 200);
   };
 
   if (!data) {
     return (
       <div style={{ padding: '1rem' }}>
         <p>내역을 불러오지 못했습니다.</p>
-        <button onClick={() => navigate('/quiz-list')}>목록으로</button>
+        <button onClick={() => {
+          const state = location.state as any;
+          const returnPage = state?.returnPage;
+          const filterUserId = state?.filterUserId;
+          navigate('/quiz-list', {
+            state: {
+              ...(returnPage && { returnPage }),
+              ...(filterUserId && { filterUserId })
+            }
+          });
+        }}>목록으로</button>
       </div>
     );
   }
@@ -394,7 +404,17 @@ const Etc_01_Display: React.FC = () => {
         </div>
         <div className="header-right">
           <button
-            onClick={() => navigate('/quiz-list')}
+            onClick={() => {
+              const state = location.state as any;
+              const returnPage = state?.returnPage;
+              const filterUserId = state?.filterUserId;
+              navigate('/quiz-list', {
+                state: {
+                  ...(returnPage && { returnPage }),
+                  ...(filterUserId && { filterUserId })
+                }
+              });
+            }}
             className="back-btn"
           >
             목록보기

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { getQuizHistory, QuizHistoryItem, updateQuizHistoryMemo } from '../../services/quizHistoryService';
+import { getQuizHistory, getAllQuizHistory, QuizHistoryItem, updateQuizHistoryMemo } from '../../services/quizHistoryService';
+import { searchUsers } from '../../services/adminService';
+import { isAdmin } from '../../utils/adminUtils';
 import './QuizListPage.css';
 import SEO from '../common/SEO';
 
@@ -16,6 +18,42 @@ const QuizListPage: React.FC = () => {
   const itemsPerPage = 10;
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [memoValues, setMemoValues] = useState<Record<string, string>>({});
+  const [filterUserId, setFilterUserId] = useState<string>('');
+  const [filterSearchTerm, setFilterSearchTerm] = useState<string>('');
+  const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  
+  const isAdminUser = isAdmin(userData);
+  
+  // 사용자 검색
+  const handleUserSearch = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setUserSearchResults([]);
+      setShowUserSearch(false);
+      return;
+    }
+    
+    try {
+      const result = await searchUsers({
+        searchTerm: searchTerm.trim(),
+        searchType: 'all',
+        limit: 10
+      });
+      setUserSearchResults(result.users);
+      setShowUserSearch(true);
+    } catch (error) {
+      console.error('사용자 검색 오류:', error);
+      setUserSearchResults([]);
+    }
+  };
+  
+  // 사용자 선택
+  const handleUserSelect = (userId: string) => {
+    setFilterUserId(userId);
+    setFilterSearchTerm('');
+    setShowUserSearch(false);
+    setUserSearchResults([]);
+  };
 
   // 문제 생성 내역 로드
   const loadQuizHistory = async () => {
@@ -24,7 +62,8 @@ const QuizListPage: React.FC = () => {
     setLoading(true);
     try {
       console.log('📋 문제생성목록 로드 시작:', {
-        userId: userData.uid
+        userId: userData.uid,
+        isAdmin: isAdminUser
       });
       
       // 먼저 모든 데이터 조회 시도 (6개월 제한 없이)
@@ -34,7 +73,18 @@ const QuizListPage: React.FC = () => {
         includeAll: true
       };
       
-      let history = await getQuizHistory(userData.uid, params);
+      let history: QuizHistoryItem[];
+      
+      if (isAdminUser) {
+        // 관리자는 모든 사용자의 내역 조회
+        if (filterUserId) {
+          params.userId = filterUserId;
+        }
+        history = await getAllQuizHistory(params);
+      } else {
+        // 일반 사용자는 자신의 내역만 조회
+        history = await getQuizHistory(userData.uid, params);
+      }
       
       console.log('📋 문제생성목록 로드 완료:', {
         totalCount: history.length,
@@ -106,11 +156,12 @@ const QuizListPage: React.FC = () => {
     try {
       // 패키지 퀴즈인지 확인
       if (historyItem.workTypeId.startsWith('P') && historyItem.generatedData?.isPackage) {
-        // 새 페이지로 이동하면서 데이터와 현재 페이지 정보 전달
+        // 새 페이지로 이동하면서 데이터와 현재 페이지 정보, 필터 정보 전달
         navigate('/quiz-display', {
           state: {
             quizData: historyItem,
-            returnPage: currentPage
+            returnPage: currentPage,
+            filterUserId: filterUserId || undefined
           }
         });
       } else if (historyItem.workTypeId === '15') {
@@ -118,7 +169,8 @@ const QuizListPage: React.FC = () => {
         navigate('/etc-01-display', {
           state: {
             quizData: historyItem,
-            returnPage: currentPage
+            returnPage: currentPage,
+            filterUserId: filterUserId || undefined
           }
         });
       } else {
@@ -158,7 +210,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -182,7 +234,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -226,7 +278,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -270,7 +322,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
           } else {
               // 단일 문제인 경우
@@ -314,7 +366,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -351,7 +403,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -388,7 +440,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -425,7 +477,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -460,7 +512,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -495,7 +547,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -530,7 +582,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -565,7 +617,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -600,7 +652,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else {
               // 단일 문제인 경우
@@ -636,7 +688,7 @@ const QuizListPage: React.FC = () => {
                 }
               } as any;
 
-              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage } });
+              navigate('/quiz-display', { state: { quizData: wrapped, returnPage: currentPage, filterUserId: filterUserId || undefined } });
               return;
             } else if (parsed && typeof parsed === 'object') {
               // 단일 문제인 경우 또는 객체인 경우
@@ -819,11 +871,20 @@ const QuizListPage: React.FC = () => {
     }));
   };
 
-  // location.state에서 페이지 정보 확인 및 설정
+  // location.state에서 페이지 정보 및 필터 정보 확인 및 설정
   useEffect(() => {
     const state = location.state as any;
-    if (state && state.returnPage) {
-      setCurrentPage(state.returnPage);
+    if (state) {
+      if (state.returnPage) {
+        setCurrentPage(state.returnPage);
+      }
+      if (state.filterUserId) {
+        setFilterUserId(state.filterUserId);
+        // 필터가 설정되면 자동으로 목록 로드
+        if (userData?.uid) {
+          loadQuizHistory();
+        }
+      }
     }
   }, [location]);
 
@@ -832,7 +893,7 @@ const QuizListPage: React.FC = () => {
     if (userData?.uid) {
       loadQuizHistory();
     }
-  }, [userData?.uid]);
+  }, [userData?.uid, filterUserId]);
 
   // 현재 페이지의 데이터 계산
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -847,24 +908,119 @@ const QuizListPage: React.FC = () => {
       />
       <div className="quiz-list-container">
         <div className="table-header">
-          <h2>나의 문제 생성 목록</h2>
-          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
-            생성된 모든 문제의 내역을 확인하고 다운로드할 수 있습니다.
+          <h2>{isAdminUser ? '전체 문제 생성 목록 (관리자)' : '나의 문제 생성 목록'}</h2>
+          <p className="table-header-description">
+            생성된 문제는 6개월간 보관되며, 이후 자동으로 삭제됩니다.
           </p>
         </div>
 
         <div className="quiz-list-header">
-          <h1>문제 생성 목록</h1>
-          <button 
-            onClick={() => {
-              console.log('🔄 문제생성목록 새로고침 버튼 클릭');
-              loadQuizHistory();
-            }} 
-            className="refresh-btn"
-            disabled={loading}
-          >
-            {loading ? '새로고침 중...' : '새로고침'}
-          </button>
+          <h1>{isAdminUser ? '전체 문제 생성 목록 (관리자)' : '문제 생성 목록'}</h1>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative' }}>
+            {isAdminUser && (
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="사용자 이름, 닉네임, 이메일로 검색"
+                  value={filterSearchTerm}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFilterSearchTerm(value);
+                    handleUserSearch(value);
+                  }}
+                  onFocus={() => {
+                    if (filterSearchTerm) {
+                      setShowUserSearch(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    // 검색 결과 클릭을 위해 약간의 지연
+                    setTimeout(() => setShowUserSearch(false), 200);
+                  }}
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '4px',
+                    fontSize: '0.85rem',
+                    width: '250px'
+                  }}
+                />
+                {showUserSearch && userSearchResults.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '4px',
+                    marginTop: '0.25rem',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 1000,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}>
+                    {userSearchResults.map((user) => (
+                      <div
+                        key={user.uid}
+                        onClick={() => handleUserSelect(user.uid)}
+                        style={{
+                          padding: '0.5rem 0.8rem',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f3f4f6'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f9fafb';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'white';
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                          {user.name} ({user.nickname})
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          {user.email}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {filterUserId && (
+                  <button
+                    onClick={() => {
+                      setFilterUserId('');
+                      setFilterSearchTerm('');
+                      setShowUserSearch(false);
+                      loadQuizHistory();
+                    }}
+                    style={{
+                      marginLeft: '0.5rem',
+                      padding: '0.4rem 0.8rem',
+                      backgroundColor: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    필터 해제
+                  </button>
+                )}
+              </div>
+            )}
+            <button 
+              onClick={() => {
+                console.log('🔄 문제생성목록 새로고침 버튼 클릭');
+                loadQuizHistory();
+              }} 
+              className="refresh-btn"
+              disabled={loading}
+            >
+              {loading ? '새로고침 중...' : '새로고침'}
+            </button>
+          </div>
         </div>
 
         <div className="quiz-list-table">
@@ -878,6 +1034,7 @@ const QuizListPage: React.FC = () => {
               <table>
                 <thead>
                   <tr>
+                    {isAdminUser && <th>사용자</th>}
                     <th>날짜</th>
                     <th>유형번호</th>
                     <th>유형명</th>
@@ -890,6 +1047,16 @@ const QuizListPage: React.FC = () => {
                 <tbody>
                   {currentData.map((item) => (
                     <tr key={item.id}>
+                      {isAdminUser && (
+                        <td>
+                          <div style={{ fontSize: '0.8rem' }}>
+                            <div style={{ fontWeight: 600 }}>{item.userName || '이름 없음'}</div>
+                            <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                              {item.userNickname || '닉네임 없음'} ({item.userId.substring(0, 8)}...)
+                            </div>
+                          </div>
+                        </td>
+                      )}
                       <td>{item.createdAt.toLocaleString('ko-KR', {
                         year: 'numeric',
                         month: '2-digit',
