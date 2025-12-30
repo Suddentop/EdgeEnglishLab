@@ -114,17 +114,17 @@ const QuizListPage: React.FC = () => {
           }
         });
       } else if (historyItem.workTypeId === '15') {
-        // 유형#15 전용 표시 페이지로 이동 (원래 인쇄 페이지)
-        navigate('/work-15-display', {
+        // ETC#01 전용 표시 페이지로 이동 (원래 인쇄 페이지)
+        navigate('/etc-01-display', {
           state: {
             quizData: historyItem,
             returnPage: currentPage
           }
         });
       } else {
-        // 단일 유형(01~14, 16)도 패키지 표시 페이지를 재사용해 동일한 인쇄 버튼 동작 제공
+        // 단일 유형(01~15)도 패키지 표시 페이지를 재사용해 동일한 인쇄 버튼 동작 제공
         const numId = historyItem.workTypeId?.toString()?.padStart(2, '0');
-        const isSingleWork = /^(01|02|03|04|05|06|07|08|09|10|11|12|13|14|16)$/.test(numId || '');
+        const isSingleWork = /^(01|02|03|04|05|06|07|08|09|10|11|12|13|14|15)$/.test(numId || '');
 
         if (isSingleWork) {
           // generatedData를 패키지 프린트 컴포넌트가 인식하는 구조로 변환
@@ -617,15 +617,15 @@ const QuizListPage: React.FC = () => {
               const merged = { ...d, ...(quizInner || {}) };
               quizItem[nestedKey] = merged;
             }
-          } else if (numId === '16') {
-            // 유형#16는 여러 문제를 배열로 저장할 수 있음 (유형#12와 유사한 구조)
+          } else if (numId === '15') {
+            // 유형#15는 여러 문제를 배열로 저장할 수 있음 (유형#12와 유사한 구조)
             // parsed가 배열인 경우 (여러 문제)
             if (Array.isArray(parsed)) {
-              // 배열인 경우: 각 항목을 work16Data 필드로 변환하여 패키지 형태로 처리
+              // 배열인 경우: 각 항목을 work15Data 필드로 변환하여 패키지 형태로 처리
               const quizzes = parsed.map((quiz, index) => ({
-                workTypeId: '16',
+                workTypeId: '15',
                 workTypeName: historyItem.workTypeName,
-                work16Data: quiz
+                work15Data: quiz
               }));
               
               const wrapped = {
@@ -649,7 +649,7 @@ const QuizListPage: React.FC = () => {
                   quizItem[nestedKey] = parsed;
                 }
               } else if (parsed[nestedKey]) {
-                // work16Data 필드가 있는 경우
+                // work15Data 필드가 있는 경우
                 quizItem[nestedKey] = parsed[nestedKey];
               } else {
                 // 그 외의 경우 parsed를 그대로 사용

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { generateWork16Quiz, WordQuiz, WordItem, regenerateWork16QuizFromWords, generateSingleWordMeaning } from '../../../services/work16Service';
+import { generateWork15Quiz, WordQuiz, WordItem, regenerateWork15QuizFromWords, generateSingleWordMeaning } from '../../../services/work15Service';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
@@ -8,9 +8,9 @@ import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelp
 import { useAuth } from '../../../contexts/AuthContext';
 import { callOpenAI } from '../../../services/common';
 import { processWithConcurrency } from '../../../utils/concurrency';
-import HistoryPrintWork16 from './HistoryPrintWork16';
-import './Work_16_PassageWordStudy.css';
-import './PrintFormat16.css';
+import HistoryPrintWork15 from './HistoryPrintWork15';
+import './Work_15_PassageWordStudy.css';
+import './PrintFormat15.css';
 
 type InputType = 'clipboard' | 'file' | 'text';
 
@@ -101,7 +101,7 @@ function cleanOpenAIVisionResult(text: string): string {
   return text.replace(/^(Sure!|Here is|Here are|Here's|Here's)[^\n:]*[:：]?\s*/i, '').trim();
 }
 
-const Work_16_PassageWordStudy: React.FC = () => {
+const Work_15_PassageWordStudy: React.FC = () => {
   // 상태 관리
   const [items, setItems] = useState<InputItem[]>([
     { id: '1', inputType: 'clipboard', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '' }
@@ -136,7 +136,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
           ]);
           
           setWorkTypePoints(workTypePointsData);
-          const workType = workTypePointsData.find((wt: any) => wt.id === '16');
+          const workType = workTypePointsData.find((wt: any) => wt.id === '15');
           if (workType) {
             setPointsToDeduct(workType.points);
           }
@@ -276,7 +276,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
       const totalPoints = pointsToDeduct * validItems.length;
       const deductionResult = await deductUserPoints(
         userData!.uid, 
-        '16',
+        '15',
         `본문 단어 학습 (${validItems.length}문제)`,
         userData!.displayName || '사용자',
         userData!.nickname || '사용자',
@@ -290,7 +290,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
         const results = await processWithConcurrency(validItems, 3, async (item) => {
           try {
             console.log(`🔍 문제 생성 시작 (ID: ${item.id})...`);
-            const quiz = await generateWork16Quiz(item.text, quizType);
+            const quiz = await generateWork15Quiz(item.text, quizType);
             return { quiz, input: item.text };
           } catch (err) {
             console.error(`❌ 문제 생성 실패 (ID: ${item.id}):`, err);
@@ -317,16 +317,16 @@ const Work_16_PassageWordStudy: React.FC = () => {
               userId: userData!.uid,
               userName: userData!.name || '사용자',
               userNickname: userData!.nickname || '사용자',
-              workTypeId: '16',
-              workTypeName: `${getWorkTypeName('16')} (${generatedQuizzes.length}문제)`,
+              workTypeId: '15',
+              workTypeName: `${getWorkTypeName('15')} (${generatedQuizzes.length}문제)`,
               points: totalPoints,
               inputText: combinedInputText,
               quizData: generatedQuizzes,
               status: 'success'
             });
-            console.log(`✅ 유형#16 내역 저장 완료 (${generatedQuizzes.length}문제)`);
+            console.log(`✅ 유형#15 내역 저장 완료 (${generatedQuizzes.length}문제)`);
           } catch (historyError) {
-            console.error('❌ 유형#16 내역 저장 실패:', historyError);
+            console.error('❌ 유형#15 내역 저장 실패:', historyError);
           }
         }
         
@@ -370,10 +370,10 @@ const Work_16_PassageWordStudy: React.FC = () => {
     }
     
     /* 화면에서도 오버레이에 표시되도록 */
-    .only-print-work16 {
+    .only-print-work15 {
       display: block !important;
     }
-    .a4-landscape-page-template-work16 {
+    .a4-landscape-page-template-work15 {
       width: 29.7cm;
       height: 21cm;
       margin: 0;
@@ -386,11 +386,11 @@ const Work_16_PassageWordStudy: React.FC = () => {
       flex-direction: column;
       font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
     }
-    .a4-landscape-page-template-work16:not(:last-child) {
+    .a4-landscape-page-template-work15:not(:last-child) {
       page-break-after: always;
       break-after: page;
     }
-    .a4-landscape-page-header-work16 {
+    .a4-landscape-page-header-work15 {
       width: 100%;
       height: 1.5cm;
       flex-shrink: 0;
@@ -402,39 +402,39 @@ const Work_16_PassageWordStudy: React.FC = () => {
       justify-content: center;
       text-align: center;
     }
-    .print-header-work16 {
+    .print-header-work15 {
       width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
     }
-    .print-header-text-work16 {
+    .print-header-text-work15 {
       font-size: 11pt;
       font-weight: 700;
       color: #000;
     }
-    .print-header-work16::after {
+    .print-header-work15::after {
       content: '';
       width: 100%;
       height: 1px;
       background-color: #333;
       margin-top: 0.3cm;
     }
-    .a4-landscape-page-content-work16 {
+    .a4-landscape-page-content-work15 {
       width: 100%;
       flex: 1;
       padding: 0.4cm 0.8cm 1cm 0.8cm;
       box-sizing: border-box;
       overflow: visible;
     }
-    .quiz-content-work16 {
+    .quiz-content-work15 {
       width: 100%;
       height: 100%;
       display: flex;
       flex-direction: column;
     }
-    .problem-instruction-work16 {
+    .problem-instruction-work15 {
       font-weight: 800;
       font-size: 11pt;
       background: #F0F0F0;
@@ -448,28 +448,28 @@ const Work_16_PassageWordStudy: React.FC = () => {
       justify-content: space-between;
       align-items: center;
     }
-    .problem-instruction-text-work16 {
+    .problem-instruction-text-work15 {
       flex: 1 1 auto;
     }
-    .problem-type-label-work16 {
+    .problem-type-label-work15 {
       margin-left: 0.5cm;
       font-size: 10pt;
       font-weight: 700;
       color: #000000;
     }
-    .word-list-container-work16 {
+    .word-list-container-work15 {
       display: flex;
       gap: 0.5cm;
       width: 100%;
       margin: 1rem 0;
     }
-    .word-list-column-work16 {
+    .word-list-column-work15 {
       flex: 1 1 50%;
       width: 50%;
       display: flex;
       flex-direction: column;
     }
-    .quiz-card-work16 {
+    .quiz-card-work15 {
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -484,11 +484,11 @@ const Work_16_PassageWordStudy: React.FC = () => {
       max-width: 50% !important;
       width: 50% !important;
     }
-    .single-quiz-column .quiz-card-work16 {
+    .single-quiz-column .quiz-card-work15 {
       width: 100% !important;
       max-width: 100% !important;
     }
-    .word-list-table-work16 {
+    .word-list-table-work15 {
       width: 100%;
       border-collapse: collapse;
       margin: 0;
@@ -496,7 +496,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
       background: #ffffff;
       border: 2px solid #000000;
     }
-    .word-list-table-work16 th {
+    .word-list-table-work15 th {
       background: #e3f2fd;
       color: #000000;
       font-weight: 700;
@@ -505,7 +505,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
       text-align: center;
       border: 1px solid #000000;
     }
-    .word-list-table-work16 td {
+    .word-list-table-work15 td {
       border: 1px solid #000000;
       padding: 0.35rem;
       text-align: left;
@@ -513,24 +513,24 @@ const Work_16_PassageWordStudy: React.FC = () => {
       font-weight: 500;
       color: #000000;
     }
-    .word-list-table-work16 td:first-child,
-    .word-list-table-work16 th:first-child {
+    .word-list-table-work15 td:first-child,
+    .word-list-table-work15 th:first-child {
       text-align: center;
       width: 15%;
     }
-    .word-list-table-work16 td:nth-child(2),
-    .word-list-table-work16 th:nth-child(2),
-    .word-list-table-work16 td:nth-child(3),
-    .word-list-table-work16 th:nth-child(3) {
+    .word-list-table-work15 td:nth-child(2),
+    .word-list-table-work15 th:nth-child(2),
+    .word-list-table-work15 td:nth-child(3),
+    .word-list-table-work15 th:nth-child(3) {
       width: 42.5%;
     }
-    .word-list-table-work16 tr:nth-child(even) {
+    .word-list-table-work15 tr:nth-child(even) {
       background: #f8f9fa;
     }
-    .word-list-table-work16 tr:nth-child(odd) {
+    .word-list-table-work15 tr:nth-child(odd) {
       background: #ffffff;
     }
-    .word-list-table-work16 .answer-cell {
+    .word-list-table-work15 .answer-cell {
       color: #1976d2 !important;
       font-weight: 700 !important;
       background: #f0f8ff !important;
@@ -538,7 +538,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
 
     /* 화면에서 인쇄용 오버레이를 완전히 숨기기 */
     @media screen {
-      #work16-print-overlay {
+      #work15-print-overlay {
         display: none !important;
         visibility: hidden !important;
         left: -9999px !important;
@@ -549,19 +549,19 @@ const Work_16_PassageWordStudy: React.FC = () => {
     }
     
     /* 다른 유형의 @media print { body * { visibility: hidden; } } 규칙을 무력화하기 위해
-       인쇄 시점에만 body에 id="work16-print-active"를 temporarily 부여하고,
+       인쇄 시점에만 body에 id="work15-print-active"를 temporarily 부여하고,
        그 안의 모든 요소를 다시 보이게 강제한다. */
     @media print {
-      body#work16-print-active * {
+      body#work15-print-active * {
         visibility: visible !important;
       }
-      .only-print-work16 {
+      .only-print-work15 {
         display: block !important;
         visibility: visible !important;
         width: 100% !important;
         height: auto !important;
       }
-      .a4-landscape-page-template-work16 {
+      .a4-landscape-page-template-work15 {
         display: flex !important;
         visibility: visible !important;
         width: 29.7cm !important;
@@ -571,15 +571,15 @@ const Work_16_PassageWordStudy: React.FC = () => {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
       }
-      .a4-landscape-page-template-work16:not(:last-child) {
+      .a4-landscape-page-template-work15:not(:last-child) {
         page-break-after: always !important;
         break-after: page !important;
       }
-      .a4-landscape-page-template-work16:last-child {
+      .a4-landscape-page-template-work15:last-child {
         page-break-after: avoid !important;
         break-after: avoid !important;
       }
-      #work16-print-overlay {
+      #work15-print-overlay {
         display: block !important;
         visibility: visible !important;
         left: 0 !important;
@@ -592,13 +592,13 @@ const Work_16_PassageWordStudy: React.FC = () => {
         min-height: 42cm !important; /* 2페이지 = 21cm * 2 */
         overflow: visible !important;
       }
-      #work16-print-overlay .only-print-work16 {
+      #work15-print-overlay .only-print-work15 {
         display: block !important;
         visibility: visible !important;
         width: 100% !important;
         height: auto !important;
       }
-      #work16-print-overlay .a4-landscape-page-template-work16 {
+      #work15-print-overlay .a4-landscape-page-template-work15 {
         display: flex !important;
         visibility: visible !important;
         width: 29.7cm !important;
@@ -614,11 +614,11 @@ const Work_16_PassageWordStudy: React.FC = () => {
   
   const triggerPrint = (mode: PrintMode) => {
     if (!quizzes || quizzes.length === 0) {
-      console.warn('🖨️ [Work16] triggerPrint 호출되었지만 quiz 데이터가 없습니다.', { mode });
+      console.warn('🖨️ [Work15] triggerPrint 호출되었지만 quiz 데이터가 없습니다.', { mode });
       return;
     }
 
-    console.log('🖨️ [Work16] triggerPrint 시작', {
+    console.log('🖨️ [Work15] triggerPrint 시작', {
       mode,
       quizzesCount: quizzes.length,
       totalWords: quizzes.reduce((sum, q) => sum + (q.words?.length || 0), 0)
@@ -629,7 +629,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
       quizzes: quizzes.map((quiz, index) => {
         const words = Array.isArray(quiz.words) ? quiz.words : [];
         const wordsWithPartOfSpeech = words.filter((w: any) => w.partOfSpeech && w.partOfSpeech.trim().length > 0);
-        console.log(`🖨️ [Work16] 퀴즈 ${index + 1} 데이터:`, {
+        console.log(`🖨️ [Work15] 퀴즈 ${index + 1} 데이터:`, {
           wordsCount: words.length,
           hasWords: words.length > 0,
           quizType: quiz.quizType || quizType,
@@ -651,7 +651,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
       }),
       quizType: quizType
     };
-    console.log('🖨️ [Work16] 인쇄용 데이터 준비 완료', { 
+    console.log('🖨️ [Work15] 인쇄용 데이터 준비 완료', { 
       quizzesCount: quizzes.length,
       dataForPrintQuizzesCount: dataForPrint.quizzes.length,
       quizzes: dataForPrint.quizzes.map((q: any) => ({ 
@@ -663,30 +663,30 @@ const Work_16_PassageWordStudy: React.FC = () => {
 
     // React 컴포넌트를 정적 HTML로 렌더링
     const markup = ReactDOMServer.renderToStaticMarkup(
-      <HistoryPrintWork16
+      <HistoryPrintWork15
         data={dataForPrint}
         isAnswerMode={mode === 'with-answer'}
       />
     );
 
-    console.log('🖨️ [Work16] 렌더링된 마크업 길이:', markup.length);
-    console.log('🖨️ [Work16] 마크업 샘플:', markup.substring(0, 500));
+    console.log('🖨️ [Work15] 렌더링된 마크업 길이:', markup.length);
+    console.log('🖨️ [Work15] 마크업 샘플:', markup.substring(0, 500));
     
     // 렌더링된 페이지 수 확인
-    const pageCount = (markup.match(/a4-landscape-page-template-work16/g) || []).length;
+    const pageCount = (markup.match(/a4-landscape-page-template-work15/g) || []).length;
     const expectedPageCount = Math.ceil(quizzes.length / 2);
-    console.log('🖨️ [Work16] 렌더링된 페이지 수:', pageCount);
-    console.log('🖨️ [Work16] 예상 페이지 수:', expectedPageCount);
+    console.log('🖨️ [Work15] 렌더링된 페이지 수:', pageCount);
+    console.log('🖨️ [Work15] 예상 페이지 수:', expectedPageCount);
     
     // 각 페이지의 내용 확인
-    const pageMatches = markup.match(/<div class="a4-landscape-page-template-work16[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/g);
+    const pageMatches = markup.match(/<div class="a4-landscape-page-template-work15[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/g);
     if (pageMatches) {
-      console.log('🖨️ [Work16] 페이지별 마크업 확인:', {
+      console.log('🖨️ [Work15] 페이지별 마크업 확인:', {
         pageCount: pageMatches.length,
         pageLengths: pageMatches.map((p, i) => ({
           pageIndex: i,
           length: p.length,
-          hasContent: p.includes('word-list-table-work16'),
+          hasContent: p.includes('word-list-table-work15'),
           sample: p.substring(0, 200)
         }))
       });
@@ -694,17 +694,17 @@ const Work_16_PassageWordStudy: React.FC = () => {
     
     // 문제 번호 확인
     const problemMatches = markup.match(/문제 \d+\./g);
-    console.log('🖨️ [Work16] 마크업에 포함된 문제 번호:', problemMatches);
+    console.log('🖨️ [Work15] 마크업에 포함된 문제 번호:', problemMatches);
     
     if (pageCount !== expectedPageCount) {
-      console.error(`🖨️ [Work16] 페이지 수 불일치! 예상: ${expectedPageCount}, 실제: ${pageCount}`);
-      console.log('🖨️ [Work16] 전체 마크업:', markup);
+      console.error(`🖨️ [Work15] 페이지 수 불일치! 예상: ${expectedPageCount}, 실제: ${pageCount}`);
+      console.log('🖨️ [Work15] 전체 마크업:', markup);
     } else {
-      console.log('🖨️ [Work16] 모든 페이지가 마크업에 포함되었습니다.');
+      console.log('🖨️ [Work15] 모든 페이지가 마크업에 포함되었습니다.');
     }
 
     // 현재 창 위에 전체 화면 오버레이 컨테이너 생성
-    const overlayId = 'work16-print-overlay';
+    const overlayId = 'work15-print-overlay';
     const existingOverlay = document.getElementById(overlayId);
     if (existingOverlay && existingOverlay.parentNode) {
       existingOverlay.parentNode.removeChild(existingOverlay);
@@ -730,7 +730,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
     
     // 인쇄 스타일이 제대로 주입되었는지 확인
     const styleElement = overlay.querySelector('style');
-    console.log('🖨️ [Work16] 인쇄 스타일 확인:', {
+    console.log('🖨️ [Work15] 인쇄 스타일 확인:', {
       styleElementExists: !!styleElement,
       styleContentLength: styleElement ? styleElement.textContent?.length || 0 : 0,
       styleContentSample: styleElement ? styleElement.textContent?.substring(0, 200) : null,
@@ -738,7 +738,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
     });
 
     // 디버깅: 오버레이 내용 확인
-    console.log('🖨️ [Work16] 오버레이 추가 완료', {
+    console.log('🖨️ [Work15] 오버레이 추가 완료', {
       overlayId,
       hasContent: overlay.innerHTML.length > 0,
       childrenCount: overlay.children.length
@@ -746,12 +746,12 @@ const Work_16_PassageWordStudy: React.FC = () => {
     
     // 실제 DOM에서 페이지 수 확인 (더 상세한 정보)
     setTimeout(() => {
-      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work16');
-      const onlyPrintDiv = overlay.querySelector('.only-print-work16');
+      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work15');
+      const onlyPrintDiv = overlay.querySelector('.only-print-work15');
       
       // 오버레이 스타일 확인
       const overlayStyle = window.getComputedStyle(overlay);
-      console.log('🖨️ [Work16] 오버레이 스타일 확인:', {
+      console.log('🖨️ [Work15] 오버레이 스타일 확인:', {
         display: overlayStyle.display,
         visibility: overlayStyle.visibility,
         position: overlayStyle.position,
@@ -761,11 +761,11 @@ const Work_16_PassageWordStudy: React.FC = () => {
         zIndex: overlayStyle.zIndex
       });
       
-      // only-print-work16 스타일 확인
+      // only-print-work15 스타일 확인
       if (onlyPrintDiv) {
         const onlyPrintStyle = window.getComputedStyle(onlyPrintDiv);
         const onlyPrintRect = onlyPrintDiv.getBoundingClientRect();
-        console.log('🖨️ [Work16] only-print-work16 스타일 확인:', {
+        console.log('🖨️ [Work15] only-print-work15 스타일 확인:', {
           display: onlyPrintStyle.display,
           visibility: onlyPrintStyle.visibility,
           width: onlyPrintStyle.width,
@@ -828,7 +828,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
         };
       });
       
-      console.log('🖨️ [Work16] 실제 DOM 페이지 수 확인 (상세):', {
+      console.log('🖨️ [Work15] 실제 DOM 페이지 수 확인 (상세):', {
         pageElementsCount: pageElements.length,
         expectedPages: Math.ceil(quizzes.length / 2),
         onlyPrintDivExists: !!onlyPrintDiv,
@@ -837,35 +837,35 @@ const Work_16_PassageWordStudy: React.FC = () => {
       });
       
       // 마크업에서 두 번째 페이지 확인
-      const markupContainsPage1 = markup.includes('work16-page-1');
+      const markupContainsPage1 = markup.includes('work15-page-1');
       const markupContainsProblem3 = markup.includes('문제 3.');
       const markupContainsProblem4 = markup.includes('문제 4.');
-      console.log('🖨️ [Work16] 마크업 내용 확인:', {
+      console.log('🖨️ [Work15] 마크업 내용 확인:', {
         markupLength: markup.length,
         containsPage1: markupContainsPage1,
         containsProblem3: markupContainsProblem3,
         containsProblem4: markupContainsProblem4,
-        page0Index: markup.indexOf('work16-page-0'),
-        page1Index: markup.indexOf('work16-page-1'),
+        page0Index: markup.indexOf('work15-page-0'),
+        page1Index: markup.indexOf('work15-page-1'),
         problem3Index: markup.indexOf('문제 3.'),
         problem4Index: markup.indexOf('문제 4.')
       });
       
       // 두 번째 페이지의 마크업 샘플
       if (markupContainsPage1) {
-        const page1Start = markup.indexOf('work16-page-1');
+        const page1Start = markup.indexOf('work15-page-1');
         const page1Sample = markup.substring(page1Start, Math.min(page1Start + 500, markup.length));
-        console.log('🖨️ [Work16] 두 번째 페이지 마크업 샘플:', page1Sample);
+        console.log('🖨️ [Work15] 두 번째 페이지 마크업 샘플:', page1Sample);
       }
     }, 100);
 
     // body에 임시 id를 부여하여 PRINT_STYLES 내 @media print 규칙이 적용되도록 함
     const prevBodyId = document.body.getAttribute('id');
-    document.body.setAttribute('id', 'work16-print-active');
+    document.body.setAttribute('id', 'work15-print-active');
 
     // 모든 페이지가 렌더링되었는지 확인하는 함수
     const checkAllPagesRendered = (): boolean => {
-      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work16');
+      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work15');
       const expectedPages = Math.ceil(quizzes.length / 2);
       const actualPages = pageElements.length;
       
@@ -881,7 +881,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
         };
       });
       
-      console.log('🖨️ [Work16] 페이지 렌더링 확인:', {
+      console.log('🖨️ [Work15] 페이지 렌더링 확인:', {
         expectedPages,
         actualPages,
         allRendered: actualPages === expectedPages,
@@ -895,15 +895,15 @@ const Work_16_PassageWordStudy: React.FC = () => {
     const startPrint = () => {
       // 페이지 렌더링 확인
       if (!checkAllPagesRendered()) {
-        console.warn('🖨️ [Work16] 일부 페이지가 아직 렌더링되지 않았습니다. 추가 대기...');
+        console.warn('🖨️ [Work15] 일부 페이지가 아직 렌더링되지 않았습니다. 추가 대기...');
         setTimeout(startPrint, 200);
         return;
       }
 
-      console.log('🖨️ [Work16] 모든 페이지가 렌더링되었습니다. 인쇄를 시작합니다.');
+      console.log('🖨️ [Work15] 모든 페이지가 렌더링되었습니다. 인쇄를 시작합니다.');
       
       // 모든 페이지가 보이도록 스크롤 확인 (더 상세한 정보)
-      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work16');
+      const pageElements = overlay.querySelectorAll('.a4-landscape-page-template-work15');
       pageElements.forEach((page, idx) => {
         const rect = page.getBoundingClientRect();
         const computed = window.getComputedStyle(page);
@@ -912,16 +912,16 @@ const Work_16_PassageWordStudy: React.FC = () => {
         const parentComputed = parent ? window.getComputedStyle(parent) : null;
         
         // 페이지 내부 콘텐츠 확인
-        const content = page.querySelector('.print-content-work16');
+        const content = page.querySelector('.print-content-work15');
         const contentRect = content ? content.getBoundingClientRect() : null;
         const contentComputed = content ? window.getComputedStyle(content) : null;
         
         // 테이블 확인
-        const tables = page.querySelectorAll('.word-list-table-work16');
+        const tables = page.querySelectorAll('.word-list-table-work15');
         const tableCount = tables.length;
         const tableRects = Array.from(tables).map(t => t.getBoundingClientRect());
         
-        console.log(`🖨️ [Work16] 페이지 ${idx} 상세 정보:`, {
+        console.log(`🖨️ [Work15] 페이지 ${idx} 상세 정보:`, {
           element: {
             rect: {
               top: rect.top,
@@ -1008,12 +1008,12 @@ const Work_16_PassageWordStudy: React.FC = () => {
   };
 
   const handlePrintNoAnswer = () => {
-    console.log('🖨️ [Work16] 인쇄(문제) 버튼 클릭');
+    console.log('🖨️ [Work15] 인쇄(문제) 버튼 클릭');
     triggerPrint('no-answer');
   };
   
   const handlePrintWithAnswer = () => {
-    console.log('🖨️ [Work16] 인쇄(정답) 버튼 클릭');
+    console.log('🖨️ [Work15] 인쇄(정답) 버튼 클릭');
     triggerPrint('with-answer');
   };
 
@@ -1093,7 +1093,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
     setIsLoading(true);
     try {
       const originalQuiz = quizzes[quizIndex];
-      const regeneratedQuiz = await regenerateWork16QuizFromWords(
+      const regeneratedQuiz = await regenerateWork15QuizFromWords(
         editingWords,
         quizType,
         originalQuiz.passage
@@ -1120,7 +1120,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
     return (
       <div className="quiz-display">
         <div className="quiz-header no-print">
-          <h2>#16. 본문 단어 학습 (총 {quizzes.length}문제)</h2>
+          <h2>#15. 본문 단어 학습 (총 {quizzes.length}문제)</h2>
           <div className="quiz-header-buttons">
             <button 
               onClick={resetAll} 
@@ -1193,7 +1193,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
                 <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#16</span>
+                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#15</span>
                   </div>
                   {editingQuizIndex !== idx && (
                     <button
@@ -1516,7 +1516,7 @@ const Work_16_PassageWordStudy: React.FC = () => {
   return (
     <div className="quiz-generator no-print">
       <div className="generator-header">
-        <h2>[유형#16] 본문 단어 학습</h2>
+        <h2>[유형#15] 본문 영어단어 학습 (단어퀴즈) 생성</h2>
         <p>여러 개의 영어 본문을 입력하여 각 본문에서 고3 수준의 단어를 추출하여 단어 학습 문제를 생성합니다.</p>
       </div>
 
@@ -1669,5 +1669,5 @@ const Work_16_PassageWordStudy: React.FC = () => {
   );
 };
 
-export default Work_16_PassageWordStudy;
+export default Work_15_PassageWordStudy;
 

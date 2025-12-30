@@ -91,16 +91,16 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
         }
 
         // Work_16: 본문 단어 학습 문제
-        if (quizItem.workTypeId === '16') {
-          const work16Data = quizItem.work16Data || quizItem.data?.work16Data || quizItem.data;
-          console.log('🔍 [SimpleQuizDisplay] 유형#16 데이터 확인:', {
+        if (quizItem.workTypeId === '15') {
+          const work15Data = quizItem.work15Data || quizItem.data?.work15Data || quizItem.data;
+          console.log('🔍 [SimpleQuizDisplay] 유형#15 데이터 확인:', {
             workTypeId: quizItem.workTypeId,
-            hasWork16Data: !!work16Data,
-            work16DataKeys: work16Data ? Object.keys(work16Data) : [],
-            wordsCount: work16Data?.words?.length || 0,
-            sampleWord: work16Data?.words?.[0]
+            hasWork15Data: !!work15Data,
+            work15DataKeys: work15Data ? Object.keys(work15Data) : [],
+            wordsCount: work15Data?.words?.length || 0,
+            sampleWord: work15Data?.words?.[0]
           });
-          const words: any[] = Array.isArray(work16Data?.words) ? work16Data.words : [];
+          const words: any[] = Array.isArray(work15Data?.words) ? work15Data.words : [];
           const half = Math.ceil(words.length / 2);
           const left = words.slice(0, half);
           const right = words.slice(half);

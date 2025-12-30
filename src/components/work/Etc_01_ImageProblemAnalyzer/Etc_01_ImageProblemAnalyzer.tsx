@@ -13,7 +13,7 @@ import PrintHeaderWork01 from '../../common/PrintHeaderWork01';
 import FileFormatSelector from '../shared/FileFormatSelector';
 import { FileFormat, generateAndUploadFile } from '../../../services/pdfService';
 import ReactDOM from 'react-dom/client';
-import './Work_15_ImageProblemAnalyzer.css';
+import './Etc_01_ImageProblemAnalyzer.css';
 import '../../../styles/PrintFormat.css';
 
 interface ProblemAnalysisResult {
@@ -33,7 +33,7 @@ const INPUT_MODES = [
 ] as const;
 type InputMode = typeof INPUT_MODES[number]['key'];
 
-const Work_15_ImageProblemAnalyzer: React.FC = () => {
+const Etc_01_ImageProblemAnalyzer: React.FC = () => {
   const { currentUser, userData } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +51,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
   const [printMode, setPrintMode] = useState<'none' | 'problem' | 'answer'>('none');
   const [fileFormat, setFileFormat] = useState<FileFormat>('pdf');
 
-  // 포인트 관련 상태 (유형#15)
+  // 포인트 관련 상태 (ETC#01)
   const [showPointModal, setShowPointModal] = useState(false);
   const [pointsToDeduct, setPointsToDeduct] = useState(0);
   const [userCurrentPoints, setUserCurrentPoints] = useState(0);
@@ -510,15 +510,15 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
   // 인쇄(정답) 핸들러 - PDF/DOC 저장
   const handlePrintAnswer = async () => {
-    console.log('🖨️ [Work15] 인쇄(정답) 핸들러 시작');
+    console.log('🖨️ [Etc01] 인쇄(정답) 핸들러 시작');
     
     if (!analysisResult) {
-      console.error('❌ [Work15] analysisResult가 없습니다.');
+      console.error('❌ [Etc01] analysisResult가 없습니다.');
       alert('저장할 내용이 없습니다.');
       return;
     }
 
-    console.log('📋 [Work15] analysisResult 내용:', {
+    console.log('📋 [Etc01] analysisResult 내용:', {
       hasEnglishText: !!analysisResult.englishText,
       englishTextLength: analysisResult.englishText?.length || 0,
       englishTextPreview: analysisResult.englishText?.substring(0, 50) || '',
@@ -528,23 +528,23 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     });
 
     if (!currentUser?.uid) {
-      console.error('❌ [Work15] currentUser.uid가 없습니다.');
+      console.error('❌ [Etc01] currentUser.uid가 없습니다.');
       alert('로그인이 필요합니다.');
       return;
     }
 
-    console.log('✅ [Work15] 기본 검증 완료, 인쇄 프로세스 시작');
+    console.log('✅ [Etc01] 기본 검증 완료, 인쇄 프로세스 시작');
     
     // 기존 스타일 제거
-    const existingStyle = document.getElementById('print-style-work15-answer');
+    const existingStyle = document.getElementById('print-style-etc01-answer');
     if (existingStyle) {
-      console.log('🗑️ [Work15] 기존 스타일 제거');
+      console.log('🗑️ [Etc01] 기존 스타일 제거');
       existingStyle.remove();
     }
     
     // A4 세로 페이지 스타일 동적 추가 (디버깅용 색상별 테두리 포함)
     const style = document.createElement('style');
-    style.id = 'print-style-work15-answer';
+    style.id = 'print-style-etc01-answer';
     style.textContent = `
       @page {
         margin: 0;
@@ -558,14 +558,14 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           height: 29.7cm !important;
           overflow: visible !important;
         }
-        body > *:not(#print-root-work15-answer) {
+        body > *:not(#print-root-etc01-answer) {
           display: none !important;
         }
         #root {
           display: none !important;
         }
         /* 최상위 컨테이너 */
-        #print-root-work15-answer {
+        #print-root-etc01-answer {
           display: block !important;
           position: relative !important;
           left: 0 !important;
@@ -581,14 +581,14 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           box-sizing: border-box !important;
           overflow: hidden !important;
         }
-        #print-root-work15-answer * {
+        #print-root-etc01-answer * {
           visibility: visible !important;
           opacity: 1 !important;
           max-width: 100% !important;
           max-height: 100% !important;
         }
         /* a4-page-template - A4 페이지 전체 */
-        #print-root-work15-answer .a4-page-template {
+        #print-root-etc01-answer .a4-page-template {
           display: block !important;
           visibility: visible !important;
           opacity: 1 !important;
@@ -604,7 +604,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           overflow: hidden !important;
         }
         /* a4-page-header - 헤더 영역 */
-        #print-root-work15-answer .a4-page-header {
+        #print-root-etc01-answer .a4-page-header {
           display: block !important;
           visibility: visible !important;
           opacity: 1 !important;
@@ -618,16 +618,16 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           overflow: hidden !important;
         }
         /* print-header-work01 하위 모든 border 제거 */
-        #print-root-work15-answer .print-header-work01 {
+        #print-root-etc01-answer .print-header-work01 {
           border: none !important;
           border-bottom: none !important;
         }
-        #print-root-work15-answer .print-header-text-work01 {
+        #print-root-etc01-answer .print-header-text-work01 {
           border: none !important;
           border-bottom: none !important;
         }
         /* a4-page-content - 본문 영역 - 상단 패딩 50% 감소 */
-        #print-root-work15-answer .a4-page-content {
+        #print-root-etc01-answer .a4-page-content {
           display: block !important;
           visibility: visible !important;
           opacity: 1 !important;
@@ -643,12 +643,12 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           overflow: hidden !important;
         }
         /* problem-instruction - 문제 제목 - 상단 여백 제거 */
-        #print-root-work15-answer .problem-instruction {
+        #print-root-etc01-answer .problem-instruction {
           margin-top: 0 !important;
           box-sizing: border-box !important;
         }
         /* print-content-section - 영어 본문, 한글 해석 섹션 */
-        #print-root-work15-answer .print-content-section {
+        #print-root-etc01-answer .print-content-section {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
@@ -657,20 +657,20 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           overflow: hidden !important;
         }
         /* print-divider - 구분선 */
-        #print-root-work15-answer .print-divider {
+        #print-root-etc01-answer .print-divider {
           box-sizing: border-box !important;
         }
         /* print-section-title - 섹션 제목 */
-        #print-root-work15-answer .print-section-title {
+        #print-root-etc01-answer .print-section-title {
           box-sizing: border-box !important;
         }
         /* print-text-content - 텍스트 내용 */
-        #print-root-work15-answer .print-text-content {
+        #print-root-etc01-answer .print-text-content {
           box-sizing: border-box !important;
         }
         /* 모든 하위 요소도 A4 크기 제한 */
-        #print-root-work15-answer .print-section-title,
-        #print-root-work15-answer .print-text-content {
+        #print-root-etc01-answer .print-section-title,
+        #print-root-etc01-answer .print-text-content {
           max-width: 100% !important;
           word-wrap: break-word !important;
           overflow-wrap: break-word !important;
@@ -678,7 +678,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
       }
       @media screen {
         /* 화면에서는 인쇄용 컨테이너 완전히 숨기기 */
-        #print-root-work15-answer {
+        #print-root-etc01-answer {
           display: none !important;
           visibility: hidden !important;
           position: absolute !important;
@@ -692,12 +692,12 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           box-sizing: border-box !important;
           overflow: hidden !important;
         }
-        #print-root-work15-answer * {
+        #print-root-etc01-answer * {
           max-width: 100% !important;
           max-height: 100% !important;
         }
         /* a4-page-template - A4 페이지 전체 */
-        #print-root-work15-answer .a4-page-template {
+        #print-root-etc01-answer .a4-page-template {
           width: 100% !important;
           max-width: 21cm !important;
           height: auto !important;
@@ -706,7 +706,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           overflow: hidden !important;
         }
         /* a4-page-header - 헤더 영역 */
-        #print-root-work15-answer .a4-page-header {
+        #print-root-etc01-answer .a4-page-header {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
@@ -717,16 +717,16 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           overflow: hidden !important;
         }
         /* print-header-work01 하위 모든 border 제거 */
-        #print-root-work15-answer .print-header-work01 {
+        #print-root-etc01-answer .print-header-work01 {
           border: none !important;
           border-bottom: none !important;
         }
-        #print-root-work15-answer .print-header-text-work01 {
+        #print-root-etc01-answer .print-header-text-work01 {
           border: none !important;
           border-bottom: none !important;
         }
         /* a4-page-content - 본문 영역 - 상단 패딩 50% 감소 */
-        #print-root-work15-answer .a4-page-content {
+        #print-root-etc01-answer .a4-page-content {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
@@ -739,12 +739,12 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           overflow: hidden !important;
         }
         /* problem-instruction - 문제 제목 - 상단 여백 제거 */
-        #print-root-work15-answer .problem-instruction {
+        #print-root-etc01-answer .problem-instruction {
           margin-top: 0 !important;
           box-sizing: border-box !important;
         }
         /* print-content-section - 영어 본문, 한글 해석 섹션 */
-        #print-root-work15-answer .print-content-section {
+        #print-root-etc01-answer .print-content-section {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
@@ -753,21 +753,21 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           overflow: hidden !important;
         }
         /* print-divider - 구분선 */
-        #print-root-work15-answer .print-divider {
+        #print-root-etc01-answer .print-divider {
           box-sizing: border-box !important;
         }
         /* print-section-title - 섹션 제목 */
-        #print-root-work15-answer .print-section-title {
+        #print-root-etc01-answer .print-section-title {
           box-sizing: border-box !important;
         }
         /* print-text-content - 텍스트 내용 */
-        #print-root-work15-answer .print-text-content {
+        #print-root-etc01-answer .print-text-content {
           box-sizing: border-box !important;
         }
         /* 모든 하위 요소도 A4 크기 제한 */
-        #print-root-work15-answer .problem-instruction,
-        #print-root-work15-answer .print-section-title,
-        #print-root-work15-answer .print-text-content {
+        #print-root-etc01-answer .problem-instruction,
+        #print-root-etc01-answer .print-section-title,
+        #print-root-etc01-answer .print-text-content {
           max-width: 100% !important;
           box-sizing: border-box !important;
           word-wrap: break-word !important;
@@ -776,11 +776,11 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
       }
     `;
     document.head.appendChild(style);
-    console.log('✅ [Work15] CSS 스타일 추가 완료');
+    console.log('✅ [Etc01] CSS 스타일 추가 완료');
     
     // 인쇄용 컨테이너 생성 (화면 밖에 배치하여 보이지 않게)
     const printContainer = document.createElement('div');
-    printContainer.id = 'print-root-work15-answer';
+    printContainer.id = 'print-root-etc01-answer';
     printContainer.style.position = 'absolute';
     printContainer.style.left = '-9999px';
     printContainer.style.top = '0';
@@ -790,7 +790,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     // 화면에서는 보이지 않게, 인쇄 시에만 보이게
     printContainer.style.visibility = 'hidden';
     document.body.appendChild(printContainer);
-    console.log('✅ [Work15] 인쇄 컨테이너 생성 및 DOM 추가 완료 (화면 밖 배치):', {
+    console.log('✅ [Etc01] 인쇄 컨테이너 생성 및 DOM 추가 완료 (화면 밖 배치):', {
       containerId: printContainer.id,
       containerPosition: printContainer.style.position,
       containerLeft: printContainer.style.left,
@@ -801,9 +801,9 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     });
 
     // 원래 화면은 그대로 유지 (숨기지 않음)
-    console.log('✅ [Work15] 원래 문제 생성 결과 페이지 유지');
+    console.log('✅ [Etc01] 원래 문제 생성 결과 페이지 유지');
 
-    console.log('🔄 [Work15] React 렌더링 시작...');
+    console.log('🔄 [Etc01] React 렌더링 시작...');
     // React 18 방식으로 렌더링 - 중간 컨테이너 제거하고 직접 배치
     const root = ReactDOM.createRoot(printContainer);
     root.render(
@@ -827,7 +827,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
             width: '100%'
           }}>
             <span>영어 본문 추출 결과 및 한글해석</span>
-            <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#15</span>
+            <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>ETC#01</span>
           </div>
           
           {/* 영어 본문 컨테이너 */}
@@ -890,15 +890,15 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
     // 렌더링 완료 대기 및 파일 생성
     const waitForRender = async (maxAttempts = 10): Promise<HTMLElement | null> => {
-      console.log(`⏳ [Work15] 렌더링 완료 대기 시작 (최대 ${maxAttempts}회 시도)`);
+      console.log(`⏳ [Etc01] 렌더링 완료 대기 시작 (최대 ${maxAttempts}회 시도)`);
       for (let i = 0; i < maxAttempts; i++) {
-        const element = document.getElementById('print-root-work15-answer');
+        const element = document.getElementById('print-root-etc01-answer');
         if (element) {
           const templateElement = element.querySelector('.a4-page-template');
           const hasContent = templateElement && templateElement.children.length > 0;
           
           if (i === 0 || i === maxAttempts - 1) {
-            console.log(`🔍 [Work15] 렌더링 확인 (시도 ${i + 1}/${maxAttempts}):`, {
+            console.log(`🔍 [Etc01] 렌더링 확인 (시도 ${i + 1}/${maxAttempts}):`, {
               hasElement: !!element,
               hasTemplate: !!templateElement,
               templateChildrenCount: templateElement?.children.length || 0,
@@ -913,20 +913,20 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           }
           
           if (hasContent) {
-            console.log(`✅ [Work15] 렌더링 완료 확인 (시도 ${i + 1}/${maxAttempts})`);
+            console.log(`✅ [Etc01] 렌더링 완료 확인 (시도 ${i + 1}/${maxAttempts})`);
             return element;
           }
         } else {
           if (i === 0 || i === maxAttempts - 1) {
-            console.warn(`⚠️ [Work15] 인쇄 컨테이너를 찾을 수 없음 (시도 ${i + 1}/${maxAttempts})`);
+            console.warn(`⚠️ [Etc01] 인쇄 컨테이너를 찾을 수 없음 (시도 ${i + 1}/${maxAttempts})`);
           }
         }
         await new Promise(resolve => setTimeout(resolve, 50));
       }
-      console.warn('⚠️ [Work15] 렌더링 완료 확인 실패, 최대 시도 횟수 초과');
-      const finalElement = document.getElementById('print-root-work15-answer');
+      console.warn('⚠️ [Etc01] 렌더링 완료 확인 실패, 최대 시도 횟수 초과');
+      const finalElement = document.getElementById('print-root-etc01-answer');
       if (finalElement) {
-        console.log('📊 [Work15] 최종 요소 상태:', {
+        console.log('📊 [Etc01] 최종 요소 상태:', {
           innerHTML: finalElement.innerHTML.substring(0, 500),
           children: Array.from(finalElement.children).map(c => ({
             tagName: c.tagName,
@@ -939,18 +939,18 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
     };
 
     setTimeout(async () => {
-      console.log('⏰ [Work15] setTimeout 콜백 실행 시작');
+      console.log('⏰ [Etc01] setTimeout 콜백 실행 시작');
       try {
         const element = await waitForRender();
         if (!element) {
-          console.error('❌ [Work15] 인쇄 컨테이너를 찾을 수 없습니다.');
+          console.error('❌ [Etc01] 인쇄 컨테이너를 찾을 수 없습니다.');
           // 정리
           root.unmount();
           if (document.body.contains(printContainer)) {
             document.body.removeChild(printContainer);
           }
           // appRoot는 숨기지 않았으므로 복원 불필요
-          const styleElement = document.getElementById('print-style-work15-answer');
+          const styleElement = document.getElementById('print-style-etc01-answer');
           if (styleElement) {
             styleElement.remove();
           }
@@ -964,7 +964,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
         const englishTextElement = element.querySelector('.print-text-content:not(.korean)');
         const koreanTextElement = element.querySelector('.print-text-content.korean');
         
-        console.log('📊 [Work15] DOM 요소 상세 확인:', {
+        console.log('📊 [Etc01] DOM 요소 상세 확인:', {
           elementId: element.id,
           elementRect: element.getBoundingClientRect(),
           hasTemplate: !!templateElement,
@@ -996,8 +996,8 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
         });
 
         if (!templateElement) {
-          console.error('❌ [Work15] A4 페이지 템플릿을 찾을 수 없습니다.');
-          console.log('🔍 [Work15] 전체 DOM 구조:', {
+          console.error('❌ [Etc01] A4 페이지 템플릿을 찾을 수 없습니다.');
+          console.log('🔍 [Etc01] 전체 DOM 구조:', {
             elementHTML: element.innerHTML.substring(0, 1000),
             allClasses: Array.from(element.querySelectorAll('*')).map(el => el.className).filter(Boolean)
           });
@@ -1007,37 +1007,37 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
             document.body.removeChild(printContainer);
           }
           // appRoot는 숨기지 않았으므로 복원 불필요
-          const styleElement = document.getElementById('print-style-work15-answer');
+          const styleElement = document.getElementById('print-style-etc01-answer');
           if (styleElement) {
             styleElement.remove();
           }
           return;
         }
 
-        console.log('📄 [Work15] 파일 생성 시작...');
+        console.log('📄 [Etc01] 파일 생성 시작...');
         // currentUser.uid 사용
         const result = await generateAndUploadFile(
           element as HTMLElement,
           currentUser.uid,
-          `work15_answer_${Date.now()}`,
-          '유형#15_정답',
+          `etc01_answer_${Date.now()}`,
+          'ETC#01_정답',
           { isAnswerMode: true, orientation: 'portrait', fileFormat }
         );
         
-        console.log('✅ [Work15] 파일 생성 완료:', result);
+        console.log('✅ [Etc01] 파일 생성 완료:', result);
         
         // 문제 내역에 파일 URL 저장
         const history = await getQuizHistory(currentUser.uid, { limit: 10 });
-        const work15History = history.find(h => h.workTypeId === WORK_TYPE_ID);
+        const etc01History = history.find(h => h.workTypeId === WORK_TYPE_ID);
         
-        if (work15History) {
-          await updateQuizHistoryFile(work15History.id, result.url, result.fileName, 'answer');
+        if (etc01History) {
+          await updateQuizHistoryFile(etc01History.id, result.url, result.fileName, 'answer');
           const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-          console.log(`📁 [Work15] 유형#15 정답 ${formatName} 저장 완료:`, result.fileName);
+          console.log(`📁 [Etc01] ETC#01 정답 ${formatName} 저장 완료:`, result.fileName);
         }
       } catch (error) {
-        console.error(`❌ [Work15] 파일 저장 실패 (${fileFormat}):`, error);
-        console.error('❌ [Work15] 에러 상세:', {
+        console.error(`❌ [Etc01] 파일 저장 실패 (${fileFormat}):`, error);
+        console.error('❌ [Etc01] 에러 상세:', {
           errorMessage: error instanceof Error ? error.message : String(error),
           errorStack: error instanceof Error ? error.stack : undefined,
           errorName: error instanceof Error ? error.name : undefined
@@ -1047,12 +1047,12 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
       // PDF인 경우에만 브라우저 인쇄
       if (fileFormat === 'pdf') {
-        console.log('🖨️ [Work15] PDF 인쇄 시작...');
+        console.log('🖨️ [Etc01] PDF 인쇄 시작...');
         
         // 인쇄 전 최종 상태 확인
-        const printElement = document.getElementById('print-root-work15-answer');
+        const printElement = document.getElementById('print-root-etc01-answer');
         const templateEl = printElement?.querySelector('.a4-page-template');
-        console.log('📊 [Work15] 인쇄 전 최종 상태 확인:', {
+        console.log('📊 [Etc01] 인쇄 전 최종 상태 확인:', {
           containerExists: !!printElement,
           containerVisible: printElement?.offsetParent !== null,
           containerDisplay: printElement ? window.getComputedStyle(printElement).display : 'none',
@@ -1092,74 +1092,74 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
             (templateEl as HTMLElement).style.opacity = '1';
           }
           
-          console.log('✅ [Work15] 인쇄 컨테이너 스타일 강제 적용 완료');
+          console.log('✅ [Etc01] 인쇄 컨테이너 스타일 강제 적용 완료');
         }
         
         // 인쇄 전에 최소한의 지연을 두어 렌더링 완료 보장
         setTimeout(() => {
-          console.log('🖨️ [Work15] window.print() 호출');
+          console.log('🖨️ [Etc01] window.print() 호출');
           window.print();
-          console.log('✅ [Work15] window.print() 호출 완료');
+          console.log('✅ [Etc01] window.print() 호출 완료');
           
           // window.print() 호출 직후 즉시 컨테이너를 화면 밖으로 이동 (인쇄 미리보기에는 @media print CSS가 적용됨)
           if (printElement) {
             printElement.style.left = '-9999px';
             printElement.style.visibility = 'hidden';
             printElement.style.display = 'none';
-            console.log('✅ [Work15] 인쇄용 컨테이너를 즉시 화면 밖으로 이동 완료');
+            console.log('✅ [Etc01] 인쇄용 컨테이너를 즉시 화면 밖으로 이동 완료');
           }
         }, 100);
       }
       
       // 정리 (인쇄 다이얼로그가 닫힌 후)
       setTimeout(() => {
-        console.log('🧹 [Work15] 정리 작업 시작...');
+        console.log('🧹 [Etc01] 정리 작업 시작...');
         root.unmount();
         if (document.body.contains(printContainer)) {
           document.body.removeChild(printContainer);
-          console.log('✅ [Work15] 인쇄 컨테이너 제거 완료');
+          console.log('✅ [Etc01] 인쇄 컨테이너 제거 완료');
         }
         // appRoot는 숨기지 않았으므로 복원 불필요
-        const styleElement = document.getElementById('print-style-work15-answer');
+        const styleElement = document.getElementById('print-style-etc01-answer');
         if (styleElement && document.head.contains(styleElement)) {
           document.head.removeChild(styleElement);
-          console.log('✅ [Work15] 스타일 요소 제거 완료');
+          console.log('✅ [Etc01] 스타일 요소 제거 완료');
         }
-        console.log('✅ [Work15] 유형#15 정답 저장 완료');
+        console.log('✅ [Etc01] ETC#01 정답 저장 완료');
       }, fileFormat === 'pdf' ? 2000 : 100);
     }, 200);
     
-    console.log('✅ [Work15] handlePrintAnswer 함수 실행 완료 (비동기 작업 시작)');
+    console.log('✅ [Etc01] handlePrintAnswer 함수 실행 완료 (비동기 작업 시작)');
   };
 
   return (
-    <div className={`work-15-container${printMode !== 'none' ? ' print-mode-active' : ''}`} onPaste={handlePaste}>
-      <div className="work-15-header">
+    <div className={`etc-01-container${printMode !== 'none' ? ' print-mode-active' : ''}`} onPaste={handlePaste}>
+      <div className="etc-01-header">
         <h1>📦 본문 해석 및 추출</h1>
-        <p className="work-15-description">
+        <p className="etc-01-description">
           영어 문제 이미지를 업로드하면 AI가 문제를 분석하고 본문 해석을 제공합니다.
         </p>
       </div>
 
       {!analysisResult ? (
-        <div className="work-15-upload-section">
+        <div className="etc-01-upload-section">
           {/* 입력 방식 선택 */}
-          <div className="work-15-input-type-section">
+          <div className="etc-01-input-type-section">
             {INPUT_MODES.map((mode) => (
-              <div key={mode.key} className="work-15-input-mode-card">
-                <label className="work-15-input-mode-label">
-                  <div className="work-15-input-mode-header">
+              <div key={mode.key} className="etc-01-input-mode-card">
+                <label className="etc-01-input-mode-label">
+                  <div className="etc-01-input-mode-header">
                     <input
                       type="radio"
                       name="inputMode"
                       checked={inputMode === mode.key}
                       onChange={() => handleInputModeChange(mode.key)}
                     />
-                    <div className="work-15-input-mode-title">{mode.label}</div>
+                    <div className="etc-01-input-mode-title">{mode.label}</div>
                     {mode.key === 'capture' && (
                       <button
                         type="button"
-                        className="work-15-help-btn"
+                        className="etc-01-help-btn"
                         onClick={(e) => {
                           e.preventDefault();
                           setShowHelpModal(true);
@@ -1170,7 +1170,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
                       </button>
                     )}
                   </div>
-                  <div className="work-15-input-mode-description">{mode.description}</div>
+                  <div className="etc-01-input-mode-description">{mode.description}</div>
                 </label>
               </div>
             ))}
@@ -1178,16 +1178,16 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
           {/* 영어 본문 직접 붙여넣기 */}
           {inputMode === 'text' && (
-            <div className="work-15-text-input-area">
+            <div className="etc-01-text-input-area">
               <textarea
-                className="work-15-text-input"
+                className="etc-01-text-input"
                 placeholder="여기에 영어 본문을 붙여넣거나 직접 입력하세요..."
                 value={englishText}
                 onChange={(e) => setEnglishText(e.target.value)}
                 rows={12}
               />
               {englishText.trim() && (
-                <div className="work-15-text-input-info">
+                <div className="etc-01-text-input-info">
                   <p>✅ 영어 본문 입력 완료 ({englishText.trim().length}자)</p>
                 </div>
               )}
@@ -1198,7 +1198,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           {inputMode === 'capture' && (
             <div>
               <div
-                className={`work-15-paste-area${isPasteFocused ? ' paste-focused' : ''}${selectedFile ? ' paste-success' : ''}`}
+                className={`etc-01-paste-area${isPasteFocused ? ' paste-focused' : ''}${selectedFile ? ' paste-success' : ''}`}
                 tabIndex={0}
                 onClick={() => setIsPasteFocused(true)}
                 onFocus={() => setIsPasteFocused(true)}
@@ -1206,19 +1206,19 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
                 onPaste={handlePaste}
               >
                 {selectedFile ? (
-                  <div className="work-15-paste-success">
-                    <div className="work-15-paste-success-icon">✅</div>
-                    <div className="work-15-paste-success-text">이미지가 성공적으로 붙여졌습니다!</div>
-                    <div className="work-15-paste-file-info">
+                  <div className="etc-01-paste-success">
+                    <div className="etc-01-paste-success-icon">✅</div>
+                    <div className="etc-01-paste-success-text">이미지가 성공적으로 붙여졌습니다!</div>
+                    <div className="etc-01-paste-file-info">
                       <p>📁 {selectedFile.name}</p>
                       <p>📏 {(selectedFile.size / 1024 / 1024) < 1 
                         ? `${(selectedFile.size / 1024).toFixed(1)} KB`
                         : `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`}
                       </p>
                     </div>
-                    <div className="work-15-paste-success-actions">
+                    <div className="etc-01-paste-success-actions">
                       <button 
-                        className="work-15-change-btn"
+                        className="etc-01-change-btn"
                         onClick={(e) => {
                           e.stopPropagation();
                           startNewAnalysis();
@@ -1230,14 +1230,14 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="work-15-paste-icon">📋</div>
-                    <div className="work-15-paste-text">Ctrl+V로 캡처한 이미지를 붙여넣으세요</div>
-                    <div className="work-15-paste-desc">스크린샷이나 사진을 클립보드에 복사한 후 여기에 붙여넣기 하세요</div>
-                    <div className="work-15-paste-tip">
+                    <div className="etc-01-paste-icon">📋</div>
+                    <div className="etc-01-paste-text">Ctrl+V로 캡처한 이미지를 붙여넣으세요</div>
+                    <div className="etc-01-paste-desc">스크린샷이나 사진을 클립보드에 복사한 후 여기에 붙여넣기 하세요</div>
+                    <div className="etc-01-paste-tip">
                       💡 <b>팁:</b> 화면 캡처 후 Ctrl+V로 붙여넣기
                     </div>
                     {isAnalyzing && (
-                      <div className="work-15-processing">
+                      <div className="etc-01-processing">
                         AI 분석 처리 중...
                       </div>
                     )}
@@ -1249,10 +1249,10 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
           {/* 이미지 파일 첨부 (간단한 방식) */}
           {inputMode === 'image' && (
-            <div className="work-15-simple-upload">
-              <div className="work-15-simple-upload-content">
-                <div className="work-15-simple-upload-icon">📁</div>
-                <div className="work-15-simple-upload-text">
+            <div className="etc-01-simple-upload">
+              <div className="etc-01-simple-upload-content">
+                <div className="etc-01-simple-upload-icon">📁</div>
+                <div className="etc-01-simple-upload-text">
                   <h3>간단한 파일 선택</h3>
                   <p>클릭하여 이미지 파일을 선택하세요</p>
                 </div>
@@ -1264,11 +1264,11 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
                   id="fileInput"
                   style={{ display: 'none' }}
                 />
-                <label htmlFor="fileInput" className="work-15-simple-upload-btn">
+                <label htmlFor="fileInput" className="etc-01-simple-upload-btn">
                   파일 선택
                 </label>
                 {selectedFile && (
-                  <div className="work-15-simple-file-info">
+                  <div className="etc-01-simple-file-info">
                     <p>✅ {selectedFile.name}</p>
                     <p>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
@@ -1280,7 +1280,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           {/* 이미지 업로드 (고급 방식 - 드래그 앤 드롭 + 미리보기) */}
           {inputMode === 'upload' && (
             <div 
-              className="work-15-upload-area"
+              className="etc-01-upload-area"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onClick={() => fileInputRef.current?.click()}
@@ -1294,11 +1294,11 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
               />
               
               {previewUrl ? (
-                <div className="work-15-preview">
+                <div className="etc-01-preview">
                   <img src={previewUrl} alt="업로드된 이미지" />
-                  <div className="work-15-preview-overlay">
+                  <div className="etc-01-preview-overlay">
                     <p>이미지가 선택되었습니다</p>
-                    <div className="work-15-preview-info">
+                    <div className="etc-01-preview-info">
                       <p>📁 {selectedFile?.name}</p>
                       <p>📏 {(selectedFile?.size || 0) / 1024 / 1024 < 1 
                         ? `${((selectedFile?.size || 0) / 1024).toFixed(1)} KB`
@@ -1306,7 +1306,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
                       </p>
                     </div>
                     <button 
-                      className="work-15-change-btn"
+                      className="etc-01-change-btn"
                       onClick={(e) => {
                         e.stopPropagation();
                         startNewAnalysis();
@@ -1317,25 +1317,25 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="work-15-upload-placeholder">
-                  <div className="work-15-upload-icon">📷</div>
+                <div className="etc-01-upload-placeholder">
+                  <div className="etc-01-upload-icon">📷</div>
                   <h3>드래그 앤 드롭으로 이미지 업로드</h3>
                   <p>이미지를 여기로 드래그하거나 클릭하여 파일을 선택하세요</p>
-                  <div className="work-15-upload-features">
-                    <div className="work-15-feature-item">
-                      <span className="work-15-feature-icon">🎯</span>
+                  <div className="etc-01-upload-features">
+                    <div className="etc-01-feature-item">
+                      <span className="etc-01-feature-icon">🎯</span>
                       <span>드래그 앤 드롭 지원</span>
                     </div>
-                    <div className="work-15-feature-item">
-                      <span className="work-15-feature-icon">👁️</span>
+                    <div className="etc-01-feature-item">
+                      <span className="etc-01-feature-icon">👁️</span>
                       <span>실시간 미리보기</span>
                     </div>
-                    <div className="work-15-feature-item">
-                      <span className="work-15-feature-icon">📊</span>
+                    <div className="etc-01-feature-item">
+                      <span className="etc-01-feature-icon">📊</span>
                       <span>파일 정보 표시</span>
                     </div>
                   </div>
-                  <div className="work-15-upload-info">
+                  <div className="etc-01-upload-info">
                     <p>• 지원 형식: JPG, PNG, GIF</p>
                     <p>• 최대 크기: 10MB</p>
                     <p>• 영어 문제 이미지 권장</p>
@@ -1347,16 +1347,16 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
           {/* 에러 메시지 */}
           {error && (
-            <div className="work-15-error">
+            <div className="etc-01-error">
               <p>❌ {error}</p>
             </div>
           )}
 
           {/* 분석 버튼 */}
           {selectedFile && (
-            <div className="work-15-analyze-section">
+            <div className="etc-01-analyze-section">
               <button 
-                className="work-15-analyze-btn"
+                className="etc-01-analyze-btn"
                 onClick={() => setShowPointModal(true)}
                 disabled={isAnalyzing}
               >
@@ -1364,7 +1364,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
               </button>
               
               {progress && (
-                <div className="work-15-progress">
+                <div className="etc-01-progress">
                   <p>{progress}</p>
                 </div>
               )}
@@ -1373,9 +1373,9 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
 
           {/* 텍스트 해석 버튼 */}
           {inputMode === 'text' && englishText.trim() && (
-            <div className="work-15-analyze-section">
+            <div className="etc-01-analyze-section">
               <button 
-                className="work-15-analyze-btn"
+                className="etc-01-analyze-btn"
                 onClick={() => setShowPointModal(true)}
                 disabled={isAnalyzing}
               >
@@ -1383,7 +1383,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
               </button>
               
               {progress && (
-                <div className="work-15-progress">
+                <div className="etc-01-progress">
                   <p>{progress}</p>
                 </div>
               )}
@@ -1391,19 +1391,19 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="work-15-result-section">
+        <div className="etc-01-result-section">
           {/* 분석 결과 */}
-          <div className="work-15-result-header">
+          <div className="etc-01-result-header">
             <h2>📋 분석 결과</h2>
-            <div className="work-15-result-actions">
+            <div className="etc-01-result-actions">
               <button 
-                className="work-15-new-analysis-btn"
+                className="etc-01-new-analysis-btn"
                 onClick={startNewAnalysis}
               >
                 🔄 새 분석
               </button>
               <button 
-                className="work-15-action-btn primary"
+                className="etc-01-action-btn primary"
                 onClick={goToQuizList}
               >
                 문제생성목록
@@ -1458,17 +1458,17 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
           </div>
 
           {/* 영어 본문 */}
-          <div className="work-15-text-section">
+          <div className="etc-01-text-section">
             <h3>📖 영어 본문</h3>
-            <div className="work-15-text-content">
+            <div className="etc-01-text-content">
               {analysisResult.englishText}
             </div>
           </div>
 
           {/* 한글 해석 */}
-          <div className="work-15-text-section">
+          <div className="etc-01-text-section">
             <h3>🇰🇷 한글 해석</h3>
-            <div className="work-15-text-content korean">
+            <div className="etc-01-text-content korean">
               {analysisResult.koreanTranslation}
             </div>
           </div>
@@ -1502,7 +1502,7 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
                   width: '100%'
                 }}>
                   <span>영어 본문 추출 결과 및 한글해석</span>
-                  <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#15</span>
+                  <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>ETC#01</span>
                 </div>
                 
                 <div className="print-content-section">
@@ -1594,4 +1594,4 @@ const Work_15_ImageProblemAnalyzer: React.FC = () => {
   );
 };
 
-export default Work_15_ImageProblemAnalyzer;
+export default Etc_01_ImageProblemAnalyzer;

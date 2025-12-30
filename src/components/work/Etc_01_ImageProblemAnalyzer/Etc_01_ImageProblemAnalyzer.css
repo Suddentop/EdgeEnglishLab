@@ -1,13 +1,13 @@
-/* Work_15_ImageProblemAnalyzer.css */
+/* Etc_01_ImageProblemAnalyzer.css */
 /* 부모 .App-main의 max-width 제약을 벗어나기 위한 트릭 */
-.App-main:has(.work-15-container) {
-  max-width: 100% !important; /* Type#15 페이지에서는 부모 제약 해제 */
+.App-main:has(.etc-01-container) {
+  max-width: 100% !important; /* ETC#01 페이지에서는 부모 제약 해제 */
   padding-left: 0 !important;
   padding-right: 0 !important;
   margin-top: 32.5px !important; /* 네비게이션바와 제목 사이 간격 50% 감소 (65px → 32.5px) */
 }
 
-.work-15-container {
+.etc-01-container {
   max-width: 1800px; /* 파란색 입력상자 가로폭에 맞춰 증가 (1200px → 1800px, 50% 증가) */
   margin: 0 auto; /* 상단 마진 제거 (0 auto = 상단 0, 좌우 auto) */
   padding: 10px 20px;
@@ -16,7 +16,7 @@
   width: 100%; /* 부모 제약 해제 후 전체 너비 사용 */
 }
 
-.work-15-header {
+.etc-01-header {
   text-align: center;
   margin-bottom: 40px;
   padding: 20px;
@@ -24,14 +24,14 @@
   margin-top: 0; /* 상단 마진 제거 (부모 컨테이너에서 조정) */
 }
 
-.work-15-header h1 {
+.etc-01-header h1 {
   color: #1976d2;
   font-size: 2.5rem;
   margin-bottom: 10px;
   font-weight: 700;
 }
 
-.work-15-description {
+.etc-01-description {
   color: #666;
   font-size: 1.1rem;
   line-height: 1.6;
@@ -40,7 +40,7 @@
 }
 
 /* 입력 방식 선택 섹션 */
-.work-15-input-type-section {
+.etc-01-input-type-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2x2 배치 */
   gap: 20px;
@@ -52,25 +52,25 @@
   box-sizing: border-box;
 }
 
-.work-15-input-mode-card {
+.etc-01-input-mode-card {
   border: 2px solid #e0e0e0;
   border-radius: 12px;
   transition: all 0.3s ease;
   overflow: hidden;
 }
 
-.work-15-input-mode-card:hover {
+.etc-01-input-mode-card:hover {
   border-color: #1976d2;
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
 }
 
-.work-15-input-mode-card:has(input:checked) {
+.etc-01-input-mode-card:has(input:checked) {
   border-color: #1976d2;
   background: #f0f7ff;
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
 }
 
-.work-15-input-mode-label {
+.etc-01-input-mode-label {
   display: flex;
   flex-direction: column;
   cursor: pointer;
@@ -79,30 +79,30 @@
   gap: 8px;
 }
 
-.work-15-input-mode-header {
+.etc-01-input-mode-header {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.work-15-input-mode-header input[type="radio"] {
+.etc-01-input-mode-header input[type="radio"] {
   margin: 0;
   transform: scale(1.3);
 }
 
-.work-15-input-mode-title {
+.etc-01-input-mode-title {
   font-size: 1.1rem;
   font-weight: 600;
   color: #333;
 }
 
-.work-15-input-mode-description {
+.etc-01-input-mode-description {
   font-size: 0.9rem;
   color: #666;
   line-height: 1.4;
 }
 
-.work-15-help-btn {
+.etc-01-help-btn {
   background: #1976d2;
   color: white;
   border: none;
@@ -115,11 +115,11 @@
   margin-left: auto;
 }
 
-.work-15-help-btn:hover {
+.etc-01-help-btn:hover {
   background: #1565c0;
 }
 
-.work-15-help-btn-inline {
+.etc-01-help-btn-inline {
   background: #1976d2;
   color: white;
   border: none;
@@ -136,12 +136,12 @@
   vertical-align: middle;
 }
 
-.work-15-help-btn-inline:hover {
+.etc-01-help-btn-inline:hover {
   background: #1565c0;
 }
 
 /* 영어 본문 직접 붙여넣기 */
-.work-15-text-input-area {
+.etc-01-text-input-area {
   max-width: 70%; /* 가로폭 30% 감소 (100% → 70%) */
   width: 70%;
   margin: 0 auto;
@@ -149,7 +149,7 @@
   box-sizing: border-box;
 }
 
-.work-15-text-input {
+.etc-01-text-input {
   width: 100%;
   min-height: 200px;
   padding: 20px;
@@ -162,13 +162,13 @@
   transition: all 0.3s ease;
 }
 
-.work-15-text-input:focus {
+.etc-01-text-input:focus {
   outline: none;
   border-color: #1976d2;
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
 }
 
-.work-15-text-input-info {
+.etc-01-text-input-info {
   margin-top: 15px;
   padding: 12px;
   background: #e8f5e8;
@@ -177,21 +177,21 @@
   text-align: center;
 }
 
-.work-15-text-input-info p {
+.etc-01-text-input-info p {
   margin: 0;
   color: #2e7d32;
   font-weight: 500;
 }
 
 /* 간단한 업로드 스타일 */
-.work-15-simple-upload {
+.etc-01-simple-upload {
   max-width: 900px; /* 텍스트 입력 상자와 동일한 가로폭 */
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
 }
 
-.work-15-simple-upload-content {
+.etc-01-simple-upload-content {
   background: #f8f9fa;
   border-radius: 12px;
   padding: 40px;
@@ -199,30 +199,30 @@
   transition: all 0.3s ease;
 }
 
-.work-15-simple-upload-content:hover {
+.etc-01-simple-upload-content:hover {
   border-color: #1976d2;
   background: #f0f7ff;
 }
 
-.work-15-simple-upload-icon {
+.etc-01-simple-upload-icon {
   font-size: 3rem;
   margin-bottom: 20px;
 }
 
-.work-15-simple-upload-text h3 {
+.etc-01-simple-upload-text h3 {
   color: #333;
   font-size: 1.3rem;
   margin-bottom: 10px;
   font-weight: 600;
 }
 
-.work-15-simple-upload-text p {
+.etc-01-simple-upload-text p {
   color: #666;
   font-size: 1rem;
   margin-bottom: 25px;
 }
 
-.work-15-simple-upload-btn {
+.etc-01-simple-upload-btn {
   background: #1976d2;
   color: white;
   border: none;
@@ -235,13 +235,13 @@
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
 }
 
-.work-15-simple-upload-btn:hover {
+.etc-01-simple-upload-btn:hover {
   background: #1565c0;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
 }
 
-.work-15-simple-file-info {
+.etc-01-simple-file-info {
   margin-top: 20px;
   padding: 15px;
   background: #e8f5e8;
@@ -249,14 +249,14 @@
   border-left: 4px solid #4caf50;
 }
 
-.work-15-simple-file-info p {
+.etc-01-simple-file-info p {
   margin: 5px 0;
   color: #2e7d32;
   font-weight: 500;
 }
 
 /* 캡처화면 붙여넣기 영역 */
-.work-15-paste-area {
+.etc-01-paste-area {
   width: 100%;
   max-width: 900px; /* 텍스트 입력 상자와 동일한 가로폭 */
   min-height: 200px;
@@ -274,37 +274,37 @@
   text-align: center;
 }
 
-.work-15-paste-area:hover,
-.work-15-paste-area.paste-focused {
+.etc-01-paste-area:hover,
+.etc-01-paste-area.paste-focused {
   border-color: #1976d2;
   background: #f0f7ff;
 }
 
-.work-15-paste-area.paste-success {
+.etc-01-paste-area.paste-success {
   border-color: #4caf50;
   background: #e8f5e8;
   border-style: solid;
 }
 
-.work-15-paste-icon {
+.etc-01-paste-icon {
   font-size: 3rem;
   margin-bottom: 15px;
 }
 
-.work-15-paste-text {
+.etc-01-paste-text {
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
   margin-bottom: 10px;
 }
 
-.work-15-paste-desc {
+.etc-01-paste-desc {
   color: #666;
   font-size: 1rem;
   margin-bottom: 15px;
 }
 
-.work-15-paste-tip {
+.etc-01-paste-tip {
   font-size: 0.9rem;
   color: #666;
   background: #fff;
@@ -313,7 +313,7 @@
   border: 1px solid #eee;
 }
 
-.work-15-processing {
+.etc-01-processing {
   color: #1976d2;
   font-weight: 600;
   margin-top: 15px;
@@ -321,14 +321,14 @@
 }
 
 /* 붙여넣기 성공 상태 */
-.work-15-paste-success {
+.etc-01-paste-success {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 15px;
 }
 
-.work-15-paste-success-icon {
+.etc-01-paste-success-icon {
   font-size: 3rem;
   animation: successPulse 0.6s ease-in-out;
 }
@@ -339,14 +339,14 @@
   100% { transform: scale(1); }
 }
 
-.work-15-paste-success-text {
+.etc-01-paste-success-text {
   font-size: 1.2rem;
   font-weight: 600;
   color: #2e7d32;
   margin-bottom: 10px;
 }
 
-.work-15-paste-file-info {
+.etc-01-paste-file-info {
   background: rgba(255, 255, 255, 0.9);
   padding: 15px;
   border-radius: 8px;
@@ -354,17 +354,17 @@
   min-width: 200px;
 }
 
-.work-15-paste-file-info p {
+.etc-01-paste-file-info p {
   margin: 5px 0;
   color: #2e7d32;
   font-weight: 500;
 }
 
-.work-15-paste-success-actions {
+.etc-01-paste-success-actions {
   margin-top: 10px;
 }
 
-.work-15-paste-success-actions .work-15-change-btn {
+.etc-01-paste-success-actions .etc-01-change-btn {
   background: #4caf50;
   color: white;
   border: none;
@@ -376,13 +376,13 @@
   transition: all 0.3s ease;
 }
 
-.work-15-paste-success-actions .work-15-change-btn:hover {
+.etc-01-paste-success-actions .etc-01-change-btn:hover {
   background: #45a049;
   transform: translateY(-2px);
 }
 
 /* 파일 업로드 행 */
-.work-15-file-upload-row {
+.etc-01-file-upload-row {
   display: flex;
   align-items: center;
   gap: 15px;
@@ -391,7 +391,7 @@
   max-width: 600px;
 }
 
-.work-15-file-upload-btn {
+.etc-01-file-upload-btn {
   background: #1976d2;
   color: white;
   border: none;
@@ -404,13 +404,13 @@
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
 }
 
-.work-15-file-upload-btn:hover {
+.etc-01-file-upload-btn:hover {
   background: #1565c0;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
 }
 
-.work-15-file-upload-status {
+.etc-01-file-upload-status {
   color: #666;
   font-size: 0.9rem;
   padding: 8px 12px;
@@ -422,7 +422,7 @@
 }
 
 /* 업로드 섹션 */
-.work-15-upload-section {
+.etc-01-upload-section {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -433,7 +433,7 @@
   max-width: 100%; /* 파란색 입력상자 가로폭에 맞춰 전체 너비 사용 */
 }
 
-.work-15-upload-area {
+.etc-01-upload-area {
   width: 100%;
   max-width: 900px; /* 텍스트 입력 상자와 동일한 가로폭 */
   min-height: 400px;
@@ -447,35 +447,35 @@
   background: #fafafa;
 }
 
-.work-15-upload-area:hover {
+.etc-01-upload-area:hover {
   border-color: #1976d2;
   background: #f0f7ff;
 }
 
-.work-15-upload-placeholder {
+.etc-01-upload-placeholder {
   text-align: center;
   padding: 40px;
 }
 
-.work-15-upload-icon {
+.etc-01-upload-icon {
   font-size: 4rem;
   margin-bottom: 20px;
 }
 
-.work-15-upload-placeholder h3 {
+.etc-01-upload-placeholder h3 {
   color: #333;
   font-size: 1.5rem;
   margin-bottom: 10px;
   font-weight: 600;
 }
 
-.work-15-upload-placeholder p {
+.etc-01-upload-placeholder p {
   color: #666;
   font-size: 1rem;
   margin-bottom: 20px;
 }
 
-.work-15-upload-info {
+.etc-01-upload-info {
   text-align: left;
   background: #fff;
   padding: 20px;
@@ -483,14 +483,14 @@
   border: 1px solid #eee;
 }
 
-.work-15-upload-info p {
+.etc-01-upload-info p {
   margin: 5px 0;
   font-size: 0.9rem;
   color: #555;
 }
 
 /* 고급 업로드 기능 */
-.work-15-upload-features {
+.etc-01-upload-features {
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -498,7 +498,7 @@
   flex-wrap: wrap;
 }
 
-.work-15-feature-item {
+.etc-01-feature-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -510,11 +510,11 @@
   color: #555;
 }
 
-.work-15-feature-icon {
+.etc-01-feature-icon {
   font-size: 1.1rem;
 }
 
-.work-15-preview-info {
+.etc-01-preview-info {
   margin: 10px 0;
   padding: 10px;
   background: rgba(255, 255, 255, 0.9);
@@ -522,13 +522,13 @@
   font-size: 0.9rem;
 }
 
-.work-15-preview-info p {
+.etc-01-preview-info p {
   margin: 3px 0;
   color: #333;
 }
 
 /* 미리보기 */
-.work-15-preview {
+.etc-01-preview {
   position: relative;
   width: 100%;
   height: 100%;
@@ -537,14 +537,14 @@
   justify-content: center;
 }
 
-.work-15-preview img {
+.etc-01-preview img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   border-radius: 8px;
 }
 
-.work-15-preview-overlay {
+.etc-01-preview-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -561,11 +561,11 @@
   border-radius: 8px;
 }
 
-.work-15-preview:hover .work-15-preview-overlay {
+.etc-01-preview:hover .etc-01-preview-overlay {
   opacity: 1;
 }
 
-.work-15-change-btn {
+.etc-01-change-btn {
   background: #1976d2;
   color: white;
   border: none;
@@ -577,18 +577,18 @@
   transition: background 0.3s ease;
 }
 
-.work-15-change-btn:hover {
+.etc-01-change-btn:hover {
   background: #1565c0;
 }
 
 /* 분석 섹션 */
-.work-15-analyze-section {
+.etc-01-analyze-section {
   text-align: center;
   padding: 20px;
   box-sizing: border-box;
 }
 
-.work-15-analyze-btn {
+.etc-01-analyze-btn {
   background: #1976d2;
   color: white;
   border: none;
@@ -601,20 +601,20 @@
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
 }
 
-.work-15-analyze-btn:hover:not(:disabled) {
+.etc-01-analyze-btn:hover:not(:disabled) {
   background: #1565c0;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4);
 }
 
-.work-15-analyze-btn:disabled {
+.etc-01-analyze-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.work-15-progress {
+.etc-01-progress {
   margin-top: 20px;
   padding: 15px;
   background: #e3f2fd;
@@ -622,14 +622,14 @@
   border-left: 4px solid #1976d2;
 }
 
-.work-15-progress p {
+.etc-01-progress p {
   color: #1976d2;
   font-weight: 500;
   margin: 0;
 }
 
 /* 에러 메시지 */
-.work-15-error {
+.etc-01-error {
   background: #ffebee;
   color: #c62828;
   padding: 15px;
@@ -638,13 +638,13 @@
   text-align: center;
 }
 
-.work-15-error p {
+.etc-01-error p {
   margin: 0;
   font-weight: 500;
 }
 
 /* 결과 섹션 */
-.work-15-result-section {
+.etc-01-result-section {
   display: flex;
   flex-direction: column;
   gap: 30px;
@@ -655,7 +655,7 @@
   margin: 0 auto; /* 중앙 정렬 */
 }
 
-.work-15-result-header {
+.etc-01-result-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -665,21 +665,21 @@
   box-sizing: border-box;
 }
 
-.work-15-result-header h2 {
+.etc-01-result-header h2 {
   color: #1976d2;
   font-size: 2rem;
   margin: 0;
   font-weight: 700;
 }
 
-.work-15-result-actions {
+.etc-01-result-actions {
   display: flex;
   gap: 15px;
   padding: 15px;
   box-sizing: border-box;
 }
 
-.work-15-action-btn {
+.etc-01-action-btn {
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 1rem;
@@ -689,35 +689,35 @@
   border: none;
 }
 
-.work-15-action-btn.primary {
+.etc-01-action-btn.primary {
   background: #1976d2;
   color: white;
 }
 
-.work-15-action-btn.primary:hover {
+.etc-01-action-btn.primary:hover {
   background: #1565c0;
   transform: translateY(-2px);
 }
 
-.work-15-action-btn.secondary {
+.etc-01-action-btn.secondary {
   background: #f5f5f5;
   color: #333;
   border: 1px solid #ddd;
 }
 
-.work-15-action-btn.secondary:hover {
+.etc-01-action-btn.secondary:hover {
   background: #e0e0e0;
 }
 
 /* 텍스트 섹션 */
-.work-15-text-section {
+.etc-01-text-section {
   background: #fff;
   border-radius: 12px;
   padding: 25px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.work-15-text-section h3 {
+.etc-01-text-section h3 {
   color: #1976d2;
   font-size: 1.3rem;
   margin-bottom: 15px;
@@ -727,7 +727,7 @@
   gap: 8px;
 }
 
-.work-15-text-content {
+.etc-01-text-content {
   background: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
@@ -738,20 +738,20 @@
   border-left: 4px solid #1976d2;
 }
 
-.work-15-text-content.korean {
+.etc-01-text-content.korean {
   color: #1976d2;
   font-weight: 500;
 }
 
 /* 분석 섹션 */
-.work-15-analysis-section {
+.etc-01-analysis-section {
   background: #fff;
   border-radius: 12px;
   padding: 25px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.work-15-analysis-section h3 {
+.etc-01-analysis-section h3 {
   color: #1976d2;
   font-size: 1.3rem;
   margin-bottom: 15px;
@@ -761,31 +761,31 @@
   gap: 8px;
 }
 
-.work-15-analysis-content {
+.etc-01-analysis-content {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.work-15-analysis-item {
+.etc-01-analysis-item {
   background: #f8f9fa;
   padding: 15px;
   border-radius: 8px;
   border-left: 4px solid #1976d2;
 }
 
-.work-15-analysis-item strong {
+.etc-01-analysis-item strong {
   color: #1976d2;
   font-weight: 600;
 }
 
-.work-15-analysis-item p {
+.etc-01-analysis-item p {
   margin: 10px 0 0 0;
   line-height: 1.6;
 }
 
 /* 인쇄 섹션 */
-.work-15-print-section {
+.etc-01-print-section {
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
@@ -793,7 +793,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.work-15-print-section h3 {
+.etc-01-print-section h3 {
   color: #1976d2;
   font-size: 1.3rem;
   margin-bottom: 15px;
@@ -803,13 +803,13 @@
   gap: 8px;
 }
 
-.work-15-print-buttons {
+.etc-01-print-buttons {
   display: flex;
   gap: 15px;
   justify-content: center;
 }
 
-.work-15-print-btn {
+.etc-01-print-btn {
   background: #4caf50;
   color: white;
   border: none;
@@ -822,7 +822,7 @@
   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
-.work-15-print-btn:hover {
+.etc-01-print-btn:hover {
   background: #45a049;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
@@ -830,150 +830,150 @@
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
-  .work-15-container {
+  .etc-01-container {
     padding: 15px;
   }
   
-  .work-15-header h1 {
+  .etc-01-header h1 {
     font-size: 2rem;
   }
   
-  .work-15-description {
+  .etc-01-description {
     font-size: 1rem;
   }
   
-  .work-15-input-type-section {
+  .etc-01-input-type-section {
     grid-template-columns: 1fr;
     gap: 15px;
   }
   
-  .work-15-input-mode-card {
+  .etc-01-input-mode-card {
     margin: 0 10px;
   }
   
-  .work-15-upload-features {
+  .etc-01-upload-features {
     flex-direction: column;
     gap: 10px;
   }
   
-  .work-15-feature-item {
+  .etc-01-feature-item {
     justify-content: center;
   }
   
-  .work-15-paste-area {
+  .etc-01-paste-area {
     min-height: 150px;
     padding: 20px;
   }
   
-  .work-15-paste-success-icon {
+  .etc-01-paste-success-icon {
     font-size: 2.5rem;
   }
   
-  .work-15-paste-success-text {
+  .etc-01-paste-success-text {
     font-size: 1.1rem;
   }
   
-  .work-15-paste-file-info {
+  .etc-01-paste-file-info {
     min-width: auto;
     width: 100%;
     max-width: 300px;
   }
   
-  .work-15-file-upload-row {
+  .etc-01-file-upload-row {
     flex-direction: column;
     gap: 10px;
   }
   
-  .work-15-file-upload-status {
+  .etc-01-file-upload-status {
     min-width: auto;
     width: 100%;
   }
   
-  .work-15-upload-area {
+  .etc-01-upload-area {
     min-height: 300px;
   }
   
-  .work-15-result-header {
+  .etc-01-result-header {
     flex-direction: column;
     gap: 15px;
     align-items: stretch;
   }
   
-  .work-15-result-actions {
+  .etc-01-result-actions {
     justify-content: center;
   }
   
-  .work-15-print-buttons {
+  .etc-01-print-buttons {
     flex-direction: column;
   }
   
-  .work-15-text-section,
-  .work-15-analysis-section,
-  .work-15-print-section {
+  .etc-01-text-section,
+  .etc-01-analysis-section,
+  .etc-01-print-section {
     padding: 20px;
   }
 }
 
 @media (max-width: 480px) {
-  .work-15-header h1 {
+  .etc-01-header h1 {
     font-size: 1.8rem;
   }
   
-  .work-15-upload-placeholder {
+  .etc-01-upload-placeholder {
     padding: 20px;
   }
   
-  .work-15-upload-icon {
+  .etc-01-upload-icon {
     font-size: 3rem;
   }
   
-  .work-15-text-section,
-  .work-15-analysis-section,
-  .work-15-print-section {
+  .etc-01-text-section,
+  .etc-01-analysis-section,
+  .etc-01-print-section {
     padding: 15px;
   }
 }
 
 /* 인쇄 스타일 */
 @media print {
-  .work-15-container {
+  .etc-01-container {
     max-width: none;
     padding: 0;
   }
   
-  .work-15-result-header,
-  .work-15-result-actions,
-  .work-15-print-section {
+  .etc-01-result-header,
+  .etc-01-result-actions,
+  .etc-01-print-section {
     display: none;
   }
   
-  .work-15-text-section,
-  .work-15-analysis-section {
+  .etc-01-text-section,
+  .etc-01-analysis-section {
     break-inside: avoid;
     box-shadow: none;
     border: 1px solid #ccc;
     margin-bottom: 20px;
   }
   
-  .work-15-text-content {
+  .etc-01-text-content {
     background: none;
     border-left: none;
   }
   
-  .work-15-analysis-item {
+  .etc-01-analysis-item {
     background: none;
     border-left: none;
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
   }
   
-  .work-15-analysis-item:last-child {
+  .etc-01-analysis-item:last-child {
     border-bottom: none;
   }
 }
 
 /* 새 분석 버튼 스타일 */
-.work-15-new-analysis-btn {
+.etc-01-new-analysis-btn {
   background: linear-gradient(135deg, #9e9e9e, #757575);
   color: white;
   border: none;
@@ -990,18 +990,18 @@
   margin-right: 12px;
 }
 
-.work-15-new-analysis-btn:hover {
+.etc-01-new-analysis-btn:hover {
   background: linear-gradient(135deg, #757575, #616161);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(158, 158, 158, 0.4);
 }
 
-.work-15-new-analysis-btn:active {
+.etc-01-new-analysis-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(158, 158, 158, 0.3);
 }
 
-.work-15-new-analysis-btn:focus {
+.etc-01-new-analysis-btn:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(158, 158, 158, 0.3);
 }

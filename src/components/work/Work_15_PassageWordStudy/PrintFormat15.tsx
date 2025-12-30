@@ -1,38 +1,38 @@
 import React from 'react';
-import './PrintFormat16.css';
+import './PrintFormat15.css';
 import { getCurrentPrintHeader } from '../../../utils/printHeader';
 
-// 유형#16 전용 인쇄 헤더 컴포넌트
-export const PrintHeaderWork16: React.FC = () => {
+// 유형#15 전용 인쇄 헤더 컴포넌트
+export const PrintHeaderWork15: React.FC = () => {
   const headerText = getCurrentPrintHeader();
 
   return (
-    <div className="print-header-work16">
-      <div className="print-header-text-work16">
+    <div className="print-header-work15">
+      <div className="print-header-text-work15">
         {headerText}
       </div>
     </div>
   );
 };
 
-// 유형#16 전용 A4 가로형 페이지 템플릿 컴포넌트
-interface A4PageTemplateWork16Props {
+// 유형#15 전용 A4 가로형 페이지 템플릿 컴포넌트
+interface A4PageTemplateWork15Props {
   children: React.ReactNode;
   className?: string;
 }
 
-export const A4PageTemplateWork16: React.FC<A4PageTemplateWork16Props> = ({ 
+export const A4PageTemplateWork15: React.FC<A4PageTemplateWork15Props> = ({ 
   children, 
   className = '' 
 }) => {
-  const finalClassName = `a4-landscape-page-template-work16 ${className}`.trim();
+  const finalClassName = `a4-landscape-page-template-work15 ${className}`.trim();
   return (
     <div className={finalClassName}>
-      <div className="a4-landscape-page-header-work16">
-        <PrintHeaderWork16 />
+      <div className="a4-landscape-page-header-work15">
+        <PrintHeaderWork15 />
       </div>
-      <div className="a4-landscape-page-content-work16">
-        <div className="quiz-content-work16">
+      <div className="a4-landscape-page-content-work15">
+        <div className="quiz-content-work15">
           {children}
         </div>
       </div>
@@ -40,24 +40,24 @@ export const A4PageTemplateWork16: React.FC<A4PageTemplateWork16Props> = ({
   );
 };
 
-// 유형#16 전용 문제 지시문 컴포넌트
-interface ProblemInstructionWork16Props {
+// 유형#15 전용 문제 지시문 컴포넌트
+interface ProblemInstructionWork15Props {
   children: React.ReactNode;
   className?: string;
 }
 
-export const ProblemInstructionWork16: React.FC<ProblemInstructionWork16Props> = ({ 
-  children, 
-  className = '' 
+export const ProblemInstructionWork15: React.FC<ProblemInstructionWork15Props> = ({
+  children,
+  className = ''
 }) => (
-  <div className={`problem-instruction-work16 ${className}`}>
-    <span className="problem-instruction-text-work16">{children}</span>
-    <span className="problem-type-label-work16">유형#16</span>
+  <div className={`problem-instruction-work15 ${className}`}>
+    <span className="problem-instruction-text-work15">{children}</span>
+    <span className="problem-type-label-work15">유형#15</span>
   </div>
 );
 
-// 유형#16 전용 단어 목록 테이블 컴포넌트
-interface WordListTableWork16Props {
+// 유형#15 전용 단어 목록 테이블 컴포넌트
+interface WordListTableWork15Props {
   words: Array<{
     english: string;
     korean: string;
@@ -68,7 +68,7 @@ interface WordListTableWork16Props {
   instructionText?: string;
 }
 
-export const WordListTableWork16: React.FC<WordListTableWork16Props> = ({
+export const WordListTableWork15: React.FC<WordListTableWork15Props> = ({
   words,
   showAnswers = false,
   quizType = 'english-to-korean',
@@ -90,7 +90,7 @@ export const WordListTableWork16: React.FC<WordListTableWork16Props> = ({
 
     // 각 단의 번호는 1부터 시작 (단별로 독립적)
     return (
-      <table className="word-list-table-work16">
+      <table className="word-list-table-work15">
         <thead>
           <tr>
             <th>No.</th>
@@ -127,22 +127,22 @@ export const WordListTableWork16: React.FC<WordListTableWork16Props> = ({
   };
 
   return (
-    <div className="word-list-container-work16">
-      <div className="word-list-column-work16">
+    <div className="word-list-container-work15">
+      <div className="word-list-column-work15">
         {Array.isArray(leftWords) && leftWords.length > 0 && (
           <>
-            <ProblemInstructionWork16>
+            <ProblemInstructionWork15>
               {instructionText}
-            </ProblemInstructionWork16>
+            </ProblemInstructionWork15>
             {renderTable(leftWords, 0)}
           </>
         )}
       </div>
       {hasRightWords && (
-        <div className="word-list-column-work16">
-          <ProblemInstructionWork16>
+        <div className="word-list-column-work15">
+          <ProblemInstructionWork15>
             {instructionText}
-          </ProblemInstructionWork16>
+          </ProblemInstructionWork15>
           {renderTable(rightWords, 1)}
         </div>
       )}
@@ -150,30 +150,30 @@ export const WordListTableWork16: React.FC<WordListTableWork16Props> = ({
   );
 };
 
-// 유형#16 전용 인쇄 모드 타입
-export type PrintModeWork16 = 'none' | 'no-answer' | 'with-answer';
+// 유형#15 전용 인쇄 모드 타입
+export type PrintModeWork15 = 'none' | 'no-answer' | 'with-answer';
 
-// 유형#16 전용 단어 아이템 타입
-export interface WordItemWork16 {
+// 유형#15 전용 단어 아이템 타입
+export interface WordItemWork15 {
   english: string;
   korean: string;
   partOfSpeech?: string; // 품사 (n., v., adj., adv. 등)
 }
 
-// 유형#16 전용 단어 문제 타입
-export interface WordQuestionWork16Type {
+// 유형#15 전용 단어 문제 타입
+export interface WordQuestionWork15Type {
   question: string;
   options: string[];
   answerIndex: number;
   correctAnswer: string;
-  wordItem: WordItemWork16;
+  wordItem: WordItemWork15;
 }
 
-// 유형#16 전용 단어 퀴즈 타입
-export interface WordQuizWork16Type {
-  words: WordItemWork16[];
+// 유형#15 전용 단어 퀴즈 타입
+export interface WordQuizWork15Type {
+  words: WordItemWork15[];
   quizType: 'english-to-korean' | 'korean-to-english';
-  questions: WordQuestionWork16Type[];
+  questions: WordQuestionWork15Type[];
   totalQuestions: number;
   passage?: string;
 }

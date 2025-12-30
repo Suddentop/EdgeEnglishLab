@@ -1,5 +1,5 @@
 /**
- * Work_15 (본문 단어 학습) 문제 생성 로직
+ * Work_16 (본문 단어 학습) 문제 생성 로직
  * 여러 영어 본문을 입력받아 각 본문에서 고3 수준의 단어를 추출하여 단어 학습 문제를 생성합니다.
  */
 
@@ -40,7 +40,7 @@ export async function generateWork15Quiz(
   passage: string, 
   quizType: 'english-to-korean' | 'korean-to-english' = 'english-to-korean'
 ): Promise<WordQuiz> {
-  console.log('🔍 Work_15 문제 생성 시작...');
+  console.log('🔍 Work_16 문제 생성 시작...');
   console.log('📝 입력 텍스트 길이:', passage.length);
   console.log('🎯 퀴즈 타입:', quizType);
 
@@ -90,7 +90,7 @@ export async function generateWork15Quiz(
     };
 
   } catch (error) {
-    console.error('❌ Work_15 문제 생성 실패:', error);
+    console.error('❌ Work_16 문제 생성 실패:', error);
     throw error;
   }
 }
@@ -492,7 +492,7 @@ export async function regenerateWork15QuizFromWords(
   quizType: 'english-to-korean' | 'korean-to-english' = 'english-to-korean',
   passage?: string
 ): Promise<WordQuiz> {
-  console.log('🔄 Work_15 퀴즈 재생성 시작 (단어 목록 기반)...');
+  console.log('🔄 Work_16 퀴즈 재생성 시작 (단어 목록 기반)...');
   console.log('📝 단어 수:', words.length);
   
   try {
@@ -502,7 +502,7 @@ export async function regenerateWork15QuizFromWords(
       passage: passage || quiz.passage
     };
   } catch (error) {
-    console.error('❌ Work_15 퀴즈 재생성 실패:', error);
+    console.error('❌ Work_16 퀴즈 재생성 실패:', error);
     throw error;
   }
 }

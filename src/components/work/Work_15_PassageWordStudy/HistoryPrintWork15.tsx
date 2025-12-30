@@ -1,12 +1,12 @@
 import React from 'react';
 import {
-  PrintHeaderWork16,
-  A4PageTemplateWork16,
-  ProblemInstructionWork16,
-  WordListTableWork16,
-  WordQuizWork16Type
-} from './PrintFormat16';
-import './PrintFormat16.css';
+  PrintHeaderWork15,
+  A4PageTemplateWork15,
+  ProblemInstructionWork15,
+  WordListTableWork15,
+  WordQuizWork15Type
+} from './PrintFormat15';
+import './PrintFormat15.css';
 
 interface WordItem { 
   english: string; 
@@ -14,7 +14,7 @@ interface WordItem {
   partOfSpeech?: string; // 품사 (n., v., adj., adv. 등)
 }
 
-interface Work16Data {
+interface Work15Data {
   words?: WordItem[];
   questions?: any[];
   quizType?: 'english-to-korean' | 'korean-to-english';
@@ -28,15 +28,15 @@ interface Work16Data {
   }>;
 }
 
-interface HistoryPrintWork16Props {
-  data: Work16Data | WordQuizWork16Type;
+interface HistoryPrintWork15Props {
+  data: Work15Data | WordQuizWork15Type;
   isAnswerMode?: boolean;
 }
 
-const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerMode = false }) => {
+const HistoryPrintWork15: React.FC<HistoryPrintWork15Props> = ({ data, isAnswerMode = false }) => {
   // 여러 퀴즈가 있는 경우 (본문별로 분리)
-  const dataAsWork16 = data as Work16Data;
-  const hasMultipleQuizzes = Array.isArray(dataAsWork16?.quizzes) && dataAsWork16.quizzes!.length > 0;
+  const dataAsWork15 = data as Work15Data;
+  const hasMultipleQuizzes = Array.isArray(dataAsWork15?.quizzes) && dataAsWork15.quizzes!.length > 0;
   
   const quizType: 'english-to-korean' | 'korean-to-english' =
     data.quizType === 'korean-to-english' ? 'korean-to-english' : 'english-to-korean';
@@ -47,17 +47,17 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
       : '다음 한글 뜻에 해당하는 영어 단어를 고르시오.';
 
   if (process.env.NODE_ENV === 'development') {
-    const sampleWords = hasMultipleQuizzes && dataAsWork16.quizzes!.length > 0
-      ? dataAsWork16.quizzes![0].words?.slice(0, 3) || []
+      const sampleWords = hasMultipleQuizzes && dataAsWork15.quizzes!.length > 0
+      ? dataAsWork15.quizzes![0].words?.slice(0, 3) || []
       : Array.isArray(data?.words) ? data.words.slice(0, 3) : [];
     
-    console.log('🖨️ [Work16] HistoryPrintWork16 렌더링', {
+    console.log('🖨️ [Work15] HistoryPrintWork15 렌더링', {
       isAnswerMode,
       hasMultipleQuizzes,
-      quizzesCount: hasMultipleQuizzes ? dataAsWork16.quizzes!.length : 0,
+      quizzesCount: hasMultipleQuizzes ? dataAsWork15.quizzes!.length : 0,
       dataKeys: Object.keys(data || {}),
       hasQuizzes: 'quizzes' in data,
-      quizzesData: hasMultipleQuizzes ? dataAsWork16.quizzes!.map((q: any) => ({ 
+      quizzesData: hasMultipleQuizzes ? dataAsWork15.quizzes!.map((q: any) => ({ 
         wordsCount: q.words?.length || 0,
         hasWords: Array.isArray(q.words) && q.words.length > 0,
         wordsWithPartOfSpeech: q.words?.filter((w: any) => w.partOfSpeech && w.partOfSpeech.trim().length > 0).length || 0
@@ -74,9 +74,9 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
 
   // 여러 퀴즈가 있는 경우: 각 퀴즈를 독립적으로 처리
   if (hasMultipleQuizzes) {
-    console.log('🖨️ [Work16] 여러 퀴즈 처리 시작:', {
-      originalQuizzesCount: dataAsWork16.quizzes!.length,
-      originalQuizzes: dataAsWork16.quizzes!.map((q: any) => ({
+    console.log('🖨️ [Work15] 여러 퀴즈 처리 시작:', {
+      originalQuizzesCount: dataAsWork15.quizzes!.length,
+      originalQuizzes: dataAsWork15.quizzes!.map((q: any) => ({
         hasWords: Array.isArray(q.words),
         wordsCount: q.words?.length || 0,
         wordsType: Array.isArray(q.words) ? 'array' : typeof q.words,
@@ -84,10 +84,10 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
       }))
     });
     
-    const quizzes = dataAsWork16.quizzes!.filter((q: any) => {
+    const quizzes = dataAsWork15.quizzes!.filter((q: any) => {
       const hasWords = Array.isArray(q.words) && q.words.length > 0;
       if (!hasWords) {
-        console.warn('🖨️ [Work16] 퀴즈 필터링됨 (단어 없음):', {
+        console.warn('🖨️ [Work15] 퀴즈 필터링됨 (단어 없음):', {
           hasWordsArray: Array.isArray(q.words),
           wordsLength: q.words?.length || 0,
           quizKeys: Object.keys(q || {})
@@ -96,7 +96,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
       return hasWords;
     });
     
-    console.log('🖨️ [Work16] 필터링 후 퀴즈 수:', {
+    console.log('🖨️ [Work15] 필터링 후 퀴즈 수:', {
       filteredCount: quizzes.length,
       filteredQuizzes: quizzes.map((q: any) => ({
         wordsCount: q.words?.length || 0,
@@ -109,22 +109,22 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
     });
     
     if (quizzes.length === 0) {
-      console.warn('🖨️ [Work16] 유효한 단어가 있는 퀴즈가 없습니다.', {
-        originalQuizzesCount: dataAsWork16.quizzes!.length,
-        originalQuizzesData: dataAsWork16.quizzes!
+      console.warn('🖨️ [Work15] 유효한 단어가 있는 퀴즈가 없습니다.', {
+        originalQuizzesCount: dataAsWork15.quizzes!.length,
+        originalQuizzesData: dataAsWork15.quizzes!
       });
       return (
-        <div className="only-print-work16">
-          <A4PageTemplateWork16>
-            <div className="print-content-work16">
-              <ProblemInstructionWork16>
+        <div className="only-print-work15">
+          <A4PageTemplateWork15>
+            <div className="print-content-work15">
+              <ProblemInstructionWork15>
                 {instructionText}
-              </ProblemInstructionWork16>
+              </ProblemInstructionWork15>
               <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
                 단어가 없습니다.
               </div>
             </div>
-          </A4PageTemplateWork16>
+          </A4PageTemplateWork15>
         </div>
       );
     }
@@ -134,7 +134,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
     const pages: typeof quizzes[] = [];
     
     // 디버깅: 퀴즈 데이터 확인
-    console.log('🖨️ [Work16] 페이지 생성 전 퀴즈 확인:', {
+    console.log('🖨️ [Work15] 페이지 생성 전 퀴즈 확인:', {
       totalQuizzes: quizzes.length,
       quizzes: quizzes.map((q: any, idx: number) => ({
         index: idx,
@@ -149,7 +149,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
       // 빈 배열이 아닌 경우에만 추가
       if (pageQuizzes.length > 0) {
         pages.push(pageQuizzes);
-        console.log(`🖨️ [Work16] 페이지 ${pages.length - 1} 생성:`, {
+        console.log(`🖨️ [Work15] 페이지 ${pages.length - 1} 생성:`, {
           startIndex: i,
           endIndex: i + pageQuizzes.length,
           quizzesCount: pageQuizzes.length,
@@ -161,7 +161,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
       }
     }
     
-    console.log('🖨️ [Work16] 전체 페이지 정보:', {
+    console.log('🖨️ [Work15] 전체 페이지 정보:', {
       totalQuizzes: quizzes.length,
       totalPages: pages.length,
       expectedPages: Math.ceil(quizzes.length / quizzesPerPage),
@@ -178,7 +178,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
     // 페이지가 예상보다 적으면 경고
     const expectedPages = Math.ceil(quizzes.length / quizzesPerPage);
     if (pages.length !== expectedPages) {
-      console.error(`🖨️ [Work16] 페이지 수 불일치! 예상: ${expectedPages}, 실제: ${pages.length}`);
+      console.error(`🖨️ [Work15] 페이지 수 불일치! 예상: ${expectedPages}, 실제: ${pages.length}`);
     }
 
     // 단일 퀴즈 테이블 렌더링 함수 (각 단별로 독립적 번호)
@@ -191,7 +191,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
       }
 
       return (
-        <table className="word-list-table-work16">
+        <table className="word-list-table-work15">
           <thead>
             <tr>
               <th>No.</th>
@@ -211,7 +211,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
               
               // 디버깅: 품사 정보 확인
               if (process.env.NODE_ENV === 'development' && isAnswerMode && index < 3) {
-                console.log(`🖨️ [Work16] 단어 ${index + 1} 품사 정보:`, {
+                console.log(`🖨️ [Work15] 단어 ${index + 1} 품사 정보:`, {
                   english: word.english,
                   partOfSpeech: word.partOfSpeech,
                   hasPartOfSpeech,
@@ -241,7 +241,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
     };
 
     // 렌더링 전 최종 확인
-    console.log('🖨️ [Work16] 렌더링 시작:', {
+    console.log('🖨️ [Work15] 렌더링 시작:', {
       totalPages: pages.length,
       pages: pages.map((p, idx) => ({
         pageIndex: idx,
@@ -252,7 +252,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
     });
     
     return (
-      <div className="only-print-work16">
+      <div className="only-print-work15">
         {pages.map((pageQuizzes, pageIndex) => {
           // 안전하게 퀴즈 데이터 확인
           const leftQuiz = pageQuizzes[0];
@@ -260,7 +260,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
           const hasLeftQuiz = leftQuiz && Array.isArray(leftQuiz.words) && leftQuiz.words.length > 0;
           const hasRightQuiz = rightQuiz && Array.isArray(rightQuiz.words) && rightQuiz.words.length > 0;
           
-          console.log(`🖨️ [Work16] 페이지 ${pageIndex} 렌더링:`, {
+          console.log(`🖨️ [Work15] 페이지 ${pageIndex} 렌더링:`, {
             pageIndex,
             pageQuizzesCount: pageQuizzes.length,
             hasLeftQuiz,
@@ -273,23 +273,23 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
           
           // 페이지에 퀴즈가 하나도 없으면 빈 페이지라도 렌더링 (디버깅용)
           if (!hasLeftQuiz && !hasRightQuiz) {
-            console.warn(`🖨️ [Work16] 페이지 ${pageIndex}에 유효한 퀴즈가 없습니다.`, {
+            console.warn(`🖨️ [Work15] 페이지 ${pageIndex}에 유효한 퀴즈가 없습니다.`, {
               leftQuiz: leftQuiz ? { hasWords: Array.isArray(leftQuiz.words), wordsLength: leftQuiz.words?.length } : null,
               rightQuiz: rightQuiz ? { hasWords: Array.isArray(rightQuiz.words), wordsLength: rightQuiz.words?.length } : null
             });
             // 빈 페이지도 렌더링하여 문제 확인
             return (
-              <A4PageTemplateWork16 key={pageIndex}>
-                <div className="print-content-work16">
-                  <div className="word-list-container-work16">
-                    <div className="word-list-column-work16">
+              <A4PageTemplateWork15 key={pageIndex}>
+                <div className="print-content-work15">
+                  <div className="word-list-container-work15">
+                    <div className="word-list-column-work15">
                       <div style={{ padding: '2rem', color: '#666', textAlign: 'center' }}>
                         페이지 {pageIndex + 1}: 퀴즈 데이터 없음
                       </div>
                     </div>
                   </div>
                 </div>
-              </A4PageTemplateWork16>
+              </A4PageTemplateWork15>
             );
           }
           
@@ -297,19 +297,19 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
           const isLastPageWithSingleQuiz = !hasRightQuiz && hasLeftQuiz;
           
           return (
-            <A4PageTemplateWork16 
-              key={`work16-page-${pageIndex}`}
-              className={`work16-page-${pageIndex} ${isLastPageWithSingleQuiz ? 'single-quiz-page' : ''}`}
+            <A4PageTemplateWork15 
+              key={`work15-page-${pageIndex}`}
+              className={`work15-page-${pageIndex} ${isLastPageWithSingleQuiz ? 'single-quiz-page' : ''}`}
             >
-              <div className="print-content-work16">
-                <div className={`word-list-container-work16 ${isLastPageWithSingleQuiz ? 'single-quiz-container' : ''}`}>
+              <div className="print-content-work15">
+                <div className={`word-list-container-work15 ${isLastPageWithSingleQuiz ? 'single-quiz-container' : ''}`}>
                   {/* 왼쪽 단: 첫 번째 퀴즈 카드 */}
-                  <div className={`word-list-column-work16 ${isLastPageWithSingleQuiz ? 'single-quiz-column' : ''}`}>
+                  <div className={`word-list-column-work15 ${isLastPageWithSingleQuiz ? 'single-quiz-column' : ''}`}>
                     {hasLeftQuiz && (
-                      <div className="quiz-card-work16">
-                        <ProblemInstructionWork16>
+                      <div className="quiz-card-work15">
+                        <ProblemInstructionWork15>
                           문제 {pageIndex * 2 + 1}. {instructionText}
-                        </ProblemInstructionWork16>
+                        </ProblemInstructionWork15>
                         {renderSingleQuizTable(
                           leftQuiz.words,
                           leftQuiz.quizType || quizType
@@ -319,11 +319,11 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
                   </div>
                   {/* 오른쪽 단: 두 번째 퀴즈 카드 (있을 때만 표시) */}
                   {hasRightQuiz && (
-                    <div className="word-list-column-work16">
-                      <div className="quiz-card-work16">
-                        <ProblemInstructionWork16>
+                    <div className="word-list-column-work15">
+                      <div className="quiz-card-work15">
+                        <ProblemInstructionWork15>
                           문제 {pageIndex * 2 + 2}. {instructionText}
-                        </ProblemInstructionWork16>
+                        </ProblemInstructionWork15>
                         {renderSingleQuizTable(
                           rightQuiz.words,
                           rightQuiz.quizType || quizType
@@ -333,7 +333,7 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
                   )}
                 </div>
               </div>
-            </A4PageTemplateWork16>
+            </A4PageTemplateWork15>
           );
         })}
       </div>
@@ -344,34 +344,34 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
   // 하지만 quizzes 배열이 있고 단일 항목인 경우도 처리
   let words: WordItem[] = [];
   
-  if (hasMultipleQuizzes && dataAsWork16.quizzes!.length === 1) {
+  if (hasMultipleQuizzes && dataAsWork15.quizzes!.length === 1) {
     // 단일 퀴즈지만 quizzes 배열로 전달된 경우
-    words = Array.isArray(dataAsWork16.quizzes![0]?.words) ? dataAsWork16.quizzes![0].words : [];
+    words = Array.isArray(dataAsWork15.quizzes![0]?.words) ? dataAsWork15.quizzes![0].words : [];
   } else {
     // 기존 방식: data.words 사용
     words = Array.isArray(data?.words) ? data.words : [];
   }
 
   if (!words || words.length === 0) {
-    console.warn('🖨️ [Work16] 단어가 없습니다. 빈 페이지를 표시합니다.', {
+    console.warn('🖨️ [Work15] 단어가 없습니다. 빈 페이지를 표시합니다.', {
       hasMultipleQuizzes,
       hasQuizzes: 'quizzes' in data,
-      quizzesLength: hasMultipleQuizzes ? dataAsWork16.quizzes!.length : 0,
+      quizzesLength: hasMultipleQuizzes ? dataAsWork15.quizzes!.length : 0,
       hasWords: 'words' in data,
       wordsLength: Array.isArray(data?.words) ? data.words.length : 0
     });
     return (
-      <div className="only-print-work16">
-        <A4PageTemplateWork16>
-          <div className="print-content-work16">
-            <ProblemInstructionWork16>
+      <div className="only-print-work15">
+        <A4PageTemplateWork15>
+          <div className="print-content-work15">
+            <ProblemInstructionWork15>
               {instructionText}
-            </ProblemInstructionWork16>
+            </ProblemInstructionWork15>
             <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
               단어가 없습니다.
             </div>
           </div>
-        </A4PageTemplateWork16>
+        </A4PageTemplateWork15>
       </div>
     );
   }
@@ -389,22 +389,22 @@ const HistoryPrintWork16: React.FC<HistoryPrintWork16Props> = ({ data, isAnswerM
   }
 
   return (
-    <div className="only-print-work16">
+    <div className="only-print-work15">
       {pages.map((pageWords, pageIndex) => (
-        <A4PageTemplateWork16 key={pageIndex}>
-          <div className="print-content-work16">
-            <WordListTableWork16
+        <A4PageTemplateWork15 key={pageIndex}>
+          <div className="print-content-work15">
+            <WordListTableWork15
               words={pageWords}
               showAnswers={isAnswerMode}
               quizType={quizType}
               instructionText={pageIndex === 0 ? instructionText : `${instructionText} (계속 - ${pageIndex + 1}페이지)`}
             />
           </div>
-        </A4PageTemplateWork16>
+        </A4PageTemplateWork15>
       ))}
     </div>
   );
 };
 
-export default HistoryPrintWork16;
+export default HistoryPrintWork15;
 

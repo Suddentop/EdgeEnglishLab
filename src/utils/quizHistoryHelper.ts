@@ -172,7 +172,7 @@ export const getWorkTypeName = (workTypeId: string): string => {
     '12': '본문 문장별 해석(수정)',
     '13': '빈칸 채우기 (단어-주관식)',
     '14': '빈칸 채우기 (문장-주관식)',
-    '16': '본문 단어 학습'
+    '15': '본문 단어 학습'
   };
   
   return typeNames[workTypeId] || `유형#${workTypeId}`;
@@ -195,7 +195,7 @@ const extractQuizData = (quiz: any): any => {
   if (quiz.work12Data) return quiz.work12Data;
   if (quiz.work13Data) return quiz.work13Data;
   if (quiz.work14Data) return quiz.work14Data;
-  if (quiz.work16Data) return quiz.work16Data;
+  if (quiz.work15Data) return quiz.work15Data;
   
   return quiz;
 };

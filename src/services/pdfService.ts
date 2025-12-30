@@ -36,13 +36,13 @@ export const generateAndUploadPDF = async (
         elementTag: element.tagName,
         hasPrintPage: element.querySelector('.print-page') !== null,
         hasA4Template: element.querySelector('.a4-landscape-page-template') !== null,
-        hasA4TemplateWork16: element.querySelector('.a4-landscape-page-template-work16') !== null,
+        hasA4TemplateWork15: element.querySelector('.a4-landscape-page-template-work15') !== null,
         hasA4TemplateWork12: element.querySelector('.a4-page-template-work12') !== null,
         isAnswerMode
       });
     }
     
-    const pageElements = element.querySelectorAll('.print-page, .a4-landscape-page-template, .a4-landscape-page-template-work16, .a4-page-template-work12');
+    const pageElements = element.querySelectorAll('.print-page, .a4-landscape-page-template, .a4-landscape-page-template-work15, .a4-page-template-work12');
     const hasMultiplePages = pageElements.length > 0;
     
     if (process.env.NODE_ENV === 'development') {
@@ -336,7 +336,7 @@ export const generateAndUploadPDF = async (
         }
       }
       
-      // A4 가로 크기 상수 정의 (유형#16용)
+      // A4 가로 크기 상수 정의 (유형#15용)
       const A4_LANDSCAPE_WIDTH_PX = 1123; // 29.7cm
       const A4_LANDSCAPE_HEIGHT_PX = 794; // 21cm
       
@@ -394,8 +394,8 @@ export const generateAndUploadPDF = async (
               }
             }
             
-            // 유형#16인 경우 추가 스타일 적용
-            if (element.id === 'print-root-work16-new' || element.id === 'print-root-work16-new-answer') {
+            // 유형#15인 경우 추가 스타일 적용
+            if (element.id === 'print-root-work15-new' || element.id === 'print-root-work15-new-answer') {
               clonedEl.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`; // 29.7cm
               clonedEl.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`; // 21cm
               clonedEl.style.maxWidth = `${A4_LANDSCAPE_WIDTH_PX}px`;
@@ -404,9 +404,9 @@ export const generateAndUploadPDF = async (
               clonedEl.style.minHeight = `${A4_LANDSCAPE_HEIGHT_PX}px`;
               clonedEl.style.overflow = 'hidden';
               
-              // 내부 .a4-landscape-page-template-work16 요소도 조정
-              const work16Pages = clonedEl.querySelectorAll('.a4-landscape-page-template-work16');
-              work16Pages.forEach((page) => {
+              // 내부 .a4-landscape-page-template-work15 요소도 조정
+              const work15Pages = clonedEl.querySelectorAll('.a4-landscape-page-template-work15');
+              work15Pages.forEach((page) => {
                 const pageEl = page as HTMLElement;
                 pageEl.style.width = `${A4_LANDSCAPE_WIDTH_PX}px`;
                 pageEl.style.height = `${A4_LANDSCAPE_HEIGHT_PX}px`;
@@ -1173,21 +1173,21 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
     });
   }
   
-  // 유형#16 특별 처리 (패키지#02와 동일한 방식)
+  // 유형#15 특별 처리 (패키지#02와 동일한 방식)
   // 여러 페이지가 있을 수 있으므로 모든 페이지 템플릿을 찾아서 처리
-  // .only-print-work16은 최상위 컨테이너이므로 제외하고 .a4-landscape-page-template-work16만 찾기
-  const work16Templates = element.querySelectorAll('.a4-landscape-page-template-work16');
-  if (work16Templates.length > 0) {
+  // .only-print-work15은 최상위 컨테이너이므로 제외하고 .a4-landscape-page-template-work15만 찾기
+  const work15Templates = element.querySelectorAll('.a4-landscape-page-template-work15');
+  if (work15Templates.length > 0) {
     let globalProblemNumber = 1; // 전역 문제 번호 (각 페이지의 문제를 순차적으로 번호 매기기)
     
     // 각 페이지를 순회하면서 처리
-    work16Templates.forEach((work16Template, pageIndex) => {
+    work15Templates.forEach((work15Template, pageIndex) => {
       
       // 헤더는 첫 번째 페이지에만 표시
       if (pageIndex === 0) {
-        const work16Header = work16Template.querySelector('.a4-landscape-page-header-work16, .print-header-work16');
-        if (work16Header) {
-          const headerText = work16Header.querySelector('.print-header-text-work16');
+        const work15Header = work15Template.querySelector('.a4-landscape-page-header-work15, .print-header-work15');
+        if (work15Header) {
+          const headerText = work15Header.querySelector('.print-header-text-work15');
           if (headerText) {
             const text = headerText.textContent?.trim() || '';
             if (text) {
@@ -1219,23 +1219,23 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
       }
     
     // 단어 테이블 찾기 (2단 레이아웃 처리)
-    const wordListContainer = work16Template.querySelector('.word-list-container-work16');
+    const wordListContainer = work15Template.querySelector('.word-list-container-work15');
     if (wordListContainer) {
-      const columns = wordListContainer.querySelectorAll('.word-list-column-work16');
+      const columns = wordListContainer.querySelectorAll('.word-list-column-work15');
       
       // 각 컬럼(단)을 순회하면서 처리
       columns.forEach((column, columnIndex) => {
-        const quizCard = column.querySelector('.quiz-card-work16');
+        const quizCard = column.querySelector('.quiz-card-work15');
         if (!quizCard) return; // 카드가 없으면 건너뛰기
         
         // 문제 지시문 찾기 (각 카드마다)
-        const problemInstruction = quizCard.querySelector('.problem-instruction-work16');
+        const problemInstruction = quizCard.querySelector('.problem-instruction-work15');
         let instruction = '다음 영어 단어의 한글 뜻을 고르시오.'; // 기본값
-        let typeBadge = '유형#16';
+        let typeBadge = '유형#15';
         
         if (problemInstruction) {
-          const instructionText = problemInstruction.querySelector('.problem-instruction-text-work16');
-          const typeLabel = problemInstruction.querySelector('.problem-type-label-work16');
+          const instructionText = problemInstruction.querySelector('.problem-instruction-text-work15');
+          const typeLabel = problemInstruction.querySelector('.problem-type-label-work15');
           
           if (instructionText) {
             // "문제 N. " 부분을 제거하고 지시문만 추출
@@ -1246,7 +1246,7 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
           typeBadge = typeLabel?.textContent?.trim() || typeBadge;
         }
         
-        // 문제 제목 추가: "문제 N. 다음 영어 단어의 한글 뜻을 고르시오.   유형#16"
+        // 문제 제목 추가: "문제 N. 다음 영어 단어의 한글 뜻을 고르시오.   유형#15"
         paragraphs.push(
           new Paragraph({
             children: [
@@ -1287,7 +1287,7 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
         globalProblemNumber++;
         
         // 테이블 찾기
-        const table = quizCard.querySelector('.word-list-table-work16');
+        const table = quizCard.querySelector('.word-list-table-work15');
         if (!table) return; // 테이블이 없으면 건너뛰기
         
         // 테이블 처리
@@ -1400,7 +1400,7 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
       });
       } else {
         // 단일 컬럼인 경우: 기존 로직 사용
-        const wordTables = work16Template.querySelectorAll('.word-list-table-work16');
+        const wordTables = work15Template.querySelectorAll('.word-list-table-work15');
         if (wordTables.length > 0) {
           wordTables.forEach((table) => {
             const thead = table.querySelector('thead');
@@ -1503,7 +1503,7 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
       }
       
       // 페이지 간 간격 추가 (마지막 페이지가 아닌 경우)
-      if (pageIndex < work16Templates.length - 1) {
+      if (pageIndex < work15Templates.length - 1) {
         paragraphs.push(
           new Paragraph({
             text: '',
@@ -1513,10 +1513,10 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
       }
     });
     
-    // 유형#16 처리가 완료되었으므로 여기서 반환
+    // 유형#15 처리가 완료되었으므로 여기서 반환
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 htmlToDocxParagraphs - 유형#16 처리 완료:', {
-        totalPages: work16Templates.length,
+      console.log('🔍 htmlToDocxParagraphs - 유형#15 처리 완료:', {
+        totalPages: work15Templates.length,
         totalParagraphs: paragraphs.length
       });
     }
@@ -1994,12 +1994,12 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
   // 헤더 찾기 (가로선 포함) - PDF와 동일한 구조
   // 패키지#02: .print-header-package02 > .print-header-text-package02
   // 패키지#03: .a4-landscape-page-header > .print-header-package03 > .print-header-text-package03
-  // 유형#16: .a4-landscape-page-header-work16 > .print-header-work16 > .print-header-text-work16
+  // 유형#15: .a4-landscape-page-header-work15 > .print-header-work15 > .print-header-text-work15
   // 유형#01-15: .a4-page-header > .print-header-text-work01
-  const header = element.querySelector('.a4-landscape-page-header, .a4-page-header, .print-header-package02, .print-header-package03, .a4-landscape-page-header-work16');
+  const header = element.querySelector('.a4-landscape-page-header, .a4-page-header, .print-header-package02, .print-header-package03, .a4-landscape-page-header-work15');
   if (header) {
     // 여러 헤더 텍스트 셀렉터 시도
-    const headerText = header.querySelector('.print-header-text-package02, .print-header-text-package03, .print-header-text-work01, .print-header-text-work16, .print-header-text');
+    const headerText = header.querySelector('.print-header-text-package02, .print-header-text-package03, .print-header-text-work01, .print-header-text-work15, .print-header-text');
     if (headerText) {
       const text = headerText.textContent?.trim() || '';
       if (text) {
@@ -2030,7 +2030,7 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
   }
   
   // 문제 카드들을 찾아서 각각 처리
-  // 유형#15는 .quiz-content를 사용하지만 특수 구조이므로 별도로 처리됨
+  // ETC#01는 .quiz-content를 사용하지만 특수 구조이므로 별도로 처리됨
   // 패키지#01 유형#11: .work-11-print도 포함
   // 패키지#01: .a4-page-template을 우선으로 찾고, wrapper div는 제외 (중복 방지)
   // 패키지#02: .print-question-card 사용
@@ -2426,29 +2426,29 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
         });
       }
       
-      // 유형#15인 경우 건너뛰기 (별도 처리됨)
-      // 유형#15는 .quiz-content 또는 .a4-page-content 내부에 .print-content-section이 있고,
+      // ETC#01인 경우 건너뛰기 (별도 처리됨)
+      // ETC#01는 .quiz-content 또는 .a4-page-content 내부에 .print-content-section이 있고,
       // .print-question-card가 없는 구조입니다.
       // 단, 카드 자체가 .print-question-card인 경우는 제외해야 합니다.
       const isCardItselfQuestionCard = card.classList.contains('print-question-card');
       
-      // 카드 자체가 .print-question-card인 경우는 유형#15가 아님 (건너뛰지 않음)
+        // 카드 자체가 .print-question-card인 경우는 ETC#01가 아님 (건너뛰지 않음)
       if (!isCardItselfQuestionCard) {
-        // 카드 자체가 .print-question-card가 아닌 경우에만 유형#15 체크
+        // 카드 자체가 .print-question-card가 아닌 경우에만 ETC#01 체크
         // 단, .a4-landscape-page-template은 유형#06 등 다른 유형에서도 사용하므로 제외
         const isLandscapeTemplate = card.classList.contains('a4-landscape-page-template');
         
         if (!isLandscapeTemplate) {
-          // .a4-landscape-page-template이 아닌 경우에만 유형#15 체크
-      const cardWork15Content = card.querySelector('.quiz-content') || card.querySelector('.a4-page-content');
-      const cardHasPrintContentSection = cardWork15Content?.querySelector('.print-content-section') !== null;
-          // 내부에 .print-question-card가 없는 경우만 유형#15로 판단
+          // .a4-landscape-page-template이 아닌 경우에만 ETC#01 체크
+      const cardEtc01Content = card.querySelector('.quiz-content') || card.querySelector('.a4-page-content');
+      const cardHasPrintContentSection = cardEtc01Content?.querySelector('.print-content-section') !== null;
+          // 내부에 .print-question-card가 없는 경우만 ETC#01로 판단
           const cardHasQuestionCardInside = card.querySelector('.print-question-card') !== null;
           if (cardHasPrintContentSection && !cardHasQuestionCardInside) {
             if (process.env.NODE_ENV === 'development') {
-              console.log(`⏭️ 카드 ${cardIndex + 1} 건너뛰기 (유형#15)`);
+              console.log(`⏭️ 카드 ${cardIndex + 1} 건너뛰기 (ETC#01)`);
             }
-        return; // 유형#15는 별도 처리되므로 건너뛰기
+        return; // ETC#01는 별도 처리되므로 건너뛰기
           }
         }
       }
@@ -4502,28 +4502,28 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
     }
   }
   
-  // 유형#15 처리: .quiz-content 또는 .a4-page-content 내부의 .print-content-section 처리
-  // 유형#15는 .quiz-content 또는 .a4-page-content 안에 .print-content-section이 있고, .print-question-card가 없는 구조
-  const work15QuizContent = element.querySelector('.quiz-content') || element.querySelector('.a4-page-content');
-  const work15HasPrintContentSection = work15QuizContent?.querySelector('.print-content-section') !== null;
-  const work15HasQuestionCard = element.querySelector('.print-question-card') !== null;
-  const work15IsWork15 = work15HasPrintContentSection && !work15HasQuestionCard;
+  // ETC#01 처리: .quiz-content 또는 .a4-page-content 내부의 .print-content-section 처리
+  // ETC#01는 .quiz-content 또는 .a4-page-content 안에 .print-content-section이 있고, .print-question-card가 없는 구조
+  const etc01QuizContent = element.querySelector('.quiz-content') || element.querySelector('.a4-page-content');
+  const etc01HasPrintContentSection = etc01QuizContent?.querySelector('.print-content-section') !== null;
+  const etc01HasQuestionCard = element.querySelector('.print-question-card') !== null;
+  const etc01IsEtc01 = etc01HasPrintContentSection && !etc01HasQuestionCard;
   
-  if (work15IsWork15 && work15QuizContent) {
+  if (etc01IsEtc01 && etc01QuizContent) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 유형#15 DOC 변환 시작:', {
-        hasPrintContentSection: work15HasPrintContentSection,
-        hasQuestionCard: work15HasQuestionCard,
-        isWork15: work15IsWork15,
-        contentSectionsCount: work15QuizContent.querySelectorAll('.print-content-section').length,
-        containerClass: work15QuizContent.className
+      console.log('🔍 ETC#01 DOC 변환 시작:', {
+        hasPrintContentSection: etc01HasPrintContentSection,
+        hasQuestionCard: etc01HasQuestionCard,
+        isEtc01: etc01IsEtc01,
+        contentSectionsCount: etc01QuizContent.querySelectorAll('.print-content-section').length,
+        containerClass: etc01QuizContent.className
       });
     }
-    // 유형#15의 경우: .print-content-section을 찾아서 처리
-    const contentSections = work15QuizContent.querySelectorAll('.print-content-section');
+    // ETC#01의 경우: .print-content-section을 찾아서 처리
+    const contentSections = etc01QuizContent.querySelectorAll('.print-content-section');
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 유형#15 섹션 개수:', contentSections.length);
+      console.log('🔍 ETC#01 섹션 개수:', contentSections.length);
     }
     
     contentSections.forEach((section, sectionIndex) => {
@@ -4531,7 +4531,7 @@ const htmlToDocxParagraphs = (element: HTMLElement, isAnswerMode: boolean = fals
       const sectionText = section.querySelector('.print-text-content');
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`🔍 유형#15 섹션 ${sectionIndex + 1}:`, {
+        console.log(`🔍 ETC#01 섹션 ${sectionIndex + 1}:`, {
           hasTitle: !!sectionTitle,
           hasText: !!sectionText,
           titleText: sectionTitle?.textContent?.trim()?.substring(0, 50),

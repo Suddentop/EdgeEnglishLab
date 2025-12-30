@@ -1,8 +1,10 @@
 .quiz-generator {
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Open Sans', 'Noto Sans KR', sans-serif;
+  box-sizing: border-box; /* 테두리 포함하여 너비 계산 */
 }
 
 .generator-header {

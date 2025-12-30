@@ -6,7 +6,7 @@ import './Navigation.css';
 import { isAdmin } from '../../utils/adminUtils';
 
 const WORK_MENUS = [
-  { label: '📦 본문 해석 및 본문 추출', path: '/work_15_image-problem-analyzer' },
+  { label: '📦 본문 해석 및 본문 추출', path: '/etc_01_image-problem-analyzer' },
   { label: '📦 패키지 퀴즈 #01 (여러 유형 생성)', path: '/package-quiz' },
   { label: '📦 패키지 퀴즈 #02 (2단 출력)', path: '/package-quiz-2step' },
   { label: '📦 패키지 퀴즈 #03 (본문 집중 문제)', path: '/package-quiz-3order' },
@@ -24,7 +24,7 @@ const WORK_MENUS = [
   { label: '12. 단어 학습', path: '/work_12_word-study' },
   { label: '13. 빈칸 채우기 (단어-주관식)', path: '/work_13_blank-fill-word' },
   { label: '14. 빈칸 채우기 (문장-주관식)', path: '/work_14_blank-fill-sentence' },
-  { label: '15. 본문 영어단어 학습', path: '/work_16_passage-word-study' }
+  { label: '15. 본문 영어단어 학습', path: '/work_15_passage-word-study' }
 ];
 
 const Navigation: React.FC = () => {

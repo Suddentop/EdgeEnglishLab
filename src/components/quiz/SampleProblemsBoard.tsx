@@ -233,7 +233,7 @@ const SampleProblemsBoard: React.FC = () => {
   const formatProblemType = (problemType: string): string => {
     // "본문해석 및 본문추출" 특수 처리
     if (problemType.includes('본문해석') || problemType.includes('본문추출')) {
-      return '유형#15';
+      return 'ETC#01';
     }
 
     // 패키지 형식 처리 (패키지01, 패키지02, 패키지03 등)
