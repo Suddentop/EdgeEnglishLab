@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { User } from '../../services/adminService';
+import { updateWorkTypeId } from '../../services/quizHistoryService';
 import './PointManagement.css';
 
 interface PointTransaction {
@@ -46,6 +47,9 @@ const PointManagement: React.FC = () => {
   
   // 디바운싱을 위한 타이머
   const [updateTimer, setUpdateTimer] = useState<NodeJS.Timeout | null>(null);
+  
+  // 유형 번호 업데이트 상태
+  const [updatingWorkType, setUpdatingWorkType] = useState(false);
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -717,6 +721,43 @@ const PointManagement: React.FC = () => {
             <p className="section-description">
               각 유형별로 문제 생성 시 차감될 포인트를 설정할 수 있습니다.
             </p>
+            
+            {/* 유형 번호 업데이트 버튼 */}
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f3f4f6', borderRadius: '8px' }}>
+              <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 600 }}>🔧 유형 번호 업데이트</h4>
+              <p style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#6b7280' }}>
+                기존에 생성된 유형#16 문제들을 유형#15로 변경합니다.
+              </p>
+              <button
+                onClick={async () => {
+                  if (!window.confirm('유형#16을 유형#15로 변경하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                    return;
+                  }
+                  setUpdatingWorkType(true);
+                  try {
+                    const count = await updateWorkTypeId('16', '15', '본문 단어 학습');
+                    setMessage({ type: 'success', text: `✅ ${count}개의 문제가 유형#15로 변경되었습니다.` });
+                  } catch (error) {
+                    console.error('유형 번호 업데이트 실패:', error);
+                    setMessage({ type: 'error', text: '❌ 유형 번호 업데이트에 실패했습니다.' });
+                  } finally {
+                    setUpdatingWorkType(false);
+                  }
+                }}
+                disabled={updatingWorkType}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: updatingWorkType ? '#9ca3af' : '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: updatingWorkType ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {updatingWorkType ? '업데이트 중...' : '유형#16 → 유형#15 변경'}
+              </button>
+            </div>
             
             <div className="work-types-table">
               <table className="point-table">

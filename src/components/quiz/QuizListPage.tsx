@@ -164,15 +164,6 @@ const QuizListPage: React.FC = () => {
             filterUserId: filterUserId || undefined
           }
         });
-      } else if (historyItem.workTypeId === '15') {
-        // ETC#01 전용 표시 페이지로 이동 (원래 인쇄 페이지)
-        navigate('/etc-01-display', {
-          state: {
-            quizData: historyItem,
-            returnPage: currentPage,
-            filterUserId: filterUserId || undefined
-          }
-        });
       } else {
         // 단일 유형(01~15)도 패키지 표시 페이지를 재사용해 동일한 인쇄 버튼 동작 제공
         const numId = historyItem.workTypeId?.toString()?.padStart(2, '0');

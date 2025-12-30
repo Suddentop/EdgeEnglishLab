@@ -361,6 +361,49 @@ export const updateQuizHistoryMemo = async (
   }
 };
 
+// 유형 번호 일괄 업데이트 (유형#16 -> 유형#15)
+export const updateWorkTypeId = async (
+  oldWorkTypeId: string,
+  newWorkTypeId: string,
+  newWorkTypeName: string
+): Promise<number> => {
+  try {
+    console.log(`🔄 유형 번호 업데이트 시작: ${oldWorkTypeId} -> ${newWorkTypeId}`);
+    
+    // oldWorkTypeId를 가진 모든 문서 조회
+    const q = query(
+      collection(db, 'quizHistory'),
+      where('workTypeId', '==', oldWorkTypeId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    let updateCount = 0;
+    
+    // 각 문서 업데이트
+    const updatePromises = querySnapshot.docs.map(async (docSnapshot) => {
+      try {
+        const docRef = doc(db, 'quizHistory', docSnapshot.id);
+        await updateDoc(docRef, {
+          workTypeId: newWorkTypeId,
+          workTypeName: newWorkTypeName
+        });
+        updateCount++;
+        console.log(`✅ 업데이트 완료: ${docSnapshot.id}`);
+      } catch (error) {
+        console.error(`❌ 업데이트 실패 (${docSnapshot.id}):`, error);
+      }
+    });
+    
+    await Promise.all(updatePromises);
+    
+    console.log(`✅ 유형 번호 업데이트 완료: ${updateCount}개 문서 업데이트됨`);
+    return updateCount;
+  } catch (error) {
+    console.error('❌ 유형 번호 업데이트 실패:', error);
+    throw error;
+  }
+};
+
 // 만료된 내역 정리 (6개월 후 자동 삭제)
 export const cleanupExpiredHistory = async (): Promise<void> => {
   try {
