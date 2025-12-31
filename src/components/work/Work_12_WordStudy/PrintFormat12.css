@@ -163,9 +163,9 @@
 
   .a4-page-header-work12 {
     width: 100%;
-    height: 1cm;
+    height: 1.2cm;
     flex-shrink: 0;
-    padding: 0.2cm 0.8cm 0 0.8cm;
+    padding: 0.5cm 0.8cm 0 0.8cm;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -199,7 +199,7 @@
   .a4-page-content-work12 {
     width: 100% !important;
     flex: 1;
-    padding: 0.3cm 0.8cm 0.3cm 0.8cm;
+    padding: 0.1cm 0.8cm 0.3cm 0.8cm;
     box-sizing: border-box;
     overflow: visible;
     display: flex !important;
@@ -278,14 +278,14 @@
     color: #000000;
     font-weight: 700;
     font-size: 10pt;
-    padding: 0.35rem 0.5rem;
+    padding: 0.33rem 0.5rem;
     text-align: center;
     border: 1px solid #000000;
   }
 
   .word-list-table-work12 td {
     border: 1px solid #000000;
-    padding: 0.35rem 0.5rem;
+    padding: 0.33rem 0.5rem;
     text-align: left;
     font-size: 10pt;
     font-weight: 500;
@@ -316,6 +316,16 @@
     width: 54%;
     min-width: 54%;
     max-width: 54%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  
+  /* 한글뜻 셀: 폰트 크기 자동 조정을 위한 기본 스타일 */
+  .word-list-table-work12 td.korean-meaning-cell {
+    overflow: hidden;
+    white-space: nowrap;
+    box-sizing: border-box;
   }
 
   .word-list-table-work12 tr:nth-child(even) {

@@ -132,6 +132,43 @@ export const WordListTableWork12: React.FC<WordListTableWork12Props> = ({
   const leftWords = words.slice(0, midPoint);
   const rightWords = words.slice(midPoint);
 
+  // 한글뜻 열의 폰트 크기를 자동으로 조정하는 함수
+  const adjustFontSize = (cell: HTMLElement) => {
+    const minFontSize = 7; // 최소 폰트 크기 (pt)
+    const maxFontSize = 10; // 최대 폰트 크기 (pt)
+    let fontSize = maxFontSize;
+    
+    // 임시로 최대 폰트 크기 설정하여 측정
+    cell.style.fontSize = `${maxFontSize}pt`;
+    cell.style.whiteSpace = 'nowrap';
+    
+    // 텍스트가 넘치는지 확인
+    while (cell.scrollWidth > cell.clientWidth && fontSize > minFontSize) {
+      fontSize -= 0.5; // 0.5pt씩 줄임
+      cell.style.fontSize = `${fontSize}pt`;
+    }
+    
+    // 최소 크기까지 줄였는데도 넘치면 최소 크기로 고정
+    if (cell.scrollWidth > cell.clientWidth && fontSize <= minFontSize) {
+      cell.style.fontSize = `${minFontSize}pt`;
+    }
+  };
+
+  // 렌더링 후 폰트 크기 조정
+  React.useEffect(() => {
+    // 인쇄 미리보기나 실제 렌더링 후 실행되도록 약간의 지연
+    const timer = setTimeout(() => {
+      const koreanCells = document.querySelectorAll('.word-list-table-work12 td:nth-child(3)');
+      koreanCells.forEach((cell) => {
+        if (cell instanceof HTMLElement) {
+          adjustFontSize(cell);
+        }
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [words, showAnswers, quizType]);
+
   const renderTable = (wordList: typeof words, startIndex: number) => (
     <table className="word-list-table-work12">
       <thead>
@@ -147,7 +184,7 @@ export const WordListTableWork12: React.FC<WordListTableWork12Props> = ({
           <tr key={startIndex + index}>
             <td>{startIndex + index + 1}</td>
             <td>{quizType === 'english-to-korean' ? word.english : word.korean}</td>
-            <td className={showAnswers ? 'answer-cell' : ''}>
+            <td className={`korean-meaning-cell ${showAnswers ? 'answer-cell' : ''}`}>
               {showAnswers
                 ? (() => {
                     const answer = quizType === 'english-to-korean' ? word.korean : word.english;
