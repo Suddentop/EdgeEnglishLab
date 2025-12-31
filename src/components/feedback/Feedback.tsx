@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { db, storage } from '../../firebase/config';
 import { 
@@ -28,6 +28,7 @@ interface FeedbackPost {
   updatedAt?: any;
   imageUrls?: string[];
   replies?: FeedbackReply[];
+  isSecret?: boolean;
 }
 
 interface FeedbackReply {
@@ -48,6 +49,7 @@ const Feedback: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [isSecret, setIsSecret] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -75,11 +77,6 @@ const Feedback: React.FC = () => {
       setIsAdmin(checkIsAdmin(userData));
     }
   }, [currentUser, userData]);
-
-  // 게시글 목록 불러오기
-  useEffect(() => {
-    fetchPosts();
-  }, []);
 
   // 이미지 업로드 함수
   const uploadImages = async (files: File[]): Promise<string[]> => {
@@ -122,7 +119,7 @@ const Feedback: React.FC = () => {
     return URL.createObjectURL(file);
   };
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
@@ -130,6 +127,7 @@ const Feedback: React.FC = () => {
       
       for (const doc of querySnapshot.docs) {
         const postData = doc.data();
+        
         // 답글 불러오기
         const repliesQuery = query(
           collection(db, 'feedback', doc.id, 'replies'),
@@ -162,7 +160,12 @@ const Feedback: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // 게시글 목록 불러오기
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   // 게시글 작성
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,11 +207,13 @@ const Feedback: React.FC = () => {
         authorName: authorName,
         createdAt: serverTimestamp(),
         imageUrls: uploadedImageUrls,
+        isSecret: isSecret,
       };
 
       await addDoc(collection(db, 'feedback'), postData);
       setTitle('');
       setContent('');
+      setIsSecret(false);
       setSelectedImages([]);
       setImageUrls([]);
       setIsWriting(false);
@@ -240,10 +245,12 @@ const Feedback: React.FC = () => {
         content: content.trim(),
         updatedAt: serverTimestamp(),
         imageUrls: uploadedImageUrls,
+        isSecret: isSecret,
       });
 
       setTitle('');
       setContent('');
+      setIsSecret(false);
       setSelectedImages([]);
       setImageUrls([]);
       setIsEditing(false);
@@ -566,12 +573,25 @@ const Feedback: React.FC = () => {
     setSelectedPost(post);
     setTitle(post.title);
     setContent(post.content);
+    setIsSecret(post.isSecret || false);
     setImageUrls(post.imageUrls || []);
     setIsEditing(true);
   };
 
   // 게시글 보기
   const viewPost = (post: FeedbackPost) => {
+    // 비밀글 접근 권한 체크: 작성자와 관리자만 볼 수 있음
+    if (post.isSecret === true) {
+      if (!currentUser) {
+        alert('비밀글은 작성자와 관리자만 볼 수 있습니다.');
+        return;
+      }
+      if (post.authorId !== currentUser.uid && !checkIsAdmin(userData)) {
+        alert('비밀글은 작성자와 관리자만 볼 수 있습니다.');
+        return;
+      }
+    }
+    
     setSelectedPost(post);
     setIsWriting(false);
     setIsEditing(false);
@@ -588,6 +608,7 @@ const Feedback: React.FC = () => {
     setIsEditing(false);
     setTitle('');
     setContent('');
+    setIsSecret(false);
     setReplyContent('');
     setSelectedImages([]);
     setSelectedReplyImages([]);
@@ -651,6 +672,7 @@ const Feedback: React.FC = () => {
                           className="post-title-btn"
                           onClick={() => viewPost(post)}
                         >
+                          {post.isSecret && <span className="secret-indicator">🔒 </span>}
                           {post.title}
                           {post.imageUrls && post.imageUrls.length > 0 && (
                             <span className="image-indicator"> 📷</span>
@@ -697,6 +719,17 @@ const Feedback: React.FC = () => {
                 rows={10}
                 required
               />
+            </div>
+            
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={isSecret}
+                  onChange={(e) => setIsSecret(e.target.checked)}
+                />
+                <span>비밀글 (작성자와 관리자만 볼 수 있습니다)</span>
+              </label>
             </div>
             
             {/* 이미지 업로드 섹션 */}
@@ -759,6 +792,7 @@ const Feedback: React.FC = () => {
                   setIsWriting(false);
                   setTitle('');
                   setContent('');
+                  setIsSecret(false);
                   setSelectedImages([]);
                 }}
               >
@@ -790,6 +824,17 @@ const Feedback: React.FC = () => {
                 rows={10}
                 required
               />
+            </div>
+            
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={isSecret}
+                  onChange={(e) => setIsSecret(e.target.checked)}
+                />
+                <span>비밀글 (작성자와 관리자만 볼 수 있습니다)</span>
+              </label>
             </div>
             
             {/* 기존 이미지 표시 */}
@@ -878,7 +923,10 @@ const Feedback: React.FC = () => {
       {selectedPost && !isWriting && !isEditing && (
         <div className="feedback-view">
           <div className="post-header">
-            <h2>{selectedPost.title}</h2>
+            <h2>
+              {selectedPost.isSecret && <span className="secret-indicator">🔒 </span>}
+              {selectedPost.title}
+            </h2>
             <div className="post-meta">
               <span>작성자: {selectedPost.authorName}</span>
               <span>
