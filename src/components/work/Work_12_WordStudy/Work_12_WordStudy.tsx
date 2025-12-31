@@ -1814,7 +1814,8 @@ ${englishWords.join(', ')}
     <div className="quiz-generator" onPaste={handlePaste}>
       <div className="generator-header">
         <h2>[유형#12] 영어 단어 학습 문제 생성</h2>
-        <p>영어 본문에서 중요한 단어들을 추출하여 단어 학습 문제를 생성합니다.</p>
+        <p style={{marginBottom: '0.08rem'}}>영어 본문에서 중요한 단어들을 추출하여 단어 학습 문제를 생성합니다.</p>
+        <p style={{marginTop: '0', fontSize: '0.95rem', color: '#666'}}>캡처화면 붙여넣기는 연속해서 여러 화면을 붙여넣을 수 있습니다</p>
       </div>
       <div className="input-type-section">
         <label>
@@ -1858,8 +1859,8 @@ ${englishWords.join(', ')}
       </div>
       
       {/* 문제 유형 선택 */}
-      <div className="quiz-type-section" style={{margin: '1.5rem 0', padding: '1rem', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef'}}>
-        <h3 style={{margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#495057'}}>문제 유형 선택</h3>
+      <div className="quiz-type-section" style={{margin: '1.5rem auto', padding: '0.5rem 1rem', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', maxWidth: 'fit-content'}}>
+        <h3 style={{margin: '0', fontSize: '1.1rem', color: '#495057'}}>문제 유형 선택</h3>
         <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
           <label style={{display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '0.5rem', borderRadius: '6px', background: quizType === 'english-to-korean' ? '#e3f2fd' : 'transparent', border: quizType === 'english-to-korean' ? '2px solid #1976d2' : '2px solid #e0e0e0'}}>
             <input
@@ -1913,7 +1914,7 @@ ${englishWords.join(', ')}
         </div>
       )}
       {inputMode === 'image' && (
-        <div className="input-guide">
+        <div className="input-guide" style={{border: '2px solid #339af0', padding: '0.5rem'}}>
           <div className="file-upload-row">
             <label htmlFor="blank-quiz-image" className="file-upload-btn">
               파일 선택
