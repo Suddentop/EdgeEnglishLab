@@ -22,9 +22,9 @@ const WORK_MENUS = [
   { label: '10. 다중 어법 오류 찾기', path: '/work_10_multi-grammar-error' },
   { label: '11. 본문 문장별 해석', path: '/work_11_sentence-translation' },
   { label: '12. 단어 학습 (단어문제)', path: '/work_12_word-study' },
-  { label: '13. 빈칸 채우기 (단어-주관식)', path: '/work_13_blank-fill-word' },
-  { label: '14. 빈칸 채우기 (문장-주관식)', path: '/work_14_blank-fill-sentence' },
-  { label: '15. 단어 학습 (본문 - 단어문제)', path: '/work_15_passage-word-study' }
+  { label: '13. 단어 학습 (본문 - 단어문제)', path: '/work_15_passage-word-study' },
+  { label: '14. 빈칸 채우기 (단어-주관식)', path: '/work_13_blank-fill-word' },
+  { label: '15. 빈칸 채우기 (문장-주관식)', path: '/work_14_blank-fill-sentence' }
 ];
 
 const Navigation: React.FC = () => {
