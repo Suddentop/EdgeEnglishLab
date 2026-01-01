@@ -300,11 +300,13 @@
 }
 
 .dropdown-item:hover::before {
-  transform: scaleX(1);
+  transform: scaleX(1) !important;
 }
 
-.dropdown-item:not(.highlight-word-study):hover::before {
-  transform: scaleX(1);
+/* 12번 메뉴를 제외한 모든 하위 메뉴에 파란색 선 효과 */
+.dropdown-item:not(.highlight-word-study):hover::before,
+.dropdown-item:not(.highlight-word-study):focus::before {
+  transform: scaleX(1) !important;
 }
 .dropdown-item:not(:last-child) {
   border-bottom: 0.5px solid #f0f0f7;
