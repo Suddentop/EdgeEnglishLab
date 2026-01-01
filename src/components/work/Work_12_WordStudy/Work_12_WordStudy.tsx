@@ -570,12 +570,15 @@ const Work_12_WordStudy: React.FC = () => {
     const basePrompt = `You are an expert at extracting text from images. This image contains an English vocabulary worksheet with English words and their Korean translations.
 
 CRITICAL REQUIREMENTS:
-1. You MUST extract ALL English words visible in the image, even if the image quality is not perfect
-2. For each English word, extract its corresponding Korean translation if visible
-3. If Korean translation is not visible, leave the "korean" field as an empty string ""
-4. Extract words from ALL columns and rows, even if the layout is complex
-5. Ignore numbers, labels, or other non-word content
-6. Extract at least 5-60 words (extract as many as possible)
+1. You MUST extract ONLY English words (words written in English alphabet) from the image
+2. DO NOT extract Korean-only words or phrases - ONLY extract entries that have an English word
+3. For each English word found, extract its corresponding Korean translation if visible
+4. If Korean translation is not visible, leave the "korean" field as an empty string ""
+5. Extract words from ALL columns and rows, even if the layout is complex
+6. Ignore numbers, labels, Korean-only entries, or other non-English-word content
+7. Extract at least 5-60 words (extract as many as possible)
+8. The "english" field MUST contain ONLY English alphabet characters (a-z, A-Z), spaces, hyphens, or apostrophes
+9. The "english" field MUST NOT contain any Korean characters (한글) or other non-English characters
 
 OUTPUT FORMAT (MUST be valid JSON array only, no other text):
 [
@@ -587,8 +590,9 @@ OUTPUT FORMAT (MUST be valid JSON array only, no other text):
 IMPORTANT:
 - You MUST respond with ONLY a valid JSON array
 - Do NOT say "I cannot" or "I'm unable" - extract what you can see
-- Even if the image is blurry or unclear, extract any words you can identify
-- If you see English words, extract them (korean can be empty if not visible)
+- Even if the image is blurry or unclear, extract any English words you can identify
+- ONLY extract entries that have an English word - skip Korean-only entries
+- The "english" field must be a valid English word, NOT Korean text
 - NO explanations, NO apologies, ONLY JSON array`;
 
     const retryPrompt = retryCount > 0 
@@ -648,8 +652,21 @@ IMPORTANT:
       if (jsonMatch) {
         try {
           const words = JSON.parse(jsonMatch[0]);
-          // 영어 단어가 있으면 포함 (한글 뜻이 없어도 포함)
-          const filteredWords = words.filter((word: any) => word.english && word.english.trim().length > 0);
+          // 영어 단어가 있고, 실제로 영어 문자로만 구성되어 있는지 검증
+          const filteredWords = words.filter((word: any) => {
+            if (!word.english || word.english.trim().length === 0) {
+              return false;
+            }
+            // 영어 필드가 실제로 영어 문자(알파벳, 공백, 하이픈, 아포스트로피)로만 구성되어 있는지 확인
+            // 한글이 포함되어 있으면 제외
+            const englishField = word.english.trim();
+            const isEnglishOnly = /^[a-zA-Z\s\-']+$/.test(englishField) && !/^[가-힣]/.test(englishField);
+            if (!isEnglishOnly) {
+              console.warn(`[필터링] 영어가 아닌 항목 제외: "${englishField}"`);
+              return false;
+            }
+            return true;
+          });
           console.log(`[시도 ${retryCount + 1}/${MAX_RETRIES + 1}] 추출된 단어 수:`, filteredWords.length);
           
           if (filteredWords.length === 0) {
