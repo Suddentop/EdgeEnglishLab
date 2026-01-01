@@ -291,7 +291,19 @@
   transform: translateX(4px);
 }
 
+/* 12번 메뉴를 제외한 모든 하위 메뉴에 파란색 배경 효과 */
+.dropdown-item:not(.highlight-word-study):hover,
+.dropdown-item:not(.highlight-word-study):focus {
+  background: var(--primary-50) !important;
+  color: var(--primary-700) !important;
+  transform: translateX(4px);
+}
+
 .dropdown-item:hover::before {
+  transform: scaleX(1);
+}
+
+.dropdown-item:not(.highlight-word-study):hover::before {
   transform: scaleX(1);
 }
 .dropdown-item:not(:last-child) {
@@ -484,6 +496,13 @@
 .mobile-menu-item:hover {
   background: #f0f0f7;
   color: #222;
+}
+
+/* 12번 메뉴를 제외한 모든 하위 메뉴에 파란색 배경 효과 */
+.mobile-menu-item:not(.highlight-word-study):hover {
+  background: var(--primary-50) !important;
+  color: var(--primary-700) !important;
+  transform: translateX(5px);
 }
 /* PC 네비게이션 메뉴 스타일 - 텍스트 링크 디자인 */
 .nav-links {
@@ -1316,4 +1335,27 @@ body, #root, .App {
   background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
   color: #78350f;
   transform: translateX(5px);
+}
+
+/* 13번 메뉴 (work_15_passage-word-study) 스타일 초기화 - 11번 메뉴와 동일하게 */
+/* 하이라이트 클래스가 없는 경우 하이라이트 스타일이 적용되지 않도록 명시적으로 초기화 */
+.dropdown-item:not(.highlight-word-study) {
+  background: none !important;
+  color: var(--secondary-700) !important;
+  font-weight: 500 !important;
+  border-left: none !important;
+  padding-left: 1.5rem !important;
+}
+
+.dropdown-item:not(.highlight-word-study)::before {
+  background: var(--gradient-primary) !important;
+  transform: scaleX(0) !important;
+}
+
+.mobile-menu-item:not(.highlight-word-study) {
+  background: none !important;
+  color: #2c3e50 !important;
+  font-weight: 500 !important;
+  border-left: none !important;
+  padding-left: 1.5rem !important;
 } 
