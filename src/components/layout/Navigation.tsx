@@ -334,7 +334,7 @@ const Navigation: React.FC = () => {
                     {WORK_MENUS.map(menu => (
                       <button
                         key={menu.path}
-                        className="mobile-menu-item mobile-sub-item"
+                        className={`mobile-menu-item mobile-sub-item ${menu.path === '/work_12_word-study' || menu.path === '/work_15_passage-word-study' ? 'highlight-word-study' : ''}`}
                         onClick={() => handleMenuClick(menu.path)}
                       >
                         {menu.label}
@@ -361,7 +361,7 @@ const Navigation: React.FC = () => {
                 {WORK_MENUS.map(menu => (
                   <button
                     key={menu.path}
-                    className="dropdown-item"
+                    className={`dropdown-item ${menu.path === '/work_12_word-study' || menu.path === '/work_15_passage-word-study' ? 'highlight-word-study' : ''}`}
                     onClick={() => handleMenuClick(menu.path)}
                   >
                     {menu.label}
