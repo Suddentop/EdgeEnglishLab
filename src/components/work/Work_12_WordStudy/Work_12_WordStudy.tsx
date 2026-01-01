@@ -319,6 +319,86 @@ const Work_12_WordStudy: React.FC = () => {
     return totalWords;
   };
 
+  // 텍스트에서 현재 단어를 빠르게 파싱하는 함수 (간단한 버전, 콘솔 로그 최소화)
+  const parseWordsFromTextSimple = (text: string): WordItem[] => {
+    if (!text.trim()) return [];
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    const words: WordItem[] = [];
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) continue;
+      
+      let english = '';
+      let korean = '';
+      
+      // 탭으로 구분된 형식
+      if (trimmedLine.includes('\t')) {
+        const parts = trimmedLine.split('\t').map(p => p.trim()).filter(p => p);
+        if (parts.length >= 2) {
+          english = parts[0];
+          korean = parts.slice(1).join(' ');
+        }
+      }
+      
+      // 콜론으로 구분된 형식
+      if (!english && !korean) {
+        const match = trimmedLine.match(/^(.+?)\s*[:：]\s*(.+)$/);
+        if (match) {
+          english = match[1].trim();
+          korean = match[2].trim();
+        }
+      }
+      
+      // 하이픈으로 구분된 형식
+      if (!english && !korean) {
+        const match = trimmedLine.match(/^(.+?)\s*-\s*(.+)$/);
+        if (match) {
+          english = match[1].trim();
+          korean = match[2].trim();
+        }
+      }
+      
+      // 공백으로 구분된 형식 (영어 + 한글)
+      if (!english && !korean) {
+        const wordsArray = trimmedLine.split(/\s+/);
+        if (wordsArray.length >= 2) {
+          let englishParts: string[] = [];
+          let koreanParts: string[] = [];
+          let foundKorean = false;
+          
+          for (const word of wordsArray) {
+            const trimmedWord = word.trim();
+            if (!trimmedWord) continue;
+            
+            if (/^[가-힣]/.test(trimmedWord)) {
+              foundKorean = true;
+              koreanParts.push(trimmedWord);
+            } else if (!foundKorean && /^[a-zA-Z]/.test(trimmedWord)) {
+              englishParts.push(trimmedWord);
+            } else if (foundKorean) {
+              koreanParts.push(trimmedWord);
+            }
+          }
+          
+          if (englishParts.length > 0 && koreanParts.length > 0) {
+            english = englishParts.join(' ');
+            korean = koreanParts.join(' ');
+          }
+        }
+      }
+      
+      // 유효한 단어 쌍이면 추가
+      if (english && korean && english !== korean) {
+        words.push({ english, korean });
+      }
+      // 영어 단어만 있는 경우는 문제 생성 시 한글뜻을 생성하므로 여기서는 카운트하지 않음
+    }
+    
+    return words;
+  };
+
   // 이미지 파일 업로드
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -379,8 +459,11 @@ const Work_12_WordStudy: React.FC = () => {
       return;
     }
     
+    // 현재 입력된 텍스트를 파싱해서 실제 단어 개수 확인
+    const currentWordCount = parseWordsFromTextSimple(inputText).length;
+    
     // 이미 60개에 도달했으면 추가 불가
-    if (extractedWords.length >= 60) {
+    if (currentWordCount >= 60) {
       alert('최대 문제생성 가능 개수 60개에 도달했습니다.\n추가 이미지를 캡처할 수 없습니다.');
       e.preventDefault();
       return;
@@ -418,8 +501,11 @@ const Work_12_WordStudy: React.FC = () => {
               });
             }
             
+            // 현재 입력된 텍스트를 파싱해서 기존 단어 목록 가져오기
+            const currentWords = parseWordsFromTextSimple(inputText);
+            
             // 기존 단어에 새 단어 추가 (60개 제한 적용)
-            const updatedWords = addWordsWithLimit(newWords, extractedWords);
+            const updatedWords = addWordsWithLimit(newWords, currentWords);
             setExtractedWords(updatedWords);
             
             // 단어들을 텍스트로 변환하여 textarea에 표시 (기존 텍스트 + 새 텍스트)
@@ -451,7 +537,16 @@ const Work_12_WordStudy: React.FC = () => {
 
   // 본문 입력 핸들러
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(e.target.value);
+    const newText = e.target.value;
+    setInputText(newText);
+    
+    // 텍스트가 변경될 때마다 실제 단어 개수를 계산하여 extractedWords 업데이트
+    // (캡처 모드에서 이미지로 추출한 경우나 텍스트 모드에서 입력한 경우 모두 처리)
+    if (inputMode === 'capture' || inputMode === 'text') {
+      const parsedWords = parseWordsFromTextSimple(newText);
+      setExtractedWords(parsedWords);
+    }
+    
     if (textAreaRef.current) {
       textAreaRef.current.style.height = 'auto';
       textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
