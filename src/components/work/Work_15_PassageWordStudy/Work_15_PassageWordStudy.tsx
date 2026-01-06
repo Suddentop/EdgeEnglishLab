@@ -1516,7 +1516,7 @@ const Work_15_PassageWordStudy: React.FC = () => {
   return (
     <div className="quiz-generator no-print">
       <div className="generator-header">
-        <h2>[유형#15] 본문 영어단어 학습 (단어퀴즈) 생성</h2>
+        <h2>메뉴#13. 본문 단어 학습 문제 생성 (본문-단어문제)</h2>
         <p>여러 개의 영어 본문을 입력하여 각 본문에서 고3 수준의 단어를 추출하여 단어 학습 문제를 생성합니다.</p>
       </div>
 

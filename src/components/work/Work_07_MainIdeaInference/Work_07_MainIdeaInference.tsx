@@ -1100,7 +1100,7 @@ ${passage}
   return (
     <div className="quiz-generator" onPaste={handlePaste}>
       <div className="generator-header">
-        <h2>[유형#07] 주제 추론 문제 생성</h2>
+        <h2>메뉴#07. 주제 추론 문제 생성</h2>
         <p>영어 본문의 주제를 AI가 추론해 5지선다 객관식 문제로 출제합니다.</p>
       </div>
       <div className="input-type-section">

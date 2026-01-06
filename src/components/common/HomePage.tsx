@@ -116,51 +116,18 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
         title="홈 - AI 영어 문제 생성 솔루션" 
         description="수능 수준의 고품질 영어 문제를 AI로 자동 생성하세요. 독해, 문법, 어휘 문제 제작과 인쇄를 지원하는 영어 선생님 필수 도구입니다." 
       />
-      <section className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">영어 교육 전문가를 위한 AI 영어 문제 생성 플랫폼</h1>
-          <p className="hero-description">
-            학원과 강사님들의 수업 준비 시간을 대폭 단축하고, 교육 품질을 한 단계 높여주는 전문적인 AI 솔루션입니다.
-          </p>
-          <p className="hero-description">
-            복잡한 문제 제작 과정을 간소화하여 교육에만 집중할 수 있습니다.
-          </p>
-          <div className="hero-stats">
-            <div className="stat-item">
-              <div className="stat-number">GPT-5</div>
-              <div className="stat-label">AI 엔진 기반</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">14가지</div>
-              <div className="stat-label">문제 유형</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">50%</div>
-              <div className="stat-label">시간 절약</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">즉시</div>
-              <div className="stat-label">문제지 생성</div>
-            </div>
-          </div>
-          <div className="pc-notice-box">
-            <p className="pc-notice-text">이 웹사이트는 PC환경에 최적화 되어있습니다. 원활한 이용을 위해서는 PC(노트북)을 이용해 주세요</p>
-          </div>
-        </div>
-      </section>
-
       <div style={{
-        marginTop: '0',
-        marginBottom: '2rem',
+        marginTop: '-54.75px',
+        marginBottom: '1rem',
         padding: '12px 20px',
         backgroundColor: '#f8f9fa',
         borderRadius: '8px',
         border: '1px solid #ced4da',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         display: 'flex',
-        justifyContent: 'center',
-        maxWidth: '1200px',
-        marginLeft: 'auto',
+        justifyContent: 'flex-start',
+        maxWidth: '100%',
+        marginLeft: '0',
         marginRight: 'auto',
         boxSizing: 'border-box'
       }}>
@@ -200,6 +167,38 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
           <span style={{ color: '#007bff' }}>→</span>
         </a>
       </div>
+      <section className="hero-section">
+        <div className="hero-content">
+          <h1 className="hero-title">영어 교육 전문가를 위한 AI 영어 문제 생성 플랫폼</h1>
+          <p className="hero-description">
+            학원과 강사님들의 수업 준비 시간을 대폭 단축하고, 교육 품질을 한 단계 높여주는 전문적인 AI 솔루션입니다.
+          </p>
+          <p className="hero-description">
+            복잡한 문제 제작 과정을 간소화하여 교육에만 집중할 수 있습니다.
+          </p>
+          <div className="hero-stats">
+            <div className="stat-item">
+              <div className="stat-number">GPT-5</div>
+              <div className="stat-label">AI 엔진 기반</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">14가지</div>
+              <div className="stat-label">문제 유형</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">50%</div>
+              <div className="stat-label">시간 절약</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">즉시</div>
+              <div className="stat-label">문제지 생성</div>
+            </div>
+          </div>
+          <div className="pc-notice-box">
+            <p className="pc-notice-text">이 웹사이트는 PC환경에 최적화 되어있습니다. 원활한 이용을 위해서는 PC(노트북)을 이용해 주세요</p>
+          </div>
+        </div>
+      </section>
 
       <section className="cta-section" style={{ marginTop: '0' }}>
         <div className="cta-content">

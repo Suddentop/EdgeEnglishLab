@@ -553,7 +553,7 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
   return (
     <div className="quiz-generator no-print">
       <div className="generator-header">
-        <h2>[유형#01] 문장 순서 맞추기</h2>
+        <h2>메뉴#01. 문단 순서 맞추기</h2>
         <p>여러 개의 본문을 입력하여 한 번에 여러 문제를 생성할 수 있습니다.</p>
       </div>
 

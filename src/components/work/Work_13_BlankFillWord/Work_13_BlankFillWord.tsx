@@ -677,7 +677,7 @@ const Work_13_BlankFillWord: React.FC = () => {
   return (
     <div className="quiz-generator">
       <div className="generator-header">
-        <h2>[유형#13] 빈칸 채우기 문제 (단어-주관식) 생성</h2>
+        <h2>메뉴#14. 분문 단어 빈칸 채우기 (단어-주관식)</h2>
         <p>영어 본문에서 문장별로 의미있는 단어를 빈칸으로 바꾸고, 주관식으로 답을 채우는 문제를 생성합니다.</p>
       </div>
       

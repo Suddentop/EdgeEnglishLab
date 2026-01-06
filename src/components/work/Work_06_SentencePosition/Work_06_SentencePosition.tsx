@@ -554,7 +554,7 @@ const Work_06_SentencePosition: React.FC = () => {
   return (
     <div className="quiz-generator">
       <div className="generator-header">
-        <h2>[유형#06] 문장 위치 찾기 문제 생성</h2>
+        <h2>메뉴#06. 문장 위치 찾기 문제 생성</h2>
         <p>여러 개의 본문을 입력하여 한 번에 여러 문제를 생성할 수 있습니다.</p>
       </div>
 

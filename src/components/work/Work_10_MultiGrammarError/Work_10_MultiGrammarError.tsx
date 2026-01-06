@@ -606,7 +606,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
   return (
     <div className="quiz-generator">
       <div className="generator-header">
-        <h2>[유형#10] 다중 어법 오류 찾기 문제 생성</h2>
+        <h2>메뉴#10. 다중 어법 오류 찾기 문제 생성</h2>
         <p>영어 본문에서 어법(문법) 변형이 가능한 8개 단어를 선정, 3~8개만 어법상 틀리게 변형하여 총 몇 개가 틀렸는지 고르는 문제를 출제합니다.</p>
       </div>
       

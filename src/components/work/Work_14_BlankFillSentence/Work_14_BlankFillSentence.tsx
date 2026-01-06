@@ -883,7 +883,7 @@ const Work_14_FillSentence: React.FC = () => {
   return (
     <div className="quiz-generator">
       <div className="generator-header">
-        <h2>[유형#14] 문장 빈칸 채우기 문제 (주관식) 생성</h2>
+        <h2>메뉴#15. 빈칸 문장 빈칸 채우기 (문장-주관식)</h2>
         <p>영어 본문에서 2~3개의 문장을 빈칸으로 바꾸고, 빈칸에 원래 문장을 채우는 주관식 문제를 생성합니다.<br />시험대비 효과적인 본문 암기를 위한 문제 생성을 위한 툴입니다.</p>
       </div>
       

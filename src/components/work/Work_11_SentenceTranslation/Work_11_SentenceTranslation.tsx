@@ -733,7 +733,7 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
   return (
     <div className="quiz-generator">
       <div className="generator-header">
-        <h2>[유형#11] 본문 문장별 해석 문제 생성</h2>
+        <h2>메뉴#11. 본문 문장별 해석 문제 생성</h2>
         <p>영어 본문을 입력하면 각 문장별로 해석을 작성할 수 있는 문제를 생성합니다.</p>
       </div>
       

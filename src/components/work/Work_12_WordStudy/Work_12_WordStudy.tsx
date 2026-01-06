@@ -1925,7 +1925,7 @@ ${englishWords.join(', ')}
   return (
     <div className="quiz-generator" onPaste={handlePaste}>
       <div className="generator-header">
-        <h2>[유형#12] 영어 단어 학습 문제 생성</h2>
+        <h2>메뉴#12. 영어 단어 학습 문제 생성 (단어문제)</h2>
         <p style={{marginBottom: '0.08rem'}}>영어 본문에서 중요한 단어들을 추출하여 단어 학습 문제를 생성합니다.</p>
         <p style={{marginTop: '0', fontSize: '0.95rem', color: '#666'}}>캡처화면 붙여넣기는 연속해서 여러 화면을 붙여넣을 수 있습니다</p>
       </div>

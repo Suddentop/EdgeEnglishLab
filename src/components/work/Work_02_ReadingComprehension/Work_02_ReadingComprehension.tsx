@@ -715,7 +715,7 @@ Korean translation:`;
   return (
     <div className="quiz-generator">
       <div className="generator-header">
-        <h2>[유형#02] 독해 문제 생성</h2>
+        <h2>메뉴#02. 유사단어 독해 문제 생성</h2>
         <p>여러 개의 본문을 입력하여 한 번에 여러 문제를 생성할 수 있습니다.</p>
       </div>
 
