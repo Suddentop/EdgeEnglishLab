@@ -150,9 +150,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               userRef,
               (snapshot) => {
                 if (snapshot.exists()) {
+                  const data = snapshot.data();
+                  // createdAt이 Timestamp 객체인 경우 ISO 문자열로 변환
+                  if (data.createdAt) {
+                    if (data.createdAt.toDate && typeof data.createdAt.toDate === 'function') {
+                      data.createdAt = data.createdAt.toDate().toISOString();
+                    } else if (data.createdAt.seconds) {
+                      const timestamp = data.createdAt as any;
+                      data.createdAt = new Date(timestamp.seconds * 1000).toISOString();
+                    }
+                  }
                   const snapData = {
                     uid: user.uid,  // uid 추가
-                    ...snapshot.data()
+                    ...data
                   };
                   setUserData(snapData);
                   // 실시간으로 변경된 헤더를 전역 상태에 반영

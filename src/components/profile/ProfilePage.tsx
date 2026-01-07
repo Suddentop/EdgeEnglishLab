@@ -431,7 +431,17 @@ const ProfilePage: React.FC = () => {
               <div className="info-row">
                 <label>가입일 :</label>
                 <span className="info-value">
-                  {userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : '미설정'}
+                  {userData.createdAt ? (() => {
+                    try {
+                      const date = new Date(userData.createdAt);
+                      if (!isNaN(date.getTime())) {
+                        return date.toLocaleDateString('ko-KR');
+                      }
+                      return '미설정';
+                    } catch (e) {
+                      return '미설정';
+                    }
+                  })() : '미설정'}
                 </span>
               </div>
 

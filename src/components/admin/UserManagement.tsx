@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { searchUsers, toggleUserStatus, User, createUserByAdmin, CreateUserData } from '../../services/adminService';
+import { searchUsers, toggleUserStatus, User, createUserByAdmin, CreateUserData, batchCreateUsersByAdmin } from '../../services/adminService';
 import { app } from '../../firebase/config';
 import { getAuth } from 'firebase/auth';
 import { formatPhoneNumber, formatPhoneInput } from '../../utils/textProcessor';
@@ -18,7 +18,18 @@ const UserManagement: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showPasswordDirectModal, setShowPasswordDirectModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showBatchCreateModal, setShowBatchCreateModal] = useState(false);
+  const [batchCreateText, setBatchCreateText] = useState('');
+  const [batchCreateError, setBatchCreateError] = useState('');
+  const [batchCreateResults, setBatchCreateResults] = useState<{
+    success: Array<{ email: string; userId: string; name: string }>;
+    failed: Array<{ email: string; reason: string }>;
+  } | null>(null);
   const [editForm, setEditForm] = useState({
     name: '',
     nickname: '',
@@ -354,6 +365,169 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // 일괄 사용자 생성
+  const handleBatchCreate = async () => {
+    if (!userData) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    if (!batchCreateText.trim()) {
+      setBatchCreateError('사용자 목록을 입력해주세요.');
+      return;
+    }
+
+    try {
+      setBatchCreateError('');
+      setBatchCreateResults(null);
+      setLoading(true);
+
+      // CSV 형식 파싱
+      const lines = batchCreateText.trim().split('\n');
+      if (lines.length < 2) {
+        setBatchCreateError('헤더와 최소 1명의 사용자 정보가 필요합니다.');
+        setLoading(false);
+        return;
+      }
+
+      // 헤더 제거 (첫 번째 줄)
+      const dataLines = lines.slice(1);
+      const users: CreateUserData[] = [];
+
+      for (let i = 0; i < dataLines.length; i++) {
+        const line = dataLines[i].trim();
+        if (!line) continue;
+
+        const parts = line.split(',').map(p => p.trim());
+        if (parts.length < 4) {
+          setBatchCreateError(`${i + 2}번째 줄: 형식이 올바르지 않습니다. (이메일,비밀번호,이름,닉네임)`);
+          setLoading(false);
+          return;
+        }
+
+        const [email, password, name, nickname] = parts;
+
+        // 기본 유효성 검사
+        if (!email || !password || !name || !nickname) {
+          setBatchCreateError(`${i + 2}번째 줄: 모든 필드가 필요합니다.`);
+          setLoading(false);
+          return;
+        }
+
+        // 이메일 형식 검사
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          setBatchCreateError(`${i + 2}번째 줄: 올바른 이메일 형식이 아닙니다.`);
+          setLoading(false);
+          return;
+        }
+
+        // 비밀번호 길이 검사
+        if (password.length < 8) {
+          setBatchCreateError(`${i + 2}번째 줄: 비밀번호는 최소 8자 이상이어야 합니다.`);
+          setLoading(false);
+          return;
+        }
+
+        users.push({
+          email,
+          password,
+          name,
+          nickname,
+          role: 'user'
+        });
+      }
+
+      if (users.length === 0) {
+        setBatchCreateError('생성할 사용자가 없습니다.');
+        setLoading(false);
+        return;
+      }
+
+      if (users.length > 100) {
+        setBatchCreateError('한 번에 최대 100명까지 생성할 수 있습니다.');
+        setLoading(false);
+        return;
+      }
+
+      // 일괄 생성 API 호출
+      const result = await batchCreateUsersByAdmin(userData.uid, users);
+
+      setBatchCreateResults(result.results);
+      loadUsers(); // 목록 새로고침
+
+      if (result.results.failed.length === 0) {
+        alert(`모든 사용자(${result.results.success.length}명)가 성공적으로 생성되었습니다.`);
+      } else {
+        // 결과는 모달에 표시됨
+      }
+    } catch (error: any) {
+      console.error('일괄 생성 오류:', error);
+      setBatchCreateError(error.message || '일괄 생성에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 관리자가 직접 비밀번호 변경
+  const handlePasswordDirectChange = async () => {
+    if (!selectedUser || !userData) {
+      alert('사용자를 선택해주세요.');
+      return;
+    }
+
+    // 유효성 검사
+    if (!newPassword || !confirmPassword) {
+      setPasswordError('새 비밀번호와 비밀번호 확인을 모두 입력해주세요.');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('비밀번호는 최소 8자 이상이어야 합니다.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    try {
+      setPasswordError('');
+      setLoading(true);
+
+      // Cloud Function을 사용하여 비밀번호 직접 변경
+      const response = await fetch('https://us-central1-edgeenglishlab.cloudfunctions.net/changeUserPasswordByAdmin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetUserId: selectedUser.uid,
+          newPassword: newPassword,
+          adminUid: userData.uid
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowPasswordDirectModal(false);
+        setNewPassword('');
+        setConfirmPassword('');
+        setPasswordError('');
+        alert(`${selectedUser.name} 회원의 비밀번호가 성공적으로 변경되었습니다.`);
+      } else {
+        setPasswordError(result.message || '비밀번호 변경에 실패했습니다.');
+      }
+    } catch (error: any) {
+      console.error('비밀번호 직접 변경 오류:', error);
+      setPasswordError('비밀번호 변경 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="user-management">
       <div className="user-management-header">
@@ -377,6 +551,18 @@ const UserManagement: React.FC = () => {
             style={{ marginRight: '10px' }}
           >
             ➕ 회원 등록
+          </button>
+          <button 
+            onClick={() => {
+              setBatchCreateText('');
+              setBatchCreateError('');
+              setBatchCreateResults(null);
+              setShowBatchCreateModal(true);
+            }}
+            className="btn-primary"
+            style={{ marginRight: '10px' }}
+          >
+            📋 일괄 생성
           </button>
         </div>
         <div className="search-controls">
@@ -438,7 +624,19 @@ const UserManagement: React.FC = () => {
                 <td>{user.nickname}</td>
                 <td>{formatPhoneNumber(user.phoneNumber || '') || '-'}</td>
                 <td>{user.email}</td>
-                <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                <td>
+                  {user.createdAt ? (() => {
+                    try {
+                      const date = new Date(user.createdAt);
+                      if (!isNaN(date.getTime())) {
+                        return date.toLocaleDateString('ko-KR');
+                      }
+                      return '-';
+                    } catch (e) {
+                      return '-';
+                    }
+                  })() : '-'}
+                </td>
                 <td>
                   <span className={`status-badge ${user.isActive ? 'active' : 'inactive'}`}>
                     {user.isActive ? '활성' : '비활성'}
@@ -472,7 +670,20 @@ const UserManagement: React.FC = () => {
                         setShowPasswordModal(true);
                       }}
                       className="action-btn password"
-                      title="비밀번호 변경"
+                      title="비밀번호 재설정 이메일 발송"
+                    >
+                      📧
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setNewPassword('');
+                        setConfirmPassword('');
+                        setPasswordError('');
+                        setShowPasswordDirectModal(true);
+                      }}
+                      className="action-btn password"
+                      title="비밀번호 직접 변경"
                     >
                       🔒
                     </button>
@@ -587,12 +798,12 @@ const UserManagement: React.FC = () => {
         </div>
       )}
 
-      {/* 비밀번호 재설정 모달 */}
+      {/* 비밀번호 재설정 이메일 발송 모달 */}
       {showPasswordModal && selectedUser && (
         <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>비밀번호 재설정</h3>
+              <h3>비밀번호 재설정 이메일 발송</h3>
               <button className="modal-close" onClick={() => setShowPasswordModal(false)}>×</button>
             </div>
             <div className="modal-body">
@@ -605,6 +816,222 @@ const UserManagement: React.FC = () => {
               <div className="modal-actions">
                 <button onClick={handlePasswordChange} className="btn-primary">이메일 발송</button>
                 <button onClick={() => setShowPasswordModal(false)} className="btn-secondary">취소</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 관리자 비밀번호 직접 변경 모달 */}
+      {showPasswordDirectModal && selectedUser && (
+        <div className="modal-overlay" onClick={() => setShowPasswordDirectModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>비밀번호 직접 변경</h3>
+              <button className="modal-close" onClick={() => setShowPasswordDirectModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p><strong>{selectedUser.name}</strong> 회원의 비밀번호를 직접 변경합니다.</p>
+              {passwordError && (
+                <div className="error-message" style={{ 
+                  color: '#d32f2f', 
+                  backgroundColor: '#ffebee', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  marginBottom: '15px' 
+                }}>
+                  {passwordError}
+                </div>
+              )}
+              <div className="form-group">
+                <label>새 비밀번호 <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  placeholder="최소 8자 이상"
+                  disabled={loading}
+                />
+                <small style={{ color: '#666', fontSize: '12px' }}>
+                  영문, 숫자, 특수문자를 포함해주세요
+                </small>
+              </div>
+              <div className="form-group">
+                <label>비밀번호 확인 <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setPasswordError('');
+                  }}
+                  placeholder="비밀번호를 다시 입력하세요"
+                  disabled={loading}
+                />
+              </div>
+              <div className="modal-actions">
+                <button 
+                  onClick={handlePasswordDirectChange} 
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? '변경 중...' : '비밀번호 변경'}
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowPasswordDirectModal(false);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    setPasswordError('');
+                  }} 
+                  className="btn-secondary"
+                  disabled={loading}
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 일괄 생성 모달 */}
+      {showBatchCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowBatchCreateModal(false)}>
+          <div className="modal-content" style={{ maxWidth: '800px', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>일괄 사용자 생성</h3>
+              <button className="modal-close" onClick={() => setShowBatchCreateModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ marginBottom: '15px' }}>
+                <p style={{ marginBottom: '10px', color: '#666' }}>
+                  CSV 형식으로 사용자 정보를 입력하세요. (헤더 포함)
+                </p>
+                <div style={{ 
+                  backgroundColor: '#f5f5f5', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  fontSize: '12px',
+                  fontFamily: 'monospace',
+                  marginBottom: '10px'
+                }}>
+                  <strong>형식:</strong> 이메일,비밀번호,이름,닉네임<br/>
+                  <strong>예시:</strong><br/>
+                  edgeuser01@naver.com,@testpw00,테스트유저 #01,edgeuser01<br/>
+                  edgeuser02@naver.com,@testpw00,테스트유저 #02,edgeuser02
+                </div>
+              </div>
+
+              {batchCreateError && (
+                <div className="error-message" style={{ 
+                  color: '#d32f2f', 
+                  backgroundColor: '#ffebee', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  marginBottom: '15px' 
+                }}>
+                  {batchCreateError}
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>사용자 목록 (CSV 형식)</label>
+                <textarea
+                  value={batchCreateText}
+                  onChange={(e) => {
+                    setBatchCreateText(e.target.value);
+                    setBatchCreateError('');
+                    setBatchCreateResults(null);
+                  }}
+                  placeholder="이메일,비밀번호,이름,닉네임&#10;edgeuser01@naver.com,@testpw00,테스트유저 #01,edgeuser01&#10;edgeuser02@naver.com,@testpw00,테스트유저 #02,edgeuser02"
+                  style={{
+                    width: '100%',
+                    minHeight: '200px',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace',
+                    fontSize: '13px',
+                    resize: 'vertical'
+                  }}
+                  disabled={loading}
+                />
+              </div>
+
+              {batchCreateResults && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4 style={{ marginBottom: '10px' }}>
+                    생성 결과: ✅ 성공 {batchCreateResults.success.length}명 / ❌ 실패 {batchCreateResults.failed.length}명
+                  </h4>
+                  
+                  {batchCreateResults.success.length > 0 && (
+                    <div style={{ marginBottom: '15px' }}>
+                      <strong style={{ color: '#2e7d32' }}>✅ 성공한 사용자:</strong>
+                      <div style={{ 
+                        maxHeight: '150px', 
+                        overflow: 'auto', 
+                        backgroundColor: '#f1f8f4', 
+                        padding: '10px', 
+                        borderRadius: '4px',
+                        marginTop: '5px',
+                        fontSize: '12px'
+                      }}>
+                        {batchCreateResults.success.map((user, index) => (
+                          <div key={index} style={{ marginBottom: '5px' }}>
+                            {user.email} ({user.name})
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {batchCreateResults.failed.length > 0 && (
+                    <div>
+                      <strong style={{ color: '#d32f2f' }}>❌ 실패한 사용자:</strong>
+                      <div style={{ 
+                        maxHeight: '150px', 
+                        overflow: 'auto', 
+                        backgroundColor: '#ffebee', 
+                        padding: '10px', 
+                        borderRadius: '4px',
+                        marginTop: '5px',
+                        fontSize: '12px'
+                      }}>
+                        {batchCreateResults.failed.map((user, index) => (
+                          <div key={index} style={{ marginBottom: '5px' }}>
+                            {user.email}: {user.reason}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button 
+                  onClick={handleBatchCreate} 
+                  className="btn-primary"
+                  disabled={loading || !batchCreateText.trim()}
+                >
+                  {loading ? '생성 중...' : '일괄 생성'}
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowBatchCreateModal(false);
+                    setBatchCreateText('');
+                    setBatchCreateError('');
+                    setBatchCreateResults(null);
+                  }} 
+                  className="btn-secondary"
+                  disabled={loading}
+                >
+                  닫기
+                </button>
               </div>
             </div>
           </div>

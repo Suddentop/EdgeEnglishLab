@@ -92,6 +92,15 @@ export const searchUsers = async (options: UserSearchOptions = {}): Promise<{
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      // createdAt이 Timestamp 객체인 경우 ISO 문자열로 변환
+      let createdAt = data.createdAt || '';
+      if (createdAt && typeof createdAt === 'object') {
+        if (createdAt.toDate && typeof createdAt.toDate === 'function') {
+          createdAt = createdAt.toDate().toISOString();
+        } else if (createdAt.seconds) {
+          createdAt = new Date((createdAt as any).seconds * 1000).toISOString();
+        }
+      }
       users.push({
         uid: doc.id,
         name: data.name || '',
@@ -99,7 +108,7 @@ export const searchUsers = async (options: UserSearchOptions = {}): Promise<{
         email: data.email || '',
         phoneNumber: data.phoneNumber || undefined,
         role: data.role || 'user',
-        createdAt: data.createdAt || '',
+        createdAt: createdAt,
         isActive: data.isActive !== false, // 기본값 true
         points: data.points || 0,
         totalPaidPoints: data.totalPaidPoints || 0,
@@ -276,6 +285,45 @@ export const createUserByAdmin = async (
     return result;
   } catch (error) {
     console.error('사용자 생성 오류:', error);
+    throw error;
+  }
+};
+
+/**
+ * 관리자가 여러 사용자를 일괄 생성
+ */
+export const batchCreateUsersByAdmin = async (
+  adminUid: string,
+  users: CreateUserData[]
+): Promise<{ 
+  success: boolean; 
+  message: string; 
+  results: {
+    success: Array<{ email: string; userId: string; name: string }>;
+    failed: Array<{ email: string; reason: string }>;
+  }
+}> => {
+  try {
+    const response = await fetch('https://us-central1-edgeenglishlab.cloudfunctions.net/batchCreateUsersByAdmin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        adminUid,
+        users
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || '일괄 사용자 생성에 실패했습니다.');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('일괄 사용자 생성 오류:', error);
     throw error;
   }
 };

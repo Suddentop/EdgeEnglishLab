@@ -155,6 +155,12 @@ exports.changeUserPasswordByAdmin = functions.https.onRequest((req, res) => {
         password: newPassword
       });
 
+      // 로그인 실패 횟수 리셋
+      await admin.firestore().collection('users').doc(targetUserId).update({
+        loginAttempts: 0,
+        lockedUntil: null
+      });
+
       // 비밀번호 변경 이력 기록
       await admin.firestore().collection('passwordHistory').add({
         targetUserId: targetUserId,
@@ -217,6 +223,12 @@ exports.changeUserPassword = functions.https.onCall(async (data, context) => {
       password: newPassword
     });
 
+    // 로그인 실패 횟수 리셋
+    await admin.firestore().collection('users').doc(targetUserId).update({
+      loginAttempts: 0,
+      lockedUntil: null
+    });
+
     // 비밀번호 변경 이력 기록
     await admin.firestore().collection('passwordHistory').add({
       targetUserId: targetUserId,
@@ -230,6 +242,155 @@ exports.changeUserPassword = functions.https.onCall(async (data, context) => {
     console.error('비밀번호 변경 오류:', error);
     throw new functions.https.HttpsError('internal', '비밀번호 변경 중 오류가 발생했습니다.');
   }
+});
+
+/**
+ * 로그인 실패 횟수 추적 및 잠금 처리
+ */
+exports.trackLoginFailure = functions.https.onRequest((req, res) => {
+  // OPTIONS 요청 처리
+  if (req.method === 'OPTIONS') {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.status(204).send('');
+    return;
+  }
+
+  return cors(req, res, async () => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        res.status(400).json({ success: false, message: '이메일이 필요합니다.' });
+        return;
+      }
+
+      // 이메일로 사용자 찾기
+      const userRecord = await admin.auth().getUserByEmail(email).catch(() => null);
+      if (!userRecord) {
+        // 사용자가 없어도 기본 메시지만 반환 (보안상 사용자 존재 여부를 노출하지 않음)
+        res.json({ success: true, message: '비밀번호가 올바르지 않습니다.' });
+        return;
+      }
+
+      const userId = userRecord.uid;
+      const userDoc = await admin.firestore().collection('users').doc(userId).get();
+
+      if (!userDoc.exists) {
+        res.json({ success: true, message: '비밀번호가 올바르지 않습니다.' });
+        return;
+      }
+
+      const data = userDoc.data();
+      const lockedUntil = data.lockedUntil;
+
+      // 잠금 상태 확인
+      if (lockedUntil) {
+        const lockedUntilTime = lockedUntil.toMillis();
+        const now = Date.now();
+
+        if (now < lockedUntilTime) {
+          // 아직 잠겨 있음
+          const remainingMinutes = Math.ceil((lockedUntilTime - now) / 60000);
+          res.json({
+            success: true,
+            locked: true,
+            remainingMinutes: remainingMinutes,
+            message: `계정이 잠겨 있습니다. ${remainingMinutes}분 후에 다시 시도해주세요.`
+          });
+          return;
+        } else {
+          // 잠금 시간이 지났으면 잠금 해제
+          await admin.firestore().collection('users').doc(userId).update({
+            lockedUntil: null,
+            loginAttempts: 0
+          });
+        }
+      }
+
+      // 실패 횟수 증가
+      const currentAttempts = (data.loginAttempts || 0) + 1;
+      const MAX_ATTEMPTS = 5;
+
+      if (currentAttempts >= MAX_ATTEMPTS) {
+        // 5회 실패 시 30분간 잠금
+        const lockDuration = 30 * 60 * 1000; // 30분 (밀리초)
+        const lockedUntil = admin.firestore.Timestamp.fromMillis(Date.now() + lockDuration);
+
+        await admin.firestore().collection('users').doc(userId).update({
+          loginAttempts: currentAttempts,
+          lockedUntil: lockedUntil
+        });
+
+        res.json({
+          success: true,
+          locked: true,
+          remainingMinutes: 30,
+          message: '비밀번호를 5회 잘못 입력하여 계정이 30분간 잠겼습니다. 잠시 후 다시 시도해주세요.'
+        });
+      } else {
+        // 실패 횟수만 증가
+        await admin.firestore().collection('users').doc(userId).update({
+          loginAttempts: currentAttempts
+        });
+
+        const remainingAttempts = MAX_ATTEMPTS - currentAttempts;
+        res.json({
+          success: true,
+          locked: false,
+          remainingAttempts: remainingAttempts,
+          message: `비밀번호가 올바르지 않습니다. (남은 시도 횟수: ${remainingAttempts}회)`
+        });
+      }
+    } catch (error) {
+      console.error('로그인 실패 추적 오류:', error);
+      res.status(500).json({ success: false, message: '로그인 실패 추적 중 오류가 발생했습니다.' });
+    }
+  });
+});
+
+/**
+ * 비밀번호 재설정 시 로그인 실패 횟수 리셋
+ */
+exports.resetLoginAttempts = functions.https.onRequest((req, res) => {
+  // OPTIONS 요청 처리
+  if (req.method === 'OPTIONS') {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.status(204).send('');
+    return;
+  }
+
+  return cors(req, res, async () => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        res.status(400).json({ success: false, message: '이메일이 필요합니다.' });
+        return;
+      }
+
+      // 이메일로 사용자 찾기
+      const userRecord = await admin.auth().getUserByEmail(email).catch(() => null);
+      if (!userRecord) {
+        res.json({ success: true, message: '사용자를 찾을 수 없습니다.' });
+        return;
+      }
+
+      const userId = userRecord.uid;
+      await admin.firestore().collection('users').doc(userId).update({
+        loginAttempts: 0,
+        lockedUntil: null
+      });
+
+      res.json({ success: true, message: '로그인 실패 횟수가 리셋되었습니다.' });
+    } catch (error) {
+      console.error('로그인 실패 횟수 리셋 오류:', error);
+      res.status(500).json({ success: false, message: '로그인 실패 횟수 리셋 중 오류가 발생했습니다.' });
+    }
+  });
 });
 
 /**
@@ -979,6 +1140,148 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
         error: error.message 
       });
     }
+});
+
+/**
+ * 관리자가 여러 사용자를 일괄 생성하는 함수
+ */
+exports.batchCreateUsersByAdmin = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    try {
+      const { adminUid, users } = req.body;
+    
+      if (!adminUid || !users || !Array.isArray(users)) {
+        res.status(400).json({ success: false, message: 'adminUid와 users 배열이 필요합니다.' });
+        return;
+      }
+
+      if (users.length === 0) {
+        res.status(400).json({ success: false, message: '생성할 사용자 목록이 비어있습니다.' });
+        return;
+      }
+
+      if (users.length > 100) {
+        res.status(400).json({ success: false, message: '한 번에 최대 100명까지 생성할 수 있습니다.' });
+        return;
+      }
+
+      console.log(`관리자 일괄 사용자 생성 시작: ${adminUid} -> ${users.length}명`);
+
+      // 1. 관리자 권한 확인
+      const adminDoc = await admin.firestore().collection('users').doc(adminUid).get();
+      if (!adminDoc.exists || adminDoc.data().role !== 'admin') {
+        res.status(403).json({ success: false, message: '관리자 권한이 필요합니다.' });
+        return;
+      }
+
+      const defaultPoints = 30000;
+      const defaultPrintHeader = 'EdgeEnglishLab | AI 영어 문제 생성 플랫폼';
+
+      const results = {
+        success: [],
+        failed: []
+      };
+
+      // 각 사용자 생성
+      for (let i = 0; i < users.length; i++) {
+        const userData = users[i];
+        const { email, password, name, nickname, phoneNumber, role } = userData;
+
+        try {
+          // 필수 필드 확인
+          if (!email || !password || !name || !nickname) {
+            results.failed.push({
+              email: email || '이메일 없음',
+              reason: '이메일, 비밀번호, 이름, 닉네임은 필수입니다.'
+            });
+            continue;
+          }
+
+          // 이메일 중복 확인
+          try {
+            await admin.auth().getUserByEmail(email);
+            results.failed.push({
+              email: email,
+              reason: '이미 존재하는 이메일입니다.'
+            });
+            continue;
+          } catch (error) {
+            if (error.code !== 'auth/user-not-found') {
+              throw error;
+            }
+          }
+
+          // Firebase Auth에 사용자 생성
+          const userRecord = await admin.auth().createUser({
+            email: email,
+            password: password,
+            emailVerified: true
+          });
+
+          // Firestore에 사용자 정보 저장
+          await admin.firestore().collection('users').doc(userRecord.uid).set({
+            name: name,
+            nickname: nickname,
+            email: email,
+            phoneNumber: phoneNumber || '',
+            role: role || 'user',
+            isActive: true,
+            points: defaultPoints,
+            totalPaidPoints: 0,
+            usedPoints: 0,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdBy: adminUid,
+            printHeader: defaultPrintHeader
+          });
+
+          results.success.push({
+            email: email,
+            userId: userRecord.uid,
+            name: name
+          });
+
+          console.log(`사용자 생성 완료 (${i + 1}/${users.length}): ${email}`);
+        } catch (error) {
+          console.error(`사용자 생성 실패: ${email}`, error);
+          let errorMessage = '알 수 없는 오류';
+          if (error.code === 'auth/email-already-exists') {
+            errorMessage = '이미 존재하는 이메일입니다.';
+          } else if (error.code === 'auth/invalid-email') {
+            errorMessage = '유효하지 않은 이메일 형식입니다.';
+          } else if (error.code === 'auth/weak-password') {
+            errorMessage = '비밀번호가 너무 약합니다.';
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+
+          results.failed.push({
+            email: email || '이메일 없음',
+            reason: errorMessage
+          });
+        }
+      }
+
+      console.log(`일괄 사용자 생성 완료: 성공 ${results.success.length}명, 실패 ${results.failed.length}명`);
+
+      res.json({
+        success: true,
+        message: `일괄 생성 완료: 성공 ${results.success.length}명, 실패 ${results.failed.length}명`,
+        results: results
+      });
+    } catch (error) {
+      console.error('일괄 사용자 생성 오류:', error);
+      res.status(500).json({
+        success: false,
+        message: '일괄 사용자 생성 중 오류가 발생했습니다.',
+        error: error.message
+      });
+    }
+  });
 });
 
 /**

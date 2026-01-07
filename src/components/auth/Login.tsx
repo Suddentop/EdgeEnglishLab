@@ -39,8 +39,21 @@ const Login: React.FC = () => {
         setError('');
         await login(values.email, values.password, values.rememberMe);
         navigate('/');
-      } catch (err) {
-        setError('이메일 또는 비밀번호가 올바르지 않습니다');
+      } catch (err: any) {
+        // 에러 메시지가 이미 상세하게 설정되어 있으면 그대로 사용
+        if (err.message) {
+          setError(err.message);
+        } else if (err.code === 'auth/user-not-found') {
+          setError('등록되지 않은 이메일 주소입니다.');
+        } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+          setError('이메일 또는 비밀번호가 올바르지 않습니다.\n\n💡 관리자가 생성한 계정인 경우, 설정된 비밀번호를 정확히 입력해주세요.\n💡 비밀번호를 잊으셨다면 "비밀번호를 잊으셨나요?" 링크를 이용해주세요.');
+        } else if (err.code === 'auth/too-many-requests') {
+          setError('너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
+        } else if (err.code === 'auth/user-disabled') {
+          setError('계정이 비활성화되었습니다. 관리자에게 문의해주세요.');
+        } else {
+          setError(`로그인에 실패했습니다. (오류 코드: ${err.code || '알 수 없음'})\n\n💡 이메일과 비밀번호를 확인해주세요.`);
+        }
       }
     }
   });
@@ -104,7 +117,11 @@ const Login: React.FC = () => {
         description="엣지잉글리쉬랩에 로그인하여 AI 기반 영어 문제 생성 서비스를 이용하세요. 수능형 문제 제작을 지금 시작해보세요." 
       />
       <h2>로그인</h2>
-      {error && <div className="error-message">{error}</div>}
+      {error && (
+        <div className="error-message" style={{ whiteSpace: 'pre-line', lineHeight: '1.6' }}>
+          {error}
+        </div>
+      )}
       
       <form onSubmit={formik.handleSubmit}>
         <div className="form-group">
