@@ -1285,6 +1285,107 @@ exports.batchCreateUsersByAdmin = functions.https.onRequest((req, res) => {
 });
 
 /**
+ * 모든 사용자의 포인트를 일괄 변경하는 함수 (관리자 전용)
+ */
+exports.updateAllUserPoints = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    try {
+      const { adminUid, targetPoints } = req.body;
+
+      if (!adminUid) {
+        res.status(400).json({ success: false, message: 'adminUid가 필요합니다.' });
+        return;
+      }
+
+      const points = targetPoints || 60000;
+
+      // 관리자 권한 확인
+      const adminDoc = await admin.firestore().collection('users').doc(adminUid).get();
+      if (!adminDoc.exists || adminDoc.data().role !== 'admin') {
+        res.status(403).json({ success: false, message: '관리자 권한이 필요합니다.' });
+        return;
+      }
+
+      console.log(`관리자 ${adminUid}가 모든 사용자 포인트를 ${points}P로 변경 시작`);
+
+      const usersRef = admin.firestore().collection('users');
+      const snapshot = await usersRef.get();
+
+      if (snapshot.empty) {
+        res.json({
+          success: true,
+          message: '변경할 사용자가 없습니다.',
+          updatedCount: 0
+        });
+        return;
+      }
+
+      let updateCount = 0;
+      const batchSize = 500;
+      let batch = admin.firestore().batch();
+      let batchCount = 0;
+
+      const docsToUpdate = [];
+      snapshot.forEach((doc) => {
+        const userData = doc.data();
+        const currentPoints = userData.points || 0;
+
+        // 포인트가 이미 목표값과 같으면 건너뛰기
+        if (currentPoints === points) {
+          return;
+        }
+
+        docsToUpdate.push(doc);
+      });
+
+      // 배치로 처리
+      for (let i = 0; i < docsToUpdate.length; i++) {
+        const doc = docsToUpdate[i];
+        batch.update(doc.ref, {
+          points: points
+        });
+
+        updateCount++;
+        batchCount++;
+
+        // 배치 제한에 도달하면 커밋하고 새 배치 시작
+        if (batchCount >= batchSize) {
+          await batch.commit();
+          batch = admin.firestore().batch();
+          batchCount = 0;
+        }
+      }
+
+      // 남은 변경사항 커밋
+      if (batchCount > 0) {
+        await batch.commit();
+      }
+
+      console.log(`포인트 변경 완료: ${updateCount}명의 사용자 포인트가 ${points}P로 변경됨`);
+
+      res.json({
+        success: true,
+        message: `${updateCount}명의 사용자 포인트가 ${points}P로 변경되었습니다.`,
+        updatedCount: updateCount,
+        targetPoints: points
+      });
+    } catch (error) {
+      console.error('포인트 일괄 변경 오류:', error);
+      res.status(500).json({
+        success: false,
+        message: '포인트 일괄 변경 중 오류가 발생했습니다.',
+        error: error.message
+      });
+    }
+  });
+});
+
+/**
  * 사용자 계정 상태 확인 함수 (이메일 기반)
  */
 exports.checkUserAccountStatus = functions.https.onRequest((req, res) => {

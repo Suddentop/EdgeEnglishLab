@@ -290,6 +290,43 @@ export const createUserByAdmin = async (
 };
 
 /**
+ * 관리자가 모든 사용자의 포인트를 일괄 변경
+ */
+export const updateAllUserPointsByAdmin = async (
+  adminUid: string,
+  targetPoints: number = 60000
+): Promise<{ 
+  success: boolean; 
+  message: string; 
+  updatedCount: number;
+  targetPoints: number;
+}> => {
+  try {
+    const response = await fetch('https://us-central1-edgeenglishlab.cloudfunctions.net/updateAllUserPoints', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        adminUid,
+        targetPoints
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || '포인트 일괄 변경에 실패했습니다.');
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('포인트 일괄 변경 오류:', error);
+    throw error;
+  }
+};
+
+/**
  * 관리자가 여러 사용자를 일괄 생성
  */
 export const batchCreateUsersByAdmin = async (

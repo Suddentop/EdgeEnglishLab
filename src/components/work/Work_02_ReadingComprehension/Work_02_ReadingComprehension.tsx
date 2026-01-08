@@ -9,6 +9,7 @@ import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPo
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import { extractTextFromImage, callOpenAI } from '../../../services/common';
+import { CostEstimateDisplay } from '../../common/CostEstimateDisplay';
 import '../../../styles/PrintFormat.css';
 import PrintFormatWork02New from './PrintFormatWork02New';
 import { processWithConcurrency } from '../../../utils/concurrency';
@@ -766,7 +767,18 @@ Korean translation:`;
                       rows={6}
                       style={{ marginTop: '10px', width: '100%' }}
         />
-                   {item.error && <div className="error-message">❌ {item.error}</div>}
+        {item.text && item.text.trim().length >= 10 && (
+          <CostEstimateDisplay
+            inputText={item.text}
+            workTypeId="02"
+            options={{
+              includeTranslation: true,
+              sentenceCount: Math.ceil(item.text.split(/[.!?]+/).length)
+            }}
+            className="cost-estimate-item"
+          />
+        )}
+        {item.error && <div className="error-message">❌ {item.error}</div>}
         </div>
              )}
           </div>

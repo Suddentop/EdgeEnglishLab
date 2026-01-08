@@ -548,7 +548,7 @@ const UserManagement: React.FC = () => {
               setShowCreateModal(true);
             }}
             className="btn-primary"
-            style={{ marginRight: '10px' }}
+            style={{ marginRight: '10px', fontSize: '13px', padding: '6px 12px' }}
           >
             ➕ 회원 등록
           </button>
@@ -560,7 +560,7 @@ const UserManagement: React.FC = () => {
               setShowBatchCreateModal(true);
             }}
             className="btn-primary"
-            style={{ marginRight: '10px' }}
+            style={{ marginRight: '10px', fontSize: '13px', padding: '6px 12px' }}
           >
             📋 일괄 생성
           </button>

@@ -1,0 +1,181 @@
+.cost-estimate-display {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cost-estimate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #d0d7de;
+}
+
+.cost-estimate-header h4 {
+  margin: 0;
+  color: #24292f;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.cost-estimate-note {
+  font-size: 0.75rem;
+  color: #656d76;
+  font-style: italic;
+}
+
+.cost-estimate-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cost-section {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid #e1e4e8;
+}
+
+.cost-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e1e4e8;
+}
+
+.cost-section-title {
+  font-weight: 600;
+  color: #24292f;
+  font-size: 0.95rem;
+}
+
+.cost-section-total {
+  font-weight: 700;
+  color: #0969da;
+  font-size: 1rem;
+}
+
+.cost-usd {
+  font-size: 0.85rem;
+  color: #656d76;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.cost-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cost-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.cost-detail-label {
+  color: #656d76;
+  font-weight: 500;
+}
+
+.cost-detail-value {
+  color: #24292f;
+  font-weight: 600;
+}
+
+.cost-api-calls {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e1e4e8;
+}
+
+.cost-api-calls-title {
+  font-size: 0.85rem;
+  color: #656d76;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.cost-api-call-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: #f6f8fa;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+}
+
+.cost-api-call-desc {
+  color: #24292f;
+  flex: 1;
+}
+
+.cost-api-call-tokens {
+  color: #656d76;
+  font-weight: 500;
+  margin-left: 12px;
+}
+
+.cost-total {
+  background: linear-gradient(135deg, #0969da 0%, #0550ae 100%);
+  color: white;
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(9, 105, 218, 0.3);
+}
+
+.cost-total-label {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.cost-total-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.cost-total .cost-usd {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+  .cost-estimate-display {
+    padding: 12px;
+  }
+
+  .cost-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cost-total {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cost-api-call-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
