@@ -70,8 +70,8 @@ const estimateSectionHeight = (section: PrintSection): number => {
       return (totalLines * LINE_HEIGHT_ENG) + 30;
     }
     case 'options': {
-      // 컨테이너 마진/패딩
-      let totalOptionHeight = 15; 
+      // 컨테이너 마진/패딩 (더 정밀하게 계산)
+      let totalOptionHeight = 10; // 마진/패딩을 줄여서 더 정확하게
       section.options?.forEach(opt => {
         const textLen = (opt.text || '').length + 5; // 번호 길이 포함
         const lines = Math.ceil(textLen / CHARS_PER_LINE_OPTION);
@@ -81,18 +81,28 @@ const estimateSectionHeight = (section: PrintSection): number => {
       return totalOptionHeight;
     }
     case 'translation': {
-      // 제목 + 패딩 + 마진
+      // 제목 + 패딩 + 마진 (더 정밀하게 계산)
       const textContent = section.text || '';
-      const paragraphs = textContent.split('\n');
+      const paragraphs = textContent.split('\n\n'); // \n\n으로 구분된 단락들
       let totalLines = 0;
       paragraphs.forEach(p => {
         if (p.trim().length > 0) {
-           totalLines += Math.ceil(p.length / CHARS_PER_LINE_KOR);
+          // 단락 내 줄바꿈도 고려
+          const lines = p.trim().split('\n');
+          lines.forEach(line => {
+            if (line.trim().length > 0) {
+              totalLines += Math.ceil(line.length / CHARS_PER_LINE_KOR);
+            }
+          });
+          // 단락 사이 간격 추가 (빈 줄 1줄)
+          if (paragraphs.length > 1) {
+            totalLines += 1;
+          }
         }
       });
       totalLines = Math.max(1, totalLines);
 
-      return (totalLines * LINE_HEIGHT_KOR) + 40; // 제목영역 등 고려 40px
+      return (totalLines * LINE_HEIGHT_KOR) + 35; // 제목영역 등을 줄여서 더 정확하게 (40px -> 35px)
     }
     case 'answer':
       // 정답 섹션 (Work_01은 보통 options 안에 정답 표시가 있지만 별도 섹션일 수도 있음)
@@ -171,47 +181,85 @@ const PrintFormatWork01New: React.FC<PrintFormatWork01NewProps> = ({ quizzes, is
     };
 
     items.forEach((item) => {
-      // 1. 아이템 높이 정밀 분석
-      const mainSections = item.sections.filter(s => s.type !== 'translation');
-      const transSections = item.sections.filter(s => s.type === 'translation');
+      // 1. 아이템 높이 정밀 분석 (3단계 분할 로직 A/B/C)
+      // A: 문제 헤더 + 본문 (title, instruction, html, paragraph)
+      // B: 핵심 질문/선택지 (options)
+      // C: 부가 정보 (translation)
+      
+      const sectionA = item.sections.filter(s => ['title', 'instruction', 'html', 'paragraph'].includes(s.type));
+      const sectionB = item.sections.filter(s => ['options'].includes(s.type));
+      const sectionC = item.sections.filter(s => ['translation'].includes(s.type));
 
-      const mainHeight = mainSections.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
-      const transHeight = transSections.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
-      const totalHeight = mainHeight + transHeight;
+      const heightA = sectionA.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
+      const heightB = sectionB.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
+      const heightC = sectionC.reduce((sum, s) => sum + estimateSectionHeight(s), 0);
+      
+      const buffer = 0; // 0px로 최소화하여 불필요한 공백 방지
+      const heightTotal = heightA + heightB + heightC + buffer;
+      const heightAB = heightA + heightB + buffer;
 
       // 현재 단에 내용이 있으면 무조건 다음 단으로 이동 (새로운 문제는 항상 새 단에서 시작)
       if (currentColumns[currentColumnIndex].length > 0) {
         moveToNextColumn();
       }
 
-      // 2. 분할 결정
-      // 전체 높이가 페이지 높이(730px)를 초과하고, 본문+선택지는 페이지 높이보다 작은 경우에만 분할
-      // 단, 정답 모드일 때만 적용
-      if (isAnswerMode && transSections.length > 0 && totalHeight > PAGE_HEIGHT_PX && mainHeight < PAGE_HEIGHT_PX) {
-        // 분할 처리
-        
-        // Item A: 본문 + 선택지
-        const itemMain: NormalizedQuizItem = {
-          ...item,
-          sections: mainSections,
-        };
+      // 2. 분할 결정 (A/B/C Split Logic - 정밀 로직)
+      if (isAnswerMode && sectionC.length > 0) {
+        if (heightTotal <= PAGE_HEIGHT_PX) {
+          // Case 1: A+B+C <= 높이 -> 모두 한 단에 배치
+          addToCurrentColumn(item);
+        } else if (heightAB <= PAGE_HEIGHT_PX) {
+          // Case 2: A+B+C > 높이 && A+B <= 높이 -> C만 다음 단으로
+          const itemAB: NormalizedQuizItem = {
+            ...item,
+            sections: [...sectionA, ...sectionB],
+          };
+          const itemC: NormalizedQuizItem = {
+            originalItem: item.originalItem,
+            workTypeId: item.workTypeId,
+            sections: sectionC,
+            chunkMeta: { ...item.chunkMeta, isSplitPart: true }
+          };
+          
+          addToCurrentColumn(itemAB);
+          moveToNextColumn();
+          addToCurrentColumn(itemC);
+        } else if (heightA <= PAGE_HEIGHT_PX) {
+          // Case 3: A+B > 높이 && A <= 높이 -> A는 현재 단, B+C는 다음 단
+          const itemA: NormalizedQuizItem = {
+            ...item,
+            sections: sectionA,
+          };
+          const itemBC: NormalizedQuizItem = {
+            originalItem: item.originalItem,
+            workTypeId: item.workTypeId,
+            sections: [...sectionB, ...sectionC],
+            chunkMeta: { ...item.chunkMeta, isSplitPart: true }
+          };
 
-        // Item B: 해석
-        const itemTrans: NormalizedQuizItem = {
-          originalItem: item.originalItem,
-          workTypeId: item.workTypeId,
-          sections: transSections,
-          chunkMeta: { ...item.chunkMeta, isSplitPart: true }
-        };
+          addToCurrentColumn(itemA);
+          moveToNextColumn();
+          addToCurrentColumn(itemBC);
+        } else {
+          // Case 4: A > 높이 (어쩔 수 없이 넘침, 하지만 가능한 최선의 배치)
+          // A는 현재 단, B+C는 다음 단으로 배치 (A가 넘치더라도)
+          const itemA: NormalizedQuizItem = {
+            ...item,
+            sections: sectionA,
+          };
+          const itemBC: NormalizedQuizItem = {
+            originalItem: item.originalItem,
+            workTypeId: item.workTypeId,
+            sections: [...sectionB, ...sectionC],
+            chunkMeta: { ...item.chunkMeta, isSplitPart: true }
+          };
 
-        // Item A를 현재 단에 배치
-        addToCurrentColumn(itemMain);
-
-        // Item B(해석)를 다음 단으로 이동하여 배치
-        moveToNextColumn();
-        addToCurrentColumn(itemTrans);
+          addToCurrentColumn(itemA);
+          moveToNextColumn();
+          addToCurrentColumn(itemBC);
+        }
       } else {
-        // 분할 불필요 (한 단에 모두 들어가거나, 본문 자체가 너무 커서 분할 의미가 없는 경우)
+        // 문제 모드일 때 (보통 A+B만 존재) 또는 해석이 없는 경우
         addToCurrentColumn(item);
       }
     });
@@ -286,6 +334,7 @@ const PrintFormatWork01New: React.FC<PrintFormatWork01NewProps> = ({ quizzes, is
                 <div 
                   key={`page-${pageIndex}-col-${columnIndex}`} 
                   className="print-column"
+                  data-column-index={columnIndex + 1}
                 >
                   {columnItems.map((item, itemIndex) => 
                     renderNormalizedCard(item, `p${pageIndex}-c${columnIndex}-i${itemIndex}`)

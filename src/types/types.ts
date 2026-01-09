@@ -99,6 +99,10 @@ export interface Quiz {
   paragraphs?: Paragraph[];
   sentences?: string[];
   translations?: string[];
+  format?: 'normal' | 'exam'; // 문제 형식: 일반 형식 또는 모의고사 형식
+  fixedParagraph?: string; // 모의고사 형식일 때 고정된 첫 번째 단락
+  fixedParagraphTranslation?: string; // 모의고사 형식일 때 고정된 첫 번째 단락의 번역
+  instruction?: string; // 문제 지시문 (모의고사 형식: "주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.")
 }
 
 // AI 단락 응답 타입

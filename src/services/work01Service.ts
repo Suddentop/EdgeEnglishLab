@@ -23,19 +23,60 @@ function getAllPermutations(arr: string[]): string[][] {
   return result;
 }
 
+// 모의고사 형식용: A, B, C의 가능한 모든 순열 생성 (A-B-C 제외)
+function getExamPermutations(): string[][] {
+  const arr = ['A', 'B', 'C'];
+  const allPerms = getAllPermutations(arr);
+  // A-B-C 순서 제외
+  return allPerms.filter(perm => perm.join('-') !== 'A-B-C');
+}
+
 // 객관식 선택지 4개 생성 (정답 포함)
 function generateChoices(correct: string[], allPerms: string[][]): { choices: string[][], answerIndex: number } {
-  // 정답을 포함한 4개 선택지 랜덤 추출
-  const perms = allPerms.map(p => p.join('-'));
+  // 금지된 순서: A-B-C-D, A-B-D-C
+  const forbiddenOrders = ['A-B-C-D', 'A-B-D-C'];
+  
+  // 정답 문자열 생성
   const correctStr = correct.join('-');
-  const otherPerms = perms.filter(p => p !== correctStr);
-  // 랜덤하게 3개 선택
-  const shuffled = otherPerms.sort(() => Math.random() - 0.5).slice(0, 3);
+  
+  // 정답이 금지된 순서인지 확인
+  if (forbiddenOrders.includes(correctStr)) {
+    throw new Error('정답이 금지된 순서(A-B-C-D 또는 A-B-D-C)입니다. 단락을 다시 섞어주세요.');
+  }
+  
+  // 모든 순열을 문자열로 변환
+  const perms = allPerms.map(p => p.join('-'));
+  
+  // 정답과 금지된 순서를 제외한 나머지 순열 필터링
+  const validPerms = perms.filter(p => {
+    const isCorrect = p === correctStr;
+    const isForbidden = forbiddenOrders.includes(p);
+    return !isCorrect && !isForbidden;
+  });
+  
+  // 유효한 순열이 최소 3개 이상인지 확인 (정답 1개 + 오답 3개 = 4개 선택지)
+  if (validPerms.length < 3) {
+    throw new Error('선택지를 생성할 수 없습니다. 금지된 순서를 제외한 후 충분한 순열이 없습니다.');
+  }
+  
+  // 랜덤하게 3개 오답 선택
+  const shuffled = validPerms.sort(() => Math.random() - 0.5).slice(0, 3);
+  
+  // 정답과 오답 3개를 합쳐서 4개 선택지 생성
   const allChoices = [correctStr, ...shuffled];
-  // 다시 섞어서 정답 위치 무작위화
+  
+  // 선택지 위치 무작위화
   const finalChoices = allChoices.sort(() => Math.random() - 0.5);
   const answerIndex = finalChoices.indexOf(correctStr);
-  // 문자열 배열로 변환
+  
+  // 최종 확인: 금지된 순서가 포함되어 있지 않은지 재확인
+  const hasForbiddenOrder = finalChoices.some(choice => forbiddenOrders.includes(choice));
+  if (hasForbiddenOrder) {
+    console.error('❌ 최종 선택지에 금지된 순서가 포함되어 있습니다:', finalChoices);
+    throw new Error('선택지 생성 중 오류가 발생했습니다. 금지된 순서가 포함되었습니다.');
+  }
+  
+  // 문자열 배열로 변환하여 반환
   return {
     choices: finalChoices.map(s => s.split('-')),
     answerIndex
@@ -221,7 +262,176 @@ ${paragraphContent}
 }
 
 /**
- * Work_01: 문단 순서 맞추기 문제 생성
+ * Work_01: 문단 순서 맞추기 문제 생성 (모의고사 형식)
+ * @param text - 영어 본문
+ * @param useAI - AI 사용 여부
+ * @returns 생성된 퀴즈 데이터
+ */
+export async function generateWork01ExamQuiz(text: string, useAI: boolean = false): Promise<Quiz> {
+  console.log('🔍 Work_01 모의고사 형식 문제 생성 시작...');
+  console.log('📝 입력 텍스트 길이:', text.length);
+  console.log('🤖 AI 사용 여부:', useAI);
+
+  try {
+    const paragraphTexts = await splitIntoParagraphs(text, useAI);
+    
+    if (paragraphTexts.length < 4) {
+      throw new Error('본문을 4개의 의미있는 단락으로 나눌 수 없습니다. 더 긴 본문을 입력해주세요.');
+    }
+
+    console.log('📝 단락 분할 결과:', paragraphTexts.length, '개 단락');
+    console.log('🔍 각 단락 길이:', paragraphTexts.map(p => p.length));
+
+    // 첫 번째 단락은 고정
+    const fixedParagraph = paragraphTexts[0].trim();
+    const remainingParagraphs = paragraphTexts.slice(1, 4); // 나머지 3개 단락
+
+    console.log('📌 고정된 첫 번째 단락:', fixedParagraph.substring(0, 50) + '...');
+    console.log('📝 나머지 3개 단락:', remainingParagraphs.map(p => p.substring(0, 30) + '...'));
+
+    // 나머지 3개 단락을 객체로 변환
+    const remainingParagraphObjects = remainingParagraphs.map((content, idx) => ({
+      id: `paragraph-${idx + 1}`,
+      content: content.trim(),
+      originalOrder: idx, // 원본에서의 순서 (1, 2, 3)
+      label: '', // 임시
+    }));
+
+    // 나머지 3개 단락 섞기
+    type RemainingParagraph = { id: string; content: string; originalOrder: number; label: string; };
+    let shuffledRemaining: RemainingParagraph[];
+    let reshuffleAttempts = 0;
+    const maxReshuffleAttempts = 10;
+    const forbiddenOrder = 'A-B-C';
+
+    // 정답 순서가 A-B-C가 되지 않도록 재섞기
+    do {
+      // 모의고사 형식용 간단한 섞기 함수
+      const shuffled = [...remainingParagraphObjects];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      shuffledRemaining = shuffled;
+      
+      // 라벨 부여 (A, B, C)
+      const labels = ['A', 'B', 'C'];
+      const labeledShuffled = shuffledRemaining.map((p, i) => ({ ...p, label: labels[i] }));
+      
+      // 정답 순서 계산 (원본 순서대로)
+      const correctOrder: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const foundParagraph = labeledShuffled.find(p => p.originalOrder === i);
+        if (foundParagraph) {
+          correctOrder.push(foundParagraph.label);
+        }
+      }
+      
+      const correctOrderStr = correctOrder.join('-');
+      
+      // 정답이 A-B-C인지 확인
+      if (correctOrderStr === forbiddenOrder) {
+        console.log(`⚠️ 정답 순서 "${correctOrderStr}"가 금지된 순서입니다. 다시 섞는 중... (시도 ${reshuffleAttempts + 1}/${maxReshuffleAttempts})`);
+        reshuffleAttempts++;
+        
+        if (reshuffleAttempts >= maxReshuffleAttempts) {
+          throw new Error('금지된 순서를 피하여 문제를 생성할 수 없습니다. 본문을 다시 입력하거나 다른 본문을 사용해주세요.');
+        }
+      } else {
+        // 금지된 순서가 아니면 루프 종료
+        break;
+      }
+    } while (reshuffleAttempts < maxReshuffleAttempts);
+
+    // 최종 라벨 부여
+    const labels = ['A', 'B', 'C'];
+    const labeledShuffled = shuffledRemaining.map((p, i) => ({ ...p, label: labels[i] }));
+
+    // 정답 순서 계산 (원본 순서대로)
+    const correctOrder: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const foundParagraph = labeledShuffled.find(p => p.originalOrder === i);
+      if (foundParagraph) {
+        correctOrder.push(foundParagraph.label);
+      }
+    }
+
+    console.log('🎯 정답 순서 생성:', correctOrder.join('-'));
+
+    // 각 단락별 한글 번역 생성
+    console.log('🌐 각 단락별 번역 생성 시작...');
+    const [fixedTranslation, ...remainingTranslations] = await Promise.all([
+      translateParagraph(fixedParagraph),
+      ...labeledShuffled.map(paragraph => translateParagraph(paragraph.content))
+    ]);
+
+    const translatedParagraphs = labeledShuffled.map((paragraph, idx) => ({
+      ...paragraph,
+      translation: remainingTranslations[idx]
+    }));
+
+    console.log('✅ 모든 단락 번역 완료');
+
+    // 선택지 생성 (A-B-C 제외)
+    const allPerms = getExamPermutations();
+    const correctStr = correctOrder.join('-');
+    
+    // 정답과 금지된 순서를 제외한 나머지 순열 필터링
+    const validPerms = allPerms.map(p => p.join('-')).filter(p => p !== correctStr);
+    
+    if (validPerms.length < 3) {
+      throw new Error('선택지를 생성할 수 없습니다. 충분한 순열이 없습니다.');
+    }
+    
+    // 랜덤하게 3개 오답 선택
+    const shuffled = validPerms.sort(() => Math.random() - 0.5).slice(0, 3);
+    const allChoices = [correctStr, ...shuffled];
+    
+    // 선택지 위치 무작위화
+    const finalChoices = allChoices.sort(() => Math.random() - 0.5);
+    const answerIndex = finalChoices.indexOf(correctStr);
+    const choices = finalChoices.map(s => s.split('-'));
+
+    // 정답 순서대로 번역 생성
+    const correctOrderTranslations = correctOrder
+      .map(paragraphLabel => {
+        const paragraph = translatedParagraphs.find(p => p.label === paragraphLabel);
+        const translation = paragraph?.translation || '';
+        if (translation && !translation.includes('[번역 실패')) {
+          return translation;
+        }
+        return null;
+      })
+      .filter((t): t is string => t !== null && t.length > 0);
+    
+    const paragraphTranslations = correctOrderTranslations.length > 0
+      ? correctOrderTranslations.join('\n\n')
+      : '';
+
+    const result: Quiz = {
+      id: `quiz-${Date.now()}`,
+      originalText: text,
+      shuffledParagraphs: translatedParagraphs,
+      choices,
+      answerIndex,
+      correctOrder,
+      translation: paragraphTranslations,
+      format: 'exam', // 모의고사 형식
+      fixedParagraph: fixedParagraph,
+      fixedParagraphTranslation: fixedTranslation,
+      instruction: '주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.'
+    };
+
+    console.log('✅ Work_01 모의고사 형식 문제 생성 완료:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Work_01 모의고사 형식 문제 생성 실패:', error);
+    throw error;
+  }
+}
+
+/**
+ * Work_01: 문단 순서 맞추기 문제 생성 (일반 형식)
  * @param text - 영어 본문
  * @param useAI - AI 사용 여부
  * @returns 생성된 퀴즈 데이터
@@ -306,7 +516,48 @@ export async function generateWork01Quiz(text: string, useAI: boolean = false): 
     
     // 2. 섞인 순서대로 A, B, C, D 라벨 부여 (사용자 요구사항)
     const labels = ['A', 'B', 'C', 'D'];
-    const labeledShuffled = shuffledParagraphs.map((p, i) => ({ ...p, label: labels[i] }));
+    
+    // 금지된 순서 확인 및 재섞기 로직
+    let labeledShuffled = shuffledParagraphs.map((p, i) => ({ ...p, label: labels[i] }));
+    let correctOrder = [];
+    let reshuffleAttempts = 0;
+    const maxReshuffleAttempts = 10;
+    const forbiddenOrders = ['A-B-C-D', 'A-B-D-C'];
+    
+    // 정답 순서가 금지된 순서인지 확인하고, 금지된 순서면 다시 섞기
+    do {
+      // 정답 순서 계산 (라벨 부여 후)
+      correctOrder = [];
+      for (let i = 0; i < 4; i++) {
+        const foundParagraph = labeledShuffled.find(p => p.originalOrder === i);
+        if (foundParagraph) {
+          correctOrder.push(foundParagraph.label);
+        }
+      }
+      
+      const correctOrderStr = correctOrder.join('-');
+      
+      // 정답 순서가 금지된 순서인지 확인
+      if (forbiddenOrders.includes(correctOrderStr)) {
+        console.log(`⚠️ 정답 순서 "${correctOrderStr}"가 금지된 순서입니다. 다시 섞는 중... (시도 ${reshuffleAttempts + 1}/${maxReshuffleAttempts})`);
+        
+        // 다시 섞기
+        shuffledParagraphs = shuffleParagraphs(allParagraphs);
+        labeledShuffled = shuffledParagraphs.map((p, i) => ({ ...p, label: labels[i] }));
+        reshuffleAttempts++;
+        
+        if (reshuffleAttempts >= maxReshuffleAttempts) {
+          throw new Error('금지된 순서를 피하여 문제를 생성할 수 없습니다. 본문을 다시 입력하거나 다른 본문을 사용해주세요.');
+        }
+      } else {
+        // 금지된 순서가 아니면 루프 종료
+        break;
+      }
+    } while (reshuffleAttempts < maxReshuffleAttempts);
+    
+    if (reshuffleAttempts > 0) {
+      console.log(`✅ ${reshuffleAttempts}번 재섞기 후 유효한 정답 순서 생성: ${correctOrder.join('-')}`);
+    }
     
     // 2-1. 각 단락별 한글 번역 생성
     console.log('🌐 각 단락별 번역 생성 시작...');
@@ -318,17 +569,7 @@ export async function generateWork01Quiz(text: string, useAI: boolean = false): 
     );
     console.log('✅ 모든 단락 번역 완료');
     
-    // 3. 원본 순서대로 라벨링된 단락 (정답 확인용)
-    // 섞인 순서에서 각 단락의 원본 순서를 찾아서 정답 순서 생성
-    const correctOrder = [];
-    for (let i = 0; i < 4; i++) {
-      // 원본 순서 i에 해당하는 단락을 섞인 순서에서 찾기
-      const foundParagraph = translatedParagraphs.find(p => p.originalOrder === i);
-      if (foundParagraph) {
-        correctOrder.push(foundParagraph.label);
-      }
-    }
-    
+    // 3. 원본 순서대로 라벨링된 단락 (정답 확인용) - 이미 위에서 계산됨
     console.log('🎯 정답 순서 생성:');
     console.log('- 섞인 순서 (라벨):', translatedParagraphs.map(p => p.label));
     console.log('- 원본 순서 (라벨):', correctOrder);
@@ -373,6 +614,8 @@ export async function generateWork01Quiz(text: string, useAI: boolean = false): 
       choices, // 4지선다 선택지들
       answerIndex, // 정답 인덱스
       translation: paragraphTranslations, // 단락별 번역을 \n\n으로 구분된 문자열 (Work_01과 동일한 방식)
+      format: 'normal', // 일반 형식
+      instruction: '문제 : 다음 단락들을 의미에 맞게 가장 적절히 배열한 것을 고르세요.'
     };
 
     console.log('✅ Work_01 문제 생성 완료:', result);

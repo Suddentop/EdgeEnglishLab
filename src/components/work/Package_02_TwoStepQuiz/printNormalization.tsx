@@ -273,13 +273,28 @@ export const normalizeQuizItemForPrint = (
         quizData ||
         quizItem;
 
+      // 모의고사 형식인지 확인
+      const isExamFormat = data?.format === 'exam';
+      const instruction = isExamFormat 
+        ? '주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.'
+        : '다음 단락들을 의미에 맞게 가장 적절히 배열한 것을 고르세요.';
+
       pushSection(
         createInstructionSection(
           '01',
-          '다음 단락들을 원래 순서대로 배열한 것을 고르세요',
+          instruction,
           chunkMeta
         )
       );
+
+      // 모의고사 형식이면 고정된 첫 번째 단락을 박스로 표시
+      if (isExamFormat && data?.fixedParagraph) {
+        pushSection({
+          type: 'html',
+          key: 'fixed-paragraph-01',
+          html: `<div style="border: 2px solid #333; border-radius: 8px; padding: 0.5rem 1rem; margin-bottom: 1.5rem; background-color: #fff; font-size: 9.4pt; line-height: 1.54; color: #333;">${data.fixedParagraph}</div>`
+        });
+      }
 
       const paragraphs = ensureParagraphArray(
         data?.shuffledParagraphs || data?.paragraphs || quizData?.shuffledParagraphs || []
@@ -289,16 +304,17 @@ export const normalizeQuizItemForPrint = (
           type: 'paragraph',
           key: `paragraph-01-${index}`,
           text: para.content,
-          label: para.label
+          label: isExamFormat ? `(${para.label})` : para.label // 모의고사 형식은 (A), (B), (C) 형식
         });
       });
 
-      // 유형#01의 경우 choices는 배열의 배열이므로 "→"로 join
+      // 유형#01의 경우 choices는 배열의 배열이므로 형식에 따라 구분자 사용
       const choices = data?.choices || quizData?.choices || quizData?.options || [];
+      const choiceSeparator = isExamFormat ? ' - ' : ' → ';
       const options = choices.map((choice: any, idx: number) => {
         const choiceArray = Array.isArray(choice) ? choice : [];
         const choiceText = choiceArray.length > 0 
-          ? choiceArray.join(' → ')
+          ? choiceArray.join(choiceSeparator)
           : cleanOptionText(choice);
         return {
           label: OPTION_LABELS[idx],
