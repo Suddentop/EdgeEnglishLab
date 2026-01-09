@@ -23,14 +23,12 @@ export interface Notice {
   isImportant?: boolean; // 중요 공지 여부
 }
 
-// 공지사항 목록 조회
+// 공지사항 목록 조회 (로그인 없이도 조회 가능)
 export const getNotices = async (): Promise<Notice[]> => {
   try {
-    const q = query(
-      collection(db, 'notices'),
-      orderBy('createdAt', 'desc')
-    );
-    
+    // orderBy 없이 전체 컬렉션 조회 (권한 문제 방지)
+    // 로그인 없이도 조회 가능하도록 orderBy를 사용하지 않고 클라이언트에서 정렬
+    const q = query(collection(db, 'notices'));
     const querySnapshot = await getDocs(q);
     const notices: Notice[] = [];
     
@@ -48,10 +46,19 @@ export const getNotices = async (): Promise<Notice[]> => {
       });
     });
     
+    // 클라이언트 측에서 날짜순 정렬 (최신순)
+    notices.sort((a, b) => {
+      const dateA = a.createdAt.getTime();
+      const dateB = b.createdAt.getTime();
+      return dateB - dateA; // 내림차순
+    });
+    
     return notices;
-  } catch (error) {
+  } catch (error: any) {
     console.error('공지사항 조회 실패:', error);
-    throw error;
+    // 권한 오류나 기타 오류 발생 시에도 빈 배열을 반환하여 페이지가 정상적으로 표시되도록 함
+    // 로그인 없이도 이용안내 페이지의 다른 탭(이용안내, 이용약관 등)은 정상적으로 볼 수 있어야 함
+    return [];
   }
 };
 

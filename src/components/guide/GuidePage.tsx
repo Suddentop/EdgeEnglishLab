@@ -18,6 +18,11 @@ const TrashIcon: React.FC<{ size?: number }> = ({ size = 16 }) => {
   return React.createElement(FaTrash as any, { size });
 };
 
+/**
+ * 이용안내 페이지 컴포넌트
+ * 로그인하지 않은 상태에서도 모든 내용(공지사항, 이용안내, 이용약관, 환불안내, 개인정보취급방침)을 볼 수 있습니다.
+ * 관리자 기능(공지사항 등록/수정/삭제)만 로그인 및 관리자 권한이 필요합니다.
+ */
 const GuidePage: React.FC = () => {
   const { userData } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('notice');
@@ -79,16 +84,17 @@ const GuidePage: React.FC = () => {
   const loadNotices = async () => {
     setLoading(true);
     try {
-      // 로그인 여부와 관계없이 공지사항 조회 가능
+      // 로그인 여부와 관계없이 공지사항 조회 가능 (Firestore 보안 규칙: allow read: if true)
       const noticeList = await getNotices();
       setNotices(noticeList);
       setFilteredNotices(noticeList);
     } catch (error) {
       console.error('공지사항 로드 실패:', error);
-      // 로그인하지 않은 사용자에게도 에러 메시지 표시
+      // 로그인하지 않은 사용자도 이용안내 페이지의 모든 내용을 볼 수 있어야 하므로
+      // 에러가 발생해도 빈 목록으로 표시하여 다른 탭(이용안내, 이용약관 등)은 정상적으로 볼 수 있도록 함
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
       console.error('에러 상세:', errorMessage);
-      // alert 대신 콘솔 로그만 남기고 사용자에게는 빈 목록 표시
+      // 에러가 발생해도 빈 목록으로 설정하여 페이지가 정상적으로 표시되도록 함
       setNotices([]);
       setFilteredNotices([]);
     } finally {
