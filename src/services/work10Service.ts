@@ -41,19 +41,18 @@ export async function generateWork10Quiz(
   while (retryCount < maxRetries) {
     try {
     // Step 1: 본문에서 어법 변형 가능한 단어 후보를 먼저 추출
-    const candidatePrompt = `아래 영어 본문을 분석하여, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 다중 어법 오류 찾기 문제로 변형 가능한 단어들을 추출해주세요.
+    const candidatePrompt = `**수능 고난도 다중 어법 오류 문제용 단어 후보 추출**
 
-**🎯 추출 기준:**
-1. **본문에 실제로 존재하는 단어만 추출** (본문에 나타나는 형태 그대로)
-2. **반드시 본문 있는 단어만 선택할 것**
-3. **어법 변형 가능한 문법적 단어 우선:**
-   - 본동사 vs 준동사(분사, 부정사)의 구별이 필요한 자리
-   - 관계사(who, which, that, what, where 등) 및 접속사
-   - 보어 자리의 형용사 vs 부사
-   - 대명사의 수 일치 (지칭 추론 필요)
-   - 병렬 구조의 마지막 항목
-4. **고유명사, 단순 명사, 기초 단어(a, an, the, is, are 등) 제외**
-5. **반드시 "한 단어(Single Word)" 단위로만 추출** (구/절 금지)
+본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다.
+
+**제외:** 조동사+동사원형, 규칙과거형(-ed), 3인칭-s/-es(동사원형+-s/-es), 단순 단복수, 기본 관사(a/an/the), 단순 전치사, 초급 시제, be동사 단순형(it was/were, they was/were 등), 주어-동사 시제일치(1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es), 고유명사, **to 부정사 단순 변형**(to+동사원형 → to+동사ing)
+
+**우선:** 관계사, 분사구문, 가정법, 병렬구조, 수일치(고난도), 대명사, 접속사vs전치사, 의미상 주어/논리 오류, **to 부정사 복잡 구조**(to+be+동사ing, to+have been+p.p 등)
+
+**추출 기준:**
+- 본문에 실제로 존재하는 단어만 (형태 그대로)
+- 한 단어(Single Word) 단위만 (구/절 금지)
+- 문법적으로 변형 가능한 단어 우선 (준동사, 동사, 형용사/부사, 전치사, 관계사/접속사)
 
 본문:
 ${passage}
@@ -118,56 +117,80 @@ ${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
     console.log(`✅ 본문에서 추출된 유효한 후보 단어: ${validCandidateWords.length}개`);
 
     // Step 3: 유효한 후보 단어 중에서 최종 8개 선택 및 어법 변형
-    const prompt = `아래 **본문에서 실제로 추출된 유효한 단어 목록** 중에서, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 다중 어법 오류 찾기 문제를 만들어주세요.
+    // 본문을 문장 단위로 분할 (마침표, 느낌표, 물음표 기준)
+    const sentences = passage.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 0);
+    const sentenceList = sentences.map((sentence, index) => 
+      `문장 ${index + 1}: "${sentence}"`
+    ).join('\n\n');
 
-**🎯 핵심 요구사항 (CSAT Level):**
-1. **단어 선정 (8개):**
-   - **⚠️ CRITICAL: 아래 목록에 있는 단어만 선택하세요.** 목록에 없는 단어는 절대 선택하지 마세요.
-   - **⚠️ 절대 규칙: 반드시 "한 단어(Single Word)" 단위로만 선정하세요. (구/절 금지)**
-     - (X) "can prey" (두 단어 금지)
-     - (O) "prey"
-   - **선정 기준 (난이도 상):**
-     - 단순한 명사나 관사, 전치사는 제외하세요.
-     - **문장의 구조를 결정하는 핵심어(Key Structural Words)** 위주로 선정하세요:
-       - **본동사 vs 준동사(분사, 부정사)의 구별이 필요한 자리**
-       - **관계사(who, which, that, what, where 등) 및 접속사**
-       - **보어 자리의 형용사 vs 부사**
-       - **대명사의 수 일치 (지칭 추론 필요)**
-       - **병렬 구조의 마지막 항목**
-   - 본문의 핵심 구조를 결정하는 중요 단어(동사, 준동사, 접속사, 관계사 등) 위주로 8개를 선정하세요.
-   - **중복 금지:** 본문 내에서 서로 다른 위치에 있는 8개의 단어를 선정하되, 가능한 서로 다른 단어를 선택하세요.
+    const prompt = `**수능 고난도 다중 어법 오류 문제 생성**
 
-2. **어법 변형 (3~8개):**
-   - 선정된 8개 단어 중 **3개에서 8개**를 랜덤하게 선택하여 **어법상 틀리게** 변형하세요.
-   - **변형 수준:** 단순한 철자 오류가 아닌, **고난도 문법 오류**를 만드세요.
-     - **수 일치 (Complex Subject-Verb Agreement):** 주어와 동사가 수식어구(관계사절, 전치사구 등)로 인해 멀리 떨어진 경우. (e.g., "The detailed analysis of the samples *were*(x) -> was")
-     - **능동 vs 수동 (Voice):** 의미상 주어와의 관계를 파악해야 하는 태의 오류. (e.g., "The experiments *conducting*(x) -> conducted")
-     - **준동사 (Verbals):** 본동사 자리인지 준동사 자리인지 구별하는 오류. (e.g., "A system *designed* to improve efficiency *generating*(x) -> generates")
-     - **관계사 vs 접속사 (Relatives vs Conjunctions):** 완전/불완전 문장 구조에 따른 오류. (e.g., "The place *which*(x) we visited -> where", "The fact *which*(x) he arrived -> that")
-     - **형용사 vs 부사 (Adjective vs Adverb):** 보어 자리나 수식 관계에서의 품사 오류. (e.g., "It remains *silently*(x) -> silent")
-     - **병렬 구조 (Parallelism):** 등위접속사나 상관접속사로 연결된 요소의 형태 불일치.
+아래 목록에서 **수능 최고난도 수준**의 다중 어법 오류 찾기 문제를 위한 단어 8개를 선정하고, 3~8개를 변형하세요.
 
-3. **나머지 단어:** 변형되지 않은 나머지 단어들은 반드시 **원본 그대로** 유지하세요.
+**⚠️ 필수 규칙 (엄격히 준수):**
+- 목록에 있는 단어만 선택 (목록 외 단어 절대 금지)
+- 한 단어(Single Word) 단위만 (구/절 금지, 예: "can prey"(X) -> "prey"(O))
+- 중복 불가 (서로 다른 위치의 8개 단어)
+- wrongIndexes는 3~8개 (절대 2개 이하, 9개 이상 금지)
+- 모든 wrongIndexes 값은 0~7 범위
+- **🚨 CRITICAL: 각 문장에서 최대 1개만 선택** (한 문장에서 여러 단어 선택 시 자동 실패)
+- **8개 문제는 모두 다른 어법 유형**으로 변형해야 함 (동일 어법 반복 금지)
+- **주어-동사 시제일치 문제 절대 금지** (1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es 등)
+- **단순 시제 변형 절대 금지** (was/were, 동사원형+-s/-es 등)
+- **to 부정사 단순 변형 절대 금지**: "to continue" → "to continuing" 같은 단순 변형은 금지. 반드시 "to be continuing" 또는 "to have been continuing" 같은 복잡한 구조만 사용
 
-**유효한 후보 단어 목록 (본문에 실제로 존재하는 단어들):**
+**📋 본문 (문장 단위):**
+${sentenceList}
+
+**선택 방법:**
+1. 문장 1에서 최대 1개 단어 선택 (또는 0개)
+2. 문장 2에서 최대 1개 단어 선택 (또는 0개)
+3. ... 각 문장을 순회하며 총 8개 단어 선택
+4. **중요:** 각 문장에서 2개 이상 선택 절대 금지 (이 규칙 위반 시 자동 실패)
+
+**단어 선정 기준 (8개):**
+1. **문장 구조를 결정하는 핵심어** 위주: 준동사, 동사, 형용사/부사, 전치사, 관계사/접속사
+2. **🚨 필수 어법 유형 다양성 (8개 선택 시 반드시 서로 다른 어법 유형):**
+   아래 어법 유형들을 최대한 다양하게 포함해야 함 (동일 어법 반복 절대 금지):
+   - 관계대명사와 관계부사 (where, when, how 등)
+   - 형용사 vs 부사
+   - 5형식에서 목적격 보어
+   - 능동/수동 문제
+   - 과거분사/현재분사
+   - 대동사 (Do, Be)
+   - 도치
+   - 수의 일치 (주어+동사)
+   **8개 문제는 모두 서로 다른 어법 유형이어야 하며, 가능한 한 위 목록의 어법 유형들을 다양하게 포함해야 함**
+3. **의미 해석 영향:** 틀리면 문장 의미 해석에 실제 영향이 있어야 함
+4. 단순 명사, 기본 관사, 단순 전치사 제외
+
+**어법 변형 기준 (3~8개):**
+- 단순 철자 오류가 아닌 **고난도 문법 오류**
+- **🚨 변형된 오류들은 모두 서로 다른 어법 유형**이어야 함 (동일 어법 반복 절대 금지)
+- 아래 어법 유형들을 최대한 다양하게 포함:
+  * 관계대명사와 관계부사 (where, when, how 등)
+  * 형용사 vs 부사
+  * 5형식에서 목적격 보어
+  * 능동/수동 문제
+  * 과거분사/현재분사
+  * 대동사 (Do, Be)
+  * 도치
+  * 수의 일치 (주어+동사)
+- 변형된 오류가 의미 해석에 실제 영향이 있어야 함
+- **to 부정사 변형 시:** "to continue" → "to continuing" 같은 단순 변형은 절대 금지. 반드시 "to be continuing" 또는 "to have been continuing" 같은 복잡한 구조만 사용
+- 나머지 단어는 원본 그대로 유지
+
+**유효한 후보 단어 목록:**
 ${JSON.stringify(validCandidateWords, null, 2)}
 
-**선택 규칙:**
-- 위 목록에 있는 단어만 선택하세요
-- 반드시 8개를 선택하세요
-- wrongIndexes는 3~8개 사이여야 합니다 (절대 2개 이하, 9개 이상 금지)
+**최종 검증:** 각 단어에 대해 "이 문법 오류가 고등학교 교실에서 설명할 가치가 있는가?" 질문하고, "아니오"면 선택/변형하지 마세요.
 
-아래 JSON 형식으로만 응답하세요 (예시가 아닌 실제 값으로 채워주세요):
+아래 JSON 형식으로만 응답하세요:
 {
   "originalWords": ["word1", "word2", "word3", "word4", "word5", "word6", "word7", "word8"],
   "transformedWords": ["word1", "wrong_word", "word3", "word4", "word5", "wrong_word", "wrong_word", "word8"],
   "wrongIndexes": [1, 5, 6]
-}
-
-**⚠️ CRITICAL:**
-- originalWords는 위 목록에 있는 단어만 사용하세요
-- wrongIndexes는 반드시 3개 이상 8개 이하여야 합니다 (예: [0,1,2] 또는 [0,1,2,3,4,5,6,7] 등)
-- wrongIndexes의 모든 값은 0~7 범위여야 합니다`;
+}`;
 
     // 다양성 추가
     const enhancedPrompt = addVarietyToPrompt(prompt);
@@ -333,6 +356,65 @@ ${JSON.stringify(validCandidateWords, null, 2)}
 
     // 3. 본문 위치(start) 기준으로 정렬
     mappedWords.sort((a, b) => a.start - b.start);
+
+    // 3.5. 같은 문장에 여러 단어가 선택되었는지 검증
+    const passageSentences = passage.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 0);
+    // 각 문장의 시작 위치 계산 (원본 passage 기준)
+    const sentenceBounds: Array<{ start: number, end: number, text: string }> = [];
+    let currentPos = 0;
+    for (const sentence of passageSentences) {
+      const start = passage.indexOf(sentence, currentPos);
+      if (start >= 0) {
+        const end = start + sentence.length;
+        sentenceBounds.push({ start, end, text: sentence });
+        currentPos = end;
+      } else {
+        // 찾지 못한 경우 (거의 발생하지 않음)
+        sentenceBounds.push({ start: currentPos, end: currentPos + sentence.length, text: sentence });
+        currentPos += sentence.length;
+      }
+    }
+    
+    const sentenceWordCount: { [sentenceIndex: number]: Array<{ word: string, start: number }> } = {};
+    
+    // 각 단어가 어느 문장에 속하는지 확인
+    for (const mappedWord of mappedWords) {
+      let sentenceIndex = -1;
+      for (let i = 0; i < sentenceBounds.length; i++) {
+        const bound = sentenceBounds[i];
+        if (mappedWord.start >= bound.start && mappedWord.start < bound.end) {
+          sentenceIndex = i;
+          break;
+        }
+      }
+      
+      if (sentenceIndex >= 0) {
+        if (!sentenceWordCount[sentenceIndex]) {
+          sentenceWordCount[sentenceIndex] = [];
+        }
+        sentenceWordCount[sentenceIndex].push({ word: mappedWord.original, start: mappedWord.start });
+      }
+    }
+    
+    // 같은 문장에 2개 이상 있는 경우 찾기
+    const violations: string[] = [];
+    for (const [sentenceIdx, wordList] of Object.entries(sentenceWordCount)) {
+      if (wordList.length > 1) {
+        const idx = parseInt(sentenceIdx);
+        const sentenceText = sentenceBounds[idx].text.substring(0, 80);
+        violations.push(`문장 ${idx + 1} ("${sentenceText}..."): ${wordList.map(w => w.word).join(', ')}`);
+      }
+    }
+    
+    if (violations.length > 0) {
+      console.error(`❌ 같은 문장에서 여러 단어가 선택됨:\n${violations.join('\n')}`);
+      if (retryCount < maxRetries - 1) {
+        console.warn(`재시도 ${retryCount + 1}/${maxRetries}...`);
+        retryCount++;
+        continue; // while 루프의 다음 반복으로
+      }
+      throw new Error(`한 문장에서 여러 단어가 선택되었습니다:\n${violations.join('\n')}`);
+    }
 
     // 4. 정렬된 순서대로 데이터 재구성
     const sortedOriginalWords = mappedWords.map(w => w.original);

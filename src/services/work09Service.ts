@@ -62,16 +62,21 @@ export async function generateWork09Quiz(
       throw new Error(`단어 선정 실패: 관계대명사/관계부사/접속사가 ${finalRelativeCount}개 선택되었습니다. 최대 1개만 허용됩니다.`);
     }
 
-    // Step 2: 어법 변형
-    const transformation = await transformWord(words);
+    // Step 2: 난이도 평가 (선택된 5개 단어 중 가장 난이도 높은 단어 선정)
+    const difficultyResult = await evaluateDifficulty(words, passage);
+    console.log('✅ 난이도 평가 결과:', difficultyResult);
+    console.log(`🎯 정답 단어 선정: 인덱스 ${difficultyResult.answerIndex}, 단어 "${difficultyResult.original}", 난이도 ${difficultyResult.difficulty}`);
+
+    // Step 3: 어법 변형 (난이도 평가로 선정된 단어를 변형)
+    const transformation = await transformWord(words, difficultyResult.answerIndex);
     console.log('✅ 어법 변형 결과:', transformation);
 
-    // Step 3: 원본 단어를 변형된 단어로 교체하면서 번호/밑줄 적용
+    // Step 4: 원본 단어를 변형된 단어로 교체하면서 번호/밑줄 적용
     const { numberedPassage, passageOrder } = applyNumberAndUnderline(passage, words, transformation.transformedWords);
     console.log('✅ 번호/밑줄 적용 완료');
     console.log('📋 본문에 나타나는 순서 (originalWords 인덱스):', passageOrder);
 
-    // Step 4: 번역
+    // Step 5: 번역
     const translation = await translateToKorean(passage);
     console.log('✅ 번역 완료');
 
@@ -120,23 +125,27 @@ async function selectWords(
   passage: string,
   previouslySelectedWords?: string[]
 ): Promise<string[]> {
-  // Step 1: 본문에서 어법 변형 가능한 단어 후보를 먼저 추출
-  const candidatePrompt = `아래 영어 본문을 분석하여, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 어법 오류 찾기 문제로 변형 가능한 단어들을 추출해주세요.
+  // Step 1: 본문에서 어법 변형 가능한 단어 후보를 먼저 추출 (재시도 불필요, 한 번만 수행)
+  const candidatePrompt = `**수능 고난도 어법 오류 문제용 단어 후보 추출**
 
-**🎯 추출 기준:**
-1. **본문에 실제로 존재하는 단어만 추출** (본문에 나타나는 형태 그대로)
-2. **반드시 본문 있는 단어만 선택할 것**
-2. **어법 변형 가능한 문법적 단어 우선:**
-   - 준동사: to-v, v-ing, p.p 형태
-   - 동사: 수 일치, 태, 시제 관련
-   - 형용사/부사: 보어 자리, 수식어 자리, 비교급
-   - 전치사
-   - 관계사/접속사 (최소화)
-3. **고유명사, 단순 명사 제외**
-4. **기초 단어(a, an, the, is, are 등) 제외**
+본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다.
+
+**제외:** 조동사+동사원형, 규칙과거형(-ed), 3인칭-s/-es(동사원형+-s/-es), 단순 단복수, 기본 관사(a/an/the), 단순 전치사, 초급 시제, be동사 단순형(it was/were, they was/were 등), 주어-동사 시제일치(1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es), 고유명사, **to 부정사 단순 변형**(to+동사원형 → to+동사ing)
+
+**우선:** 관계사, 분사구문, 가정법, 병렬구조, 수일치(고난도), 대명사, 접속사vs전치사, 의미상 주어/논리 오류, **to 부정사 복잡 구조**(to+be+동사ing, to+have been+p.p 등)
+
+**추출 기준:**
+- 본문에 실제로 존재하는 단어만 (형태 그대로)
+- 문법적으로 변형 가능한 단어 우선 (준동사, 동사, 형용사/부사, 전치사, 관계사/접속사)
 
 본문:
 ${passage}
+${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
+
+**⚠️ 매우 중요 - 이전 선택 단어 제외:**
+* 아래 단어들은 이전에 이미 선택된 단어입니다. 이 단어들은 **절대 선택하지 마세요**:
+* ${previouslySelectedWords.map(word => `"${word}"`).join(', ')}
+* 위 단어들과는 **완전히 다른 단어**를 선택해야 합니다.` : ''}
 
 응답 형식 (JSON 배열, 최소 15개 이상 추출):
 ["word1", "word2", "word3", ...]`;
@@ -190,65 +199,360 @@ ${passage}
 
   console.log(`✅ 본문에서 추출된 유효한 후보 단어: ${validCandidateWords.length}개`);
 
-  // Step 3: 유효한 후보 단어 중에서 최종 5개 선택
-  const selectionPrompt = `아래 **본문에서 실제로 추출된 유효한 단어 목록** 중에서, **대한민국 고등학교 3학년 및 대학수학능력시험(수능) 최고난도 수준**의 어법 오류 찾기 문제를 위한 단어 5개를 선정해주세요.
+  // Step 3: 유효한 후보 단어 중에서 최종 5개 선택 (문장별 후보 추출 방식)
+  // 본문을 문장 단위로 분할 (마침표, 느낌표, 물음표 기준)
+  const sentences = passage.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 0);
+  
+  // 각 문장별로 후보 단어 추출 (코드 레벨에서 미리 추출)
+  const sentenceCandidates: { sentenceIndex: number; sentence: string; candidates: string[] }[] = [];
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i];
+    const candidates: string[] = [];
+    
+    // 유효한 후보 단어 중에서 이 문장에 실제로 존재하는 단어만 추출
+    for (const word of validCandidateWords) {
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+      if (regex.test(sentence)) {
+        candidates.push(word);
+      }
+    }
+    
+    if (candidates.length > 0) {
+      sentenceCandidates.push({
+        sentenceIndex: i,
+        sentence: sentence,
+        candidates: candidates
+      });
+    }
+  }
+  
+  if (sentenceCandidates.length < 5) {
+    throw new Error(`본문에 5개 이상의 문장이 필요합니다. (현재: ${sentenceCandidates.length}개 문장에 후보 단어 존재)`);
+  }
+  
+  // 문장별 후보 단어를 프롬프트에 포함
+  const sentenceList = sentenceCandidates.map((item, idx) => 
+    `문장 ${item.sentenceIndex + 1}: "${item.sentence}"\n가능한 후보 단어: ${JSON.stringify(item.candidates)}`
+  ).join('\n\n');
+  
+  const maxRetries = 5;
+  let retryCount = 0;
+  let previousErrors: string[] = [];
+  
+  while (retryCount < maxRetries) {
+    try {
 
-**⚠️ CRITICAL:**
-- **아래 목록에 있는 단어만 선택하세요.** 목록에 없는 단어는 절대 선택하지 마세요.
-- 관계대명사/관계부사/접속사는 최대 1개만 선택 가능합니다. 2개 이상 선택 시 자동으로 실패 처리됩니다.
+      const errorContext = previousErrors.length > 0 ? `
 
-**🎯 핵심 선정 기준 (수능 1등급 수준 - 엄격한 다양성 필수):**
-1. **복잡한 구문 구조:** 단순한 단문이 아닌, 관계사절, 분사구문, 도치 구문, 가정법 등 **복잡한 문장 구조 내에서 문법적 판단이 필요한 단어**를 우선 선정하세요.
-2. **핵심 문법 요소 (다양성 필수 - 관계사/접속사 최대 1개만):**
-   - **준동사 (우선 선정):** 부정사(to-v), 동명사(v-ing), 분사(v-ing/p.p)의 구별 (문장의 본동사를 찾는 능력 요구) - **최소 1개 필수**
-   - **동사 (우선 선정):** 수 일치(주어가 멀리 떨어져 있는 경우), 태(능동/수동), 시제(완료시제 등) - **최소 1개 필수**
-   - **형용사/부사 (우선 선정):** 보어 자리의 형용사 vs 수식어 자리의 부사, 비교급/최상급 - **최소 1개 필수**
-   - **전치사 (우선 선정):** 전치사 vs 접속사 구별, 전치사 목적어 자리 - **최소 1개 필수**
-   - **관계사/접속사 (최후의 수단):** 관계대명사 vs 관계부사, that vs what, 계속적 용법, 병렬 구조 등 - **최대 1개만 허용, 가능하면 0개**
-3. **단순 암기 지양:** 단순한 숙어 암기나 철자 문제는 배제하고, **문맥과 구조를 파악해야만 풀 수 있는 단어**를 선택하세요.
-   - 예: 단순 'make'가 아닌, 사역동사/5형식 구조에서의 'make' 또는 목적보어 자리의 형용사/부사 판단.
-4. **난이도 상향 조정:** 중학교 수준의 단순한 시제나 인칭 대명사 문제는 절대적으로 피하세요.
+**⚠️ 이전 시도 실패 이유 (반드시 피하세요):**
+${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
+위 실수를 반복하지 마세요.` : '';
 
-**🚫 절대 금지 사항 (엄격히 준수):**
-- **관계대명사/관계부사/접속사 과다 선택 절대 금지:** 
-  * that, which, who, whom, whose, what, whatever, when, where, why, how, however, whichever, whoever, wherever, whenever 등은 **최대 1개만** 선택 가능
-  * 2개 이상 선택 시 자동으로 실패 처리됩니다
-- **다양성 필수 (5개 중 최소 4개는 다른 카테고리):**
-  * 준동사 1-2개 (to-v, v-ing, p.p 중)
-  * 동사 1-2개 (수 일치, 태, 시제 관련)
-  * 형용사/부사 1-2개 (보어 자리, 수식어 자리, 비교급 등)
-  * 전치사 1개
-  * 관계사/접속사 0-1개 (가능하면 0개, 최대 1개)
-- **균형잡힌 선택 필수:** 관계사/접속사는 최후의 수단으로만 사용하고, 나머지는 반드시 준동사, 동사, 형용사/부사, 전치사 등으로 다양하게 선택하세요.
+      const selectionPrompt = `**수능 고난도 어법 오류 문제용 단어 5개 선정**${errorContext}
 
-**⚠️ 규칙 (엄격히 준수):**
-- **반드시 위 목록에 있는 단어만 선택하세요.** 목록에 없는 단어는 절대 선택하지 마세요.
-- 반드시 "단어" 단위로 선정하세요. (구/절 단위 X)
-- 동일한 단어 중복 선정 금지.
-- 각기 다른 문장에서 1개씩만 선정하세요.
-- **관계대명사/관계부사/접속사(that, which, who, whom, whose, what, whatever, when, where, why, how, however 등)는 최대 1개만 선택하세요. 가능하면 0개를 선택하세요.**
-- **우선 선택 순서: 1) 준동사(to-v, v-ing, p.p), 2) 동사(수일치, 태, 시제), 3) 형용사/부사, 4) 전치사, 5) 관계사/접속사(최후의 수단)**
+아래 목록에서 **수능 1등급 수준**의 어법 오류 찾기 문제를 위한 단어 5개를 선정하세요.
 
-**유효한 후보 단어 목록 (본문에 실제로 존재하는 단어들):**
-${JSON.stringify(validCandidateWords, null, 2)}
+**⚠️ 필수 규칙 (엄격히 준수 - 위반 시 자동 실패):**
+- **목록에 있는 단어만 선택** (목록 외 단어 절대 금지 - 위반 시 재시도됨)
+- 단어 단위만 (구/절 금지)
+- 중복 불가
+- 관계사/접속사(that, which, what, when, where 등)는 **최대 1개만** (2개 이상 시 실패)
+- **🚨 CRITICAL: 각 문장에서 최대 1개만 선택** (한 문장에서 여러 단어 선택 시 자동 실패 및 재시도)
+- **5개 문제는 모두 다른 어법 유형**으로 생성해야 함 (동일 어법 반복 금지)
+- **주어-동사 시제일치 문제 절대 금지** (1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es 등)
+- **단순 시제 변형 절대 금지** (was/were, 동사원형+-s/-es 등)
+- **to 부정사 단순 변형 절대 금지**: "to continue" → "to continuing" 같은 단순 변형은 금지. 반드시 "to be continuing" 또는 "to have been continuing" 같은 복잡한 구조만 사용
 
-**선택 규칙:**
-- 반드시 본문에 있는 단어만 선택하세요
-- 위 목록에 있는 단어만 선택하세요
-- 관계사/접속사는 최대 1개만
-- 다양성 필수: 준동사, 동사, 형용사/부사, 전치사 등으로 다양하게
+**📋 본문 (문장 단위):**
+${sentenceList}
+
+**선택 방법 (반드시 이 순서로 따라야 함):**
+1. 문장 1을 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
+2. 문장 2를 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
+3. 문장 3을 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
+4. ... 각 문장을 순회하며 총 5개 단어 선택
+5. **절대 금지:** 한 문장에서 2개 이상의 단어를 선택하는 것 (이 규칙 위반 시 자동 실패)
+
+**선정 기준:**
+1. **복잡한 구문 내 문법 판단이 필요한 단어** 우선 (관계사절, 분사구문, 가정법, 도치 등)
+2. **🚨 필수 어법 유형 다양성 (5개 선택 시 반드시 서로 다른 어법 유형):**
+   아래 어법 유형들을 최대한 다양하게 포함해야 함 (동일 어법 반복 절대 금지):
+   - 관계대명사와 관계부사 (where, when, how 등)
+   - 형용사 vs 부사
+   - 5형식에서 목적격 보어
+   - 능동/수동 문제
+   - 과거분사/현재분사
+   - 대동사 (Do, Be)
+   - 도치
+   - 수의 일치 (주어+동사)
+   **5개 문제는 모두 서로 다른 어법 유형이어야 하며, 가능한 한 위 목록의 어법 유형들을 다양하게 포함해야 함**
+3. **의미 해석 영향:** 틀리면 문장 의미 해석에 실제 영향이 있어야 함
+4. **우선 순서:** 준동사 > 동사 > 형용사/부사 > 전치사 > 관계사/접속사
+
+**중요:** 각 문장의 "가능한 후보 단어" 목록에서만 선택하세요. 위 전체 목록이 아닌, 각 문장별로 제시된 후보 단어 목록만 사용하세요.
+
+**🚨 매우 중요 - 선택 전 필수 체크리스트:**
+1. 선택하려는 단어가 위 목록에 **정확히 존재하는가?** (목록에 없으면 절대 선택 금지)
+2. 이전에 선택한 단어와 같은 문장에 있는가? (같은 문장이면 절대 선택 금지)
+3. 각 문장에서 이미 1개를 선택했는가? (이미 선택했다면 그 문장에서 더 이상 선택 금지)
+
+**올바른 선택 예시:**
+- 문장 1: "word1" 선택 (목록에 있음) ✅
+- 문장 2: "word2" 선택 (목록에 있음, 문장 1과 다른 문장) ✅
+- 문장 3: "word3" 선택 (목록에 있음, 문장 1,2와 다른 문장) ✅
+- 문장 4: "word4" 선택 (목록에 있음, 이전 문장들과 다른 문장) ✅
+- 문장 5: "word5" 선택 (목록에 있음, 이전 문장들과 다른 문장) ✅
+
+**잘못된 선택 예시 (절대 금지):**
+- ❌ 문장 3에서 "word1"과 "word2" 두 개 선택 (한 문장에서 2개 선택 금지)
+- ❌ 목록에 없는 "where" 선택 (목록 외 단어 선택 금지)
+- ❌ 문장 1에서 이미 선택했는데 문장 1에서 또 선택 (같은 문장 중복 선택 금지)
+
+**최종 검증:** 각 단어에 대해 "이 문법 오류가 고등학교 교실에서 설명할 가치가 있는가?" 질문하고, "아니오"면 선택하지 마세요.
 
 결과는 아래 JSON 배열 형식으로만 반환하세요:
 ["word1", "word2", "word3", "word4", "word5"]`;
 
+      const response = await callOpenAI({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: `You are a helpful assistant that selects words from a provided list. 
+
+CRITICAL RULES (MUST FOLLOW):
+1. You MUST ONLY select words that are EXACTLY in the provided validCandidateWords list
+2. If a word is NOT in the validCandidateWords list, you MUST NOT select it
+3. You must strictly follow the rule: select at most ONE word per sentence
+4. Return only valid JSON arrays
+5. Before selecting any word, verify that it exists in the validCandidateWords list
+6. Selecting a word not in the list will cause automatic failure
+7. Selecting multiple words from the same sentence will cause automatic failure
+
+VERIFICATION STEPS:
+For each word you want to select:
+- Step 1: Check if the word exists in the validCandidateWords list (case-insensitive match)
+- Step 2: Check which sentence the word belongs to
+- Step 3: Check if you have already selected a word from that sentence
+- Step 4: If both checks pass, you can select the word
+- Step 5: If any check fails, DO NOT select the word` },
+          { role: 'user', content: selectionPrompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 1000,
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API 오류: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0].message.content.trim();
+
+      // 마크다운 코드 블록 제거
+      let wordsJson = content;
+      if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+        wordsJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+      }
+
+      let words: string[];
+      try {
+        words = JSON.parse(wordsJson);
+      } catch (jsonError) {
+        console.warn(`⚠️ JSON 파싱 실패 (재시도 ${retryCount + 1}/${maxRetries}):`, jsonError instanceof Error ? jsonError.message : String(jsonError));
+        if (retryCount < maxRetries - 1) {
+          retryCount++;
+          continue;
+        }
+        throw new Error(`AI 응답 형식 오류: JSON 파싱에 실패했습니다.`);
+      }
+      if (!Array.isArray(words) || words.length !== 5) {
+        throw new Error('선택된 단어가 5개가 아닙니다.');
+      }
+      
+      // 선택된 단어가 각 문장의 후보 목록에 있는지 검증 (코드 레벨 검증)
+      const invalidWords: string[] = [];
+      const wordSentenceMap: { [word: string]: number } = {}; // 각 단어가 어느 문장에 속하는지
+      
+      for (const word of words) {
+        let found = false;
+        let sentenceIndex = -1;
+        
+        // 각 문장별 후보 목록에서 단어 찾기
+        for (const item of sentenceCandidates) {
+          const wordLower = word.trim().toLowerCase();
+          const isInCandidates = item.candidates.some(candidate => candidate.trim().toLowerCase() === wordLower);
+          
+          if (isInCandidates) {
+            // 문장에 실제로 존재하는지 확인
+            const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+            if (regex.test(item.sentence)) {
+              found = true;
+              sentenceIndex = item.sentenceIndex;
+              wordSentenceMap[word] = sentenceIndex;
+              break;
+            }
+          }
+        }
+        
+        if (!found) {
+          invalidWords.push(word);
+        }
+      }
+      
+      if (invalidWords.length > 0) {
+        const errorMsg = `유효한 후보 목록에 없는 단어를 선택했습니다: ${invalidWords.join(', ')}. 각 문장의 "가능한 후보 단어" 목록에서만 선택하세요.`;
+        console.warn(`⚠️ 유효하지 않은 단어 선택됨 (재시도 ${retryCount + 1}/${maxRetries}): ${invalidWords.join(', ')}`);
+        if (retryCount < maxRetries - 1) {
+          previousErrors.push(errorMsg);
+          retryCount++;
+          continue;
+        }
+        throw new Error(`유효한 후보 목록에 없는 단어가 선택되었습니다: ${invalidWords.join(', ')}`);
+      }
+      
+      // 본문 존재 여부 최종 검증
+      const missingWords: string[] = [];
+      for (const word of words) {
+        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+        if (!regex.test(passage)) {
+          missingWords.push(word);
+        }
+      }
+      
+      if (missingWords.length > 0) {
+        console.warn(`⚠️ 본문에 존재하지 않는 단어 (재시도 ${retryCount + 1}/${maxRetries}): ${missingWords.join(', ')}`);
+        if (retryCount < maxRetries - 1) {
+          retryCount++;
+          continue;
+        }
+        throw new Error(`본문에 존재하지 않는 단어가 선택되었습니다: ${missingWords.join(', ')}`);
+      }
+      
+      // 같은 문장에 여러 단어가 선택되었는지 검증 (코드 레벨 검증)
+      const sentenceWordCount: { [sentenceIndex: number]: string[] } = {};
+      for (const word of words) {
+        const sentenceIndex = wordSentenceMap[word];
+        if (sentenceIndex !== undefined) {
+          if (!sentenceWordCount[sentenceIndex]) {
+            sentenceWordCount[sentenceIndex] = [];
+          }
+          sentenceWordCount[sentenceIndex].push(word);
+        }
+      }
+      
+      // 같은 문장에 2개 이상 있는 경우 찾기
+      const violations: string[] = [];
+      for (const [sentenceIdx, wordList] of Object.entries(sentenceWordCount)) {
+        if (wordList.length > 1) {
+          const idx = parseInt(sentenceIdx);
+          const sentenceItem = sentenceCandidates.find(item => item.sentenceIndex === idx);
+          const sentenceText = sentenceItem ? sentenceItem.sentence.substring(0, 80) : '';
+          violations.push(`문장 ${idx + 1} ("${sentenceText}..."): ${wordList.join(', ')}`);
+        }
+      }
+      
+      if (violations.length > 0) {
+        const errorMsg = `한 문장에서 여러 단어를 선택했습니다: ${violations.map(v => v.split(':')[1].trim()).join(', ')}. 각 문장에서 최대 1개만 선택하세요.`;
+        console.warn(`⚠️ 같은 문장에서 여러 단어가 선택됨 (재시도 ${retryCount + 1}/${maxRetries}):\n${violations.join('\n')}`);
+        if (retryCount < maxRetries - 1) {
+          previousErrors.push(errorMsg);
+          retryCount++;
+          continue;
+        }
+        throw new Error(`한 문장에서 여러 단어가 선택되었습니다:\n${violations.join('\n')}`);
+      }
+      
+      // 모든 검증 통과
+      console.log(`✅ 단어 선택 성공 (시도 ${retryCount + 1}):`, words);
+      previousErrors = []; // 성공 시 에러 기록 초기화
+      return words;
+      
+    } catch (parseError: any) {
+      // 예상치 못한 에러 (API 에러 등)
+      console.warn(`⚠️ 예상치 못한 에러 발생 (재시도 ${retryCount + 1}/${maxRetries}):`, parseError instanceof Error ? parseError.message : String(parseError));
+      if (retryCount < maxRetries - 1) {
+        retryCount++;
+        continue;
+      }
+      // 최종 재시도 실패
+      console.error('❌ 단어 선택 최종 실패:', parseError);
+      throw parseError;
+    }
+  }
+  
+  throw new Error(`단어 선택이 ${maxRetries}회 재시도 후에도 실패했습니다.`);
+}
+
+/**
+ * MCP 2: 난이도 평가 서비스
+ * @param words - 선택된 단어 배열
+ * @param passage - 영어 본문
+ * @returns 가장 난이도 높은 단어의 인덱스와 정보
+ */
+async function evaluateDifficulty(
+  words: string[],
+  passage: string
+): Promise<{
+  answerIndex: number;
+  original: string;
+  difficulty: number;
+}> {
+  const prompt = `**수능 고난도 어법 오류 문제 난이도 평가**
+
+다음 5개 단어 중에서 **수능 최고난도 수준**의 어법 오류 문제를 만들기에 가장 적합한 단어 1개를 선정하세요.
+
+**선택된 단어들:**
+${words.map((word, idx) => `${idx + 1}. "${word}"`).join('\n')}
+
+**본문:**
+${passage}
+
+**난이도 평가 기준:**
+1. **어법 복잡도**: 복잡한 구문 구조 내에서 판단이 필요한 어법일수록 높은 난이도
+   - 관계사절, 분사구문, 가정법, 도치 등 복잡한 구문 구조
+   - 단순 시제 변화, 기본 관사, 단순 전치사 등은 낮은 난이도
+2. **의미 해석 영향**: 틀리면 문장 의미 해석에 큰 영향을 미치는 단어일수록 높은 난이도
+3. **문맥 판단 필요**: 문맥과 문장 구조를 종합적으로 분석해야 판단 가능한 단어일수록 높은 난이도
+4. **수능 출제 빈도**: 수능 고난도 문제에 자주 출제되는 어법 유형일수록 높은 난이도
+   - 분사구문, 관계사, 가정법, 병렬구조, 수일치(복잡), 준동사 등
+
+**우선 순위 (높은 난이도 순):**
+1. 분사구문 (능동/수동 판단, 의미상 주어)
+2. 관계사 (관계대명사 vs 관계부사, 전치사+관계대명사)
+3. 가정법 (시제 불일치, if 생략)
+4. 병렬구조 (형태 일치, 품사 일치)
+5. 준동사 (동명사 vs 부정사, 분사 형태 판단)
+6. 수일치 (복잡한 주어-동사 일치)
+7. 능동/수동 (목적어 유무, 의미 판단)
+8. 형용사 vs 부사 (보어 vs 수식어)
+9. 전치사 (문맥 판단)
+10. 기타
+
+**결정 방법:**
+- 위 기준에 따라 각 단어의 난이도를 평가하고 (1-10점, 10점이 가장 높음)
+- 가장 높은 난이도 점수를 받은 단어 1개를 선택
+- 동점인 경우, 어법 복잡도 > 의미 해석 영향 > 문맥 판단 필요 순서로 우선순위 결정
+
+아래 JSON 형식으로만 응답하세요:
+{
+  "answerIndex": 2,
+  "original": "collected",
+  "difficulty": 9
+}`;
+
   const response = await callOpenAI({
     model: 'gpt-4o',
     messages: [
-      { role: 'system', content: 'You are a helpful assistant that selects words from a provided list. You must ONLY select words that are in the provided list. Return only valid JSON arrays.' },
-      { role: 'user', content: selectionPrompt }
+      {
+        role: 'system',
+        content: 'You are a grammar expert specializing in Korean CSAT (Suneung) English section. You evaluate the difficulty level of grammar words for creating high-level exam questions.'
+      },
+      { role: 'user', content: prompt }
     ],
     temperature: 0.3,
-    max_tokens: 1000,
+    max_tokens: 500,
   });
 
   if (!response.ok) {
@@ -259,60 +563,63 @@ ${JSON.stringify(validCandidateWords, null, 2)}
   const content = data.choices[0].message.content.trim();
 
   // 마크다운 코드 블록 제거
-  let wordsJson = content;
+  let resultJson = content;
   if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
-    wordsJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+    resultJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
   }
 
   try {
-    const words = JSON.parse(wordsJson);
-    if (!Array.isArray(words) || words.length !== 5) {
-      throw new Error('선택된 단어가 5개가 아닙니다.');
+    const result = JSON.parse(resultJson);
+
+    // 검증
+    if (!result.original || typeof result.original !== 'string') {
+      throw new Error('original이 올바르지 않습니다.');
     }
+
+    // original 단어가 배열에 실제로 존재하는지 확인하고, 인덱스 찾기
+    const wordLower = result.original.trim().toLowerCase();
+    const foundIndex = words.findIndex(w => w.trim().toLowerCase() === wordLower);
     
-    // 선택된 단어가 유효한 후보 목록에 있는지 검증
-    const invalidWords: string[] = [];
-    for (const word of words) {
-      const wordLower = word.trim().toLowerCase();
-      const isValid = validCandidateWords.some(candidate => candidate.trim().toLowerCase() === wordLower);
-      if (!isValid) {
-        invalidWords.push(word);
-      }
+    if (foundIndex === -1) {
+      throw new Error(`선정된 단어 "${result.original}"가 선택된 단어 목록에 없습니다.`);
     }
-    
-    if (invalidWords.length > 0) {
-      console.error(`❌ 유효하지 않은 단어 선택됨: ${invalidWords.join(', ')}`);
-      throw new Error(`유효한 후보 목록에 없는 단어가 선택되었습니다: ${invalidWords.join(', ')}`);
+
+    // answerIndex 검증 (original 기준으로 찾은 인덱스가 유효한지 확인)
+    if (typeof result.answerIndex === 'number' && (result.answerIndex < 0 || result.answerIndex > 4)) {
+      console.warn(`⚠️ answerIndex(${result.answerIndex})가 범위를 벗어났습니다. original("${result.original}")의 실제 인덱스(${foundIndex})를 사용합니다.`);
     }
-    
-    // 본문 존재 여부 최종 검증
-    const missingWords: string[] = [];
-    for (const word of words) {
-      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
-      if (!regex.test(passage)) {
-        missingWords.push(word);
-      }
+
+    // answerIndex와 실제 찾은 인덱스가 다른 경우, 실제 인덱스로 교정
+    if (typeof result.answerIndex === 'number' && foundIndex !== result.answerIndex) {
+      console.warn(`⚠️ answerIndex(${result.answerIndex})와 original("${result.original}")의 실제 인덱스(${foundIndex})가 일치하지 않습니다. 실제 인덱스로 교정합니다.`);
     }
-    
-    if (missingWords.length > 0) {
-      console.error(`❌ 본문에 존재하지 않는 단어: ${missingWords.join(', ')}`);
-      throw new Error(`본문에 존재하지 않는 단어가 선택되었습니다: ${missingWords.join(', ')}`);
-    }
-    
-    return words;
+
+    const finalAnswerIndex = foundIndex;
+    const finalOriginal = words[finalAnswerIndex]; // 원본 배열에서 정확한 형태 가져오기
+
+    console.log(`✅ 난이도 평가 완료: 인덱스 ${finalAnswerIndex}, 단어 "${finalOriginal}", 난이도 ${result.difficulty || 'N/A'}`);
+    return {
+      answerIndex: finalAnswerIndex,
+      original: finalOriginal,
+      difficulty: result.difficulty || 0
+    };
+
   } catch (parseError) {
-    console.error('파싱 실패한 내용:', wordsJson);
-    throw new Error('단어 선택 결과를 파싱할 수 없습니다.');
+    console.error('난이도 평가 파싱 실패:', resultJson);
+    throw new Error(`난이도 평가에 실패했습니다: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
   }
 }
 
 /**
  * MCP 3: 어법 변형 서비스 (재시도 로직 포함)
  * @param words - 선택된 단어 배열
+ * @param answerIndex - 변형할 단어의 인덱스 (명시적으로 지정)
  * @returns 변형된 단어들과 정답 정보
  */
-async function transformWord(words: string[]): Promise<{
+async function transformWord(
+  words: string[],
+  answerIndex: number
+): Promise<{
   transformedWords: string[];
   answerIndex: number;
   original: string;
@@ -337,31 +644,72 @@ async function transformWord(words: string[]): Promise<{
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     console.log(`어법 변형 시도 ${attempt}/${maxRetries}...`);
     
-    const prompt = `You must transform exactly ONE word from the list to create a **High-Level Grammar Error** suitable for the Korean CSAT (Suneung - College Scholastic Ability Test).
+    const prompt = `Transform exactly ONE word to create a **High-Level Grammar Error** for Korean CSAT (high school) level.
 
 Original words: ${JSON.stringify(words)}
+Target word index: ${answerIndex} (word: "${words[answerIndex]}")
 Grammar types: ${grammarTypes.join(', ')}
 
-**🎯 Critical Requirements for CSAT Level (High Difficulty):**
-1.  **Do NOT create trivial errors** like spelling, simple pluralization (e.g. apple->apples), or obvious tense changes (e.g. go->went) unless the context makes it very tricky.
-2.  **Focus on Structural Syntax:** The error must require analyzing the sentence structure (clauses, modifiers, subject location) to detect.
-3.  **Contextual Logic:** The error should look grammatically plausible at a glance (e.g., using a past participle that looks like a past tense verb) but be structurally incorrect.
-4.  **Diversity Priority:** If the word list contains multiple relative pronouns/adverbs/conjunctions (that, which, what, when, where, how, whatever, etc.), **PRIORITIZE transforming non-relative/non-conjunction words** (verbs, participles, gerunds, infinitives, adjectives, adverbs, prepositions) to ensure variety. Only transform a relative pronoun/adverb/conjunction if it's the ONLY option that creates a meaningful high-level error.
+**IMPORTANT:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). Do NOT transform any other word.
+
+**Principle:** Generate errors that require interpretation/judgment, NOT simple mechanical rules.
+
+**🚨 CRITICAL - Word Relationship (ABSOLUTELY MANDATORY):**
+The transformed word MUST be **grammatically related** to the original word. They must be:
+- The same word in different grammatical forms (e.g., "collected" → "collecting", "possible" → "possibly")
+- Related words from the same word family (e.g., "which" → "where" [both relative pronouns], "be" → "been" [both forms of be-verb])
+- Grammatical variations of the same root word (e.g., "to improve" → "to be improving", "to have been improved")
+
+**ABSOLUTELY FORBIDDEN:**
+- Transforming to a completely unrelated word (e.g., "though" → "thought" is FORBIDDEN - they are completely different words)
+- Spelling errors that create a different word (e.g., "though" → "thought" is a spelling error that creates a different word, NOT a grammar error)
+- Transformations that create unrelated words from different word families
+
+**Exclude:** Modal+verb, simple past(-ed), 3rd person -s/-es (base verb+-s/-es), simple plural, basic articles, simple prepositions, basic tenses, be-verb forms (it was/were, they was/were, etc.), subject-verb tense agreement (1st/2nd person + base verb, 3rd person + base verb + s/-es), **simple infinitive transformations** (e.g., "to continue" → "to continuing" is ABSOLUTELY FORBIDDEN. Only use complex structures like "to be continuing" or "to have been continuing"), **unrelated word transformations** (e.g., "though" → "thought" is ABSOLUTELY FORBIDDEN - they are completely different words).
+
+**Prioritize:** Errors that change meaning, confuse logic, cause ambiguity - Relative pronouns/adverbs, participles, subjunctive, parallelism, S-V agreement (complex), pronouns, conjunctions vs prepositions, logical subject errors, **complex infinitive structures** (to+be+v-ing, to+have been+p.p, etc.).
+
+**CRITICAL - Grammar Type Diversity (MUST):**
+Each of the 5 words must create a DIFFERENT grammar error type. Do NOT repeat the same grammar type.
+- All 5 errors must be UNIQUE grammar types from the Grammar types list above
+- **Prioritize these grammar types for maximum diversity:**
+  * Relative pronouns/adverbs (where, when, how)
+  * Adjective vs Adverb
+  * Objective complement (5-pattern)
+  * Active vs Passive
+  * Past participle vs Present participle
+  * Do-support, Be-verb
+  * Inversion
+  * Subject-verb agreement
+
+**Requirements:**
+1. Must affect meaning interpretation (not just mechanically wrong)
+2. Requires analyzing sentence structure (clauses, modifiers, subject location)
+3. Looks plausible but structurally incorrect
+4. If multiple relative pronouns/conjunctions exist, transform non-relative words first
+5. **Each word must create a DIFFERENT grammar error type** (no duplicates)
+
+**Verification:** "Would this grammar mistake be worth explaining in a high school classroom?" If no, choose different word/error.
 
 **🔥 Examples of High-Quality CSAT Errors (Prioritize These):**
 - **(Participle):** Changing a correct past participle (p.p.) to a present participle (v-ing) where the passive meaning is required, or vice versa. *Example: "The data [collected -> collecting] by the sensors..."*
 - **(Subject-Verb Agreement):** Changing the verb number when the subject is separated by a long modifier clause. *Example: "The detailed analysis of the samples [show -> shows] that..."*
 - **(Gerund vs Infinitive):** Changing a gerund to an infinitive or vice versa in specific contexts. *Example: "I enjoy [reading -> to read] books."*
+- **(Complex Infinitive):** Using complex infinitive structures (to+be+v-ing, to+have been+p.p) instead of simple transformations. *Example: "The goal is [to be improving -> to improve]" or "She seems [to have been injured -> to be injured]". **ABSOLUTELY FORBIDDEN:** Simple transformations like "to continue" → "to continuing". **ONLY** use complex structures like "to be continuing" or "to have been continuing".
 - **(Adjective/Adverb):** Changing an adjective complement to an adverb. *Example: "It remains [possible -> possibly]..."*
 - **(Voice):** Changing active to passive or vice versa incorrectly. *Example: "The problem [was solved -> solved] by the team."*
 - **(Preposition):** Changing a correct preposition to an incorrect one. *Example: "depend [on -> of] something"*
-- **(Relative Clause - Use Sparingly):** Only if necessary, changing 'which' to 'where' or 'what' to 'that' in complex relative clauses. *Example: "The house [in which -> which] he lived..."*
+- **(Relative Clause - Use Sparingly):** Only if necessary, changing 'which' to 'where' or 'what' to 'that' in complex relative clauses. *Example: "The house [in which -> which] he lived..."* (✅ "which" and "where" are related - both relative pronouns/adverbs)
+
+**❌ FORBIDDEN Examples (DO NOT DO THIS):**
+- **Unrelated Words:** "though" → "thought" is FORBIDDEN (they are completely different words: "though" = conjunction/adverb, "thought" = noun/verb from "think")
+- **Different Word Families:** Transforming to words from completely different word families
+- **Spelling Errors:** Simple spelling changes that create unrelated words
 
 **Selection Strategy (STRICT - Must Follow):**
-1. **MANDATORY First Priority:** If the word list contains ANY verbs, participles (v-ing/p.p), gerunds, infinitives, adjectives, adverbs, or prepositions, you MUST transform one of these. DO NOT transform relative pronouns/adverbs/conjunctions if other options exist.
-2. **ABSOLUTE Last Resort:** Only transform a relative pronoun/adverb/conjunction (that, which, what, when, where, how, whatever, etc.) if ALL other words in the list are also relative pronouns/adverbs/conjunctions AND there is no other viable option.
-3. **Prohibited:** If the word list has 2+ relative pronouns/adverbs/conjunctions, you MUST transform a non-relative word. Transforming a relative word in this case will be considered a failure.
-4. Randomly choose ONE word to transform. Keep the other 4 words exactly the same.
+1. **MANDATORY:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). This word has been selected as the highest difficulty word.
+2. **DO NOT transform any other word.** Keep the other 4 words exactly the same.
+3. Even if the target word is a relative pronoun/adverb/conjunction, you MUST transform it (it was selected because it has the highest difficulty).
 
 Return ONLY this JSON format. **YOU MUST USE REAL ENGLISH WORDS, NOT PLACEHOLDERS:**
 
@@ -426,9 +774,20 @@ Example 2 (if transforming "which"):
       if (typeof result.answerIndex !== 'number' || result.answerIndex < 0 || result.answerIndex > 4) {
         throw new Error('answerIndex가 올바르지 않습니다.');
       }
+
+      // 명시적으로 지정된 answerIndex와 일치하는지 확인
+      if (result.answerIndex !== answerIndex) {
+        throw new Error(`변형된 단어의 answerIndex(${result.answerIndex})가 지정된 인덱스(${answerIndex})와 일치하지 않습니다.`);
+      }
       
       if (!result.original || !result.grammarType) {
         throw new Error('original 또는 grammarType이 누락되었습니다.');
+      }
+
+      // original이 지정된 단어와 일치하는지 확인
+      const expectedWord = words[answerIndex];
+      if (result.original.trim().toLowerCase() !== expectedWord.trim().toLowerCase()) {
+        throw new Error(`변형된 단어의 original("${result.original}")가 지정된 단어("${expectedWord}")와 일치하지 않습니다.`);
       }
 
       // 플레이스홀더 검증: "WRONG_WORD", "CORRECT_WORD" 등의 플레이스홀더가 있는지 확인
@@ -457,6 +816,33 @@ Example 2 (if transforming "which"):
       if (originalRelativeCount >= 2 && transformedWordIsRelative && attempt < maxRetries) {
         console.warn(`⚠️ 관계사/접속사가 ${originalRelativeCount}개인데 그 중 하나를 변형함. 재시도...`);
         continue;
+      }
+
+      // 단어 관계 검증: 변형된 단어가 원본 단어와 문법적으로 관련되어 있는지 확인
+      const originalWord = result.original.trim().toLowerCase();
+      const transformedWord = result.transformedWords[result.answerIndex].trim().toLowerCase();
+      
+      // 완전히 다른 단어인지 확인 (예: "though" → "thought" 같은 경우)
+      const unrelatedWordPairs = [
+        ['though', 'thought'], ['thought', 'though'],
+        ['through', 'thorough'], ['thorough', 'through'],
+        ['whether', 'weather'], ['weather', 'whether'],
+        ['desert', 'dessert'], ['dessert', 'desert'],
+        ['principal', 'principle'], ['principle', 'principal'],
+      ];
+      
+      const isUnrelated = unrelatedWordPairs.some(pair => 
+        (pair[0] === originalWord && pair[1] === transformedWord) ||
+        (pair[1] === originalWord && pair[0] === transformedWord)
+      );
+      
+      if (isUnrelated) {
+        console.warn(`⚠️ 변형된 단어("${transformedWord}")가 원본 단어("${originalWord}")와 전혀 다른 단어입니다. 재시도...`);
+        if (attempt < maxRetries) {
+          continue;
+        } else {
+          throw new Error(`변형된 단어("${transformedWord}")가 원본 단어("${originalWord}")와 전혀 다른 단어입니다. 문법적으로 관련된 단어여야 합니다.`);
+        }
       }
 
       console.log(`✅ 어법 변형 성공 (시도 ${attempt}번째):`, result);
@@ -537,18 +923,16 @@ function applyNumberAndUnderline(
   // 본문에 나타나는 순서 정보 저장 (originalIndex의 순서)
   const passageOrder = mappedWords.map(item => item.originalIndex);
 
-  // 뒤에서부터 치환 (인덱스가 꼬이지 않도록)
+  // 뒤에서부터 치환 (인덱스가 꼬이지 않도록, 위치 기반으로 직접 치환)
   const circleNumbers = ['①', '②', '③', '④', '⑤'];
   for (let i = mappedWords.length - 1; i >= 0; i--) {
     const item = mappedWords[i];
     const num = circleNumbers[i];
-    const escapedWord = item.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escapedWord}\\b`);
+    const replacement = `${num}<span class="grammar-error-highlight"><u>${item.transformedWord}</u></span>`;
     
-    result = result.replace(
-      regex,
-      `${num}<span class="grammar-error-highlight"><u>${item.transformedWord}</u></span>`
-    );
+    // 위치 기반으로 직접 치환 (regex 대신)
+    const wordLength = item.word.length;
+    result = result.substring(0, item.position) + replacement + result.substring(item.position + wordLength);
   }
 
   const numCount = (result.match(/[①②③④⑤]/g) || []).length;
