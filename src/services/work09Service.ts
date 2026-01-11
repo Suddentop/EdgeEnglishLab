@@ -666,8 +666,9 @@ The transformed word MUST be **grammatically related** to the original word. The
 - Transformations that create unrelated words from different word families
 - **🚨 CRITICAL: Adding "-ing" to modal verbs is ABSOLUTELY FORBIDDEN** (e.g., "could" → "coulding", "should" → "shoulding", "would" → "woulding" are FORBIDDEN - these words do not exist in English)
 - **Modal verb transformations:** You CAN swap modal verbs with each other (e.g., "could" → "should" or "would" → "could" is ALLOWED), but you CANNOT add "-ing" to them
+- **🚨 CRITICAL: Transforming subject pronouns to possessive forms is ABSOLUTELY FORBIDDEN** (e.g., "it" → "its", "they" → "their", "he" → "his", "she" → "her" when used as subjects are FORBIDDEN - these are too simple and mechanical transformations)
 
-**Exclude:** Modal+verb, simple past(-ed), 3rd person -s/-es (base verb+-s/-es), simple plural, basic articles, simple prepositions, basic tenses, be-verb forms (it was/were, they was/were, etc.), subject-verb tense agreement (1st/2nd person + base verb, 3rd person + base verb + s/-es), **simple infinitive transformations** (e.g., "to continue" → "to continuing" is ABSOLUTELY FORBIDDEN. Only use complex structures like "to be continuing" or "to have been continuing"), **unrelated word transformations** (e.g., "though" → "thought" is ABSOLUTELY FORBIDDEN - they are completely different words), **modal verb + ing transformations** (e.g., "could" → "coulding", "should" → "shoulding", "would" → "woulding" are ABSOLUTELY FORBIDDEN - these words do not exist in English).
+**Exclude:** Modal+verb, simple past(-ed), 3rd person -s/-es (base verb+-s/-es), simple plural, basic articles, simple prepositions, basic tenses, be-verb forms (it was/were, they was/were, etc.), subject-verb tense agreement (1st/2nd person + base verb, 3rd person + base verb + s/-es), **🚨 CRITICAL: "to + 동사원형" → "to + 동사ing" 변형은 절대 금지** (e.g., "to continue" → "to continuing" is ABSOLUTELY FORBIDDEN - this pattern does not exist in English), **✅ ALLOWED infinitive transformations:** "to + 동사원형" → "동사+ing" (e.g., "to continue" → "continuing" is ALLOWED), "to + 동사원형" → "to be + 과거분사" (e.g., "to continue" → "to be continued" is ALLOWED), "to + 동사원형" → "to be + 동사ing" (e.g., "to continue" → "to be continuing" is ALLOWED), "to + 동사원형" → "to have been + 과거분사" (e.g., "to continue" → "to have been continued" is ALLOWED), **unrelated word transformations** (e.g., "though" → "thought" is ABSOLUTELY FORBIDDEN - they are completely different words), **modal verb + ing transformations** (e.g., "could" → "coulding", "should" → "shoulding", "would" → "woulding" are ABSOLUTELY FORBIDDEN - these words do not exist in English), **subject pronoun to possessive transformations** (e.g., "it" → "its", "they" → "their", "he" → "his", "she" → "her" when used as subjects are ABSOLUTELY FORBIDDEN - these are too simple and mechanical).
 
 **Prioritize:** Errors that change meaning, confuse logic, cause ambiguity - Relative pronouns/adverbs, participles, subjunctive, parallelism, S-V agreement (complex), pronouns, conjunctions vs prepositions, logical subject errors, **complex infinitive structures** (to+be+v-ing, to+have been+p.p, etc.).
 
@@ -697,7 +698,7 @@ Each of the 5 words must create a DIFFERENT grammar error type. Do NOT repeat th
 - **(Participle):** Changing a correct past participle (p.p.) to a present participle (v-ing) where the passive meaning is required, or vice versa. *Example: "The data [collected -> collecting] by the sensors..."*
 - **(Subject-Verb Agreement):** Changing the verb number when the subject is separated by a long modifier clause. *Example: "The detailed analysis of the samples [show -> shows] that..."*
 - **(Gerund vs Infinitive):** Changing a gerund to an infinitive or vice versa in specific contexts. *Example: "I enjoy [reading -> to read] books."*
-- **(Complex Infinitive):** Using complex infinitive structures (to+be+v-ing, to+have been+p.p) instead of simple transformations. *Example: "The goal is [to be improving -> to improve]" or "She seems [to have been injured -> to be injured]". **ABSOLUTELY FORBIDDEN:** Simple transformations like "to continue" → "to continuing". **ONLY** use complex structures like "to be continuing" or "to have been continuing".
+- **(Complex Infinitive):** Using complex infinitive structures (to+be+v-ing, to+have been+p.p) instead of simple transformations. *Example: "The goal is [to be improving -> to improve]" or "She seems [to have been injured -> to be injured]". **🚨 ABSOLUTELY FORBIDDEN:** "to + 동사원형" → "to + 동사ing" (e.g., "to continue" → "to continuing" is FORBIDDEN - this pattern does not exist). **✅ ALLOWED:** "to + 동사원형" → "동사+ing" (e.g., "to continue" → "continuing"), "to + 동사원형" → "to be + 과거분사" (e.g., "to continue" → "to be continued"), "to + 동사원형" → "to be + 동사ing" (e.g., "to continue" → "to be continuing"), "to + 동사원형" → "to have been + 과거분사" (e.g., "to continue" → "to have been continued").
 - **(Adjective/Adverb):** Changing an adjective complement to an adverb. *Example: "It remains [possible -> possibly]..."*
 - **(Voice):** Changing active to passive or vice versa incorrectly. *Example: "The problem [was solved -> solved] by the team."*
 - **(Preposition):** Changing a correct preposition to an incorrect one. *Example: "depend [on -> of] something"*
@@ -708,6 +709,7 @@ Each of the 5 words must create a DIFFERENT grammar error type. Do NOT repeat th
 - **Different Word Families:** Transforming to words from completely different word families
 - **Spelling Errors:** Simple spelling changes that create unrelated words
 - **Modal Verb + ing:** "could" → "coulding" is FORBIDDEN (this word does not exist in English). You CAN swap modals (e.g., "could" → "should" or "would" → "could"), but you CANNOT add "-ing" to modal verbs.
+- **Subject Pronoun to Possessive:** "it" → "its" is FORBIDDEN when "it" is used as a subject (e.g., "it can indicate" → "its can indicate" is FORBIDDEN - this is too simple and mechanical). Similarly, "they" → "their", "he" → "his", "she" → "her" when used as subjects are FORBIDDEN.
 
 **Selection Strategy (STRICT - Must Follow):**
 1. **MANDATORY:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). This word has been selected as the highest difficulty word.
@@ -840,6 +842,47 @@ Example 2 (if transforming "which" in a 5-word array):
           continue;
         } else {
           throw new Error(`조동사에 "-ing"를 붙인 변형("${transformedWord}")은 절대 금지됩니다. 조동사는 서로 교체할 수 있지만 "-ing"를 붙일 수 없습니다.`);
+        }
+      }
+      
+      // 🚨 주어 대명사를 소유격으로 변형하는 것 금지 (it → its, they → their 등)
+      const subjectToPossessivePairs = [
+        ['it', 'its'], ['its', 'it'],
+        ['they', 'their'], ['their', 'they'],
+        ['he', 'his'], ['his', 'he'],
+        ['she', 'her'], ['her', 'she'],
+        ['we', 'our'], ['our', 'we'],
+        ['you', 'your'], ['your', 'you']
+      ];
+      
+      const isSubjectToPossessive = subjectToPossessivePairs.some(pair => 
+        (pair[0] === originalWord && pair[1] === transformedWord) ||
+        (pair[1] === originalWord && pair[0] === transformedWord)
+      );
+      
+      if (isSubjectToPossessive) {
+        console.warn(`⚠️ 주어 대명사를 소유격으로 변형하는 것이 감지되었습니다: "${originalWord}" → "${transformedWord}". 이는 너무 단순하고 기계적인 변형입니다. 재시도...`);
+        if (attempt < maxRetries) {
+          continue;
+        } else {
+          throw new Error(`주어 대명사를 소유격으로 변형("${originalWord}" → "${transformedWord}")은 절대 금지됩니다. 이는 너무 단순하고 기계적인 변형입니다.`);
+        }
+      }
+      
+      // 🚨 "to + 동사ing" 패턴 검증 (절대 금지: to continuing, to going 등)
+      // "to + 동사원형" → "to + 동사ing" 변형은 금지
+      // 허용: "to + 동사원형" → "동사+ing" (to 제거), "to + 동사원형" → "to be + 과거분사", "to + 동사원형" → "to be + 동사ing" 등
+      const toInfinitivePattern = /^to\s+[a-z]+ing$/i;
+      if (toInfinitivePattern.test(transformedWord)) {
+        // 원본이 "to + 동사원형" 형태인지 확인
+        const originalToPattern = /^to\s+[a-z]+$/i;
+        if (originalToPattern.test(originalWord)) {
+          console.warn(`⚠️ "to + 동사원형" → "to + 동사ing" 변형이 감지되었습니다: "${originalWord}" → "${transformedWord}". 이는 존재하지 않는 패턴입니다. 재시도...`);
+          if (attempt < maxRetries) {
+            continue;
+          } else {
+            throw new Error(`"to + 동사원형" → "to + 동사ing" 변형("${originalWord}" → "${transformedWord}")은 절대 금지됩니다. "to + 동사ing" 패턴은 영어에 존재하지 않습니다.`);
+          }
         }
       }
       
