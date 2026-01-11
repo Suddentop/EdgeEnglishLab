@@ -664,8 +664,10 @@ The transformed word MUST be **grammatically related** to the original word. The
 - Transforming to a completely unrelated word (e.g., "though" → "thought" is FORBIDDEN - they are completely different words)
 - Spelling errors that create a different word (e.g., "though" → "thought" is a spelling error that creates a different word, NOT a grammar error)
 - Transformations that create unrelated words from different word families
+- **🚨 CRITICAL: Adding "-ing" to modal verbs is ABSOLUTELY FORBIDDEN** (e.g., "could" → "coulding", "should" → "shoulding", "would" → "woulding" are FORBIDDEN - these words do not exist in English)
+- **Modal verb transformations:** You CAN swap modal verbs with each other (e.g., "could" → "should" or "would" → "could" is ALLOWED), but you CANNOT add "-ing" to them
 
-**Exclude:** Modal+verb, simple past(-ed), 3rd person -s/-es (base verb+-s/-es), simple plural, basic articles, simple prepositions, basic tenses, be-verb forms (it was/were, they was/were, etc.), subject-verb tense agreement (1st/2nd person + base verb, 3rd person + base verb + s/-es), **simple infinitive transformations** (e.g., "to continue" → "to continuing" is ABSOLUTELY FORBIDDEN. Only use complex structures like "to be continuing" or "to have been continuing"), **unrelated word transformations** (e.g., "though" → "thought" is ABSOLUTELY FORBIDDEN - they are completely different words).
+**Exclude:** Modal+verb, simple past(-ed), 3rd person -s/-es (base verb+-s/-es), simple plural, basic articles, simple prepositions, basic tenses, be-verb forms (it was/were, they was/were, etc.), subject-verb tense agreement (1st/2nd person + base verb, 3rd person + base verb + s/-es), **simple infinitive transformations** (e.g., "to continue" → "to continuing" is ABSOLUTELY FORBIDDEN. Only use complex structures like "to be continuing" or "to have been continuing"), **unrelated word transformations** (e.g., "though" → "thought" is ABSOLUTELY FORBIDDEN - they are completely different words), **modal verb + ing transformations** (e.g., "could" → "coulding", "should" → "shoulding", "would" → "woulding" are ABSOLUTELY FORBIDDEN - these words do not exist in English).
 
 **Prioritize:** Errors that change meaning, confuse logic, cause ambiguity - Relative pronouns/adverbs, participles, subjunctive, parallelism, S-V agreement (complex), pronouns, conjunctions vs prepositions, logical subject errors, **complex infinitive structures** (to+be+v-ing, to+have been+p.p, etc.).
 
@@ -705,6 +707,7 @@ Each of the 5 words must create a DIFFERENT grammar error type. Do NOT repeat th
 - **Unrelated Words:** "though" → "thought" is FORBIDDEN (they are completely different words: "though" = conjunction/adverb, "thought" = noun/verb from "think")
 - **Different Word Families:** Transforming to words from completely different word families
 - **Spelling Errors:** Simple spelling changes that create unrelated words
+- **Modal Verb + ing:** "could" → "coulding" is FORBIDDEN (this word does not exist in English). You CAN swap modals (e.g., "could" → "should" or "would" → "could"), but you CANNOT add "-ing" to modal verbs.
 
 **Selection Strategy (STRICT - Must Follow):**
 1. **MANDATORY:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). This word has been selected as the highest difficulty word.
@@ -823,6 +826,22 @@ Example 2 (if transforming "which" in a 5-word array):
       // 단어 관계 검증: 변형된 단어가 원본 단어와 문법적으로 관련되어 있는지 확인
       const originalWord = result.original.trim().toLowerCase();
       const transformedWord = result.transformedWords[result.answerIndex].trim().toLowerCase();
+      
+      // 🚨 조동사+ing 패턴 검증 (절대 금지: coulding, shoulding, woulding 등)
+      const modalVerbs = ['could', 'should', 'would', 'can', 'may', 'might', 'must', 'will', 'shall'];
+      const forbiddenModalIng = modalVerbs.some(modal => {
+        const modalIng = modal + 'ing';
+        return transformedWord === modalIng || transformedWord.startsWith(modalIng + ' ');
+      });
+      
+      if (forbiddenModalIng) {
+        console.warn(`⚠️ 조동사에 "-ing"를 붙인 변형이 감지되었습니다: "${transformedWord}". 이는 존재하지 않는 단어입니다. 재시도...`);
+        if (attempt < maxRetries) {
+          continue;
+        } else {
+          throw new Error(`조동사에 "-ing"를 붙인 변형("${transformedWord}")은 절대 금지됩니다. 조동사는 서로 교체할 수 있지만 "-ing"를 붙일 수 없습니다.`);
+        }
+      }
       
       // 완전히 다른 단어인지 확인 (예: "though" → "thought" 같은 경우)
       const unrelatedWordPairs = [

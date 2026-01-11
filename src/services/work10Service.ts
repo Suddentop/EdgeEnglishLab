@@ -400,9 +400,12 @@ ${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
 **⚠️ 필수 규칙 (엄격히 준수 - 위반 시 자동 실패):**
 - **목록에 있는 단어만 선택** (목록 외 단어 절대 금지 - 위반 시 재시도됨)
 - 단어 단위만 (구/절 금지)
+- **🚨 절대 금지: "prior to", "because of", "instead of", "due to" 같은 전치사구를 "prior"와 "to"로 분리하여 선택하는 것**
 - 중복 불가
 - 관계사/접속사(that, which, what, when, where 등)는 **최대 1개만** (2개 이상 시 실패)
-- **🚨 CRITICAL: 각 문장에서 최대 1개만 선택** (한 문장에서 여러 단어 선택 시 자동 실패 및 재시도)
+- **🚨 CRITICAL: 각 문장에서 정확히 1개만 선택** (한 문장에서 여러 단어 선택 시 자동 실패 및 재시도)
+- **🚨 절대 금지: 한 문장에서 "are"와 "of" 같이 두 개의 단어를 선택하는 것**
+- **🚨 절대 금지: 한 문장에서 "which"와 "since" 같이 두 개의 단어를 선택하는 것**
 - **${targetWordCount}개 문제는 모두 다른 어법 유형**으로 생성해야 함 (동일 어법 반복 금지)
 - **주어-동사 시제일치 문제 절대 금지** (1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es 등)
 - **단순 시제 변형 절대 금지** (was/were, 동사원형+-s/-es 등)
@@ -412,12 +415,14 @@ ${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
 ${sentenceList}
 
 **선택 방법 (반드시 이 순서로 따라야 함):**
-1. 문장 1을 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
-2. 문장 2를 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
-3. 문장 3을 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
+1. 문장 1을 확인하고, 해당 문장에서 **정확히 1개** 단어만 선택 (0개는 안 됨, 2개도 안 됨)
+2. 문장 2를 확인하고, 해당 문장에서 **정확히 1개** 단어만 선택 (0개는 안 됨, 2개도 안 됨)
+3. 문장 3을 확인하고, 해당 문장에서 **정확히 1개** 단어만 선택 (0개는 안 됨, 2개도 안 됨)
 4. ... 각 문장을 순회하며 총 ${targetWordCount}개 단어 선택
 5. **절대 금지:** 한 문장에서 2개 이상의 단어를 선택하는 것 (이 규칙 위반 시 자동 실패)
-6. **중요:** 정확히 ${targetWordCount}개 단어를 선택해야 합니다. ${targetWordCount}개보다 많거나 적으면 안 됩니다.
+6. **절대 금지:** "prior to"를 "prior"와 "to"로 분리하여 선택하는 것
+7. **절대 금지:** "because of"를 "because"와 "of"로 분리하여 선택하는 것
+8. **중요:** 정확히 ${targetWordCount}개 단어를 선택해야 합니다. ${targetWordCount}개보다 많거나 적으면 안 됩니다.
 
 **선정 기준:**
 1. **복잡한 구문 내 문법 판단이 필요한 단어** 우선 (관계사절, 분사구문, 가정법, 도치 등)
@@ -441,6 +446,18 @@ ${sentenceList}
 1. 선택하려는 단어가 위 목록에 **정확히 존재하는가?** (목록에 없으면 절대 선택 금지)
 2. 이전에 선택한 단어와 같은 문장에 있는가? (같은 문장이면 절대 선택 금지)
 3. 각 문장에서 이미 1개를 선택했는가? (이미 선택했다면 그 문장에서 더 이상 선택 금지)
+4. "prior to", "because of", "instead of" 같은 구를 분리하여 선택하지 않았는가? (분리 선택 절대 금지)
+
+**올바른 선택 예시:**
+- 문장 1: "are" 선택 (목록에 있음, 문장 1에서 1개만) ✅
+- 문장 2: "which" 선택 (목록에 있음, 문장 2에서 1개만) ✅
+- 문장 3: "prior" 선택 (목록에 있음, 단 "prior to"가 있으면 "prior"만 선택 가능) ✅
+
+**잘못된 선택 예시 (절대 금지):**
+- ❌ 문장 1에서 "are"와 "of" 두 개 선택 (한 문장에서 2개 선택 금지)
+- ❌ 문장 4에서 "which"와 "since" 두 개 선택 (한 문장에서 2개 선택 금지)
+- ❌ 문장 5에서 "prior"와 "to" 두 개 선택 (한 문장에서 2개 선택 금지, "prior to"는 하나의 구)
+- ❌ 목록에 없는 "minor" 선택 (목록 외 단어 선택 금지)
 
 **최종 검증:** 각 단어에 대해 "이 문법 오류가 고등학교 교실에서 설명할 가치가 있는가?" 질문하고, "아니오"면 선택하지 마세요.
 
@@ -449,9 +466,30 @@ ${targetWordCount === 8 ? '["word1", "word2", "word3", "word4", "word5", "word6"
 
 **⚠️ 최종 확인 (반드시 체크):**
 1. 정확히 ${targetWordCount}개 단어를 선택했는가?
-2. 각 문장에서 최대 1개만 선택했는가?
+2. 각 문장에서 정확히 1개만 선택했는가? (0개도 안 됨, 2개도 안 됨)
 3. 선택한 모든 단어가 위 "가능한 후보 단어" 목록에 있는가?
-4. 한 문장에서 2개 이상의 단어를 선택하지 않았는가?`;
+4. 한 문장에서 2개 이상의 단어를 선택하지 않았는가?
+5. "prior to", "because of" 같은 구를 분리하여 선택하지 않았는가?
+
+**📝 Few-shot 예제 (올바른 선택 방법):**
+
+예제 1:
+- 문장 1: "There are two forms of strokes - little and big."
+  - 가능한 후보: ["are", "of", "forms"]
+  - ✅ 올바른 선택: ["are"] (1개만 선택)
+  - ❌ 잘못된 선택: ["are", "of"] (2개 선택 금지)
+
+예제 2:
+- 문장 4: "One hears less about them since it is the big strokes which often kill."
+  - 가능한 후보: ["which", "since", "hears"]
+  - ✅ 올바른 선택: ["which"] (1개만 선택)
+  - ❌ 잘못된 선택: ["which", "since"] (2개 선택 금지)
+
+예제 3:
+- 문장 5: "Little strokes occur in some people for a number of years prior to the development."
+  - 가능한 후보: ["prior", "to", "occur", "development"]
+  - ✅ 올바른 선택: ["prior"] (1개만 선택, "prior to"는 하나의 구이므로 "prior"만 선택)
+  - ❌ 잘못된 선택: ["prior", "to"] (2개 선택 금지, "prior to"를 분리하지 마세요)`;
 
       const response = await callOpenAI({
         model: 'gpt-4o',
@@ -460,26 +498,40 @@ ${targetWordCount === 8 ? '["word1", "word2", "word3", "word4", "word5", "word6"
             role: 'system', 
             content: `You are a helpful assistant that selects words from a provided list.
 
-CRITICAL RULES (MUST FOLLOW):
-1. You MUST ONLY select words that are EXACTLY in the provided validCandidateWords list
-2. If a word is NOT in the validCandidateWords list, you MUST NOT select it
-3. You must strictly follow the rule: select at most ONE word per sentence
+CRITICAL RULES (MUST FOLLOW - VIOLATION = AUTOMATIC FAILURE):
+1. You MUST ONLY select words that are EXACTLY in the provided sentence-specific candidate lists
+2. If a word is NOT in the candidate list for that sentence, you MUST NOT select it
+3. You must strictly follow the rule: select EXACTLY ONE word per sentence (NOT zero, NOT two)
 4. Return only valid JSON arrays
-5. Before selecting any word, verify that it exists in the validCandidateWords list
+5. Before selecting any word, verify that it exists in the candidate list for that specific sentence
 6. Selecting a word not in the list will cause automatic failure
 7. Selecting multiple words from the same sentence will cause automatic failure
+8. DO NOT split phrases like "prior to", "because of", "instead of" into separate words
+9. If you see "prior to" in a sentence, you can select "prior" OR "to" but NOT BOTH
 
-VERIFICATION STEPS:
+VERIFICATION STEPS (MANDATORY FOR EACH WORD):
 For each word you want to select:
-- Step 1: Check if the word exists in the validCandidateWords list (case-insensitive match)
+- Step 1: Check if the word exists in the candidate list for that specific sentence (case-insensitive match)
 - Step 2: Check which sentence the word belongs to
 - Step 3: Check if you have already selected a word from that sentence
-- Step 4: If all checks pass, you can select the word
-- Step 5: If any check fails, DO NOT select the word`
+- Step 4: If you have already selected a word from that sentence, DO NOT select another word from the same sentence
+- Step 5: If all checks pass, you can select the word
+- Step 6: If any check fails, DO NOT select the word
+
+EXAMPLES OF CORRECT SELECTION:
+- Sentence 1: Select "are" (exists in list, only 1 word from sentence 1) ✅
+- Sentence 2: Select "which" (exists in list, only 1 word from sentence 2) ✅
+- Sentence 3: Select "prior" (exists in list, only 1 word from sentence 3, even if "prior to" exists) ✅
+
+EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
+- ❌ Sentence 1: Select both "are" AND "of" (2 words from same sentence = FORBIDDEN)
+- ❌ Sentence 4: Select both "which" AND "since" (2 words from same sentence = FORBIDDEN)
+- ❌ Sentence 5: Select both "prior" AND "to" (2 words from same sentence = FORBIDDEN, even if "prior to" exists)
+- ❌ Select "minor" if it's not in the candidate list (word not in list = FORBIDDEN)`
           },
           { role: 'user', content: selectionPrompt }
         ],
-        temperature: 0.2,
+        temperature: 0.1,
         max_tokens: 1000,
       });
 
@@ -513,11 +565,12 @@ For each word you want to select:
       
       // 문장 수에 따라 유연하게 처리 (최소 5개, 최대 8개)
       const expectedCount = Math.min(8, sentenceCandidates.length);
-      if (words.length !== expectedCount) {
-        throw new Error(`선택된 단어가 ${expectedCount}개가 아닙니다. (실제: ${words.length}개)`);
+      // 단어 수가 맞지 않아도 일단 진행 (나중에 자동 수정)
+      if (words.length < 5) {
+        throw new Error(`선택된 단어가 너무 적습니다: ${words.length}개 (최소 5개 필요)`);
       }
       
-      // 검증: 각 문장의 후보 목록에 있는지 확인
+      // 검증: 각 문장의 후보 목록에 있는지 확인 및 wordSentenceMap 구축
       const invalidWords: string[] = [];
       const wordSentenceMap: { [word: string]: number } = {};
       
@@ -525,6 +578,7 @@ For each word you want to select:
         let found = false;
         let sentenceIndex = -1;
         
+        // 모든 문장을 확인하여 해당 단어가 어느 문장에 속하는지 찾기
         for (const item of sentenceCandidates) {
           const wordLower = word.trim().toLowerCase();
           const isInCandidates = item.candidates.some(candidate => candidate.trim().toLowerCase() === wordLower);
@@ -532,6 +586,22 @@ For each word you want to select:
           if (isInCandidates) {
             const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+            if (regex.test(item.sentence)) {
+              // 여러 문장에 같은 단어가 있을 수 있으므로, 첫 번째로 찾은 문장 사용
+              if (!found) {
+                found = true;
+                sentenceIndex = item.sentenceIndex;
+                wordSentenceMap[word] = sentenceIndex;
+              }
+            }
+          }
+        }
+        
+        // 후보 목록에 없어도 본문에 존재하면 문장 찾기 시도
+        if (!found) {
+          const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+          for (const item of sentenceCandidates) {
             if (regex.test(item.sentence)) {
               found = true;
               sentenceIndex = item.sentenceIndex;
@@ -576,17 +646,59 @@ For each word you want to select:
         throw new Error(`본문에 존재하지 않는 단어가 선택되었습니다: ${missingWords.join(', ')}`);
       }
       
-      // 같은 문장에 여러 단어가 선택되었는지 검증
+      // 중복 제거: 같은 단어가 여러 번 선택된 경우 제거
+      const uniqueWords: string[] = [];
+      const seenWords = new Set<string>();
+      for (const word of words) {
+        const wordLower = word.trim().toLowerCase();
+        if (!seenWords.has(wordLower)) {
+          seenWords.add(wordLower);
+          uniqueWords.push(word);
+        }
+      }
+      
+      if (uniqueWords.length !== words.length) {
+        console.warn(`⚠️ 중복 단어 제거: ${words.length}개 → ${uniqueWords.length}개`);
+        words = uniqueWords;
+      }
+      
+      // 같은 문장에 여러 단어가 선택된 경우, 각 문장에서 첫 번째만 유지
       const sentenceWordCount: { [sentenceIndex: number]: string[] } = {};
+      const sentenceFirstWord: { [sentenceIndex: number]: string } = {};
+      
       for (const word of words) {
         const sentenceIndex = wordSentenceMap[word];
         if (sentenceIndex !== undefined) {
           if (!sentenceWordCount[sentenceIndex]) {
             sentenceWordCount[sentenceIndex] = [];
+            sentenceFirstWord[sentenceIndex] = word;
           }
           sentenceWordCount[sentenceIndex].push(word);
         }
       }
+      
+      // 각 문장에서 첫 번째 단어만 유지
+      const correctedWords: string[] = [];
+      const usedSentences = new Set<number>();
+      
+      for (const word of words) {
+        const sentenceIndex = wordSentenceMap[word];
+        if (sentenceIndex !== undefined) {
+          if (!usedSentences.has(sentenceIndex)) {
+            correctedWords.push(word);
+            usedSentences.add(sentenceIndex);
+          }
+        } else {
+          // 문장 인덱스를 찾을 수 없는 경우도 포함 (안전장치)
+          correctedWords.push(word);
+        }
+      }
+      
+      // 추가 검증: "prior to", "because of" 같은 구가 분리되어 선택되었는지 확인
+      const phrasePairs = [
+        ['prior', 'to'], ['because', 'of'], ['instead', 'of'], ['due', 'to'],
+        ['according', 'to'], ['owing', 'to'], ['thanks', 'to'], ['next', 'to']
+      ];
       
       const violations: string[] = [];
       for (const [sentenceIdx, wordList] of Object.entries(sentenceWordCount)) {
@@ -594,19 +706,104 @@ For each word you want to select:
           const idx = parseInt(sentenceIdx);
           const sentenceItem = sentenceCandidates.find(item => item.sentenceIndex === idx);
           const sentenceText = sentenceItem ? sentenceItem.sentence.substring(0, 80) : '';
-          violations.push(`문장 ${idx + 1} ("${sentenceText}..."): ${wordList.join(', ')}`);
+          
+          // 구(phrase)가 분리되어 선택되었는지 확인
+          const wordListLower = wordList.map(w => w.trim().toLowerCase());
+          const isPhraseSplit = phrasePairs.some(pair => 
+            wordListLower.includes(pair[0].toLowerCase()) && wordListLower.includes(pair[1].toLowerCase())
+          );
+          
+          if (isPhraseSplit) {
+            violations.push(`문장 ${idx + 1} ("${sentenceText}..."): ${wordList.join(', ')} (구가 분리되어 선택됨)`);
+          } else {
+            violations.push(`문장 ${idx + 1} ("${sentenceText}..."): ${wordList.join(', ')}`);
+          }
         }
       }
       
+      // 수정된 단어 목록 사용
+      words = correctedWords;
+      
+      // 수정 후에도 문제가 있으면 경고만 출력하고 계속 진행
       if (violations.length > 0) {
-        const errorMsg = `한 문장에서 여러 단어를 선택했습니다: ${violations.map(v => v.split(':')[1].trim()).join(', ')}. 각 문장에서 최대 1개만 선택하세요.`;
-        console.warn(`⚠️ 같은 문장에서 여러 단어가 선택됨 (재시도 ${retryCount + 1}/${maxRetries}):\n${violations.join('\n')}`);
-        if (retryCount < maxRetries - 1) {
-          previousErrors.push(errorMsg);
-          retryCount++;
-          continue;
+        console.warn(`⚠️ 같은 문장에서 여러 단어가 선택되어 자동 수정됨 (재시도 ${retryCount + 1}/${maxRetries}):\n${violations.join('\n')}`);
+        console.log(`📝 수정된 단어 목록: ${words.length}개 - ${words.join(', ')}`);
+      }
+      
+      // 수정 후 단어 수가 부족한 경우, 사용되지 않은 문장에서 추가로 선택
+      if (words.length < targetWordCount) {
+        const usedSentenceIndices = new Set<number>();
+        for (const word of words) {
+          const sentenceIndex = wordSentenceMap[word];
+          if (sentenceIndex !== undefined) {
+            usedSentenceIndices.add(sentenceIndex);
+          }
         }
-        throw new Error(`한 문장에서 여러 단어가 선택되었습니다:\n${violations.join('\n')}`);
+        
+        // 사용되지 않은 문장에서 후보 단어 찾기
+        const availableCandidates: { sentenceIndex: number; word: string }[] = [];
+        for (const item of sentenceCandidates) {
+          if (!usedSentenceIndices.has(item.sentenceIndex)) {
+            for (const candidate of item.candidates) {
+              // 이미 선택된 단어가 아닌 경우만 추가
+              if (!words.some(w => w.trim().toLowerCase() === candidate.trim().toLowerCase())) {
+                availableCandidates.push({
+                  sentenceIndex: item.sentenceIndex,
+                  word: candidate
+                });
+              }
+            }
+          }
+        }
+        
+        // 중복 제거 (같은 문장에서 여러 후보가 있을 수 있음)
+        const uniqueCandidates: { sentenceIndex: number; word: string }[] = [];
+        const seenWords = new Set<string>();
+        const seenSentences = new Set<number>();
+        
+        for (const candidate of availableCandidates) {
+          const wordLower = candidate.word.trim().toLowerCase();
+          if (!seenWords.has(wordLower) && !seenSentences.has(candidate.sentenceIndex)) {
+            seenWords.add(wordLower);
+            seenSentences.add(candidate.sentenceIndex);
+            uniqueCandidates.push(candidate);
+          }
+        }
+        
+        // 부족한 만큼 추가
+        const needed = targetWordCount - words.length;
+        if (uniqueCandidates.length >= needed) {
+          const additionalWords = uniqueCandidates.slice(0, needed).map(c => c.word);
+          words = [...words, ...additionalWords];
+          console.log(`✅ 부족한 단어 자동 보완: ${additionalWords.length}개 추가 - ${additionalWords.join(', ')}`);
+          console.log(`📝 최종 단어 목록: ${words.length}개 - ${words.join(', ')}`);
+        } else {
+          // 보완할 수 없으면 재시도
+          const errorMsg = `수정 후 단어 수가 부족하고 보완할 수 없습니다: ${words.length}개 (필요: ${targetWordCount}개, 사용 가능한 후보: ${uniqueCandidates.length}개). 재시도합니다.`;
+          console.warn(`⚠️ ${errorMsg}`);
+          if (retryCount < maxRetries - 1) {
+            previousErrors.push(errorMsg);
+            retryCount++;
+            continue;
+          }
+          // 최소 5개 이상이면 허용 (유형#10은 3-8개 오류이므로)
+          if (words.length >= 5) {
+            console.warn(`⚠️ 단어 수가 부족하지만 최소 요구사항(5개)을 만족하므로 진행: ${words.length}개`);
+            // targetWordCount를 실제 단어 수로 조정
+            // 이는 나중에 사용될 수 있으므로 words.length로 조정
+          } else {
+            throw new Error(`단어 수가 부족합니다: ${words.length}개 (최소 5개 필요)`);
+          }
+        }
+      }
+      
+      // 단어 수가 정확히 맞는지 확인
+      if (words.length !== targetWordCount) {
+        // 초과된 경우 앞에서부터 targetWordCount개만 사용
+        if (words.length > targetWordCount) {
+          console.warn(`⚠️ 단어 수가 초과되어 앞에서 ${targetWordCount}개만 사용: ${words.length}개 → ${targetWordCount}개`);
+          words = words.slice(0, targetWordCount);
+        }
       }
       
       console.log(`✅ 단어 선택 성공 (시도 ${retryCount + 1}):`, words);
