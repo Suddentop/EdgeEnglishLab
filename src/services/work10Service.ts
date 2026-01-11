@@ -1,12 +1,10 @@
 /**
  * Work_10 (다중 어법 오류 찾기) 문제 생성 로직
- * 원본: src/components/work/Work_10_MultiGrammarError/Work_10_MultiGrammarError.tsx
- * 
- * 이 파일은 원본 컴포넌트에서 문제 생성 로직만 추출한 것입니다.
- * 원본 파일은 수정하지 않았으며, 로직을 복사하여 독립적으로 사용합니다.
+ * 유형#09와 동일한 난이도 평가 및 어법 변형 로직 사용
  */
 
-import { callOpenAI, translateToKorean, addVarietyToPrompt, getProblemGenerationTemperature } from './common';
+import { callOpenAI, translateToKorean } from './common';
+import { transformWord } from './work09Service';
 
 /**
  * 다중 어법 오류 문제 타입 정의
@@ -20,6 +18,124 @@ export interface MultiGrammarQuiz {
   originalWords: string[];
   transformedWords: string[];
   wrongIndexes: number[];
+}
+
+/**
+ * 8개 단어의 난이도를 모두 평가하는 함수 (유형#09의 evaluateDifficulty와 동일한 로직)
+ */
+async function evaluateDifficultiesForWork10(
+  words: string[],
+  passage: string
+): Promise<Array<{ index: number; word: string; difficulty: number }>> {
+  const wordCount = words.length;
+  console.log(`🔍 ${wordCount}개 단어 난이도 평가 시작...`);
+  
+  const prompt = `**수능 고난도 어법 오류 문제 난이도 평가**
+
+다음 ${wordCount}개 단어 각각의 난이도를 평가하세요. **수능 최고난도 수준**의 어법 오류 문제를 만들기에 적합한 정도를 평가합니다.
+
+**선택된 단어들:**
+${words.map((word, idx) => `${idx + 1}. "${word}"`).join('\n')}
+
+**본문:**
+${passage}
+
+**난이도 평가 기준:**
+1. **어법 복잡도**: 복잡한 구문 구조 내에서 판단이 필요한 어법일수록 높은 난이도
+   - 관계사절, 분사구문, 가정법, 도치 등 복잡한 구문 구조
+   - 단순 시제 변화, 기본 관사, 단순 전치사 등은 낮은 난이도
+2. **의미 해석 영향**: 틀리면 문장 의미 해석에 큰 영향을 미치는 단어일수록 높은 난이도
+3. **문맥 판단 필요**: 문맥과 문장 구조를 종합적으로 분석해야 판단 가능한 단어일수록 높은 난이도
+4. **수능 출제 빈도**: 수능 고난도 문제에 자주 출제되는 어법 유형일수록 높은 난이도
+   - 분사구문, 관계사, 가정법, 병렬구조, 수일치(복잡), 준동사 등
+
+**우선 순위 (높은 난이도 순):**
+1. 분사구문 (능동/수동 판단, 의미상 주어)
+2. 관계사 (관계대명사 vs 관계부사, 전치사+관계대명사)
+3. 가정법 (시제 불일치, if 생략)
+4. 병렬구조 (형태 일치, 품사 일치)
+5. 준동사 (동명사 vs 부정사, 분사 형태 판단)
+6. 수일치 (복잡한 주어-동사 일치)
+7. 능동/수동 (목적어 유무, 의미 판단)
+8. 형용사 vs 부사 (보어 vs 수식어)
+9. 전치사 (문맥 판단)
+10. 기타
+
+**평가 방법:**
+- 위 기준에 따라 각 단어의 난이도를 평가하세요 (1-10점, 10점이 가장 높음)
+- 각 단어에 대해 독립적으로 평가하세요
+
+아래 JSON 형식으로만 응답하세요 (정확히 ${wordCount}개 항목을 반환해야 합니다):
+{
+  "difficulties": [
+    ${words.map((word, idx) => `{ "index": ${idx}, "word": "${word}", "difficulty": 8 }`).join(',\n    ')}
+  ]
+}
+
+**중요:** 반드시 ${wordCount}개 항목을 모두 반환해야 합니다.`;
+
+  const response = await callOpenAI({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a grammar expert specializing in Korean CSAT (Suneung) English section. You evaluate the difficulty level of grammar words for creating high-level exam questions.'
+      },
+      { role: 'user', content: prompt }
+    ],
+    temperature: 0.3,
+    max_tokens: 1000,
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API 오류: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content.trim();
+
+  let resultJson = content;
+  if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+    resultJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+  }
+
+  try {
+    const result = JSON.parse(resultJson);
+
+    if (!result.difficulties || !Array.isArray(result.difficulties)) {
+      throw new Error('difficulties 배열이 올바르지 않습니다.');
+    }
+
+    if (result.difficulties.length !== words.length) {
+      throw new Error(`difficulties 배열의 길이가 ${words.length}이 아닙니다. (실제: ${result.difficulties.length}개)`);
+    }
+
+    // 검증: 각 단어가 원본 배열에 있는지 확인
+    const difficultyResults = result.difficulties.map((item: any) => {
+      const wordLower = item.word.trim().toLowerCase();
+      const foundIndex = words.findIndex(w => w.trim().toLowerCase() === wordLower);
+      
+      if (foundIndex === -1) {
+        throw new Error(`평가된 단어 "${item.word}"가 선택된 단어 목록에 없습니다.`);
+      }
+
+      return {
+        index: foundIndex,
+        word: words[foundIndex],
+        difficulty: item.difficulty || 5
+      };
+    });
+
+    // 난이도 순으로 정렬 (높은 순)
+    difficultyResults.sort((a: { index: number; word: string; difficulty: number }, b: { index: number; word: string; difficulty: number }) => b.difficulty - a.difficulty);
+
+    console.log('✅ 난이도 평가 완료:', difficultyResults);
+    return difficultyResults;
+
+  } catch (parseError) {
+    console.error('난이도 평가 파싱 실패:', resultJson);
+    throw new Error(`난이도 평가에 실패했습니다: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+  }
 }
 
 /**
@@ -40,8 +156,117 @@ export async function generateWork10Quiz(
 
   while (retryCount < maxRetries) {
     try {
-    // Step 1: 본문에서 어법 변형 가능한 단어 후보를 먼저 추출
-    const candidatePrompt = `**수능 고난도 다중 어법 오류 문제용 단어 후보 추출**
+      // Step 1: 8개 단어 선택 (유형#09의 selectWords 로직과 동일하지만 8개 선택)
+      // 유형#09의 selectWords를 재사용하되, 8개를 선택하도록 수정된 버전 사용
+      const words = await selectWordsForWork10(passage, previouslySelectedWords);
+      console.log('✅ 선택된 단어들:', words);
+
+      // Step 2: 난이도 평가 (8개 단어 모두 평가)
+      const difficultyResults = await evaluateDifficultiesForWork10(words, passage);
+      console.log('✅ 난이도 평가 결과:', difficultyResults);
+
+      // Step 3: 상위 3~8개 선택 (난이도 기반)
+      // 선택된 단어 수에 따라 유연하게 처리 (최소 3개, 최대 words.length개)
+      const maxWrongCount = Math.min(8, words.length);
+      const minWrongCount = Math.min(3, words.length);
+      const wrongCount = Math.floor(Math.random() * (maxWrongCount - minWrongCount + 1)) + minWrongCount; // 3~maxWrongCount
+      const selectedIndices = difficultyResults.slice(0, wrongCount).map(r => r.index);
+      console.log(`🎯 변형할 단어 선정: ${wrongCount}개 (인덱스: ${selectedIndices.join(', ')})`);
+
+      // Step 4: 선택된 단어들을 각각 변형
+      const transformedWords = [...words];
+      const grammarTypes: string[] = [];
+      
+      for (const index of selectedIndices) {
+        try {
+          const transformation = await transformWord(words, index);
+          transformedWords[index] = transformation.transformedWords[index];
+          grammarTypes.push(transformation.grammarType);
+          console.log(`✅ 인덱스 ${index} 변형 완료: "${words[index]}" → "${transformedWords[index]}" (${transformation.grammarType})`);
+        } catch (error) {
+          console.warn(`⚠️ 인덱스 ${index} 변형 실패, 원본 유지:`, error);
+          // 변형 실패 시 원본 유지
+        }
+      }
+
+      // Step 5: 번호/밑줄 적용
+      const { numberedPassage, passageOrder } = applyNumberAndUnderlineForWork10(
+        passage,
+        words,
+        transformedWords
+      );
+      console.log('✅ 번호/밑줄 적용 완료');
+
+      // Step 6: 번역
+      const translation = await translateToKorean(passage);
+      console.log('✅ 번역 완료');
+
+      // wrongIndexes 계산: 본문 순서 기준
+      const wrongIndexes: number[] = [];
+      selectedIndices.forEach(originalIndex => {
+        const newIndex = passageOrder.indexOf(originalIndex);
+        if (newIndex !== -1) {
+          wrongIndexes.push(newIndex);
+        }
+      });
+      wrongIndexes.sort((a, b) => a - b);
+
+      // 옵션, 정답 계산
+      const wrongCountFinal = wrongIndexes.length;
+      const options = [3, 4, 5, 6, 7, 8];
+      const answerIndex = options.indexOf(wrongCountFinal);
+
+      if (answerIndex === -1) {
+        throw new Error(`틀린 단어 개수(${wrongCountFinal})가 유효 범위(3~8)를 벗어났습니다.`);
+      }
+
+      // 본문 순서대로 재정렬
+      const sortedOriginalWords = passageOrder.map(originalIdx => words[originalIdx]);
+      const sortedTransformedWords = passageOrder.map(originalIdx => transformedWords[originalIdx]);
+
+      const result: MultiGrammarQuiz = {
+        passage: passage, // 원본 본문
+        numberedPassage: numberedPassage, // HTML 적용된 본문
+        options,
+        answerIndex,
+        translation,
+        originalWords: sortedOriginalWords,
+        transformedWords: sortedTransformedWords,
+        wrongIndexes
+      };
+
+      console.log('✅ Work_10 문제 생성 완료:', result);
+      return result;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`⚠️ Work_10 문제 생성 실패 (재시도 ${retryCount + 1}/${maxRetries}):`, errorMessage);
+      
+      if (retryCount < maxRetries - 1) {
+        retryCount++;
+        continue;
+      }
+      
+      console.error('❌ Work_10 문제 생성 실패:', error);
+      throw new Error(`문제 생성에 실패했습니다: ${errorMessage}`);
+    }
+  }
+  
+  throw new Error(`Work_10 문제 생성이 ${maxRetries}회 재시도 후에도 실패했습니다.`);
+}
+
+/**
+ * 유형#10용 8개 단어 선택 함수 (유형#09의 selectWords와 동일한 로직, 8개 선택)
+ */
+async function selectWordsForWork10(
+  passage: string,
+  previouslySelectedWords?: string[]
+): Promise<string[]> {
+  // 유형#09의 selectWords 로직을 재사용하되, 8개를 선택하도록 수정
+  // 여기서는 간단하게 유형#09의 로직을 복사하여 8개 선택하도록 수정
+  
+  // Step 1: 후보 단어 추출
+  const candidatePrompt = `**수능 고난도 다중 어법 오류 문제용 단어 후보 추출**
 
 본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다.
 
@@ -51,7 +276,6 @@ export async function generateWork10Quiz(
 
 **추출 기준:**
 - 본문에 실제로 존재하는 단어만 (형태 그대로)
-- 한 단어(Single Word) 단위만 (구/절 금지)
 - 문법적으로 변형 가능한 단어 우선 (준동사, 동사, 형용사/부사, 전치사, 관계사/접속사)
 
 본문:
@@ -61,80 +285,125 @@ ${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
 **⚠️ 매우 중요 - 이전 선택 단어 제외:**
 * 아래 단어들은 이전에 이미 선택된 단어입니다. 이 단어들은 **절대 선택하지 마세요**:
 * ${previouslySelectedWords.map(word => `"${word}"`).join(', ')}
-* 위 단어들과는 **완전히 다른 단어**를 선택해야 합니다.
-* 본문에서 위 단어들을 제외한 다른 적절한 단어를 선택하세요.` : ''}
+* 위 단어들과는 **완전히 다른 단어**를 선택해야 합니다.` : ''}
 
-응답 형식 (JSON 배열, 최소 15개 이상 추출):
+응답 형식 (JSON 배열, 최소 20개 이상 추출):
 ["word1", "word2", "word3", ...]`;
 
-    const candidateResponse = await callOpenAI({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant that extracts grammatical words from text. Return only valid JSON arrays.' },
-        { role: 'user', content: candidatePrompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 2000,
-    });
+  const candidateResponse = await callOpenAI({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: 'You are a helpful assistant that extracts grammatical words from text. Return only valid JSON arrays.' },
+      { role: 'user', content: candidatePrompt }
+    ],
+    temperature: 0.3,
+    max_tokens: 2000,
+  });
 
-    if (!candidateResponse.ok) {
-      throw new Error(`OpenAI API 오류: ${candidateResponse.status}`);
+  if (!candidateResponse.ok) {
+    throw new Error(`OpenAI API 오류: ${candidateResponse.status}`);
+  }
+
+  const candidateData = await candidateResponse.json();
+  let candidateContent = candidateData.choices[0].message.content.trim();
+  
+  if (candidateContent.includes('```json') || candidateContent.includes('```Json') || candidateContent.includes('```')) {
+    candidateContent = candidateContent.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+  }
+
+  let candidateWords: string[] = [];
+  try {
+    candidateWords = JSON.parse(candidateContent);
+    if (!Array.isArray(candidateWords) || candidateWords.length < 15) {
+      throw new Error('후보 단어가 부족합니다.');
     }
+  } catch (parseError) {
+    console.error('후보 단어 파싱 실패:', candidateContent);
+    throw new Error('후보 단어 추출에 실패했습니다.');
+  }
 
-    const candidateData = await candidateResponse.json();
-    let candidateContent = candidateData.choices[0].message.content.trim();
+  // Step 2: 유효한 후보 단어 필터링
+  const validCandidateWords: string[] = [];
+  for (const word of candidateWords) {
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+    if (regex.test(passage)) {
+      validCandidateWords.push(word);
+    }
+  }
+
+  if (validCandidateWords.length < 8) {
+    throw new Error(`본문에서 어법 변형 가능한 단어가 부족합니다. (${validCandidateWords.length}개 발견, 최소 8개 필요)`);
+  }
+
+  console.log(`✅ 본문에서 추출된 유효한 후보 단어: ${validCandidateWords.length}개`);
+
+  // Step 3: 문장별 후보 추출
+  const sentences = passage.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 0);
+  
+  const sentenceCandidates: { sentenceIndex: number; sentence: string; candidates: string[] }[] = [];
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i];
+    const candidates: string[] = [];
     
-    // 마크다운 코드 블록 제거
-    if (candidateContent.includes('```json') || candidateContent.includes('```Json') || candidateContent.includes('```')) {
-      candidateContent = candidateContent.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
-    }
-
-    let candidateWords: string[] = [];
-    try {
-      candidateWords = JSON.parse(candidateContent);
-      if (!Array.isArray(candidateWords) || candidateWords.length < 10) {
-        throw new Error('후보 단어가 부족합니다.');
-      }
-    } catch (parseError) {
-      console.error('후보 단어 파싱 실패:', candidateContent);
-      throw new Error('후보 단어 추출에 실패했습니다.');
-    }
-
-    // Step 2: 추출된 후보 단어 중에서 본문에 실제로 존재하는 것만 필터링
-    const validCandidateWords: string[] = [];
-    for (const word of candidateWords) {
+    for (const word of validCandidateWords) {
       const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
-      if (regex.test(passage)) {
-        validCandidateWords.push(word);
+      if (regex.test(sentence)) {
+        candidates.push(word);
       }
     }
-
-    if (validCandidateWords.length < 8) {
-      throw new Error(`본문에서 어법 변형 가능한 단어가 부족합니다. (${validCandidateWords.length}개 발견, 최소 8개 필요)`);
+    
+    if (candidates.length > 0) {
+      sentenceCandidates.push({
+        sentenceIndex: i,
+        sentence: sentence,
+        candidates: candidates
+      });
     }
+  }
+  
+  // 유형#10은 8개 단어를 선택해야 하므로, 최소 8개 문장이 필요합니다.
+  // 하지만 문장 수가 부족한 경우, 가능한 만큼만 선택하도록 유연하게 처리
+  const minSentences = Math.min(8, sentenceCandidates.length);
+  if (sentenceCandidates.length < 8) {
+    console.warn(`⚠️ 본문에 8개 이상의 문장이 필요하지만, 현재 ${sentenceCandidates.length}개 문장에만 후보 단어가 존재합니다.`);
+    // 최소 5개 문장은 있어야 함 (유형#10은 최소 3개 오류를 생성해야 하므로)
+    if (sentenceCandidates.length < 5) {
+      throw new Error(`본문에 최소 5개 이상의 문장이 필요합니다. (현재: ${sentenceCandidates.length}개 문장에 후보 단어 존재)`);
+    }
+  }
+  
+  const sentenceList = sentenceCandidates.map((item, idx) => 
+    `문장 ${item.sentenceIndex + 1}: "${item.sentence}"\n가능한 후보 단어: ${JSON.stringify(item.candidates)}`
+  ).join('\n\n');
+  
+  // 선택할 단어 개수 결정 (문장 수에 맞춰 최대 8개)
+  const targetWordCount = Math.min(8, sentenceCandidates.length);
 
-    console.log(`✅ 본문에서 추출된 유효한 후보 단어: ${validCandidateWords.length}개`);
+  const maxRetries = 5;
+  let retryCount = 0;
+  let previousErrors: string[] = [];
+  
+  while (retryCount < maxRetries) {
+    try {
+      const errorContext = previousErrors.length > 0 ? `
 
-    // Step 3: 유효한 후보 단어 중에서 최종 8개 선택 및 어법 변형
-    // 본문을 문장 단위로 분할 (마침표, 느낌표, 물음표 기준)
-    const sentences = passage.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 0);
-    const sentenceList = sentences.map((sentence, index) => 
-      `문장 ${index + 1}: "${sentence}"`
-    ).join('\n\n');
+**⚠️ 이전 시도 실패 이유 (반드시 피하세요):**
+${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
+위 실수를 반복하지 마세요.` : '';
 
-    const prompt = `**수능 고난도 다중 어법 오류 문제 생성**
+      const selectionPrompt = `**수능 고난도 다중 어법 오류 문제용 단어 ${targetWordCount}개 선정**${errorContext}
 
-아래 목록에서 **수능 최고난도 수준**의 다중 어법 오류 찾기 문제를 위한 단어 8개를 선정하고, 3~8개를 변형하세요.
+아래 목록에서 **수능 1등급 수준**의 어법 오류 찾기 문제를 위한 단어 ${targetWordCount}개를 선정하세요.
 
-**⚠️ 필수 규칙 (엄격히 준수):**
-- 목록에 있는 단어만 선택 (목록 외 단어 절대 금지)
-- 한 단어(Single Word) 단위만 (구/절 금지, 예: "can prey"(X) -> "prey"(O))
-- 중복 불가 (서로 다른 위치의 8개 단어)
-- wrongIndexes는 3~8개 (절대 2개 이하, 9개 이상 금지)
-- 모든 wrongIndexes 값은 0~7 범위
-- **🚨 CRITICAL: 각 문장에서 최대 1개만 선택** (한 문장에서 여러 단어 선택 시 자동 실패)
-- **8개 문제는 모두 다른 어법 유형**으로 변형해야 함 (동일 어법 반복 금지)
+**⚠️ 필수 규칙 (엄격히 준수 - 위반 시 자동 실패):**
+- **목록에 있는 단어만 선택** (목록 외 단어 절대 금지 - 위반 시 재시도됨)
+- 단어 단위만 (구/절 금지)
+- 중복 불가
+- 관계사/접속사(that, which, what, when, where 등)는 **최대 1개만** (2개 이상 시 실패)
+- **🚨 CRITICAL: 각 문장에서 최대 1개만 선택** (한 문장에서 여러 단어 선택 시 자동 실패 및 재시도)
+- **${targetWordCount}개 문제는 모두 다른 어법 유형**으로 생성해야 함 (동일 어법 반복 금지)
 - **주어-동사 시제일치 문제 절대 금지** (1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es 등)
 - **단순 시제 변형 절대 금지** (was/were, 동사원형+-s/-es 등)
 - **to 부정사 단순 변형 절대 금지**: "to continue" → "to continuing" 같은 단순 변형은 금지. 반드시 "to be continuing" 또는 "to have been continuing" 같은 복잡한 구조만 사용
@@ -142,15 +411,17 @@ ${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
 **📋 본문 (문장 단위):**
 ${sentenceList}
 
-**선택 방법:**
-1. 문장 1에서 최대 1개 단어 선택 (또는 0개)
-2. 문장 2에서 최대 1개 단어 선택 (또는 0개)
-3. ... 각 문장을 순회하며 총 8개 단어 선택
-4. **중요:** 각 문장에서 2개 이상 선택 절대 금지 (이 규칙 위반 시 자동 실패)
+**선택 방법 (반드시 이 순서로 따라야 함):**
+1. 문장 1을 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
+2. 문장 2를 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
+3. 문장 3을 확인하고, 해당 문장에서 **최대 1개** 단어만 선택 (또는 0개)
+4. ... 각 문장을 순회하며 총 ${targetWordCount}개 단어 선택
+5. **절대 금지:** 한 문장에서 2개 이상의 단어를 선택하는 것 (이 규칙 위반 시 자동 실패)
+6. **중요:** 정확히 ${targetWordCount}개 단어를 선택해야 합니다. ${targetWordCount}개보다 많거나 적으면 안 됩니다.
 
-**단어 선정 기준 (8개):**
-1. **문장 구조를 결정하는 핵심어** 위주: 준동사, 동사, 형용사/부사, 전치사, 관계사/접속사
-2. **🚨 필수 어법 유형 다양성 (8개 선택 시 반드시 서로 다른 어법 유형):**
+**선정 기준:**
+1. **복잡한 구문 내 문법 판단이 필요한 단어** 우선 (관계사절, 분사구문, 가정법, 도치 등)
+2. **🚨 필수 어법 유형 다양성 (${targetWordCount}개 선택 시 반드시 서로 다른 어법 유형):**
    아래 어법 유형들을 최대한 다양하게 포함해야 함 (동일 어법 반복 절대 금지):
    - 관계대명사와 관계부사 (where, when, how 등)
    - 형용사 vs 부사
@@ -160,370 +431,255 @@ ${sentenceList}
    - 대동사 (Do, Be)
    - 도치
    - 수의 일치 (주어+동사)
-   **8개 문제는 모두 서로 다른 어법 유형이어야 하며, 가능한 한 위 목록의 어법 유형들을 다양하게 포함해야 함**
+   **${targetWordCount}개 문제는 모두 서로 다른 어법 유형이어야 하며, 가능한 한 위 목록의 어법 유형들을 다양하게 포함해야 함**
 3. **의미 해석 영향:** 틀리면 문장 의미 해석에 실제 영향이 있어야 함
-4. 단순 명사, 기본 관사, 단순 전치사 제외
+4. **우선 순서:** 준동사 > 동사 > 형용사/부사 > 전치사 > 관계사/접속사
 
-**어법 변형 기준 (3~8개):**
-- 단순 철자 오류가 아닌 **고난도 문법 오류**
-- **🚨 변형된 오류들은 모두 서로 다른 어법 유형**이어야 함 (동일 어법 반복 절대 금지)
-- 아래 어법 유형들을 최대한 다양하게 포함:
-  * 관계대명사와 관계부사 (where, when, how 등)
-  * 형용사 vs 부사
-  * 5형식에서 목적격 보어
-  * 능동/수동 문제
-  * 과거분사/현재분사
-  * 대동사 (Do, Be)
-  * 도치
-  * 수의 일치 (주어+동사)
-- 변형된 오류가 의미 해석에 실제 영향이 있어야 함
-- **to 부정사 변형 시:** "to continue" → "to continuing" 같은 단순 변형은 절대 금지. 반드시 "to be continuing" 또는 "to have been continuing" 같은 복잡한 구조만 사용
-- 나머지 단어는 원본 그대로 유지
+**중요:** 각 문장의 "가능한 후보 단어" 목록에서만 선택하세요. 위 전체 목록이 아닌, 각 문장별로 제시된 후보 단어 목록만 사용하세요.
 
-**유효한 후보 단어 목록:**
-${JSON.stringify(validCandidateWords, null, 2)}
+**🚨 매우 중요 - 선택 전 필수 체크리스트:**
+1. 선택하려는 단어가 위 목록에 **정확히 존재하는가?** (목록에 없으면 절대 선택 금지)
+2. 이전에 선택한 단어와 같은 문장에 있는가? (같은 문장이면 절대 선택 금지)
+3. 각 문장에서 이미 1개를 선택했는가? (이미 선택했다면 그 문장에서 더 이상 선택 금지)
 
-**최종 검증:** 각 단어에 대해 "이 문법 오류가 고등학교 교실에서 설명할 가치가 있는가?" 질문하고, "아니오"면 선택/변형하지 마세요.
+**최종 검증:** 각 단어에 대해 "이 문법 오류가 고등학교 교실에서 설명할 가치가 있는가?" 질문하고, "아니오"면 선택하지 마세요.
 
-아래 JSON 형식으로만 응답하세요:
-{
-  "originalWords": ["word1", "word2", "word3", "word4", "word5", "word6", "word7", "word8"],
-  "transformedWords": ["word1", "wrong_word", "word3", "word4", "word5", "wrong_word", "wrong_word", "word8"],
-  "wrongIndexes": [1, 5, 6]
-}`;
+결과는 아래 JSON 배열 형식으로만 반환하세요 (정확히 ${targetWordCount}개 단어):
+${targetWordCount === 8 ? '["word1", "word2", "word3", "word4", "word5", "word6", "word7", "word8"]' : `[${Array.from({ length: targetWordCount }, (_, i) => `"word${i + 1}"`).join(', ')}]`}
 
-    // 다양성 추가
-    const enhancedPrompt = addVarietyToPrompt(prompt);
-    const temperature = getProblemGenerationTemperature(0.7);
+**⚠️ 최종 확인 (반드시 체크):**
+1. 정확히 ${targetWordCount}개 단어를 선택했는가?
+2. 각 문장에서 최대 1개만 선택했는가?
+3. 선택한 모든 단어가 위 "가능한 후보 단어" 목록에 있는가?
+4. 한 문장에서 2개 이상의 단어를 선택하지 않았는가?`;
 
-    const response = await callOpenAI({
-      model: 'gpt-4o',
-      messages: [{ role: 'system', content: 'You are an English grammar expert specializing in the Korean CSAT (Suneung). You create challenging syntax errors.' }, { role: 'user', content: enhancedPrompt }],
-      max_tokens: 3000,
-      temperature: temperature
-    });
+      const response = await callOpenAI({
+        model: 'gpt-4o',
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are a helpful assistant that selects words from a provided list.
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API 오류: ${response.status}`);
-    }
+CRITICAL RULES (MUST FOLLOW):
+1. You MUST ONLY select words that are EXACTLY in the provided validCandidateWords list
+2. If a word is NOT in the validCandidateWords list, you MUST NOT select it
+3. You must strictly follow the rule: select at most ONE word per sentence
+4. Return only valid JSON arrays
+5. Before selecting any word, verify that it exists in the validCandidateWords list
+6. Selecting a word not in the list will cause automatic failure
+7. Selecting multiple words from the same sentence will cause automatic failure
 
-    const data = await response.json();
-    const content = data.choices[0].message.content.trim();
-    
-    // 마크다운 코드 블록 제거
-    let cleanedContent = content;
-    if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
-      cleanedContent = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
-    }
-    
-    const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AI 응답에서 JSON 형식을 찾을 수 없습니다.');
-    
-    let result: any;
-    try {
-      result = JSON.parse(jsonMatch[0]);
-    } catch {
-      console.error('파싱 실패한 내용:', jsonMatch[0]);
-      throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
-    }
+VERIFICATION STEPS:
+For each word you want to select:
+- Step 1: Check if the word exists in the validCandidateWords list (case-insensitive match)
+- Step 2: Check which sentence the word belongs to
+- Step 3: Check if you have already selected a word from that sentence
+- Step 4: If all checks pass, you can select the word
+- Step 5: If any check fails, DO NOT select the word`
+          },
+          { role: 'user', content: selectionPrompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 1000,
+      });
 
-    // 필수 필드 검증
-    if (!result.originalWords || !result.transformedWords || !Array.isArray(result.wrongIndexes)) {
-      throw new Error('AI 응답에 필수 필드가 누락되었습니다.');
-    }
-
-    // 배열 길이 검증
-    if (result.originalWords.length !== 8 || result.transformedWords.length !== 8) {
-      throw new Error('originalWords와 transformedWords는 정확히 8개여야 합니다.');
-    }
-
-    // 선택된 단어가 유효한 후보 목록에 있는지 검증
-    const invalidWords: string[] = [];
-    for (const word of result.originalWords) {
-      const wordLower = word.trim().toLowerCase();
-      const isValid = validCandidateWords.some(candidate => candidate.trim().toLowerCase() === wordLower);
-      if (!isValid) {
-        invalidWords.push(word);
+      if (!response.ok) {
+        throw new Error(`OpenAI API 오류: ${response.status}`);
       }
-    }
-    
-    if (invalidWords.length > 0) {
-      console.error(`❌ 유효하지 않은 단어 선택됨: ${invalidWords.join(', ')}`);
-      throw new Error(`유효한 후보 목록에 없는 단어가 선택되었습니다: ${invalidWords.join(', ')}`);
-    }
 
-    // wrongIndexes 검증 (더 엄격하게)
-    if (!Array.isArray(result.wrongIndexes)) {
-      throw new Error('wrongIndexes는 배열이어야 합니다.');
-    }
-    
-    if (result.wrongIndexes.length < 3 || result.wrongIndexes.length > 8) {
-      console.error(`❌ wrongIndexes 개수 오류: ${result.wrongIndexes.length}개 (필요: 3~8개)`);
-      throw new Error(`wrongIndexes는 3~8개의 인덱스를 포함해야 합니다. (현재: ${result.wrongIndexes.length}개)`);
-    }
+      const data = await response.json();
+      const content = data.choices[0].message.content.trim();
 
-    // 인덱스 범위 검증
-    for (const index of result.wrongIndexes) {
-      if (typeof index !== 'number' || index < 0 || index > 7) {
-        throw new Error(`wrongIndexes의 모든 인덱스는 0~7 범위의 숫자여야 합니다. (잘못된 값: ${index})`);
+      let wordsJson = content;
+      if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+        wordsJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
       }
-    }
-    
-    // 중복 인덱스 검증
-    const uniqueIndexes = new Set(result.wrongIndexes);
-    if (uniqueIndexes.size !== result.wrongIndexes.length) {
-      throw new Error('wrongIndexes에 중복된 인덱스가 있습니다.');
-    }
 
-    // 본문 존재 여부 검증 (Strict check)
-    // 위치 정보를 찾아서 저장
-    const wordsInfo: {
-        original: string;
-        transformed: string;
-        isWrong: boolean;
-        start: number;
-        end: number;
-    }[] = [];
-
-    // 중복 단어 처리를 위해 검색 시작 위치를 추적
-    // 단, AI가 순서대로 줬다는 보장이 없으므로, 일단 모든 occurrences를 찾고 가장 적절한 조합을 찾아야 하는데,
-    // 간단하게 "AI가 본문 순서대로 주었을 것이다"라고 가정하거나,
-    // 아니면 "최대한 앞에서부터 찾되 겹치지 않게" 할당.
-    
-    // 여기서는 "각 단어를 본문에서 찾되, 이전 단어 이후부터 찾음"으로 하기엔 순서가 섞여있을 수 있음.
-    // 하지만 "서로 다른 위치"라고 했으므로, 전체 스캔 후 정렬이 안전함.
-    
-    // 1. 각 단어의 모든 등장 위치를 찾음
-    const occurrences: { word: string, index: number }[] = [];
-    result.originalWords.forEach((word: string) => {
-        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
-        let match;
-        while ((match = regex.exec(passage)) !== null) {
-            occurrences.push({ word: word, index: match.index });
+      let words: string[];
+      try {
+        words = JSON.parse(wordsJson);
+      } catch (jsonError) {
+        console.warn(`⚠️ JSON 파싱 실패 (재시도 ${retryCount + 1}/${maxRetries}):`, jsonError instanceof Error ? jsonError.message : String(jsonError));
+        if (retryCount < maxRetries - 1) {
+          retryCount++;
+          continue;
         }
-    });
-
-    // 2. originalWords와 occurrences를 매칭 (Greedy or simple matching)
-    // AI가 준 순서와 무관하게, 본문 내 위치를 할당해야 함.
-    // 하지만 transformedWords와 wrongIndexes는 originalWords의 인덱스를 따름.
-    // 따라서 "originalWords[i]"가 본문의 "어느 위치"에 해당하는지 결정해야 함.
-    
-    // 문제: "is"가 2번 등장하는데 originalWords에 "is"가 1번 있으면, 어느 "is"인가?
-    // AI가 똑똑하다면 문맥상 중요한 걸 골랐겠지만, 우리는 모름.
-    // 보통 첫 번째 등장을 매핑하는 것이 안전하지만, 만약 originalWords에 "is", "is"가 있다면 각각 다른 위치여야 함.
-    
-    // 매핑 전략: 
-    // originalWords를 순회하며 본문에서 가장 먼저 나오는(사용되지 않은) 위치를 할당.
-    
-    const usedIndices = new Set<number>();
-    const mappedWords: any[] = [];
-
-    for (let i = 0; i < result.originalWords.length; i++) {
-        const word = result.originalWords[i];
-      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
-        
-        let match;
+        throw new Error(`AI 응답 형식 오류: JSON 파싱에 실패했습니다.`);
+      }
+      
+      if (!Array.isArray(words)) {
+        throw new Error('선택된 단어가 배열 형식이 아닙니다.');
+      }
+      
+      // 문장 수에 따라 유연하게 처리 (최소 5개, 최대 8개)
+      const expectedCount = Math.min(8, sentenceCandidates.length);
+      if (words.length !== expectedCount) {
+        throw new Error(`선택된 단어가 ${expectedCount}개가 아닙니다. (실제: ${words.length}개)`);
+      }
+      
+      // 검증: 각 문장의 후보 목록에 있는지 확인
+      const invalidWords: string[] = [];
+      const wordSentenceMap: { [word: string]: number } = {};
+      
+      for (const word of words) {
         let found = false;
+        let sentenceIndex = -1;
         
-        while ((match = regex.exec(passage)) !== null) {
-            if (!usedIndices.has(match.index)) {
-                mappedWords.push({
-        original: word,
-                    transformed: result.transformedWords[i],
-                    isWrong: result.wrongIndexes.includes(i),
-                    start: match.index,
-                    end: match.index + match[0].length,
-                    originalIndex: i // 원래 배열에서의 인덱스 (wrongIndexes 참조용)
-                });
-                usedIndices.add(match.index);
-                found = true;
-                break; // 첫 번째 미사용 위치 할당
+        for (const item of sentenceCandidates) {
+          const wordLower = word.trim().toLowerCase();
+          const isInCandidates = item.candidates.some(candidate => candidate.trim().toLowerCase() === wordLower);
+          
+          if (isInCandidates) {
+            const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+            if (regex.test(item.sentence)) {
+              found = true;
+              sentenceIndex = item.sentenceIndex;
+              wordSentenceMap[word] = sentenceIndex;
+              break;
             }
+          }
         }
         
         if (!found) {
-             console.warn(`⚠️ Word not found or all occurrences used: ${word}`);
-             if (retryCount < maxRetries - 1) {
-               console.warn(`재시도 ${retryCount + 1}/${maxRetries}...`);
-               retryCount++;
-               continue; // while 루프의 다음 반복으로
-             }
-             throw new Error(`선정된 단어 '${word}'가 본문에 존재하지 않거나 중복 할당되었습니다.`);
-        }
-    }
-
-    // 3. 본문 위치(start) 기준으로 정렬
-    mappedWords.sort((a, b) => a.start - b.start);
-
-    // 3.5. 같은 문장에 여러 단어가 선택되었는지 검증
-    const passageSentences = passage.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 0);
-    // 각 문장의 시작 위치 계산 (원본 passage 기준)
-    const sentenceBounds: Array<{ start: number, end: number, text: string }> = [];
-    let currentPos = 0;
-    for (const sentence of passageSentences) {
-      const start = passage.indexOf(sentence, currentPos);
-      if (start >= 0) {
-        const end = start + sentence.length;
-        sentenceBounds.push({ start, end, text: sentence });
-        currentPos = end;
-      } else {
-        // 찾지 못한 경우 (거의 발생하지 않음)
-        sentenceBounds.push({ start: currentPos, end: currentPos + sentence.length, text: sentence });
-        currentPos += sentence.length;
-      }
-    }
-    
-    const sentenceWordCount: { [sentenceIndex: number]: Array<{ word: string, start: number }> } = {};
-    
-    // 각 단어가 어느 문장에 속하는지 확인
-    for (const mappedWord of mappedWords) {
-      let sentenceIndex = -1;
-      for (let i = 0; i < sentenceBounds.length; i++) {
-        const bound = sentenceBounds[i];
-        if (mappedWord.start >= bound.start && mappedWord.start < bound.end) {
-          sentenceIndex = i;
-          break;
+          invalidWords.push(word);
         }
       }
       
-      if (sentenceIndex >= 0) {
-        if (!sentenceWordCount[sentenceIndex]) {
-          sentenceWordCount[sentenceIndex] = [];
+      if (invalidWords.length > 0) {
+        const errorMsg = `유효한 후보 목록에 없는 단어를 선택했습니다: ${invalidWords.join(', ')}. 각 문장의 "가능한 후보 단어" 목록에서만 선택하세요.`;
+        console.warn(`⚠️ 유효하지 않은 단어 선택됨 (재시도 ${retryCount + 1}/${maxRetries}): ${invalidWords.join(', ')}`);
+        if (retryCount < maxRetries - 1) {
+          previousErrors.push(errorMsg);
+          retryCount++;
+          continue;
         }
-        sentenceWordCount[sentenceIndex].push({ word: mappedWord.original, start: mappedWord.start });
+        throw new Error(`유효한 후보 목록에 없는 단어가 선택되었습니다: ${invalidWords.join(', ')}`);
       }
-    }
-    
-    // 같은 문장에 2개 이상 있는 경우 찾기
-    const violations: string[] = [];
-    for (const [sentenceIdx, wordList] of Object.entries(sentenceWordCount)) {
-      if (wordList.length > 1) {
-        const idx = parseInt(sentenceIdx);
-        const sentenceText = sentenceBounds[idx].text.substring(0, 80);
-        violations.push(`문장 ${idx + 1} ("${sentenceText}..."): ${wordList.map(w => w.word).join(', ')}`);
+      
+      // 본문 존재 여부 최종 검증
+      const missingWords: string[] = [];
+      for (const word of words) {
+        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+        if (!regex.test(passage)) {
+          missingWords.push(word);
+        }
       }
-    }
-    
-    if (violations.length > 0) {
-      console.error(`❌ 같은 문장에서 여러 단어가 선택됨:\n${violations.join('\n')}`);
+      
+      if (missingWords.length > 0) {
+        console.warn(`⚠️ 본문에 존재하지 않는 단어 (재시도 ${retryCount + 1}/${maxRetries}): ${missingWords.join(', ')}`);
+        if (retryCount < maxRetries - 1) {
+          retryCount++;
+          continue;
+        }
+        throw new Error(`본문에 존재하지 않는 단어가 선택되었습니다: ${missingWords.join(', ')}`);
+      }
+      
+      // 같은 문장에 여러 단어가 선택되었는지 검증
+      const sentenceWordCount: { [sentenceIndex: number]: string[] } = {};
+      for (const word of words) {
+        const sentenceIndex = wordSentenceMap[word];
+        if (sentenceIndex !== undefined) {
+          if (!sentenceWordCount[sentenceIndex]) {
+            sentenceWordCount[sentenceIndex] = [];
+          }
+          sentenceWordCount[sentenceIndex].push(word);
+        }
+      }
+      
+      const violations: string[] = [];
+      for (const [sentenceIdx, wordList] of Object.entries(sentenceWordCount)) {
+        if (wordList.length > 1) {
+          const idx = parseInt(sentenceIdx);
+          const sentenceItem = sentenceCandidates.find(item => item.sentenceIndex === idx);
+          const sentenceText = sentenceItem ? sentenceItem.sentence.substring(0, 80) : '';
+          violations.push(`문장 ${idx + 1} ("${sentenceText}..."): ${wordList.join(', ')}`);
+        }
+      }
+      
+      if (violations.length > 0) {
+        const errorMsg = `한 문장에서 여러 단어를 선택했습니다: ${violations.map(v => v.split(':')[1].trim()).join(', ')}. 각 문장에서 최대 1개만 선택하세요.`;
+        console.warn(`⚠️ 같은 문장에서 여러 단어가 선택됨 (재시도 ${retryCount + 1}/${maxRetries}):\n${violations.join('\n')}`);
+        if (retryCount < maxRetries - 1) {
+          previousErrors.push(errorMsg);
+          retryCount++;
+          continue;
+        }
+        throw new Error(`한 문장에서 여러 단어가 선택되었습니다:\n${violations.join('\n')}`);
+      }
+      
+      console.log(`✅ 단어 선택 성공 (시도 ${retryCount + 1}):`, words);
+      previousErrors = [];
+      return words;
+      
+    } catch (parseError: any) {
+      console.warn(`⚠️ 예상치 못한 에러 발생 (재시도 ${retryCount + 1}/${maxRetries}):`, parseError instanceof Error ? parseError.message : String(parseError));
       if (retryCount < maxRetries - 1) {
-        console.warn(`재시도 ${retryCount + 1}/${maxRetries}...`);
         retryCount++;
-        continue; // while 루프의 다음 반복으로
+        continue;
       }
-      throw new Error(`한 문장에서 여러 단어가 선택되었습니다:\n${violations.join('\n')}`);
-    }
-
-    // 4. 정렬된 순서대로 데이터 재구성
-    const sortedOriginalWords = mappedWords.map(w => w.original);
-    const sortedTransformedWords = mappedWords.map(w => w.transformed);
-    // wrongIndexes는 재계산 필요: 정렬된 배열에서 isWrong이 true인 인덱스들
-    const sortedWrongIndexes: number[] = [];
-    mappedWords.forEach((w, newIndex) => {
-        if (w.isWrong) {
-            sortedWrongIndexes.push(newIndex);
-        }
-    });
-
-    // 옵션, 정답 계산
-    const wrongCount = sortedWrongIndexes.length;
-    const options = [3, 4, 5, 6, 7, 8];
-    const answerIndex = options.indexOf(wrongCount);
-
-    if (answerIndex === -1) {
-      throw new Error(`틀린 단어 개수(${wrongCount})가 유효 범위(3~8)를 벗어났습니다.`);
-    }
-
-    // 본문에 원번호/진하게 적용 (정렬된 단어 리스트와 위치 정보 사용)
-    // 위치 정보(start, end)를 알고 있으므로 string slicing으로 정확하게 치환 가능.
-    // 뒤에서부터 치환해야 인덱스가 안 꼬임.
-    
-    let numberedPassage = passage;
-    const circleNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'];
-    
-    // mappedWords는 start 오름차순 정렬되어 있음. 뒤에서부터 순회.
-    for (let i = mappedWords.length - 1; i >= 0; i--) {
-        const item = mappedWords[i];
-        const circleNumber = circleNumbers[i]; // 정렬된 순서에 따른 번호
-        const displayWord = item.transformed; // 변형된(또는 원본) 단어
-        
-        // HTML 적용: <strong>① word</strong>
-        // Work_10 스타일은 <u> 태그 사용? 원본 코드는 <u> 사용했음. 
-        // prompt says "원번호/밑줄".
-        // Let's check original component usage.
-        // Component uses: applyNumberAndUnderline returns `...${circle}...<u>${displayWord}</u>...` (Wait, regex replacement)
-        // Code at line 342: `${'①... '[i]}<u>${displayWord}</u>`
-        // So it's "①<u>Word</u>" or similar.
-        // Let's use <strong> for number and <u> for word to be safe and clear.
-        // Or follow the component style: Circle + Underline.
-        const replacement = `<span class="word-idx">${circleNumber}</span><u>${displayWord}</u>`;
-        
-        numberedPassage = 
-            numberedPassage.substring(0, item.start) + 
-            replacement + 
-            numberedPassage.substring(item.end);
-    }
-    
-    // 줄바꿈 처리
-    numberedPassage = numberedPassage.replace(/\n/g, '<br/>');
-
-    // 번역 생성 (입력된 영어 본문을 직접 번역)
-    console.log('🌐 본문 번역 시작...');
-    const translation = await translateToKorean(passage);
-    console.log('✅ 번역 완료');
-
-    const finalResult: MultiGrammarQuiz = {
-      passage: passage, // 원본 본문
-      numberedPassage: numberedPassage, // HTML 적용된 본문
-      options,
-      answerIndex,
-      translation: translation, // translateToKorean으로 생성한 번역
-      originalWords: sortedOriginalWords, // 정렬된 순서 반환
-      transformedWords: sortedTransformedWords, // 정렬된 순서 반환
-      wrongIndexes: sortedWrongIndexes // 재계산된 인덱스 반환
-    };
-
-      console.log('✅ Work_10 문제 생성 완료:', finalResult);
-      return finalResult;
-
-    } catch (error) {
-      // wrongIndexes 검증 실패 또는 단어 선택 실패 시 재시도
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
-      if (
-        (errorMessage.includes('wrongIndexes') || 
-         errorMessage.includes('유효한 후보 목록에 없는 단어') ||
-         errorMessage.includes('본문에 존재하지 않거나 중복 할당'))
-        && retryCount < maxRetries - 1
-      ) {
-        console.warn(`⚠️ Work_10 문제 생성 실패 (재시도 ${retryCount + 1}/${maxRetries}):`, errorMessage);
-        retryCount++;
-        continue; // while 루프의 다음 반복으로
-      }
-      
-      // 최종 실패 또는 재시도 불가능한 에러
-      console.error('❌ Work_10 문제 생성 실패:', error);
-      throw error;
+      console.error('❌ 단어 선택 최종 실패:', parseError);
+      throw parseError;
     }
   }
   
-  // 모든 재시도 실패
-  throw new Error(`Work_10 문제 생성이 ${maxRetries}회 재시도 후에도 실패했습니다.`);
+  throw new Error(`단어 선택이 ${maxRetries}회 재시도 후에도 실패했습니다.`);
 }
 
 /**
- * (Legacy) 본문 내 8개 단어에 원번호/진하게를 적용하는 함수
- * 이제 generateWork10Quiz 내부에서 처리하므로 외부에서는 사용하지 않을 수 있음.
- * 하지만 호환성을 위해 남겨두거나 삭제. 여기서는 export 유지.
+ * 유형#10용 번호/밑줄 적용 함수
  */
-export function applyNumberAndUnderline(
+function applyNumberAndUnderlineForWork10(
   passage: string,
   originalWords: string[],
-  transformedWords: string[],
-  wrongIndexes: number[]
-): string {
-    // This function is now deprecated in favor of the robust processing inside generateWork10Quiz
-    return passage; 
+  transformedWords: string[]
+): {
+  numberedPassage: string;
+  passageOrder: number[];
+} {
+  const circleNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'];
+  const passageOrder: number[] = [];
+  const wordPositions: Array<{ originalIndex: number; start: number; end: number }> = [];
+  
+  // 각 단어의 위치 찾기
+  for (let i = 0; i < originalWords.length; i++) {
+    const word = originalWords[i];
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+    const match = regex.exec(passage);
+    
+    if (match) {
+      wordPositions.push({
+        originalIndex: i,
+        start: match.index,
+        end: match.index + match[0].length
+      });
+    }
+  }
+  
+  // 위치 기준으로 정렬
+  wordPositions.sort((a, b) => a.start - b.start);
+  
+  // passageOrder 생성: 본문 순서대로 나타나는 originalWords 인덱스
+  passageOrder.push(...wordPositions.map(wp => wp.originalIndex));
+  
+  // 뒤에서부터 치환 (인덱스 유지)
+  let numberedPassage = passage;
+  for (let i = wordPositions.length - 1; i >= 0; i--) {
+    const pos = wordPositions[i];
+    const circleNumber = circleNumbers[i];
+    const displayWord = transformedWords[pos.originalIndex];
+    const replacement = `<span class="word-idx">${circleNumber}</span><u>${displayWord}</u>`;
+    
+    numberedPassage = 
+      numberedPassage.substring(0, pos.start) + 
+      replacement + 
+      numberedPassage.substring(pos.end);
+  }
+  
+  // 줄바꿈 처리
+  numberedPassage = numberedPassage.replace(/\n/g, '<br/>');
+  
+  return { numberedPassage, passageOrder };
 }

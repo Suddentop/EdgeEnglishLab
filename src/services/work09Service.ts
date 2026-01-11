@@ -491,7 +491,7 @@ For each word you want to select:
  * @param passage - 영어 본문
  * @returns 가장 난이도 높은 단어의 인덱스와 정보
  */
-async function evaluateDifficulty(
+export async function evaluateDifficulty(
   words: string[],
   passage: string
 ): Promise<{
@@ -616,7 +616,7 @@ ${passage}
  * @param answerIndex - 변형할 단어의 인덱스 (명시적으로 지정)
  * @returns 변형된 단어들과 정답 정보
  */
-async function transformWord(
+export async function transformWord(
   words: string[],
   answerIndex: number
 ): Promise<{
@@ -708,12 +708,12 @@ Each of the 5 words must create a DIFFERENT grammar error type. Do NOT repeat th
 
 **Selection Strategy (STRICT - Must Follow):**
 1. **MANDATORY:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). This word has been selected as the highest difficulty word.
-2. **DO NOT transform any other word.** Keep the other 4 words exactly the same.
+2. **DO NOT transform any other word.** Keep the other ${words.length - 1} words exactly the same.
 3. Even if the target word is a relative pronoun/adverb/conjunction, you MUST transform it (it was selected because it has the highest difficulty).
 
 Return ONLY this JSON format. **YOU MUST USE REAL ENGLISH WORDS, NOT PLACEHOLDERS:**
 
-Example 1 (if transforming "collected"):
+Example 1 (if transforming "collected" in a 5-word array):
 {
   "transformedWords": ["survives", "hunting", "collecting", "balance", "spread"],
   "answerIndex": 2,
@@ -721,7 +721,7 @@ Example 1 (if transforming "collected"):
   "grammarType": "Participle (Present vs Past)"
 }
 
-Example 2 (if transforming "which"):
+Example 2 (if transforming "which" in a 5-word array):
 {
   "transformedWords": ["survives", "where", "balance", "being", "spread"],
   "answerIndex": 1,
@@ -732,9 +732,10 @@ Example 2 (if transforming "which"):
 **⚠️ CRITICAL RULES:**
 1. **DO NOT use placeholders like "WRONG_WORD", "CORRECT_WORD", "word1", "word2", "actual_incorrect_word", etc.**
 2. **You MUST use REAL English words that are grammatically incorrect in the context.**
-3. In "transformedWords", keep 4 words exactly as they appear in the input, and replace ONLY the chosen word with the actual incorrect word.
-4. The transformed word must be a **real English word** that is grammatically incorrect in the sentence context.
-5. Do NOT transform proper nouns or simple nouns unless it's a specific countable/uncountable trick.`;
+3. In "transformedWords", keep ${words.length - 1} words exactly as they appear in the input, and replace ONLY the chosen word with the actual incorrect word.
+4. The "transformedWords" array MUST have exactly ${words.length} elements (same length as the input "words" array).
+5. The transformed word must be a **real English word** that is grammatically incorrect in the sentence context.
+6. Do NOT transform proper nouns or simple nouns unless it's a specific countable/uncountable trick.`;
 
     const response = await callOpenAI({
       model: 'gpt-4o',
@@ -765,14 +766,15 @@ Example 2 (if transforming "which"):
     try {
       const result = JSON.parse(resultJson);
       
-      // 검증
+      // 검증: words 배열의 길이에 맞춰 동적으로 검증
+      const expectedLength = words.length;
       if (!result.transformedWords || !Array.isArray(result.transformedWords) || 
-          result.transformedWords.length !== 5) {
-        throw new Error('transformedWords가 올바르지 않습니다.');
+          result.transformedWords.length !== expectedLength) {
+        throw new Error(`transformedWords가 올바르지 않습니다. (예상: ${expectedLength}개, 실제: ${result.transformedWords?.length || 0}개)`);
       }
       
-      if (typeof result.answerIndex !== 'number' || result.answerIndex < 0 || result.answerIndex > 4) {
-        throw new Error('answerIndex가 올바르지 않습니다.');
+      if (typeof result.answerIndex !== 'number' || result.answerIndex < 0 || result.answerIndex >= expectedLength) {
+        throw new Error(`answerIndex가 올바르지 않습니다. (범위: 0~${expectedLength - 1}, 실제: ${result.answerIndex})`);
       }
 
       // 명시적으로 지정된 answerIndex와 일치하는지 확인
