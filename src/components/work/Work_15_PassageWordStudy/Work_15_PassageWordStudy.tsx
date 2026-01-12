@@ -355,7 +355,7 @@ const Work_15_PassageWordStudy: React.FC = () => {
     html, body {
       margin: 0;
       padding: 0;
-      font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
       width: 29.7cm !important;
       height: auto !important;
       min-height: 21cm !important;
@@ -384,7 +384,7 @@ const Work_15_PassageWordStudy: React.FC = () => {
       position: relative;
       display: flex !important;
       flex-direction: column;
-      font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
     }
     .a4-landscape-page-template-work15:not(:last-child) {
       page-break-after: always;

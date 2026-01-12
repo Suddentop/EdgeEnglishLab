@@ -1,11 +1,11 @@
 /* 전체 페이지 배경색 */
-html, body { background: #F7F8FC; }
-#root, .App, .App-main { background: #F7F8FC; }
+html, body { background: #FFFFFF; }
+#root, .App, .App-main { background: #FFFFFF; }
 
 /* 문제생성 결과 페이지 */
 .quiz-display-page {
   min-height: 100vh;
-  background: #F7F8FC;
+  background: #FFFFFF;
   padding: 0;
   /* 네비게이션 하단과의 간격 50% 축소 (상단을 위로 당김) */
   margin-top: -0.5rem;
@@ -26,7 +26,7 @@ html, body { background: #F7F8FC; }
 
 /* 헤더 */
 .quiz-display-header {
-  background: #F7F8FC;
+  background: #FFFFFF;
   border-bottom: 1px solid #e2e8f0;
   /* 상단 패딩 제거, 좌우/하단만 유지 */
   padding: 0 2rem 2rem 2rem;
@@ -90,7 +90,7 @@ html, body { background: #F7F8FC; }
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  background: #F7F8FC;
+  background: #FFFFFF;
   margin-top: 1rem;
   border-radius: 12px;
   box-shadow: none; /* 그림자 제거 */
@@ -139,7 +139,7 @@ html, body { background: #F7F8FC; }
 /* SimpleQuizDisplay 스타일 */
 .simple-quiz-display {
   padding: 1rem;
-  background: #F7F8FC;
+  background: #FFFFFF;
 }
 
 .quiz-item {

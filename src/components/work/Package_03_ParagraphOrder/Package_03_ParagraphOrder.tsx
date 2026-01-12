@@ -882,12 +882,12 @@ const Package_03_ParagraphOrder: React.FC = () => {
           padding: 0 !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
-          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
+          font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
         }
         * {
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
-          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
+          font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
         }
         .no-print {
           display: none !important;

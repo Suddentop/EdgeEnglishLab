@@ -76,7 +76,7 @@ const Work_12_WordStudy: React.FC = () => {
       height: 29.7cm !important;
       margin: 0 !important;
       padding: 0 !important;
-      font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }

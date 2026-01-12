@@ -2,28 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Modal from 'react-modal';
-import { 
-  HiHome, 
-  HiChevronRight, 
-  HiChevronDown,
-  HiClipboard,
-  HiChatBubbleLeft,
-  HiDocumentText,
-  HiLockClosed,
-  HiPencil,
-  HiUser,
-  HiCurrencyDollar,
-  HiCog
-} from 'react-icons/hi2';
-import type { IconType } from 'react-icons';
 import './Navigation.css';
 import { isAdmin } from '../../utils/adminUtils';
-
-// 아이콘 래퍼 컴포넌트 (TypeScript 호환성)
-const IconWrapper: React.FC<{ icon: IconType; className?: string }> = ({ icon: Icon, className }) => {
-  // @ts-ignore - react-icons 타입 호환성 문제 우회
-  return React.createElement(Icon as any, { className });
-};
 
 const WORK_MENUS = [
   { label: '📦 본문 해석 및 본문 추출', path: '/etc_01_image-problem-analyzer' },
@@ -124,7 +104,7 @@ const Navigation: React.FC = () => {
       <nav className="navigation">
         {/* 로고 */}
         <Link to="/" className="logo" onClick={() => handleMenuClick('/')}>
-          <img src={process.env.PUBLIC_URL + '/images/logo_02.png'} alt="Edge English Lab" className="logo-image" />
+          <img src={process.env.PUBLIC_URL + '/images/logo.png'} alt="Edge English Lab" className="logo-image" />
           <div className="logo-text">
             <h1>Edge English Lab</h1>
             <span className="tagline">AI 영어 문제 생성 플랫폼</span>
@@ -139,22 +119,19 @@ const Navigation: React.FC = () => {
               className={`sidebar-menu-item ${isActive('/') ? 'active' : ''}`}
               onClick={() => handleMenuClick('/')}
             >
-              <IconWrapper icon={HiHome} className="sidebar-menu-item-icon" />
+              <span className="sidebar-menu-item-icon">🏠</span>
               <span className="sidebar-menu-item-text">홈</span>
             </button>
           </div>
 
           {/* 문제생성 섹션 */}
           <div className="sidebar-section">
+            <div className="sidebar-section-title">문제생성</div>
             <button
               className={`sidebar-menu-item ${showWorkMenu ? 'active' : ''}`}
               onClick={() => setShowWorkMenu(!showWorkMenu)}
             >
-              {showWorkMenu ? (
-                <IconWrapper icon={HiChevronDown} className="sidebar-menu-item-icon" />
-              ) : (
-                <IconWrapper icon={HiChevronRight} className="sidebar-menu-item-icon" />
-              )}
+              <span className="sidebar-menu-item-icon">{showWorkMenu ? '▼' : '▶'}</span>
               <span className="sidebar-menu-item-text">문제생성</span>
             </button>
             {showWorkMenu && (
@@ -179,7 +156,7 @@ const Navigation: React.FC = () => {
                 className={`sidebar-menu-item ${isActive('/quiz-list') ? 'active' : ''}`}
                 onClick={() => handleMenuClick('/quiz-list')}
               >
-                <IconWrapper icon={HiClipboard} className="sidebar-menu-item-icon" />
+                <span className="sidebar-menu-item-icon">📋</span>
                 <span className="sidebar-menu-item-text">나의문제목록</span>
               </button>
             </div>
@@ -191,7 +168,7 @@ const Navigation: React.FC = () => {
               className={`sidebar-menu-item ${isActive('/feedback') ? 'active' : ''}`}
               onClick={() => handleMenuClick('/feedback')}
             >
-              <IconWrapper icon={HiChatBubbleLeft} className="sidebar-menu-item-icon" />
+              <span className="sidebar-menu-item-icon">💬</span>
               <span className="sidebar-menu-item-text">Feedback</span>
             </button>
           </div>
@@ -202,34 +179,10 @@ const Navigation: React.FC = () => {
               className={`sidebar-menu-item ${isActive('/guide') ? 'active' : ''}`}
               onClick={() => handleMenuClick('/guide')}
             >
-              <IconWrapper icon={HiDocumentText} className="sidebar-menu-item-icon" />
+              <span className="sidebar-menu-item-icon">📖</span>
               <span className="sidebar-menu-item-text">이용안내</span>
             </button>
           </div>
-
-          {/* 로그인/회원가입 (로그인하지 않은 상태일 때만) */}
-          {!currentUser && (
-            <>
-              <div className="sidebar-section">
-                <button
-                  className={`sidebar-menu-item ${isActive('/login') ? 'active' : ''}`}
-                  onClick={() => handleMenuClick('/login')}
-                >
-                  <IconWrapper icon={HiLockClosed} className="sidebar-menu-item-icon" />
-                  <span className="sidebar-menu-item-text">로그인</span>
-                </button>
-              </div>
-              <div className="sidebar-section">
-                <button
-                  className={`sidebar-menu-item ${isActive('/signup') ? 'active' : ''}`}
-                  onClick={() => handleMenuClick('/signup')}
-                >
-                  <IconWrapper icon={HiPencil} className="sidebar-menu-item-icon" />
-                  <span className="sidebar-menu-item-text">회원가입</span>
-                </button>
-              </div>
-            </>
-          )}
 
           {/* 내 정보 */}
           {currentUser && (
@@ -238,7 +191,7 @@ const Navigation: React.FC = () => {
                 className={`sidebar-menu-item ${isActive('/profile') ? 'active' : ''}`}
                 onClick={() => handleMenuClick('/profile')}
               >
-                <IconWrapper icon={HiUser} className="sidebar-menu-item-icon" />
+                <span className="sidebar-menu-item-icon">👤</span>
                 <span className="sidebar-menu-item-text">내 정보</span>
               </button>
             </div>
@@ -251,7 +204,7 @@ const Navigation: React.FC = () => {
                 className={`sidebar-menu-item ${isActive('/point-charge') ? 'active' : ''}`}
                 onClick={() => handleMenuClick('/point-charge')}
               >
-                <IconWrapper icon={HiCurrencyDollar} className="sidebar-menu-item-icon" />
+                <span className="sidebar-menu-item-icon">💰</span>
                 <span className="sidebar-menu-item-text">포인트구매</span>
               </button>
             </div>
@@ -264,26 +217,43 @@ const Navigation: React.FC = () => {
                 className={`sidebar-menu-item ${isActive('/admin') ? 'active' : ''}`}
                 onClick={() => handleMenuClick('/admin')}
               >
-                <IconWrapper icon={HiCog} className="sidebar-menu-item-icon" />
+                <span className="sidebar-menu-item-icon">⚙️</span>
                 <span className="sidebar-menu-item-text">관리자</span>
               </button>
             </div>
           )}
         </div>
 
-        {/* 사용자 영역 (로그인한 사용자만) */}
-        {currentUser && (
-          <div className="sidebar-user-section">
-            <div className="sidebar-user-info">
-              {userData?.nickname || userData?.email || '사용자'}
-            </div>
+        {/* 사용자 영역 */}
+        <div className="sidebar-user-section">
+          {currentUser ? (
+            <>
+              <div className="sidebar-user-info">
+                {userData?.nickname || userData?.email || '사용자'}
+              </div>
+              <div className="sidebar-user-actions">
+                <button className="sidebar-action-button" onClick={handleLogout}>
+                  로그아웃
+                </button>
+              </div>
+            </>
+          ) : (
             <div className="sidebar-user-actions">
-              <button className="sidebar-action-button" onClick={handleLogout}>
-                로그아웃
+              <button 
+                className="sidebar-action-button" 
+                onClick={() => handleMenuClick('/login')}
+              >
+                로그인
+              </button>
+              <button 
+                className="sidebar-action-button" 
+                onClick={() => handleMenuClick('/signup')}
+              >
+                회원가입
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </nav>
 
       {/* 모바일 오버레이 */}

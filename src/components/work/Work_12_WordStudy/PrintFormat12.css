@@ -153,7 +153,7 @@
     position: relative;
     display: flex !important;
     flex-direction: column;
-    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
   }
 
   .a4-page-template-work12:not(:last-child) {

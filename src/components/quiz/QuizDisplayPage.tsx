@@ -390,7 +390,7 @@ const QuizDisplayPage: React.FC = () => {
               height: 29.7cm !important;
               margin: 0 !important;
               padding: 0 !important;
-              font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+              font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
@@ -847,7 +847,7 @@ const QuizDisplayPage: React.FC = () => {
           html, body {
             margin: 0;
             padding: 0;
-            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
             width: 29.7cm !important;
             height: 21cm !important;
             -webkit-print-color-adjust: exact;
@@ -873,7 +873,7 @@ const QuizDisplayPage: React.FC = () => {
             position: relative;
             display: flex !important;
             flex-direction: column;
-            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
           }
           .a4-landscape-page-template-work15:not(:last-child) {
             page-break-after: always;
@@ -1618,7 +1618,7 @@ const QuizDisplayPage: React.FC = () => {
         html, body {
           margin: 0;
           padding: 0;
-          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+          font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
           width: 29.7cm !important;
           height: auto !important;
           min-height: 21cm !important;
@@ -1666,7 +1666,7 @@ const QuizDisplayPage: React.FC = () => {
           position: relative !important;
           display: flex !important;
           flex-direction: column !important;
-          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
+          font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
           overflow: hidden !important;
         }
         .a4-landscape-page-template-work15:not(:last-child) {
@@ -2728,7 +2728,7 @@ const QuizDisplayPage: React.FC = () => {
               height: 29.7cm !important;
               margin: 0 !important;
               padding: 0 !important;
-              font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+              font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
@@ -3204,7 +3204,7 @@ const QuizDisplayPage: React.FC = () => {
           html, body {
             margin: 0;
             padding: 0;
-            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
             width: 29.7cm !important;
             height: 21cm !important;
             -webkit-print-color-adjust: exact;
@@ -3230,7 +3230,7 @@ const QuizDisplayPage: React.FC = () => {
             position: relative;
             display: flex !important;
             flex-direction: column;
-            font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
           }
           .a4-landscape-page-template-work15:not(:last-child) {
             page-break-after: always;
@@ -3851,7 +3851,7 @@ const QuizDisplayPage: React.FC = () => {
         html, body {
           margin: 0;
           padding: 0;
-          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+          font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
           width: 29.7cm !important;
           height: auto !important;
           min-height: 21cm !important;
@@ -3899,7 +3899,7 @@ const QuizDisplayPage: React.FC = () => {
           position: relative !important;
           display: flex !important;
           flex-direction: column !important;
-          font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif !important;
+          font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
           overflow: hidden !important;
         }
         .a4-landscape-page-template-work15:not(:last-child) {

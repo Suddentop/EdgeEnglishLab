@@ -74,9 +74,8 @@ const AppContent: React.FC = () => {
     <div className="App">
       <div className="no-print"><PrintHeader /></div>
       <Navigation />
-      <div className="print-gap" />
-      <ScrollToTop />
       <div className="App-main">
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<HomePage setCurrentQuiz={handleQuizGenerated} />} />
           <Route path="/login" element={<Login />} />

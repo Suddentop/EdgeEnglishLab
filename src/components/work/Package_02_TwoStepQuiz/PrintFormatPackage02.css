@@ -235,7 +235,7 @@
   display: flex;
   flex-direction: column;
   border: none;
-  font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
 }
 
 .a4-landscape-page-template:not(:last-child):not(.last-page) {
@@ -276,7 +276,7 @@
   padding: 0 0.5cm 0.5cm 0.5cm; /* 콘텐츠 여백 조정 */
   box-sizing: border-box;
     overflow: visible;
-    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
 }
 
 @media print {
@@ -411,7 +411,7 @@
     border-bottom: 2px solid #000 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    font-family: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
   }
 
   /* 인쇄(정답) 모드: 헤더 아래 여백 0.2cm */
