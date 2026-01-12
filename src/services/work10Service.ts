@@ -5,6 +5,7 @@
 
 import { callOpenAI, translateToKorean } from './common';
 import { transformWord } from './work09Service';
+import { EXCLUDE_RULES_PROMPT } from './workGrammarRules';
 
 /**
  * 다중 어법 오류 문제 타입 정의
@@ -270,7 +271,7 @@ async function selectWordsForWork10(
 
 본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다.
 
-**제외:** 조동사+동사원형, 규칙과거형(-ed), 3인칭-s/-es(동사원형+-s/-es), 단순 단복수, 기본 관사(a/an/the), 단순 전치사, 초급 시제, be동사 단순형(it was/were, they was/were 등), 주어-동사 시제일치(1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es), 고유명사, **to 부정사 단순 변형**(to+동사원형 → to+동사ing)
+${EXCLUDE_RULES_PROMPT}
 
 **우선:** 관계사, 분사구문, 가정법, 병렬구조, 수일치(고난도), 대명사, 접속사vs전치사, 의미상 주어/논리 오류, **to 부정사 복잡 구조**(to+be+동사ing, to+have been+p.p 등)
 
@@ -322,9 +323,14 @@ ${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
     throw new Error('후보 단어 추출에 실패했습니다.');
   }
 
-  // Step 2: 유효한 후보 단어 필터링
+  // Step 2: 유효한 후보 단어 필터링 + 등위접속사 제외
+  const coordinatingConjunctions = ['or', 'and', 'but', 'nor', 'for', 'so', 'yet'];
   const validCandidateWords: string[] = [];
   for (const word of candidateWords) {
+    // 등위접속사 제외
+    if (coordinatingConjunctions.includes(word.toLowerCase())) {
+      continue;
+    }
     const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
     if (regex.test(passage)) {
@@ -409,7 +415,7 @@ ${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
 - **${targetWordCount}개 문제는 모두 다른 어법 유형**으로 생성해야 함 (동일 어법 반복 금지)
 - **주어-동사 시제일치 문제 절대 금지** (1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es 등)
 - **단순 시제 변형 절대 금지** (was/were, 동사원형+-s/-es 등)
-- **to 부정사 단순 변형 절대 금지**: "to continue" → "to continuing" 같은 단순 변형은 금지. 반드시 "to be continuing" 또는 "to have been continuing" 같은 복잡한 구조만 사용
+- ${EXCLUDE_RULES_PROMPT.replace('**제외:**', '**어법 변형 금지 규칙:**')}
 
 **📋 본문 (문장 단위):**
 ${sentenceList}

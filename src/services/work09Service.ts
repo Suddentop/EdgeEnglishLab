@@ -7,6 +7,12 @@
  */
 
 import { callOpenAI, translateToKorean } from './common';
+import { 
+  FORBIDDEN_TRANSFORMATIONS_PROMPT, 
+  FORBIDDEN_EXAMPLES_PROMPT, 
+  EXCLUDE_RULES_PROMPT,
+  validateTransformation 
+} from './workGrammarRules';
 
 /**
  * 어법 오류 문제 타입 정의
@@ -130,7 +136,7 @@ async function selectWords(
 
 본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다.
 
-**제외:** 조동사+동사원형, 규칙과거형(-ed), 3인칭-s/-es(동사원형+-s/-es), 단순 단복수, 기본 관사(a/an/the), 단순 전치사, 초급 시제, be동사 단순형(it was/were, they was/were 등), 주어-동사 시제일치(1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es), 고유명사, **to 부정사 단순 변형**(to+동사원형 → to+동사ing)
+${EXCLUDE_RULES_PROMPT}
 
 **우선:** 관계사, 분사구문, 가정법, 병렬구조, 수일치(고난도), 대명사, 접속사vs전치사, 의미상 주어/논리 오류, **to 부정사 복잡 구조**(to+be+동사ing, to+have been+p.p 등)
 
@@ -183,9 +189,14 @@ ${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
     throw new Error('후보 단어 추출에 실패했습니다.');
   }
 
-  // Step 2: 추출된 후보 단어 중에서 본문에 실제로 존재하는 것만 필터링
+  // Step 2: 추출된 후보 단어 중에서 본문에 실제로 존재하는 것만 필터링 + 등위접속사 제외
+  const coordinatingConjunctions = ['or', 'and', 'but', 'nor', 'for', 'so', 'yet'];
   const validCandidateWords: string[] = [];
   for (const word of candidateWords) {
+    // 등위접속사 제외
+    if (coordinatingConjunctions.includes(word.toLowerCase())) {
+      continue;
+    }
     const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
     if (regex.test(passage)) {
@@ -262,7 +273,7 @@ ${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
 - **5개 문제는 모두 다른 어법 유형**으로 생성해야 함 (동일 어법 반복 금지)
 - **주어-동사 시제일치 문제 절대 금지** (1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es 등)
 - **단순 시제 변형 절대 금지** (was/were, 동사원형+-s/-es 등)
-- **to 부정사 단순 변형 절대 금지**: "to continue" → "to continuing" 같은 단순 변형은 금지. 반드시 "to be continuing" 또는 "to have been continuing" 같은 복잡한 구조만 사용
+- ${EXCLUDE_RULES_PROMPT.replace('**제외:**', '**어법 변형 금지 규칙:**')}
 
 **📋 본문 (문장 단위):**
 ${sentenceList}
@@ -654,21 +665,35 @@ Grammar types: ${grammarTypes.join(', ')}
 
 **Principle:** Generate errors that require interpretation/judgment, NOT simple mechanical rules.
 
+**🚨 CRITICAL - Context-Aware Transformation (ABSOLUTELY MANDATORY):**
+You MUST consider the grammatical context where the word appears. The transformation must create a grammatically incorrect word **in that specific context**, while maintaining basic grammar rules.
+
+**Example of CORRECT transformation:**
+- If the word "prey" appears after "can" (e.g., "can prey"), you CANNOT transform it to "praying" because this breaks the basic rule "modal + base verb". 
+- **ALLOWED:** "can prey" → "can be preying" (modal + be + v-ing is correct)
+- **FORBIDDEN:** "can prey" → "can praying" (this breaks the basic rule "modal + base verb")
+
 **🚨 CRITICAL - Word Relationship (ABSOLUTELY MANDATORY):**
 The transformed word MUST be **grammatically related** to the original word. They must be:
 - The same word in different grammatical forms (e.g., "collected" → "collecting", "possible" → "possibly")
 - Related words from the same word family (e.g., "which" → "where" [both relative pronouns], "be" → "been" [both forms of be-verb])
 - Grammatical variations of the same root word (e.g., "to improve" → "to be improving", "to have been improved")
 
-**ABSOLUTELY FORBIDDEN:**
-- Transforming to a completely unrelated word (e.g., "though" → "thought" is FORBIDDEN - they are completely different words)
-- Spelling errors that create a different word (e.g., "though" → "thought" is a spelling error that creates a different word, NOT a grammar error)
-- Transformations that create unrelated words from different word families
-- **🚨 CRITICAL: Adding "-ing" to modal verbs is ABSOLUTELY FORBIDDEN** (e.g., "could" → "coulding", "should" → "shoulding", "would" → "woulding" are FORBIDDEN - these words do not exist in English)
-- **Modal verb transformations:** You CAN swap modal verbs with each other (e.g., "could" → "should" or "would" → "could" is ALLOWED), but you CANNOT add "-ing" to them
-- **🚨 CRITICAL: Transforming subject pronouns to possessive forms is ABSOLUTELY FORBIDDEN** (e.g., "it" → "its", "they" → "their", "he" → "his", "she" → "her" when used as subjects are FORBIDDEN - these are too simple and mechanical transformations)
+**🚨 CRITICAL - Basic Grammar Rules Must Be Maintained:**
+When transforming a word, you MUST NOT break basic grammar rules:
+- **Modal verbs (can, could, should, would, may, might, must, will, shall) must be followed by base verb form**
+  - ❌ FORBIDDEN: "can prey" → "can praying" (breaks modal + base verb rule)
+  - ✅ ALLOWED: "can prey" → "can be preying" (modal + be + v-ing is correct)
+- **Subject + verb structure requires proper verb form**
+  - ❌ FORBIDDEN: "they work" → "they working" (needs be-verb helper)
+  - ✅ ALLOWED: "they work" → "they are working" (be-verb + v-ing is correct)
+- **"to + base verb" cannot become "to + verb-ing"**
+  - ❌ FORBIDDEN: "to continue" → "to continuing" (this pattern doesn't exist)
+  - ✅ ALLOWED: "to continue" → "to be continuing" (to + be + v-ing is correct)
 
-**Exclude:** Modal+verb, simple past(-ed), 3rd person -s/-es (base verb+-s/-es), simple plural, basic articles, simple prepositions, basic tenses, be-verb forms (it was/were, they was/were, etc.), subject-verb tense agreement (1st/2nd person + base verb, 3rd person + base verb + s/-es), **🚨 CRITICAL: "to + 동사원형" → "to + 동사ing" 변형은 절대 금지** (e.g., "to continue" → "to continuing" is ABSOLUTELY FORBIDDEN - this pattern does not exist in English), **✅ ALLOWED infinitive transformations:** "to + 동사원형" → "동사+ing" (e.g., "to continue" → "continuing" is ALLOWED), "to + 동사원형" → "to be + 과거분사" (e.g., "to continue" → "to be continued" is ALLOWED), "to + 동사원형" → "to be + 동사ing" (e.g., "to continue" → "to be continuing" is ALLOWED), "to + 동사원형" → "to have been + 과거분사" (e.g., "to continue" → "to have been continued" is ALLOWED), **unrelated word transformations** (e.g., "though" → "thought" is ABSOLUTELY FORBIDDEN - they are completely different words), **modal verb + ing transformations** (e.g., "could" → "coulding", "should" → "shoulding", "would" → "woulding" are ABSOLUTELY FORBIDDEN - these words do not exist in English), **subject pronoun to possessive transformations** (e.g., "it" → "its", "they" → "their", "he" → "his", "she" → "her" when used as subjects are ABSOLUTELY FORBIDDEN - these are too simple and mechanical).
+${FORBIDDEN_TRANSFORMATIONS_PROMPT}
+
+**Exclude:** Modal+verb, simple past(-ed), 3rd person -s/-es (base verb+-s/-es), simple plural, basic articles, simple prepositions, basic tenses, be-verb forms (it was/were, they was/were, etc.), subject-verb tense agreement (1st/2nd person + base verb, 3rd person + base verb + s/-es). ${EXCLUDE_RULES_PROMPT.replace('**제외:**', '')}
 
 **Prioritize:** Errors that change meaning, confuse logic, cause ambiguity - Relative pronouns/adverbs, participles, subjunctive, parallelism, S-V agreement (complex), pronouns, conjunctions vs prepositions, logical subject errors, **complex infinitive structures** (to+be+v-ing, to+have been+p.p, etc.).
 
@@ -704,12 +729,7 @@ Each of the 5 words must create a DIFFERENT grammar error type. Do NOT repeat th
 - **(Preposition):** Changing a correct preposition to an incorrect one. *Example: "depend [on -> of] something"*
 - **(Relative Clause - Use Sparingly):** Only if necessary, changing 'which' to 'where' or 'what' to 'that' in complex relative clauses. *Example: "The house [in which -> which] he lived..."* (✅ "which" and "where" are related - both relative pronouns/adverbs)
 
-**❌ FORBIDDEN Examples (DO NOT DO THIS):**
-- **Unrelated Words:** "though" → "thought" is FORBIDDEN (they are completely different words: "though" = conjunction/adverb, "thought" = noun/verb from "think")
-- **Different Word Families:** Transforming to words from completely different word families
-- **Spelling Errors:** Simple spelling changes that create unrelated words
-- **Modal Verb + ing:** "could" → "coulding" is FORBIDDEN (this word does not exist in English). You CAN swap modals (e.g., "could" → "should" or "would" → "could"), but you CANNOT add "-ing" to modal verbs.
-- **Subject Pronoun to Possessive:** "it" → "its" is FORBIDDEN when "it" is used as a subject (e.g., "it can indicate" → "its can indicate" is FORBIDDEN - this is too simple and mechanical). Similarly, "they" → "their", "he" → "his", "she" → "her" when used as subjects are FORBIDDEN.
+${FORBIDDEN_EXAMPLES_PROMPT}
 
 **Selection Strategy (STRICT - Must Follow):**
 1. **MANDATORY:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). This word has been selected as the highest difficulty word.
@@ -826,86 +846,17 @@ Example 2 (if transforming "which" in a 5-word array):
       }
 
       // 단어 관계 검증: 변형된 단어가 원본 단어와 문법적으로 관련되어 있는지 확인
-      const originalWord = result.original.trim().toLowerCase();
-      const transformedWord = result.transformedWords[result.answerIndex].trim().toLowerCase();
+      const originalWord = result.original.trim();
+      const transformedWord = result.transformedWords[result.answerIndex].trim();
       
-      // 🚨 조동사+ing 패턴 검증 (절대 금지: coulding, shoulding, woulding 등)
-      const modalVerbs = ['could', 'should', 'would', 'can', 'may', 'might', 'must', 'will', 'shall'];
-      const forbiddenModalIng = modalVerbs.some(modal => {
-        const modalIng = modal + 'ing';
-        return transformedWord === modalIng || transformedWord.startsWith(modalIng + ' ');
-      });
-      
-      if (forbiddenModalIng) {
-        console.warn(`⚠️ 조동사에 "-ing"를 붙인 변형이 감지되었습니다: "${transformedWord}". 이는 존재하지 않는 단어입니다. 재시도...`);
+      // 공통 검증 함수 사용
+      const validation = validateTransformation(originalWord, transformedWord);
+      if (!validation.isValid) {
+        console.warn(`⚠️ ${validation.errorMessage} 재시도...`);
         if (attempt < maxRetries) {
           continue;
         } else {
-          throw new Error(`조동사에 "-ing"를 붙인 변형("${transformedWord}")은 절대 금지됩니다. 조동사는 서로 교체할 수 있지만 "-ing"를 붙일 수 없습니다.`);
-        }
-      }
-      
-      // 🚨 주어 대명사를 소유격으로 변형하는 것 금지 (it → its, they → their 등)
-      const subjectToPossessivePairs = [
-        ['it', 'its'], ['its', 'it'],
-        ['they', 'their'], ['their', 'they'],
-        ['he', 'his'], ['his', 'he'],
-        ['she', 'her'], ['her', 'she'],
-        ['we', 'our'], ['our', 'we'],
-        ['you', 'your'], ['your', 'you']
-      ];
-      
-      const isSubjectToPossessive = subjectToPossessivePairs.some(pair => 
-        (pair[0] === originalWord && pair[1] === transformedWord) ||
-        (pair[1] === originalWord && pair[0] === transformedWord)
-      );
-      
-      if (isSubjectToPossessive) {
-        console.warn(`⚠️ 주어 대명사를 소유격으로 변형하는 것이 감지되었습니다: "${originalWord}" → "${transformedWord}". 이는 너무 단순하고 기계적인 변형입니다. 재시도...`);
-        if (attempt < maxRetries) {
-          continue;
-        } else {
-          throw new Error(`주어 대명사를 소유격으로 변형("${originalWord}" → "${transformedWord}")은 절대 금지됩니다. 이는 너무 단순하고 기계적인 변형입니다.`);
-        }
-      }
-      
-      // 🚨 "to + 동사ing" 패턴 검증 (절대 금지: to continuing, to going 등)
-      // "to + 동사원형" → "to + 동사ing" 변형은 금지
-      // 허용: "to + 동사원형" → "동사+ing" (to 제거), "to + 동사원형" → "to be + 과거분사", "to + 동사원형" → "to be + 동사ing" 등
-      const toInfinitivePattern = /^to\s+[a-z]+ing$/i;
-      if (toInfinitivePattern.test(transformedWord)) {
-        // 원본이 "to + 동사원형" 형태인지 확인
-        const originalToPattern = /^to\s+[a-z]+$/i;
-        if (originalToPattern.test(originalWord)) {
-          console.warn(`⚠️ "to + 동사원형" → "to + 동사ing" 변형이 감지되었습니다: "${originalWord}" → "${transformedWord}". 이는 존재하지 않는 패턴입니다. 재시도...`);
-          if (attempt < maxRetries) {
-            continue;
-          } else {
-            throw new Error(`"to + 동사원형" → "to + 동사ing" 변형("${originalWord}" → "${transformedWord}")은 절대 금지됩니다. "to + 동사ing" 패턴은 영어에 존재하지 않습니다.`);
-          }
-        }
-      }
-      
-      // 완전히 다른 단어인지 확인 (예: "though" → "thought" 같은 경우)
-      const unrelatedWordPairs = [
-        ['though', 'thought'], ['thought', 'though'],
-        ['through', 'thorough'], ['thorough', 'through'],
-        ['whether', 'weather'], ['weather', 'whether'],
-        ['desert', 'dessert'], ['dessert', 'desert'],
-        ['principal', 'principle'], ['principle', 'principal'],
-      ];
-      
-      const isUnrelated = unrelatedWordPairs.some(pair => 
-        (pair[0] === originalWord && pair[1] === transformedWord) ||
-        (pair[1] === originalWord && pair[0] === transformedWord)
-      );
-      
-      if (isUnrelated) {
-        console.warn(`⚠️ 변형된 단어("${transformedWord}")가 원본 단어("${originalWord}")와 전혀 다른 단어입니다. 재시도...`);
-        if (attempt < maxRetries) {
-          continue;
-        } else {
-          throw new Error(`변형된 단어("${transformedWord}")가 원본 단어("${originalWord}")와 전혀 다른 단어입니다. 문법적으로 관련된 단어여야 합니다.`);
+          throw new Error(validation.errorMessage || '변형 검증에 실패했습니다.');
         }
       }
 

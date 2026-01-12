@@ -11,7 +11,7 @@ const WORK_MENUS = [
   { label: '📦 패키지 퀴즈 #02 (2단 출력)', path: '/package-quiz-2step' },
   { label: '📦 패키지 퀴즈 #03 (본문 집중 문제)', path: '/package-quiz-3order' },
   { label: '01. 문단 순서 맞추기', path: '/work_01_article-order' },
-  { label: '02. 유사단어 독해', path: '/work_02_reading-comprehension' },
+  { label: '02. 유사단어 독해', path: '/work_02_rdlding-comprehension' },
   { label: '03. 빈칸(단어) 찾기', path: '/work_03_vocabulary-word' },
   { label: '04. 빈칸(구) 찾기', path: '/work_04_blank-phrase-inference' },
   { label: '05. 빈칸(문장) 찾기', path: '/work_05_blank-sentence-inference' },
