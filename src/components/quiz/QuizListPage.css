@@ -8,8 +8,9 @@
   max-width: 1200px; /* 1000px에서 20% 증가 (1000 * 1.2 = 1200) */
   margin: 0 auto;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
   overflow: hidden;
 }
 

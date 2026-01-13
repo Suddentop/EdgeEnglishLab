@@ -1,39 +1,64 @@
-/* Feedback.css - 깔끔하고 전문적인 디자인 */
+/* Feedback.css - 나의문제목록 화면 디자인과 동일하게 변경 */
+
+.feedback-page {
+  min-height: 100vh;
+  background: transparent;
+  padding: 0.2rem 0 1rem 0;
+}
 
 .feedback-container {
-  max-width: 1200px !important;
-  width: 100% !important;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0rem 5rem !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  min-height: calc(100vh - 100px);
+  background: white;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  overflow: hidden;
 }
 
-.feedback-header {
+.table-header {
   text-align: center;
-  margin-bottom: 2rem;
-  padding: 0rem 2rem 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.feedback-header h1 {
-  font-size: 2.5rem;
+.table-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.0rem;
   font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 0rem;
-  letter-spacing: -0.01em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: #1f2937;
+  text-align: center !important;
+  display: block;
+  width: 100%;
+  line-height: 1.4;
+  clear: both;
 }
 
-.feedback-header p {
-  font-size: 1.1rem;
-  color: #f3f4f6;
-  margin: 0;
+.table-header-description {
+  font-size: 0.85rem;
   font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  color: #6b7280;
+  margin: 0;
+}
+
+.feedback-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #d1d5db;
+  background: white;
+}
+
+.feedback-list-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 /* 로그인 필요 메시지 */
@@ -41,9 +66,6 @@
   text-align: center;
   padding: 4rem 2rem;
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
 }
 
 .feedback-login-required h2 {
@@ -61,11 +83,8 @@
 /* 게시글 목록 */
 .feedback-list {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
   overflow: hidden;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .feedback-actions {
@@ -212,11 +231,8 @@
 .feedback-write,
 .feedback-edit {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
   padding: 2.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   max-width: 100%;
 }
 
@@ -371,11 +387,8 @@
 /* 게시글 보기 */
 .feedback-view {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
   padding: 0.5rem 2.5rem 2.5rem 2.5rem;
-  max-width: 1200px !important;
+  max-width: 100% !important;
   width: 100% !important;
   margin: 0;
 }
@@ -682,25 +695,31 @@
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
-  .feedback-container {
-    padding: 1rem 0.5rem !important;
+  .feedback-page {
+    padding: 0.2rem 0 1rem 0;
   }
   
-  .feedback-header {
-    padding: 2rem 1rem;
-    margin-bottom: 2rem;
+  .table-header {
+    padding: 1.5rem 1rem;
   }
   
-  .feedback-header h1 {
-    font-size: 2rem;
+  .table-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .feedback-list-header {
+    padding: 1rem;
+  }
+  
+  .feedback-list-header h1 {
+    font-size: 1.1rem;
   }
   
   .feedback-list,
   .feedback-write,
   .feedback-edit,
   .feedback-view {
-    border-radius: 12px;
-    margin: 0 0.5rem 1rem 0.5rem;
+    margin: 0;
   }
   
   .posts-table th,

@@ -1103,46 +1103,6 @@ ${passage}
         <h2>메뉴#07. 주제 추론 문제 생성</h2>
         <p>영어 본문의 주제를 AI가 추론해 5지선다 객관식 문제로 출제합니다.</p>
       </div>
-      <div className="input-type-section">
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'capture'}
-            onChange={() => handleInputModeChange('capture')}
-          />
-          <span>📸 캡처화면 붙여넣기</span>
-          <button
-            type="button"
-            className="screenshot-help-btn"
-            onClick={(e) => {
-              e.preventDefault();
-              setShowHelpModal(true);
-            }}
-            title="화면 캡처 방법 보기"
-          >
-            ?
-          </button>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'image'}
-            onChange={() => handleInputModeChange('image')}
-          />
-          <span>🖼️ 이미지 파일 첨부</span>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputMode"
-            checked={inputMode === 'text'}
-            onChange={() => handleInputModeChange('text')}
-          />
-          <span>✍️ 영어 본문 직접 붙여넣기</span>
-        </label>
-      </div>
       <div className="input-items-list">
         {items.map((item, index) => (
           <div key={item.id} className={`input-item ${item.isExpanded ? 'expanded' : ''}`}>

@@ -251,8 +251,6 @@ body, .App {
   color: white;
   padding: 0.4rem 0;
   margin-top: var(--spacing-3xl);
-  border: 3px solid #6b7280;
-  border-top: 3px solid var(--primary-500);
   width: 100vw;
   position: relative;
   left: 50%;
@@ -1599,7 +1597,6 @@ textarea#text-input:focus {
   max-width: 1200px;
   width: 100%;
   box-sizing: border-box;
-  border: 3px solid #3b82f6;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -1658,7 +1655,7 @@ textarea#text-input:focus {
   gap: 1.5rem;
   margin-top: var(--spacing-lg);
   margin-bottom: var(--spacing-2xl);
-  max-width: 800px;
+  max-width: 560px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1666,7 +1663,7 @@ textarea#text-input:focus {
 .hero-feature-item {
   background: #f7fafc !important;
   background-color: #f7fafc !important;
-  padding: 1rem 0.8rem;
+  padding: 0 !important;
   border-radius: 8px;
   transition: all 0.3s ease;
   text-align: center;
@@ -1702,7 +1699,7 @@ textarea#text-input:focus {
 }
 
 .hero-feature-text {
-  font-size: 1.5rem !important;
+  font-size: 1.2rem !important;
   color: #1a202c !important;
   font-weight: 600 !important;
   letter-spacing: 0.3px !important;
@@ -1717,19 +1714,20 @@ textarea#text-input:focus {
 .hero-benefits {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   margin-top: var(--spacing-lg);
   margin-bottom: var(--spacing-2xl);
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+  text-align: left;
 }
 
 .hero-benefit-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
 }
 
 .hero-benefit-icon {
@@ -1742,7 +1740,7 @@ textarea#text-input:focus {
   font-size: 1.125rem;
   color: #1a202c;
   font-weight: 500;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 /* 개별 통계 카드 스타일 */
@@ -1842,7 +1840,6 @@ textarea#text-input:focus {
 .services-section {
   margin: 0rem 0;
   padding: 0rem 0;
-  border: 3px solid #8b5cf6;
 }
 
 /* 서비스 섹션 헤더 */
@@ -2038,10 +2035,7 @@ textarea#text-input:focus {
 .features-section {
   margin: 3rem 0;
   background: #ffffff;
-  border-radius: 16px;
   padding: 1rem 2rem 2rem 2rem;
-  box-shadow: 0 8px 30px rgba(45, 55, 72, 0.08);
-  border: 3px solid #eab308;
 }
 
 /* 특징 섹션 헤더 */
@@ -2063,23 +2057,34 @@ textarea#text-input:focus {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2.5rem;
+  margin-top: 3rem;
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* 개별 특징 카드 */
 .feature-item {
-  background: #f7fafc;
-  border-radius: 12px;
-  padding: 0.75rem 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-2xl);
+  padding: 0.5rem 1rem 1rem 1rem;
   text-align: center;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
+  border: 1px solid var(--secondary-200);
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+  overflow: hidden;
 }
 
 /* 특징 카드 호버 효과 */
 .feature-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(45, 55, 72, 0.1);
-  border-color: #3182ce;
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-2xl);
+  border-color: var(--primary-300);
 }
 
 /* 특징 카드 아이콘 */
@@ -2118,7 +2123,6 @@ textarea#text-input:focus {
   overflow: hidden;
   margin: var(--spacing-sm) 0 1.5rem 0;
   box-shadow: none;
-  border: 3px solid #10b981;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -2266,8 +2270,8 @@ textarea#text-input:focus {
 /* 보조 CTA 버튼 */
 .cta-secondary {
   background: transparent;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  border: 2px solid #1a202c;
+  color: #1a202c;
   padding: 1.2rem 2.8rem;
   border-radius: 8px;
   cursor: pointer;
@@ -2279,9 +2283,55 @@ textarea#text-input:focus {
 
 /* 보조 CTA 버튼 호버 효과 */
 .cta-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #1a202c;
+  color: white;
   transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #1a202c;
+}
+
+/* 단어문제 생성해보기 버튼 */
+.cta-word-study {
+  background: #E37434;
+  border: 2px solid #E37434;
+  color: white;
+  padding: 1.2rem 2.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.15rem;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.cta-word-study:hover {
+  background: #d46527;
+  border-color: #d46527;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(227, 116, 52, 0.3);
+  color: white;
+}
+
+/* 샘플 문제 다운로드 버튼 */
+.cta-sample-download {
+  background: #91C6BC;
+  border: 2px solid #91C6BC;
+  color: white;
+  padding: 1.2rem 2.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.15rem;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.cta-sample-download:hover {
+  background: #7fb3a9;
+  border-color: #7fb3a9;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(145, 198, 188, 0.3);
+  color: white;
 }
 
 /* ===========================
@@ -2344,24 +2394,59 @@ textarea#text-input:focus {
   }
 
   .hero-features {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
   .hero-feature-item {
-    padding: 0.8rem 0.6rem;
-    min-height: 70px;
+    padding: 1rem 0.8rem;
+    min-height: 56px;
+    width: 60%;
+    max-width: 60%;
+    margin: 0 auto;
+    flex-direction: row;
+    gap: 0.5rem;
   }
 
   .hero-feature-check {
     font-size: 1.3rem;
+    width: auto;
+    flex-shrink: 0;
   }
 
   .hero-feature-text {
     font-size: 1.3rem !important;
+    width: auto;
+    text-align: left;
   }
 
-  /* 히어로 혜택 목록 모바일 (제거됨) */
+  /* 히어로 혜택 목록 모바일 */
+  .hero-benefits {
+    gap: 0.3rem;
+    margin-left: 0;
+    margin-right: 0;
+    text-align: left;
+  }
+  
+  .hero-benefit-item {
+    padding: 0.15rem 0;
+    gap: 0.4rem;
+    justify-content: flex-start;
+  }
+  
+  .hero-benefit-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  
+  .hero-benefit-text {
+    font-size: 0.9rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
 
   /* 통계 카드 모바일 패딩 */
   .stat-item {
@@ -2394,6 +2479,11 @@ textarea#text-input:focus {
     padding-right: 0;
     margin-left: 0;
     margin-right: 0;
+  }
+  
+  /* 서비스 헤더 설명 모바일 크기 */
+  .services-header p {
+    font-size: 1.125rem;
   }
 
   /* 서비스 그리드 모바일 (1열) */
@@ -2558,6 +2648,51 @@ textarea#text-input:focus {
 
   .hero-feature-text {
     font-size: 1rem !important;
+    width: auto;
+    text-align: left;
+  }
+  
+  .hero-feature-item {
+    width: 60%;
+    max-width: 60%;
+    margin: 0 auto;
+    padding: 1rem 0.8rem;
+    min-height: 56px;
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+  
+  .hero-feature-check {
+    width: auto;
+    flex-shrink: 0;
+  }
+  
+  /* 히어로 혜택 목록 작은 모바일 */
+  .hero-benefits {
+    gap: 0.25rem;
+    margin-left: 0;
+    margin-right: 0;
+    text-align: left;
+  }
+  
+  .hero-benefit-item {
+    padding: 0.1rem 0;
+    gap: 0.35rem;
+    justify-content: flex-start;
+  }
+  
+  .hero-benefit-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  
+  .hero-benefit-text {
+    font-size: 0.85rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
   }
 
   .stat-label {
@@ -2572,6 +2707,11 @@ textarea#text-input:focus {
 
   .services-section {
     padding: 1.5rem 0;
+  }
+  
+  /* 서비스 헤더 설명 작은 모바일 크기 */
+  .services-header p {
+    font-size: 1rem;
   }
 
   .service-card {
@@ -2600,7 +2740,7 @@ textarea#text-input:focus {
   }
 
   .feature-item {
-    padding: 0.36rem 1.2rem;
+    padding: 1.2rem;
   }
 
   .feature-item h4 {
@@ -4219,7 +4359,6 @@ textarea#text-input:focus {
   margin: var(--spacing-sm) auto;
   max-width: 1200px;
   border-radius: 0;
-  border: 3px solid #f59e0b;
   box-shadow: none;
   border-bottom: 1px solid #e5e7eb;
 }

@@ -622,24 +622,33 @@ const Feedback: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="feedback-container">
-        <div className="feedback-login-required">
-          <h2>로그인이 필요합니다</h2>
-          <p>Feedback 게시판을 이용하려면 로그인이 필요합니다.</p>
+      <div className="feedback-page">
+        <div className="feedback-container">
+          <div className="feedback-login-required">
+            <h2>로그인이 필요합니다</h2>
+            <p>Feedback 게시판을 이용하려면 로그인이 필요합니다.</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="feedback-container">
-      <div className="feedback-header">
-        <h1>Feedback 게시판</h1>
-        <p>서비스 이용 후 피드백을 남겨주세요.</p>
-      </div>
+    <div className="feedback-page">
+      <div className="feedback-container">
+        <div className="table-header">
+          <h2>Feedback 게시판</h2>
+          <p className="table-header-description">서비스 이용 후 피드백을 남겨주세요.</p>
+        </div>
 
-      {!selectedPost && !isWriting && !isEditing && (
-        <div className="feedback-list">
+        {!selectedPost && !isWriting && !isEditing && (
+          <div className="feedback-list-header">
+            <h1>Feedback 게시판</h1>
+          </div>
+        )}
+
+        {!selectedPost && !isWriting && !isEditing && (
+          <div className="feedback-list">
           <div className="feedback-actions">
             <button 
               className="btn btn-primary"
@@ -1276,7 +1285,8 @@ const Feedback: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

@@ -356,11 +356,15 @@ const ProfilePage: React.FC = () => {
     return (
       <div className="profile-page">
         <div className="profile-container">
-          <h2>로그인이 필요합니다</h2>
-          <p>프로필을 보려면 로그인이 필요합니다.</p>
-          <button onClick={() => navigate('/login')} className="btn-primary">
-            로그인 하러 가기
-          </button>
+          <div className="table-header">
+            <h2>로그인이 필요합니다</h2>
+            <p className="table-header-description">프로필을 보려면 로그인이 필요합니다.</p>
+          </div>
+          <div className="profile-content">
+            <button onClick={() => navigate('/login')} className="btn-primary">
+              로그인 하러 가기
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -369,9 +373,10 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="profile-page">
       <div className="profile-container">
-                 <div className="profile-header">
-           <h1>내 정보</h1>
-         </div>
+        <div className="table-header">
+          <h2>내 정보</h2>
+          <p className="table-header-description">회원 정보를 확인하고 수정할 수 있습니다.</p>
+        </div>
 
         <div className="profile-content">
           <div className="profile-section">

@@ -1,0 +1,139 @@
+/* CaptureMethodTooltip 스타일 */
+
+.capture-method-tooltip-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.capture-method-tooltip-container {
+  background: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.capture-method-tooltip-header {
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #E37434 0%, #F5A623 100%);
+  border-radius: 16px 16px 0 0;
+  color: white;
+}
+
+.capture-method-tooltip-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.capture-method-tooltip-content {
+  padding: 2rem;
+}
+
+.capture-method-section {
+  margin-bottom: 1.5rem;
+}
+
+.capture-method-section:last-child {
+  margin-bottom: 0;
+}
+
+.capture-method-section h4 {
+  color: #2c3e50;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.capture-method-section ol {
+  color: #34495e;
+  font-size: 1rem;
+  line-height: 1.8;
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.capture-method-section li {
+  margin-bottom: 0.75rem;
+}
+
+.capture-method-section strong {
+  color: #E37434;
+  font-weight: 600;
+  background: #fff3e0;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.capture-method-tooltip-footer {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 2rem;
+  border-top: 2px solid #e1e8ed;
+  background: #f8f9fa;
+  border-radius: 0 0 16px 16px;
+}
+
+.capture-method-confirm-btn {
+  background: linear-gradient(135deg, #E37434 0%, #F5A623 100%);
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(227, 116, 52, 0.3);
+}
+
+.capture-method-confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(227, 116, 52, 0.4);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .capture-method-tooltip-container {
+    width: 95%;
+  }
+  
+  .capture-method-tooltip-content {
+    padding: 1.5rem;
+  }
+  
+  .capture-method-tooltip-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .capture-method-tooltip-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .capture-method-confirm-btn {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+  }
+}

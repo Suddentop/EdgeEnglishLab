@@ -1,0 +1,298 @@
+/* WordStudyIntroModal 스타일 */
+
+/* 모달 전체 컨테이너 */
+.word-study-intro-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 20px;
+  padding: 0;
+  max-width: 1000px;
+  width: 90%;
+  max-height: calc(90vh - 60px);
+  overflow-y: auto;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  border: none;
+}
+
+/* 스크롤바 숨기기 */
+.word-study-intro-modal::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.word-study-intro-modal {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* 모달 내부 컨테이너 */
+.word-study-intro-container {
+  padding: 0;
+}
+
+/* 모달 헤더 */
+.word-study-intro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #E37434 0%, #F5A623 100%);
+  border-radius: 20px 20px 0 0;
+  color: white;
+}
+
+.word-study-intro-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+/* 헤더 닫기 버튼 */
+.word-study-intro-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.word-study-intro-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* 모달 내용 */
+.word-study-intro-content {
+  padding: 2rem;
+}
+
+.intro-description {
+  margin-bottom: 2rem;
+}
+
+.intro-description p {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+.intro-description strong {
+  color: #E37434;
+  font-weight: 600;
+}
+
+/* 예시 이미지 그리드 */
+.example-images-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.example-image-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.example-image-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.example-image {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  max-height: 250px;
+  object-fit: contain;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #e1e8ed;
+}
+
+.example-image:hover {
+  transform: scale(1.05);
+  border-color: #E37434;
+  box-shadow: 0 4px 12px rgba(227, 116, 52, 0.2);
+}
+
+.example-image-description {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+  text-align: center;
+}
+
+/* 팁 섹션 */
+.intro-tips {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid #c8e6c9;
+}
+
+.intro-tips h3 {
+  color: #2e7d32;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.intro-tips ul {
+  color: #2e7d32;
+  font-size: 1rem;
+  line-height: 1.8;
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.intro-tips li {
+  margin-bottom: 0.5rem;
+}
+
+/* 모달 푸터 */
+.word-study-intro-footer {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 2rem 2rem 2rem;
+  border-top: 2px solid #e1e8ed;
+  background: #f8f9fa;
+  border-radius: 0 0 20px 20px;
+}
+
+/* 다음 버튼 */
+.word-study-intro-next-btn {
+  background: linear-gradient(135deg, #E37434 0%, #F5A623 100%);
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(227, 116, 52, 0.3);
+}
+
+.word-study-intro-next-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(227, 116, 52, 0.4);
+}
+
+/* 확대된 이미지 오버레이 */
+.expanded-image-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.expanded-image-container {
+  position: relative;
+  max-width: 90%;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.expanded-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.expanded-image-close-btn {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.expanded-image-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 모달 오버레이 */
+.word-study-intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .word-study-intro-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .word-study-intro-content {
+    padding: 1.5rem;
+  }
+  
+  .word-study-intro-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .word-study-intro-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .example-images-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .example-image {
+    max-height: 200px;
+  }
+  
+  .word-study-intro-next-btn {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+  }
+}

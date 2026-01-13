@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiSparkles, HiClipboardDocumentList, HiClock } from 'react-icons/hi2';
 import type { IconType } from 'react-icons';
+import Modal from 'react-modal';
 import SEO from './SEO';
+import Work_16_WordStudyPreview from '../work/Work_16_WordStudyPreview/Work_16_WordStudyPreview';
+import WordStudyIntroModal from '../modal/WordStudyIntroModal';
+import CaptureMethodTooltip from '../modal/CaptureMethodTooltip';
 
 // 아이콘 래퍼 컴포넌트 (TypeScript 호환성)
 const IconWrapper: React.FC<{ icon: IconType; className?: string }> = ({ icon: Icon, className }) => {
@@ -16,6 +20,9 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showWordStudyPreview, setShowWordStudyPreview] = useState(false);
+  const [showWordStudyIntro, setShowWordStudyIntro] = useState(false);
+  const [showCaptureMethodTooltip, setShowCaptureMethodTooltip] = useState(false);
   const navigate = useNavigate();
 
   const services = [
@@ -129,7 +136,6 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
         padding: '12px 20px',
         backgroundColor: '#f8f9fa',
         borderRadius: '8px',
-        border: '3px solid #ef4444',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         display: 'flex',
         justifyContent: 'flex-start',
@@ -194,7 +200,7 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
             </div>
             <div className="hero-feature-item">
               <span className="hero-feature-check">✔</span>
-              <span className="hero-feature-text">출력 가능한 문제 형태</span>
+              <span className="hero-feature-text">인쇄용 문서 디자인</span>
             </div>
           </div>
           <div className="hero-benefits">
@@ -220,10 +226,21 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
       <section className="cta-section" style={{ marginTop: '0' }}>
         <div className="cta-content">
           <h3>영어 학습 지도를 위한 새로운 툴을 경험해보세요</h3>
-          <p>AI 모델링을 통해 특화된 영어 문제 생성으로 준비 시간을 단축하고 집중력 있는 학습을 유도합니다</p>
+          <p>AI 모델링을 통해 특화된 영어 문제 생성으로 준비 시간을 단축하고 집중력 있는 학습을 유도합니다<br />
+             캡처이미지나 사진으로 영어단어문제를 만들어보세요.
+          </p>
           <div className="cta-buttons">
             <button 
-              className="cta-primary"
+              className="cta-word-study"
+              onClick={() => {
+                console.log('단어문제 생성해보기 버튼 클릭됨');
+                setShowWordStudyIntro(true);
+              }}
+            >
+              단어문제 생성해보기
+            </button>
+            <button 
+              className="cta-sample-download"
               onClick={() => navigate('/sample-problems')}
             >
               샘플 문제 다운로드
@@ -339,6 +356,84 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
           </div>
         </div>
       </footer>
+
+      {/* 단어문제 생성 설명 모달 */}
+      <WordStudyIntroModal
+        isOpen={showWordStudyIntro}
+        onClose={() => setShowWordStudyIntro(false)}
+        onNext={() => {
+          setShowWordStudyIntro(false);
+          setShowCaptureMethodTooltip(true);
+        }}
+      />
+
+      {/* 캡처 방법 툴팁 */}
+      {showCaptureMethodTooltip && (
+        <CaptureMethodTooltip
+          onConfirm={() => {
+            setShowCaptureMethodTooltip(false);
+            setShowWordStudyPreview(true);
+          }}
+        />
+      )}
+
+      {/* 단어문제 미리보기 모달 */}
+      <Modal
+        isOpen={showWordStudyPreview}
+        onRequestClose={() => {
+          console.log('모달 닫기 요청');
+          setShowWordStudyPreview(false);
+        }}
+        className="word-study-preview-modal"
+        overlayClassName="word-study-preview-overlay"
+        ariaHideApp={false}
+        style={{
+          content: {
+            position: 'absolute' as const,
+            top: '50%',
+            left: '50%',
+            right: 'auto',
+            bottom: 'auto',
+            marginRight: '-50%',
+            transform: 'translate(-50%, -50%)',
+            width: '76%',
+            maxWidth: '1120px',
+            height: '90vh',
+            maxHeight: '900px',
+            padding: '0',
+            borderRadius: '8px',
+            border: 'none',
+            overflow: 'hidden',
+            backgroundColor: '#ffffff'
+          },
+          overlay: {
+            position: 'fixed' as const,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            zIndex: 3000
+          }
+        }}
+      >
+        <div style={{ 
+          width: '100%', 
+          height: '100%', 
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#ffffff'
+        }}>
+          <div style={{ 
+            flex: 1,
+            overflow: 'auto',
+            padding: '0'
+          }}>
+            <Work_16_WordStudyPreview onClose={() => setShowWordStudyPreview(false)} />
+          </div>
+        </div>
+      </Modal>
 
       {/* 이용약관 모달 */}
       {showTerms && (

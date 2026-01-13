@@ -1,39 +1,47 @@
 /* 프로필 페이지 스타일 */
 .profile-page {
-  min-height: calc(100vh - 100px);
+  min-height: 100vh;
   background: transparent;
-  padding: 0rem 1rem;
+  padding: 0.2rem 0 1rem 0;
 }
 
 .profile-container {
-  width: calc(100% - 2rem) !important;
-  max-width: 1040px !important;
-  margin: 0 auto 2rem !important;
+  max-width: 1200px;
+  margin: 0 auto;
   background: white;
-  border-radius: 16px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
   overflow: hidden;
-  position: relative;
-  z-index: 1;
-  box-sizing: border-box;
 }
 
-.profile-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 1rem 2rem;
+.table-header {
+  text-align: center;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  border-radius: 16px 16px 0 0;
 }
 
-.profile-header h1 {
-  margin: 0;
-  font-size: 2rem;
+.table-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.0rem;
   font-weight: 700;
+  color: #1f2937;
+  text-align: center !important;
+  display: block;
+  width: 100%;
+  line-height: 1.4;
+  clear: both;
+}
+
+.table-header-description {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
 }
 
 .back-button {
@@ -54,7 +62,8 @@
 }
 
 .profile-content {
-  padding: 2rem;
+  padding: 2rem 1.5rem;
+  background: white;
 }
 
 .profile-section {
@@ -453,17 +462,14 @@
 /* 반응형 디자인 */
   @media (max-width: 768px) {
     .profile-page {
-      padding: 1rem 0.5rem;
+      padding: 0.2rem 0 1rem 0;
     }
 
-    .profile-header {
-      padding: 0.75rem 1.5rem;
-      flex-direction: column;
-      text-align: center;
-      border-radius: 16px 16px 0 0;
+    .table-header {
+      padding: 1.5rem 1rem;
     }
 
-    .profile-header h1 {
+    .table-header h2 {
       font-size: 1.5rem;
     }
 
@@ -502,12 +508,15 @@
 @media (max-width: 480px) {
   .profile-container {
     margin: 0;
-    border-radius: 16px !important;
+    border-radius: 0;
   }
 
-  .profile-header {
-    padding: 0.5rem 1rem;
-    border-radius: 16px 16px 0 0;
+  .table-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .table-header h2 {
+    font-size: 1.3rem;
   }
 
   .profile-content {

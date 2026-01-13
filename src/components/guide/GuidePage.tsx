@@ -272,7 +272,10 @@ const GuidePage: React.FC = () => {
   return (
     <div className="guide-page">
       <div className="guide-container">
-        <h1 className="guide-title">이용안내</h1>
+        <div className="table-header">
+          <h2>이용안내</h2>
+          <p className="table-header-description">서비스 이용 방법 및 안내사항을 확인하세요.</p>
+        </div>
         
         <div className="guide-tabs">
           {tabs.map(tab => (
