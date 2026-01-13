@@ -76,14 +76,14 @@
 }
 
 .amount-button:hover {
-  border-color: #667eea;
+  border-color: #92C6BC;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
 }
 
 .amount-button.selected {
-  border-color: #667eea;
-  background: #667eea;
+  border-color: #92C6BC;
+  background: #92C6BC;
   color: white;
 }
 
@@ -119,8 +119,8 @@
 
 .custom-amount-button:hover,
 .custom-amount-button.active {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #92C6BC;
+  color: #92C6BC;
 }
 
 .custom-amount-input {
@@ -142,7 +142,7 @@
 
 .custom-amount-input input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #92C6BC;
 }
 
 /* 선택된 금액 정보 */
@@ -236,7 +236,7 @@
 .charge-button {
   width: 100%;
   padding: 1rem;
-  background: #667eea;
+  background: #92C6BC;
   color: white;
   border: none;
   border-radius: 8px;

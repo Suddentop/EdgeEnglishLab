@@ -2295,13 +2295,15 @@ textarea#text-input:focus {
   background: #E37434;
   border: 2px solid #E37434;
   color: white;
-  padding: 1.2rem 2.8rem;
+  padding: 1.2rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   font-size: 1.15rem;
   transition: all 0.3s ease;
   letter-spacing: 0.5px;
+  min-width: 250px;
+  width: 250px;
 }
 
 .cta-word-study:hover {
@@ -2317,13 +2319,15 @@ textarea#text-input:focus {
   background: #91C6BC;
   border: 2px solid #91C6BC;
   color: white;
-  padding: 1.2rem 2.8rem;
+  padding: 1.2rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   font-size: 1.15rem;
   transition: all 0.3s ease;
   letter-spacing: 0.5px;
+  min-width: 250px;
+  width: 250px;
 }
 
 .cta-sample-download:hover {
@@ -2347,7 +2351,7 @@ textarea#text-input:focus {
     max-width: 100%;
     margin-left: 0;
     margin-right: 0;
-  }
+}
 
   /* 히어로 섹션 모바일 최적화 */
   .hero-section {
@@ -2384,7 +2388,7 @@ textarea#text-input:focus {
   .hero-description {
     font-size: 1rem;
     margin-bottom: 1rem;
-  }
+}
 
   /* 히어로 특징 목록 모바일 */
   .hero-features {
@@ -2446,7 +2450,7 @@ textarea#text-input:focus {
     flex: 1;
     min-width: 0;
     text-align: left;
-  }
+}
 
   /* 통계 카드 모바일 패딩 */
   .stat-item {
@@ -2512,7 +2516,7 @@ textarea#text-input:focus {
     margin: 2rem 0;
     margin-left: 0;
     margin-right: 0;
-  }
+}
 
   /* CTA 버튼들 모바일 세로 정렬 */
   .cta-buttons {

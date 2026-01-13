@@ -159,15 +159,18 @@ const Navigation: React.FC = () => {
             </button>
             {showWorkMenu && (
               <div className="sidebar-submenu">
-                {WORK_MENUS.map(menu => (
-                  <button
-                    key={menu.path}
-                    className={`sidebar-submenu-item ${isActive(menu.path) ? 'active' : ''}`}
-                    onClick={() => handleMenuClick(menu.path)}
-                  >
-                    {menu.label}
-                  </button>
-                ))}
+                {WORK_MENUS.map(menu => {
+                  const isHighlighted = menu.path === '/work_12_word-study' || menu.path === '/work_15_passage-word-study';
+                  return (
+                    <button
+                      key={menu.path}
+                      className={`sidebar-submenu-item ${isActive(menu.path) ? 'active' : ''} ${isHighlighted ? 'highlighted' : ''}`}
+                      onClick={() => handleMenuClick(menu.path)}
+                    >
+                      {menu.label}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -76,8 +76,8 @@
 
 .guide-tab.active {
   color: white;
-  background: #667eea;
-  border-color: #667eea;
+  background: #92C6BC;
+  border-color: #92C6BC;
   font-weight: 600;
   z-index: 1;
 }
@@ -141,7 +141,7 @@
 
 .notice-add-btn {
   padding: 0.5rem 1rem;
-  background: #667eea;
+  background: #92C6BC;
   color: white;
   border: none;
   border-radius: 6px;
@@ -194,7 +194,7 @@
 .form-group input[type="text"]:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #92C6BC;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -210,7 +210,7 @@
 
 .btn-primary {
   padding: 0.75rem 1.5rem;
-  background: #667eea;
+  background: #92C6BC;
   color: white;
   border: none;
   border-radius: 6px;
@@ -257,7 +257,7 @@
   padding: 1.5rem;
   background: #f7fafc;
   border-radius: 8px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #92C6BC;
   transition: box-shadow 0.3s ease;
 }
 
@@ -395,7 +395,7 @@
 }
 
 .notice-count strong {
-  color: #667eea;
+  color: #92C6BC;
 }
 
 .notice-search-form {
@@ -415,13 +415,13 @@
 
 .notice-search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #92C6BC;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .notice-search-btn {
   padding: 0.75rem 1.5rem;
-  background: #667eea;
+  background: #92C6BC;
   color: white;
   border: none;
   border-radius: 6px;
@@ -514,7 +514,7 @@
 }
 
 .notice-title-link:hover {
-  color: #667eea;
+  color: #92C6BC;
   text-decoration: underline;
 }
 
@@ -598,14 +598,14 @@
 
 .pagination-btn:hover:not(:disabled) {
   background: #f7fafc;
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #92C6BC;
+  color: #92C6BC;
 }
 
 .pagination-btn.active {
-  background: #667eea;
+  background: #92C6BC;
   color: white;
-  border-color: #667eea;
+  border-color: #92C6BC;
 }
 
 .pagination-btn:disabled {
@@ -715,7 +715,7 @@
 }
 
 .notice-detail-body a {
-  color: #667eea;
+  color: #92C6BC;
   text-decoration: underline;
 }
 
@@ -760,7 +760,7 @@
 
 .form-group .ql-container.ql-snow:focus-within,
 .form-group .ql-toolbar.ql-snow:focus-within {
-  border-color: #667eea;
+  border-color: #92C6BC;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -832,7 +832,7 @@
 .form-group input[type="text"]:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #92C6BC;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -874,7 +874,7 @@
 }
 
 .checkbox-container input[type="checkbox"]:focus {
-  outline: 2px solid #667eea;
+  outline: 2px solid #92C6BC;
   outline-offset: 2px;
 }
 
@@ -889,7 +889,7 @@
 .btn-submit,
 .btn-primary {
   padding: 0.75rem 1.5rem;
-  background: #667eea;
+  background: #92C6BC;
   color: white;
   border: none;
   border-radius: 6px;

@@ -192,7 +192,7 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
           <div className="hero-features">
             <div className="hero-feature-item">
               <span className="hero-feature-check">✔</span>
-              <span className="hero-feature-text">고등 내신 기준</span>
+              <span className="hero-feature-text">학교 내신 대비용</span>
             </div>
             <div className="hero-feature-item">
               <span className="hero-feature-check">✔</span>

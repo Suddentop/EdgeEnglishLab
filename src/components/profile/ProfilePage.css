@@ -6,7 +6,7 @@
 }
 
 .profile-container {
-  max-width: 1200px;
+  max-width: 1040px;
   margin: 0 auto;
   background: white;
   border-radius: 0;
@@ -254,6 +254,12 @@
 .profile-actions .btn-primary {
   width: 40%;
   max-width: 320px;
+  background: #E37434 !important;
+}
+
+.profile-actions .btn-primary:hover:not(:disabled) {
+  background: #d0652a !important;
+  box-shadow: 0 4px 12px rgba(227, 116, 52, 0.3);
 }
 
 /* 문제지 헤더 변경 모달 */
@@ -933,13 +939,13 @@
 }
 
 .payment-history-container .payment-history-header {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%) !important;
+  background: #91C6BC !important;
   color: white !important;
-  padding: 1.5rem 2rem !important;
+  padding: 1.05rem 2rem !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  min-height: 70px !important;
+  min-height: 49px !important;
   height: auto !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -994,7 +1000,7 @@
 
 .payment-history-container .payment-history-header h1 {
   margin: 0 !important;
-  font-size: 1.75rem !important;
+  font-size: 1.23rem !important;
   font-weight: 700 !important;
   color: white !important;
   display: block !important;

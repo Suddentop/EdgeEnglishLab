@@ -44,7 +44,7 @@ interface Work_16_WordStudyPreviewProps {
 }
 
 const Work_16_WordStudyPreview: React.FC<Work_16_WordStudyPreviewProps> = ({ onClose }) => {
-  const [inputMode, setInputMode] = useState<InputMode>('text');
+  const [inputMode, setInputMode] = useState<InputMode>('capture');
   const [inputText, setInputText] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
