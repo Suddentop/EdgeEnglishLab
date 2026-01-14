@@ -253,12 +253,9 @@ body, .App {
   color: white;
   padding: 0.4rem 0;
   margin-top: var(--spacing-3xl);
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   box-shadow: var(--shadow-xl);
 }
 
@@ -267,8 +264,10 @@ body, .App {
   justify-content: space-between;
   align-items: flex-start;
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 var(--spacing-xl);
+  box-sizing: border-box;
 }
 
 .footer-section {
@@ -2544,20 +2543,29 @@ textarea#text-input:focus {
   gap: 1rem;
   }
 
-  /* 푸터 모바일 그리드 (2열) */
-  .footer-content {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-  }
-
-  /* 푸터 모바일 패딩 */
+  /* 푸터 모바일 스타일 */
   .App-footer {
     padding: 2rem 0 1.5rem;
     margin-top: 2rem;
+    width: 100%;
+    max-width: 100%;
   }
   
   .footer-content {
+    flex-direction: column;
+    gap: 1.5rem;
     padding: 0 1rem;
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .footer-left,
+  .footer-right {
+    width: 100%;
+  }
+  
+  .footer-right {
+    justify-content: flex-start;
   }
   
   .footer-bottom {
@@ -2793,9 +2801,25 @@ textarea#text-input:focus {
   }
 
   .footer-content {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 1.2rem;
+    padding: 0 0.75rem;
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .footer-left,
+  .footer-right {
+    width: 100%;
     text-align: center;
+  }
+  
+  .footer-right {
+    justify-content: center;
+  }
+  
+  .policy-links {
+    justify-content: center;
   }
 
   .footer-section h3 {
