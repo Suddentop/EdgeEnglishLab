@@ -1661,7 +1661,7 @@ textarea#text-input:focus {
   gap: 1.5rem;
   margin-top: var(--spacing-lg);
   margin-bottom: var(--spacing-2xl);
-  max-width: 560px;
+  max-width: 750px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1674,14 +1674,15 @@ textarea#text-input:focus {
   transition: all 0.3s ease;
   text-align: center;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
+  gap: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border-top: 3px solid transparent !important;
-  min-height: 80px;
+  min-height: 56px;
   position: relative;
+  white-space: nowrap;
 }
 
 /* 특징 카드 호버 효과 */
@@ -1699,7 +1700,8 @@ textarea#text-input:focus {
   margin: 0;
   color: #3b82f6;
   text-align: center;
-  width: 100%;
+  width: auto;
+  flex-shrink: 0;
   line-height: 1.1;
 }
 
@@ -1710,7 +1712,7 @@ textarea#text-input:focus {
   letter-spacing: 0.3px !important;
   opacity: 1 !important;
   text-align: center;
-  width: 100%;
+  width: auto;
   line-height: 1.2;
   margin: 0;
 }
