@@ -121,32 +121,32 @@ const Navigation: React.FC = () => {
           ☰
         </button>
       )}
-      <nav className="navigation">
+    <nav className="navigation">
         {/* 로고 */}
         <Link to="/" className="logo" onClick={() => handleMenuClick('/')}>
           <img src={process.env.PUBLIC_URL + '/images/logo_02.png'} alt="Edge English Lab" className="logo-image" />
-          <div className="logo-text">
+        <div className="logo-text">
             <h1>Edge English Lab</h1>
             <span className="tagline">AI 영어 문제 생성 플랫폼</span>
-          </div>
-        </Link>
+        </div>
+      </Link>
 
         {/* 사이드바 컨텐츠 */}
         <div className="sidebar-content">
           {/* 홈 */}
           <div className="sidebar-section">
-            <button
+                    <button
               className={`sidebar-menu-item ${isActive('/') ? 'active' : ''}`}
               onClick={() => handleMenuClick('/')}
-            >
+                    >
               <IconWrapper icon={HiHome} className="sidebar-menu-item-icon" />
               <span className="sidebar-menu-item-text">홈</span>
-            </button>
+                    </button>
           </div>
-
+                    
           {/* 문제생성 섹션 */}
           <div className="sidebar-section">
-            <button
+                    <button
               className={`sidebar-menu-item ${showWorkMenu ? 'active' : ''}`}
               onClick={() => setShowWorkMenu(!showWorkMenu)}
             >
@@ -156,7 +156,7 @@ const Navigation: React.FC = () => {
                 <IconWrapper icon={HiChevronRight} className="sidebar-menu-item-icon" />
               )}
               <span className="sidebar-menu-item-text">문제생성</span>
-            </button>
+                    </button>
             {showWorkMenu && (
               <div className="sidebar-submenu">
                 {WORK_MENUS.map(menu => {
@@ -172,108 +172,108 @@ const Navigation: React.FC = () => {
                   );
                 })}
               </div>
-            )}
+                    )}
           </div>
-
+                    
           {/* 나의문제목록 */}
-          {currentUser && (
+                    {currentUser && (
             <div className="sidebar-section">
-              <button
+                      <button
                 className={`sidebar-menu-item ${isActive('/quiz-list') ? 'active' : ''}`}
                 onClick={() => handleMenuClick('/quiz-list')}
-              >
+                      >
                 <IconWrapper icon={HiClipboard} className="sidebar-menu-item-icon" />
                 <span className="sidebar-menu-item-text">나의문제목록</span>
-              </button>
+                      </button>
             </div>
-          )}
-
+                    )}
+                    
           {/* Feedback */}
           <div className="sidebar-section">
-            <button
+                      <button
               className={`sidebar-menu-item ${isActive('/feedback') ? 'active' : ''}`}
               onClick={() => handleMenuClick('/feedback')}
-            >
+                      >
               <IconWrapper icon={HiChatBubbleLeft} className="sidebar-menu-item-icon" />
               <span className="sidebar-menu-item-text">Feedback</span>
-            </button>
+                      </button>
           </div>
-
+                    
           {/* 이용안내 */}
           <div className="sidebar-section">
-            <button
+                      <button
               className={`sidebar-menu-item ${isActive('/guide') ? 'active' : ''}`}
               onClick={() => handleMenuClick('/guide')}
-            >
+                      >
               <IconWrapper icon={HiDocumentText} className="sidebar-menu-item-icon" />
               <span className="sidebar-menu-item-text">이용안내</span>
-            </button>
+                      </button>
           </div>
-
-          {/* 로그인/회원가입 (로그인하지 않은 상태일 때만) */}
-          {!currentUser && (
-            <>
+                    
+                    {/* 로그인/회원가입 (로그인하지 않은 상태일 때만) */}
+                    {!currentUser && (
+                      <>
               <div className="sidebar-section">
-                <button
+                        <button
                   className={`sidebar-menu-item ${isActive('/login') ? 'active' : ''}`}
                   onClick={() => handleMenuClick('/login')}
-                >
+                        >
                   <IconWrapper icon={HiLockClosed} className="sidebar-menu-item-icon" />
                   <span className="sidebar-menu-item-text">로그인</span>
-                </button>
-              </div>
+                        </button>
+                  </div>
               <div className="sidebar-section">
-                <button
+                    <button
                   className={`sidebar-menu-item ${isActive('/signup') ? 'active' : ''}`}
                   onClick={() => handleMenuClick('/signup')}
-                >
+                    >
                   <IconWrapper icon={HiPencil} className="sidebar-menu-item-icon" />
                   <span className="sidebar-menu-item-text">회원가입</span>
-                </button>
-              </div>
-            </>
-          )}
+                      </button>
+                </div>
+              </>
+            )}
 
           {/* 내 정보 */}
           {currentUser && (
             <div className="sidebar-section">
-              <button
+            <button 
                 className={`sidebar-menu-item ${isActive('/profile') ? 'active' : ''}`}
                 onClick={() => handleMenuClick('/profile')}
               >
                 <IconWrapper icon={HiUser} className="sidebar-menu-item-icon" />
                 <span className="sidebar-menu-item-text">내 정보</span>
-              </button>
-            </div>
-          )}
-
+                  </button>
+          </div>
+        )}
+        
           {/* 포인트구매 */}
           {currentUser && (
             <div className="sidebar-section">
-              <button
+          <button
                 className={`sidebar-menu-item ${isActive('/point-charge') ? 'active' : ''}`}
                 onClick={() => handleMenuClick('/point-charge')}
-              >
+          >
                 <IconWrapper icon={HiCurrencyDollar} className="sidebar-menu-item-icon" />
                 <span className="sidebar-menu-item-text">포인트구매</span>
-              </button>
+          </button>
             </div>
-          )}
-
+        )}
+        
           {/* 관리자 */}
           {currentUser && isAdmin(userData) && (
             <div className="sidebar-section">
-              <button
+          <button
                 className={`sidebar-menu-item ${isActive('/admin') ? 'active' : ''}`}
                 onClick={() => handleMenuClick('/admin')}
-              >
+          >
                 <IconWrapper icon={HiCog} className="sidebar-menu-item-icon" />
                 <span className="sidebar-menu-item-text">관리자</span>
-              </button>
+          </button>
             </div>
-          )}
+        )}
         </div>
-
+        
         {/* 사용자 영역 (로그인한 사용자만) */}
         {currentUser && (
           <div className="sidebar-user-section">
@@ -283,7 +283,7 @@ const Navigation: React.FC = () => {
             <div className="sidebar-user-actions">
               <button className="sidebar-action-button" onClick={handleLogout}>
                 로그아웃
-              </button>
+          </button>
             </div>
           </div>
         )}
@@ -305,7 +305,7 @@ const Navigation: React.FC = () => {
             zIndex: 999
           }}
         />
-      )}
+        )}
 
       <Modal
         isOpen={showAuthModal}
@@ -324,4 +324,4 @@ const Navigation: React.FC = () => {
   );
 };
 
-export default Navigation;
+export default Navigation; 

@@ -181,91 +181,83 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
         </a>
       </div>
       <section className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">영어 교육 전문가를 위한 AI 영어 문제 생성 플랫폼</h1>
-          <p className="hero-description">
-            사진 하나로 고등 영어 내신 문제를 만듭니다.
-          </p>
-          <p className="hero-description">
-            지문을 사진으로 붙이면 학원 수업에 바로 쓸 수 있는 내신 문제가 나옵니다.
-          </p>
-          <div className="hero-features">
-            <div className="hero-feature-item">
-              <span className="hero-feature-check">✔</span>
-              <span className="hero-feature-text">학교 내신 대비용</span>
-            </div>
-            <div className="hero-feature-item">
-              <span className="hero-feature-check">✔</span>
-              <span className="hero-feature-text">학원 강사용</span>
-            </div>
-            <div className="hero-feature-item">
-              <span className="hero-feature-check">✔</span>
-              <span className="hero-feature-text">인쇄용 문서 디자인</span>
-            </div>
+        <h1 className="hero-title">영어 교육 전문가를 위한 AI 영어 문제 생성 플랫폼</h1>
+        <p className="hero-description">
+          이미지(사진) 하나로 고등 영어 내신 문제를 만듭니다.<br/>
+          지문을 사진으로 붙이면 학원 수업에 바로 쓸 수 있는 내신 문제가 나옵니다.
+        </p>
+        <div className="hero-features">
+          <div className="hero-feature-item">
+            <span className="hero-feature-check">✔</span>
+            <span className="hero-feature-text">학교 내신 대비용</span>
           </div>
-          <div className="hero-benefits">
-            <div className="hero-benefit-item">
-              <IconWrapper icon={HiSparkles} className="hero-benefit-icon" />
-              <span className="hero-benefit-text">OpenAI, GPT-4o 이상의 AI 모델을 활용한 문제생성</span>
-            </div>
-            <div className="hero-benefit-item">
-              <IconWrapper icon={HiClipboardDocumentList} className="hero-benefit-icon" />
-              <span className="hero-benefit-text">15가지의 유형의 문제생성 가능</span>
-            </div>
-            <div className="hero-benefit-item">
-              <IconWrapper icon={HiClock} className="hero-benefit-icon" />
-              <span className="hero-benefit-text">문제생성 시간 50%이상 절약 가능</span>
-            </div>
+          <div className="hero-feature-item">
+            <span className="hero-feature-check">✔</span>
+            <span className="hero-feature-text">학원 강사용</span>
           </div>
-          <div className="pc-notice-box">
-            <p className="pc-notice-text">이 웹사이트는 PC환경에 최적화 되어있습니다. 원활한 이용을 위해서는 PC(노트북)을 이용해 주세요</p>
+          <div className="hero-feature-item">
+            <span className="hero-feature-check">✔</span>
+            <span className="hero-feature-text">인쇄용 문서 디자인</span>
           </div>
+        </div>
+        <div className="hero-benefits">
+          <div className="hero-benefit-item">
+            <IconWrapper icon={HiSparkles} className="hero-benefit-icon" />
+            <span className="hero-benefit-text">OpenAI, GPT-4o 이상의 AI 모델을 활용한 문제생성</span>
+          </div>
+          <div className="hero-benefit-item">
+            <IconWrapper icon={HiClipboardDocumentList} className="hero-benefit-icon" />
+            <span className="hero-benefit-text">15가지의 유형의 문제생성 가능</span>
+          </div>
+          <div className="hero-benefit-item">
+            <IconWrapper icon={HiClock} className="hero-benefit-icon" />
+            <span className="hero-benefit-text">문제생성 시간 50%이상 절약 가능</span>
+          </div>
+        </div>
+        <div className="pc-notice-box">
+          <p className="pc-notice-text">이 웹사이트는 PC환경에 최적화 되어있습니다. 원활한 이용을 위해서는 PC(노트북)을 이용해 주세요</p>
         </div>
       </section>
 
       <section className="cta-section" style={{ marginTop: '0' }}>
-        <div className="cta-content">
-          <h3>영어 학습 지도를 위한 새로운 툴을 경험해보세요</h3>
-          <p>AI 모델링을 통해 특화된 영어 문제 생성으로 준비 시간을 단축하고 집중력 있는 학습을 유도합니다<br />
-             캡처이미지나 사진으로 영어단어문제를 만들어보세요.
-          </p>
-          <div className="cta-buttons">
-            <button 
-              className="cta-word-study"
-              onClick={() => {
-                console.log('단어문제 생성해보기 버튼 클릭됨');
-                setShowWordStudyIntro(true);
-              }}
-            >
-              단어문제 생성해보기
-            </button>
-            <button 
-              className="cta-sample-download"
-              onClick={() => navigate('/sample-problems')}
-            >
-              샘플 문제 다운로드
-            </button>
-          </div>
+        <h3>영어 학습 지도를 위한 새로운 툴을 경험해보세요</h3>
+        <p>AI 모델링을 통해 특화된 영어 문제 생성으로 준비 시간을 단축하고 집중력 있는 학습을 유도합니다. <br/>
+        캡처이미지나 사진으로 영어단어문제를 만들어보세요.
+        </p>
+        <div className="cta-buttons">
+          <button 
+            className="cta-word-study"
+            onClick={() => {
+              console.log('단어문제 생성해보기 버튼 클릭됨');
+              setShowWordStudyIntro(true);
+            }}
+          >
+            단어문제 생성해보기
+          </button>
+          <button 
+            className="cta-sample-download"
+            onClick={() => navigate('/sample-problems')}
+          >
+            샘플 문제 다운로드
+          </button>
         </div>
       </section>
 
       <section className="how-to-work-section">
-        <div className="how-to-work-content">
-          <h3 className="how-to-work-title">
-            <span className="title-highlight">문제 생성</span> 프로세스
-          </h3>
-          <p className="how-to-work-description">
-            간단한 3단계로 전문적인 영어 문제를 생성하세요
-          </p>
-          <div className="how-to-work-image-container">
-            <div className="image-wrapper">
-              <img 
-                src="/images/howtowork.png" 
-                alt="문제 생성 프로세스" 
-                className="how-to-work-image"
-              />
-              <div className="image-glow"></div>
-            </div>
+        <h3 className="how-to-work-title">
+          <span className="title-highlight">문제 생성</span> 프로세스
+        </h3>
+        <p className="how-to-work-description">
+          간단한 3단계로 전문적인 영어 문제를 생성하세요
+        </p>
+        <div className="how-to-work-image-container">
+          <div className="image-wrapper">
+            <img 
+              src="/images/howtowork.png" 
+              alt="문제 생성 프로세스" 
+              className="how-to-work-image"
+            />
+            <div className="image-glow"></div>
           </div>
         </div>
       </section>

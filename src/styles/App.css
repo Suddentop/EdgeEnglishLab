@@ -115,6 +115,8 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  width: 100%;
+  overflow-x: hidden;
   font-family: var(--font-family-primary);
   color: var(--secondary-900);
   background-color: var(--secondary-50);
@@ -925,13 +927,13 @@ textarea#text-input:focus {
 }
 @media (max-width: 600px) {
   .App-main {
-    max-width: 100vw !important;
+    max-width: 100% !important;
     padding: 0 0.75rem !important;
     padding-bottom: 1rem !important;
     margin-top: 65px !important; /* 네비게이션바 높이(60px) + 최소 여백(5px) */
     margin-left: 0 !important; /* 사이드바가 숨겨지므로 마진 제거 */
     margin-right: 0 !important; /* 오른쪽 마진 제거 */
-    width: 100vw !important; /* 전체 너비 사용 */
+    width: 100% !important; /* 전체 너비 사용 */
     box-sizing: border-box !important;
   }
   
@@ -1017,12 +1019,12 @@ textarea#text-input:focus {
   
   .App-main {
     padding: 0 0.75rem !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     padding-bottom: 24px !important; /* 모바일에서 하단 여백 */
     margin-top: 65px !important; /* 네비게이션바 높이(60px) + 최소 여백(5px) */
     margin-left: 0 !important; /* 사이드바가 숨겨지므로 마진 제거 */
     margin-right: 0 !important; /* 오른쪽 마진 제거 */
-    width: 100vw !important; /* 전체 너비 사용 */
+    width: 100% !important; /* 전체 너비 사용 */
     box-sizing: border-box !important;
   }
   
@@ -1515,10 +1517,13 @@ textarea#text-input:focus {
    ========================= */
 .App {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
   display: flex;
   flex-direction: row;
   background: #ffffff;
   font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
+  overflow-x: hidden;
 }
 
 /* =========================
@@ -1616,17 +1621,18 @@ textarea#text-input:focus {
 .hero-title {
   font-family: var(--font-family-primary);
   font-weight: 800;
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-top: 0;
   margin-bottom: var(--spacing-lg);
   color: #1a202c;
   line-height: 1.2;
   letter-spacing: -0.02em;
+  text-align: center;
 }
 
 /* 히어로 섹션 설명 텍스트 */
 .hero-description {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   line-height: 1.7;
   max-width: 900px;
   margin: 0 auto 0.5rem auto;
@@ -1673,7 +1679,6 @@ textarea#text-input:focus {
   justify-content: center;
   gap: 0.3rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0 !important;
   border-top: 3px solid transparent !important;
   min-height: 80px;
   position: relative;
@@ -1737,7 +1742,7 @@ textarea#text-input:focus {
 }
 
 .hero-benefit-text {
-  font-size: 1.125rem;
+  font-size: 1.2rem;
   color: #1a202c;
   font-weight: 500;
   line-height: 1.4;
@@ -1798,33 +1803,34 @@ textarea#text-input:focus {
 
 /* PC 환경 안내 박스 */
 .pc-notice-box {
-  background-color: #fef3c7;
-  border: 1px solid #fcd34d;
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
   margin-top: 2rem;
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
   position: relative;
   z-index: 1;
+  text-align: center;
 }
 
 .pc-notice-text {
   color: #92400e;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   text-align: center;
   margin: 0;
   line-height: 1.6;
   letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 /* PC 환경 안내 박스 모바일 반응형 */
 @media (max-width: 768px) {
   .pc-notice-box {
-    padding: 0.8rem 1rem;
+    padding: 0;
     margin-top: 1.5rem;
   }
   
@@ -1850,16 +1856,17 @@ textarea#text-input:focus {
 
 /* 서비스 섹션 제목 */
 .services-header h3 {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
   color: #1a202c;
   font-weight: 800;
-  letter-spacing: -1px;
+  letter-spacing: -0.02em;
+  text-align: center;
 }
 
 /* 서비스 섹션 설명 */
 .services-header p {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: #4a5568;
   max-width: 800px;
   margin: 0 auto;
@@ -1885,7 +1892,6 @@ textarea#text-input:focus {
   padding: 0.5rem 1rem 1rem 1rem;
   box-shadow: var(--shadow-lg);
   transition: all var(--transition-normal);
-  border: 1px solid var(--secondary-200);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -1941,7 +1947,7 @@ textarea#text-input:focus {
 .service-title {
   font-family: var(--font-family-primary);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: var(--secondary-900);
   margin-bottom: 0;
   letter-spacing: -0.02em;
@@ -1952,7 +1958,7 @@ textarea#text-input:focus {
 .service-description {
   color: var(--secondary-600);
   line-height: 1.7;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   margin-bottom: var(--spacing-sm);
   font-weight: 400;
 }
@@ -2046,10 +2052,11 @@ textarea#text-input:focus {
 
 /* 특징 섹션 제목 */
 .features-header h3 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: #1a202c;
   margin-bottom: 1rem;
   font-weight: 800;
+  text-align: center;
 }
 
 /* 특징 카드들 그리드 레이아웃 */
@@ -2068,9 +2075,8 @@ textarea#text-input:focus {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-radius: var(--radius-2xl);
-  padding: 0.5rem 1rem 1rem 1rem;
+  padding: 0.25rem 1rem 0.5rem 1rem;
   text-align: center;
-  border: 1px solid var(--secondary-200);
   transition: all var(--transition-normal);
   box-shadow: var(--shadow-lg);
   display: flex;
@@ -2090,15 +2096,17 @@ textarea#text-input:focus {
 /* 특징 카드 아이콘 */
 .feature-icon {
   font-size: 3rem;
-  margin-bottom: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 0.25rem;
   color: #3182ce;
 }
 
 /* 특징 카드 제목 */
 .feature-item h4 {
   color: #1a365d;
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 0.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
@@ -2106,7 +2114,8 @@ textarea#text-input:focus {
 .feature-item p {
   color: #4a5568;
   line-height: 1.6;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
+  margin-top: 0;
 }
 
 /* ===========================
@@ -2129,6 +2138,11 @@ textarea#text-input:focus {
 /* CTA 섹션 배경 애니메이션 효과 제거 */
 .cta-section::before {
   display: none;
+}
+
+/* CTA 콘텐츠 컨테이너 */
+.cta-content {
+  border: 2px solid #00FF00 !important; /* 초록색 - CTA 콘텐츠 */
 }
 
 /* 반짝이는 애니메이션 */
@@ -2201,23 +2215,26 @@ textarea#text-input:focus {
 .stat-item:nth-child(4) { animation-delay: 0.8s; }
 
 /* CTA 섹션 제목 */
-.cta-content h3 {
-  font-size: 2rem;
+.cta-section h3 {
+  font-size: 1.5rem;
   color: #1a202c;
   margin-top: 0rem;
   margin-bottom: 1rem;
   font-weight: 800;
+  text-align: center;
 }
 
 /* CTA 섹션 설명 */
-.cta-content p {
+.cta-section p {
   font-size: 1.2rem;
   color: #4a5568;
   margin-bottom: 1rem;
-  max-width: 800px;
+  max-width: none;
   margin-left: auto;
   margin-right: auto;
-  line-height: 1.6;
+  line-height: 1.7;
+  font-weight: 400;
+  text-align: center;
 }
 
 /* CTA 버튼들 컨테이너 */
@@ -2371,17 +2388,17 @@ textarea#text-input:focus {
 
   /* 히어로 제목 모바일 크기 */
   .hero-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
   
   /* 서비스 섹션 제목 모바일 크기 (히어로 제목과 동일) */
   .services-header h3 {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
   
   /* 특징 섹션 제목 모바일 크기 (히어로 제목과 동일) */
   .features-header h3 {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   /* 히어로 설명 모바일 크기 */
@@ -2615,19 +2632,19 @@ textarea#text-input:focus {
   }
 
   .hero-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     line-height: 1.2;
   }
   
   /* 서비스 섹션 제목 작은 모바일 크기 (히어로 제목과 동일) */
   .services-header h3 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     line-height: 1.2;
   }
   
   /* 특징 섹션 제목 작은 모바일 크기 (히어로 제목과 동일) */
   .features-header h3 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     line-height: 1.2;
   }
 
@@ -2759,12 +2776,12 @@ textarea#text-input:focus {
     padding: 1.5rem 0;
   }
 
-  .cta-content h3 {
+  .cta-section h3 {
     font-size: 1.3rem;
   }
 
-  .cta-content p {
-    font-size: 0.8rem;
+  .cta-section p {
+    font-size: 1.125rem;
   }
 
   .cta-primary,
@@ -2793,7 +2810,7 @@ textarea#text-input:focus {
 .hero-content h2,
 .services-header h3,
 .features-header h3,
-.cta-content h3,
+.cta-section h3,
 .generator-header h2,
 .quiz-header h2,
 .service-card h4,
@@ -4392,18 +4409,19 @@ textarea#text-input:focus {
 }
 
 .how-to-work-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #1a202c;
   margin-top: 1.25rem;
-  margin-bottom: 0rem;
+  margin-bottom: 1rem;
   font-family: 'Noto Sans KR', sans-serif;
   text-shadow: none;
   letter-spacing: -0.02em;
+  text-align: center;
 }
 
 .how-to-work-description {
-  font-size: 1.375rem;
+  font-size: 1.2rem;
   color: #4a5568;
   margin-top: 0rem;
   margin-bottom: 2rem;
@@ -4412,6 +4430,7 @@ textarea#text-input:focus {
   margin-right: auto;
   line-height: 1.7;
   font-weight: 400;
+  text-align: center;
 }
 
 .how-to-work-image-container {
@@ -4427,7 +4446,6 @@ textarea#text-input:focus {
   padding: 2rem;
   transform: none;
   transition: all 0.3s ease;
-  border: 1px solid #e5e7eb;
 }
 
 .how-to-work-image-container:hover {
@@ -4493,7 +4511,7 @@ textarea#text-input:focus {
   }
   
   .how-to-work-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
     margin-bottom: 1.25rem;
     color: #1a202c;
   }
@@ -4536,7 +4554,7 @@ textarea#text-input:focus {
   }
   
   .how-to-work-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     margin-bottom: 1rem;
     letter-spacing: -0.01em;
     color: #1a202c;
