@@ -1386,6 +1386,63 @@ exports.updateAllUserPoints = functions.https.onRequest((req, res) => {
 });
 
 /**
+ * 이메일 존재 여부 확인 함수 (로그인 오류 메시지 구분용)
+ */
+exports.checkEmailExists = functions.https.onRequest((req, res) => {
+  return cors(req, res, async () => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        res.status(400).json({ success: false, exists: false, message: '이메일이 필요합니다.' });
+        return;
+      }
+      
+      console.log(`이메일 존재 여부 확인: ${email}`);
+      
+      // Firebase Auth에서 이메일 존재 여부 확인 (관리자 권한으로 정확하게 확인 가능)
+      try {
+        const userRecord = await admin.auth().getUserByEmail(email);
+        console.log(`이메일 존재 확인됨: ${email}, UID: ${userRecord.uid}`);
+        res.json({
+          success: true,
+          exists: true,
+          email: email,
+          uid: userRecord.uid
+        });
+      } catch (error) {
+        // auth/user-not-found 오류는 이메일이 존재하지 않음을 의미
+        if (error.code === 'auth/user-not-found') {
+          console.log(`이메일 미등록 확인됨: ${email}`);
+          res.json({
+            success: true,
+            exists: false,
+            email: email
+          });
+        } else {
+          // 다른 오류 (예: auth/invalid-email)
+          console.error(`이메일 확인 오류: ${email}`, error);
+          res.status(500).json({
+            success: false,
+            exists: null,
+            message: '이메일 확인 중 오류가 발생했습니다.',
+            error: error.message
+          });
+        }
+      }
+    } catch (error) {
+      console.error('이메일 존재 여부 확인 오류:', error);
+      res.status(500).json({
+        success: false,
+        exists: null,
+        message: '이메일 확인 중 오류가 발생했습니다.',
+        error: error.message
+      });
+    }
+  });
+});
+
+/**
  * 사용자 계정 상태 확인 함수 (이메일 기반)
  */
 exports.checkUserAccountStatus = functions.https.onRequest((req, res) => {

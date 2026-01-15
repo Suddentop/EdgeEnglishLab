@@ -40,8 +40,9 @@ const Login: React.FC = () => {
         await login(values.email, values.password, values.rememberMe);
         navigate('/');
       } catch (err: any) {
+        const isFirebaseDefaultMessage = typeof err.message === 'string' && err.message.startsWith('Firebase: Error');
         // 에러 메시지가 이미 상세하게 설정되어 있으면 그대로 사용
-        if (err.message) {
+        if (err.message && !isFirebaseDefaultMessage) {
           setError(err.message);
         } else if (err.code === 'auth/user-not-found') {
           setError('등록되지 않은 이메일 주소입니다.');

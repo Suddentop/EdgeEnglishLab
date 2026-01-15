@@ -7,7 +7,8 @@ import {
   User,
   setPersistence,
   browserSessionPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  fetchSignInMethodsForEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { POINT_POLICY } from '../utils/pointConstants';
@@ -28,6 +29,48 @@ interface UserData {
   usedPoints?: number;
   createdAt?: string;
 }
+
+const buildAuthError = (code: string, message: string) => {
+  const error = new Error(message) as Error & { code?: string };
+  error.code = code;
+  return error;
+};
+
+/**
+ * Cloud Function을 통해 이메일 존재 여부 확인 (서버 측에서 정확하게 확인)
+ */
+const checkAuthEmailExists = async (email: string): Promise<boolean | null> => {
+  try {
+    console.log('🔍 이메일 존재 여부 확인 시작 (Cloud Function):', email);
+    
+    const response = await fetch('https://us-central1-edgeenglishlab.cloudfunctions.net/checkEmailExists', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email })
+    });
+
+    if (!response.ok) {
+      console.warn('⚠️ Cloud Function 호출 실패:', response.status, response.statusText);
+      return null;
+    }
+
+    const result = await response.json();
+    console.log('🔍 이메일 존재 여부 확인 결과:', result);
+    
+    if (result.success === true) {
+      return result.exists === true;
+    } else {
+      console.warn('⚠️ Cloud Function 응답 오류:', result.message);
+      return null;
+    }
+  } catch (error: any) {
+    console.warn('⚠️ 이메일 존재 여부 확인 실패:', error);
+    console.warn('⚠️ 오류 메시지:', error?.message);
+    return null;
+  }
+};
 
 /**
  * 이메일로 사용자 검색
@@ -53,16 +96,35 @@ export const findUserByEmail = async (email: string): Promise<UserData | null> =
   }
 };
 
+const checkUserListEmailExists = async (email: string): Promise<boolean | null> => {
+  try {
+    const user = await findUserByEmail(email);
+    return Boolean(user);
+  } catch (error) {
+    console.warn('이용자 목록 이메일 확인 실패:', error);
+    return null;
+  }
+};
+
 /**
  * 이메일로 로그인
  */
 export const signInWithEmail = async (email: string, password: string, rememberMe: boolean = false) => {
+  // 로그인 시도 전에 이메일 존재 여부 확인 (더 정확한 오류 메시지를 위해)
+  // catch 블록에서도 접근 가능하도록 함수 스코프에 선언
+  let emailExistsBeforeLogin: boolean | null = null;
+  
   try {
     // 세션 단위 또는 자동 로그인(7일) 여부에 따라 퍼시스턴스 설정
     const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
     await setPersistence(auth, persistence);
 
-    // Firebase Auth 로그인 시도 (로그인 전에는 Firestore 접근 권한이 없으므로 먼저 시도)
+    // 로그인 시도 전에 이메일 존재 여부 확인
+    console.log('🔐 로그인 시도 전 이메일 확인:', email);
+    emailExistsBeforeLogin = await checkAuthEmailExists(email);
+    console.log('🔐 이메일 존재 여부 (로그인 전):', emailExistsBeforeLogin);
+
+    // Firebase Auth 로그인 시도
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
     // 로그인 성공 후 잠금 상태 확인 및 실패 횟수 리셋
@@ -103,6 +165,37 @@ export const signInWithEmail = async (email: string, password: string, rememberM
     console.error('로그인 오류:', error);
     console.error('오류 코드:', error.code);
     console.error('오류 메시지:', error.message);
+
+    if (error.code === 'auth/invalid-credential') {
+      console.log('❌ auth/invalid-credential 오류 발생');
+      
+      // 로그인 시도 전에 확인한 결과를 우선 사용
+      let authEmailExists = emailExistsBeforeLogin;
+      
+      // 만약 로그인 전 확인이 실패했거나 null이면 재확인
+      if (authEmailExists === null || authEmailExists === undefined) {
+        console.log('⚠️ 로그인 전 확인 실패 → 재확인 시도');
+        authEmailExists = await checkAuthEmailExists(email);
+        console.log('❌ 재확인 결과:', authEmailExists);
+      } else {
+        console.log('✅ 로그인 전 확인 결과 사용:', authEmailExists);
+      }
+      
+      if (authEmailExists === true) {
+        // 이메일이 Firebase Auth에 등록되어 있음 → 비밀번호 오류
+        console.log('✅ 이메일 존재 확인됨 → 비밀번호 오류로 판단');
+        throw buildAuthError('auth/wrong-password', '비밀번호가 올바르지 않습니다.');
+      } else if (authEmailExists === false) {
+        // 이메일이 Firebase Auth에 등록되어 있지 않음 → 등록되지 않은 이메일
+        console.log('❌ 이메일 미등록 확인됨 → 등록되지 않은 이메일로 판단');
+        throw buildAuthError('auth/user-not-found', '등록되지 않은 이메일 주소입니다.');
+      } else {
+        // 확인 실패 (네트워크 오류 등) → 안전하게 비밀번호 오류로 처리
+        // (이메일이 존재하는데 확인이 실패한 경우를 대비)
+        console.log('⚠️ 이메일 존재 여부 확인 실패 → 기본값으로 비밀번호 오류로 처리');
+        throw buildAuthError('auth/wrong-password', '비밀번호가 올바르지 않습니다.');
+      }
+    }
     
     // 비밀번호 오류인 경우 Cloud Function을 통해 실패 횟수 추적
     if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
