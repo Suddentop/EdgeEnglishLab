@@ -773,17 +773,58 @@ const Work_14_FillSentence: React.FC = () => {
             const quizAnswers = userAnswers[quizId] || [];
             
             return (
-              <div key={quizId} style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                  <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#14</span>
+              <div key={quizId} className="quiz-item-card" style={{ 
+                marginBottom: '2rem', 
+                padding: '1.5rem',
+                backgroundColor: '#fff',
+                border: '1px solid #e0e0e0',
+                borderRadius: '0'
+              }}>
+                <div className="quiz-item-header work14-header" style={{ 
+                  marginBottom: '1rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid #e0e0e0',
+                  paddingBottom: '0.5rem'
+                }}>
+                  <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                    문제 {idx + 1} : 빈칸(문장) 채우기
+                  </h3>
+                  <span style={{ 
+                    fontSize: '0.9rem', 
+                    color: '#666',
+                    fontWeight: '500'
+                  }}>
+                    유형#14
+                  </span>
                 </div>
                 
-                <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.18rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                  <span>다음 빈칸에 들어갈 문장을 직접 입력하시오.</span>
-                  <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#14</span>
+                <div className="problem-instruction work14-instruction" style={{
+                  fontWeight: 500, 
+                  fontSize: '0.95rem', 
+                  background: '#f5f5f5', 
+                  color: '#000', 
+                  padding: '0.6rem 1rem', 
+                  borderRadius: '0', 
+                  marginBottom: '1.5rem',
+                  textAlign: 'left',
+                  borderTop: '1px solid #e0e0e0',
+                  borderBottom: '1px solid #e0e0e0'
+                }}>
+                  다음 빈칸에 들어갈 문장을 직접 입력하시오.
                 </div>
-                <div  style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#FFF3CD', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit', whiteSpace:'pre-wrap', wordWrap:'break-word', overflowWrap:'break-word', overflow:'hidden'}}>
+                <div className="problem-passage work14-passage" style={{
+                  fontSize: '1rem',
+                  lineHeight: 1.7,
+                  margin: '0 0 1.5rem 0',
+                  background: '#ffffff',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid transparent',
+                  padding: '1rem',
+                  fontFamily: 'inherit',
+                  color: '#333'
+                }}>
                   <div dangerouslySetInnerHTML={{ __html: displayBlankedText }} />
                 </div>
                 <div className="problem-answers" style={{margin:'1.2rem 0'}}>
@@ -847,24 +888,17 @@ const Work_14_FillSentence: React.FC = () => {
 
                 {/* 본문 해석 */}
                 {quiz.translation && (
-                  <div style={{
-                    marginTop: '1.2rem',
-                    padding: '1rem',
-                    backgroundColor: '#F1F8E9',
-                    borderRadius: '8px',
-                    border: '2px solid #e3e6f0'
-                  }}>
-                    <div style={{
-                      fontWeight: '700',
-                      marginBottom: '0.5rem',
-                      color: '#000'
-                    }}>
-                      본문 해석:
-                    </div>
-                    <div style={{
+                  <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                    <div className="translation-content work14-translation" style={{
+                      background: '#F5F5F5',
+                      backgroundColor: '#F5F5F5',
+                      padding: '1rem',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      lineHeight: 1.6,
-                      color: '#333'
+                      lineHeight: 1.7,
+                      color: '#333',
+                      border: '1px solid transparent'
                     }}>
                       {quiz.translation}
                     </div>
@@ -874,19 +908,17 @@ const Work_14_FillSentence: React.FC = () => {
             );
           })}
         </div>
-        {/* 인쇄 영역 - PrintFormatWork14New에서 동적으로 처리하므로 여기서는 제거 */}
       </div>
     );
   }
 
-  // 입력/옵션/버튼 UI
   return (
-    <div className="quiz-generator">
+    <div className="quiz-generator no-print">
       <div className="generator-header">
-        <h2>메뉴#15. 빈칸 문장 빈칸 채우기 (문장-주관식)</h2>
-        <p>영어 본문에서 2~3개의 문장을 빈칸으로 바꾸고, 빈칸에 원래 문장을 채우는 주관식 문제를 생성합니다.<br />시험대비 효과적인 본문 암기를 위한 문제 생성을 위한 툴입니다.</p>
+        <h2>메뉴#14. 빈칸(문장) 채우기 문제 생성</h2>
+        <p>영어 본문을 입력하면 빈칸에 들어갈 문장을 직접 입력하는 문제를 생성합니다.</p>
       </div>
-      
+
       <div className="input-items-list">
         {items.map((item, index) => (
           <div key={item.id} className={`input-item ${item.isExpanded ? 'expanded' : ''}`}>
@@ -898,51 +930,48 @@ const Work_14_FillSentence: React.FC = () => {
                 </span>
               </div>
               <div className="input-item-controls">
-                <button className="icon-btn delete" onClick={(e) => { e.stopPropagation(); removeItem(item.id); }} title="삭제">🗑️</button>
+                <button 
+                  className="icon-btn delete" 
+                  onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
+                  title="삭제"
+                >
+                  🗑️
+                </button>
                 <span className="expand-icon">{item.isExpanded ? '🔼' : '🔽'}</span>
               </div>
             </div>
 
             {item.isExpanded && (
               <div className="input-item-content">
+                {/* 입력 방식 선택 */}
                 <div className="input-type-section" style={{ marginBottom: '15px' }}>
                   <label>
                     <input
                       type="radio"
-                      checked={item.inputType === 'clipboard'} 
-                      onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })} 
+                      checked={item.inputType === 'clipboard'}
+                      onChange={() => updateItem(item.id, { inputType: 'clipboard', error: '' })}
                     />
                     <span>📸 캡처화면 붙여넣기</span>
-                    <button
-                      type="button"
-                      className="screenshot-help-btn"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setShowHelpModal(true);
-                      }}
-                      title="화면 캡처 방법 보기"
-                    >
-                      ?
-                    </button>
                   </label>
                   <label>
                     <input
                       type="radio"
-                      checked={item.inputType === 'file'} 
-                      onChange={() => updateItem(item.id, { inputType: 'file', error: '' })} 
+                      checked={item.inputType === 'file'}
+                      onChange={() => updateItem(item.id, { inputType: 'file', error: '' })}
                     />
                     <span>🖼️ 이미지 파일 첨부</span>
                   </label>
                   <label>
                     <input
                       type="radio"
-                      checked={item.inputType === 'text'} 
-                      onChange={() => updateItem(item.id, { inputType: 'text', error: '' })} 
+                      checked={item.inputType === 'text'}
+                      onChange={() => updateItem(item.id, { inputType: 'text', error: '' })}
                     />
                     <span>✍️ 직접 붙여넣기</span>
                   </label>
                 </div>
-                   
+
+                {/* 입력 UI */}
                 {item.inputType === 'clipboard' && (
                   <div
                     className="input-guide" 

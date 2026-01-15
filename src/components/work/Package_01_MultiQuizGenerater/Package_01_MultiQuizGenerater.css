@@ -1254,3 +1254,216 @@
   color: #7a7a9a;
   margin-bottom: 0.2rem;
 }
+
+/* 패키지#01 전용 스타일 - 인쇄(문제) 화면 디자인 */
+/* 모든 Work 유형 공통 스타일 */
+.problem-instruction.package01-work01-instruction,
+.problem-instruction.package01-work02-instruction,
+.problem-instruction.package01-work03-instruction,
+.problem-instruction.package01-work04-instruction,
+.problem-instruction.package01-work05-instruction,
+.problem-instruction.package01-work06-instruction,
+.problem-instruction.package01-work07-instruction,
+.problem-instruction.package01-work08-instruction,
+.problem-instruction.package01-work09-instruction,
+.problem-instruction.package01-work10-instruction,
+.problem-instruction.package01-work11-instruction,
+.problem-instruction.package01-work13-instruction,
+.problem-instruction.package01-work14-instruction {
+  background: #f5f5f5 !important;
+  background-color: #f5f5f5 !important;
+  color: #000 !important;
+  text-align: left !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.problem-passage.package01-work01-passage,
+.problem-passage.package01-work02-passage,
+.problem-passage.package01-work03-passage,
+.problem-passage.package01-work04-passage,
+.problem-passage.package01-work05-passage,
+.problem-passage.package01-work06-passage,
+.problem-passage.package01-work07-passage,
+.problem-passage.package01-work08-passage,
+.problem-passage.package01-work09-passage,
+.problem-passage.package01-work10-passage,
+.problem-passage.package01-work13-passage,
+.problem-passage.package01-work14-passage {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+/* Work_11 문장별 해석 컨테이너 */
+.sentences-container.package01-work11-sentences-container {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+.sentence-item.package01-work11-sentence-item {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.sentence-item.package01-work11-sentence-item:hover {
+  border-color: transparent !important;
+}
+
+/* 패키지#01 Work_11 정답 컨테이너 배경색 흰색으로 변경 */
+.work-11-answer.package01-work11-answer {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+.work-11-answer.package01-work11-answer .package01-work11-answer-item,
+.package01-work11-answer-item {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+/* 패키지#01 Work_13 정답 폰트 색상 검정색으로 변경 */
+.package01-work13-answer {
+  color: #000000 !important;
+}
+
+.package01-work13-answer span {
+  color: #000000 !important;
+}
+
+/* 패키지#01 Work_14 정답 폰트 색상 검정색으로 변경 및 정답 항목 배경색 연한 회색 */
+.package01-work14-answer {
+  color: #000000 !important;
+}
+
+.package01-work14-answer > div {
+  color: #000000 !important;
+}
+
+.package01-work14-answer-item {
+  background-color: #f5f5f5 !important;
+  background: #f5f5f5 !important;
+  color: #000000 !important;
+}
+
+/* 패키지#01 Work_14 정답 영어 문장 폰트 색상 검정색으로 강제 적용 */
+.package01-work14-answer-item,
+.package01-work14-answer-item * {
+  color: #000000 !important;
+}
+
+/* 패키지#01 Work_02 변경된 본문 컨테이너 배경색 변경 */
+.text-content.package01-work02-modified-text {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
+  border: 1px solid transparent !important;
+}
+
+/* 패키지#01 Work_11 정답 영어 문장 폰트 색상 검정색으로 변경 */
+.package01-work11-answer-sentence {
+  color: #000000 !important;
+}
+
+/* 패키지#01 Work_06 주요문장 컨테이너 상단 간격 추가 */
+.package01-work06-missing-sentence {
+  margin-top: 1.5rem !important;
+}
+
+/* 패키지#01 Work_06 주요문장 영어 문장 폰트 색상 검정색으로 변경 */
+.package01-work06-missing-sentence-text {
+  color: #000000 !important;
+}
+
+/* 패키지#01 전용 한글해석 컨테이너 - 배경색 변경 */
+.quiz-item-card .translation-content.package01-work01-translation,
+.quiz-item-card .translation-content.package01-work02-translation,
+.quiz-item-card .translation-content.package01-work03-translation,
+.quiz-item-card .translation-content.package01-work04-translation,
+.quiz-item-card .translation-content.package01-work05-translation,
+.quiz-item-card .translation-content.package01-work06-translation,
+.quiz-item-card .translation-content.package01-work07-translation,
+.quiz-item-card .translation-content.package01-work08-translation,
+.quiz-item-card .translation-content.package01-work09-translation,
+.quiz-item-card .translation-content.package01-work10-translation,
+.quiz-item-card .translation-content.package01-work11-translation,
+.quiz-item-card .translation-content.package01-work13-translation,
+.quiz-item-card .translation-content.package01-work14-translation,
+.quiz-display .translation-content.package01-work01-translation,
+.quiz-display .translation-content.package01-work02-translation,
+.quiz-display .translation-content.package01-work03-translation,
+.quiz-display .translation-content.package01-work04-translation,
+.quiz-display .translation-content.package01-work05-translation,
+.quiz-display .translation-content.package01-work06-translation,
+.quiz-display .translation-content.package01-work07-translation,
+.quiz-display .translation-content.package01-work08-translation,
+.quiz-display .translation-content.package01-work09-translation,
+.quiz-display .translation-content.package01-work10-translation,
+.quiz-display .translation-content.package01-work11-translation,
+.quiz-display .translation-content.package01-work13-translation,
+.quiz-display .translation-content.package01-work14-translation,
+.translation-content.package01-work01-translation,
+.translation-content.package01-work02-translation,
+.translation-content.package01-work03-translation,
+.translation-content.package01-work04-translation,
+.translation-content.package01-work05-translation,
+.translation-content.package01-work06-translation,
+.translation-content.package01-work07-translation,
+.translation-content.package01-work08-translation,
+.translation-content.package01-work09-translation,
+.translation-content.package01-work10-translation,
+.translation-content.package01-work11-translation,
+.translation-content.package01-work13-translation,
+.translation-content.package01-work14-translation,
+.translation-section .translation-content.package01-work01-translation,
+.translation-section .translation-content.package01-work02-translation,
+.translation-section .translation-content.package01-work03-translation,
+.translation-section .translation-content.package01-work04-translation,
+.translation-section .translation-content.package01-work05-translation,
+.translation-section .translation-content.package01-work06-translation,
+.translation-section .translation-content.package01-work07-translation,
+.translation-section .translation-content.package01-work08-translation,
+.translation-section .translation-content.package01-work09-translation,
+.translation-section .translation-content.package01-work10-translation,
+.translation-section .translation-content.package01-work11-translation,
+.translation-section .translation-content.package01-work13-translation,
+.translation-section .translation-content.package01-work14-translation {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
+  border: 1px solid transparent !important;
+}
+
+/* 모든 translation-content 중에서 package01-workXX-translation만 적용 */
+.translation-content.package01-work01-translation[style*="background"],
+.translation-content.package01-work02-translation[style*="background"],
+.translation-content.package01-work03-translation[style*="background"],
+.translation-content.package01-work04-translation[style*="background"],
+.translation-content.package01-work05-translation[style*="background"],
+.translation-content.package01-work06-translation[style*="background"],
+.translation-content.package01-work07-translation[style*="background"],
+.translation-content.package01-work08-translation[style*="background"],
+.translation-content.package01-work09-translation[style*="background"],
+.translation-content.package01-work10-translation[style*="background"],
+.translation-content.package01-work11-translation[style*="background"],
+.translation-content.package01-work13-translation[style*="background"],
+.translation-content.package01-work14-translation[style*="background"],
+.translation-content.package01-work01-translation[style*="backgroundColor"],
+.translation-content.package01-work02-translation[style*="backgroundColor"],
+.translation-content.package01-work03-translation[style*="backgroundColor"],
+.translation-content.package01-work04-translation[style*="backgroundColor"],
+.translation-content.package01-work05-translation[style*="backgroundColor"],
+.translation-content.package01-work06-translation[style*="backgroundColor"],
+.translation-content.package01-work07-translation[style*="backgroundColor"],
+.translation-content.package01-work08-translation[style*="backgroundColor"],
+.translation-content.package01-work09-translation[style*="backgroundColor"],
+.translation-content.package01-work10-translation[style*="backgroundColor"],
+.translation-content.package01-work11-translation[style*="backgroundColor"],
+.translation-content.package01-work13-translation[style*="backgroundColor"],
+.translation-content.package01-work14-translation[style*="backgroundColor"] {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
+}

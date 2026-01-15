@@ -871,4 +871,52 @@
   .points-container {
     text-align: center;
   }
+}
+
+/* Work_09 전용 스타일 - 인쇄(문제) 화면 디자인 */
+.problem-passage.work09-passage {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+.problem-instruction.work09-instruction {
+  background: #f5f5f5 !important;
+  background-color: #f5f5f5 !important;
+  color: #000 !important;
+  text-align: left !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.problem-options.work09-options {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+.option.work09-option {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+/* Work_09 전용 한글해석 컨테이너 - 배경색 변경 */
+.quiz-item-card .translation-content.work09-translation,
+.quiz-display .translation-content.work09-translation,
+.quiz-content .translation-content.work09-translation,
+.quiz-generator .translation-content.work09-translation,
+.translation-content.work09-translation,
+.translation-section .translation-content.work09-translation,
+div.translation-content.work09-translation {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
+  border: 1px solid transparent !important;
+}
+
+/* 모든 translation-content 중에서 work09-translation만 적용 */
+.translation-content.work09-translation[style*="background"],
+.translation-content.work09-translation[style*="backgroundColor"] {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
 } 

@@ -693,27 +693,77 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
               const quizId = quiz.id || `quiz-${idx}`;
               
               return (
-                <div key={quizId} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
-                  <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#11</span>
+                <div key={quizId} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
+                  padding: '1.5rem',
+                  backgroundColor: '#fff',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
+                }}>
+                  <div className="quiz-item-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
+                  }}>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {idx + 1} : 문장별 해석
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#11
+                    </span>
                   </div>
 
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                    <span>다음 본문의 각 문장을 한국어로 해석하세요.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#11</span>
+                  <div className="problem-instruction work11-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
+                  }}>
+                    다음 본문의 각 문장을 한국어로 해석하세요.
                   </div>
                   
-                  <div className="sentences-container">
+                  <div className="sentences-container work11-sentences-container" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
+                  }}>
                     {quiz.sentences.map((sentence, index) => (
-                      <div key={index} className="sentence-item">
+                      <div key={index} className="sentence-item work11-sentence-item" style={{
+                        background: '#ffffff',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        padding: '0.5rem 0',
+                        marginBottom: '1rem',
+                        fontFamily: 'inherit',
+                        boxShadow: 'none'
+                      }}>
                         <div className="sentence-header">
                           <span className="sentence-number">{index + 1}.</span>
-                          <span className="sentence-content">{sentence}</span>
+                          <span className="sentence-content" style={{ color: '#333' }}>{sentence}</span>
                         </div>
                         <div className="translation-container">
                           <span className="translation-label">해석:</span>
-                          <div className="translation-answer" style={{marginTop:'0.5rem', color:'#1976d2', fontWeight:400}}>
+                          <div className="translation-answer" style={{marginTop:'0.5rem', color:'#333', fontWeight:400}}>
                             {quiz.translations[index]}
                           </div>
                         </div>

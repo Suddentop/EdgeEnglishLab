@@ -2979,73 +2979,94 @@ ${passage}`;
             // Work_01 (문장 순서 맞추기) 표시
             if (quizItem.workTypeId === '01' && quizItem.quiz) {
               return (
-                <div key={`work-01-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-01-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  <div className="work-header">
-                    <h3 style={{
-                      fontSize: '1.3rem',
-                      fontWeight: '700',
-                      color: '#000',
-                      margin: '0 0 1rem 0',
-                      padding: '0'
-                    }}>#01. 문장 순서 맞추기</h3>
+                  <div className="quiz-item-header package01-work01-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
+                  }}>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 문장 순서 맞추기
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#01
+                    </span>
                   </div>
                   
                   {/* 문제 지시문 */}
-                  <div className="problem-instruction work-01-problem-instruction" style={{
-                    fontWeight: '800',
-                    fontSize: '1.18rem',
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '1.2rem',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
+                  <div className="problem-instruction package01-work01-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>문제: 다음 단락들을 원래 순서대로 배열한 것을 고르세요</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#01</span>
+                    다음 단락들을 원래 순서대로 배열한 것을 고르시오.
                   </div>
 
                   {/* 섞인 단락들 */}
-                  <div className="problem-passage">
+                  <div className="problem-passage package01-work01-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
+                  }}>
                     {quizItem.quiz.shuffledParagraphs.map((paragraph, pIndex) => (
-                      <div key={paragraph.id} className="shuffled-paragraph">
+                      <div key={paragraph.id} className="shuffled-paragraph" style={{ marginBottom: '0.5rem' }}>
                         <strong>{paragraph.label}:</strong> {paragraph.content}
                       </div>
                     ))}
                   </div>
 
                   {/* 선택지 */}
-                  <div className="problem-options">
+                  <div className="problem-options package01-work01-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
+                  }}>
                     {quizItem.quiz.choices.map((choice, cIndex) => (
-                      <div key={cIndex} className="option">
-                        {['①', '②', '③', '④'][cIndex]} {choice.join(' → ')}
+                      <div key={cIndex} className="option" style={{
+                        display: 'block',
+                        fontSize: '1rem',
+                        margin: '0.5rem 0',
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
+                      }}>
+                        {`①②③④⑤`[cIndex] || `${cIndex+1}.`} {choice.join(' → ')}
+                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.quiz && quizItem.quiz.answerIndex === cIndex && (
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                        )}
                       </div>
                     ))}
-                  </div>
-
-                  {/* 정답 표시 */}
-                  <div className="screen-answer-footer" style={{
-                    color: '#1976d2', 
-                    fontWeight: 700, 
-                    fontSize: '1.1rem', 
-                    textAlign: 'center', 
-                    marginTop: '2rem', 
-                    padding: '0.8rem', 
-                    backgroundColor: '#f0f7ff', 
-                    borderRadius: '8px', 
-                    border: '2px solid #1976d2'
-                  }}>
-                    <span>{['①', '②', '③', '④'][quizItem.quiz.answerIndex || 0]} {quizItem.quiz.choices[quizItem.quiz.answerIndex || 0].join(' → ')}</span> <span>(정답)</span>
                   </div>
                 </div>
               );
@@ -3054,28 +3075,47 @@ ${passage}`;
             // Work_02 (독해 문제) 표시
             if (quizItem.workTypeId === '02' && quizItem.work02Data) {
               return (
-                <div key={`work-02-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-02-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  <div className="work-header">
-                    <h3 style={{
-                      fontSize: '1.3rem',
-                      fontWeight: '700',
-                      color: '#000',
-                      margin: '0 0 1rem 0',
-                      padding: '0'
-                    }}>#02. 독해 문제</h3>
+                  <div className="quiz-item-header package01-work02-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
+                  }}>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 독해
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#02
+                    </span>
                   </div>
 
                   {/* 문제 제목 */}
-                  <div className="problem-instruction work-02-problem-instruction" style={{fontWeight: '800', fontSize: '1.18rem', background: '#222', color: '#fff', padding: '0.7rem 1.2rem', borderRadius: '8px', marginBottom: '1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
-                    <span>문제: 다음 본문을 읽고 해석하세요</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#02</span>
+                  <div className="problem-instruction package01-work02-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
+                  }}>
+                    다음 본문을 읽고 해석하시오.
                   </div>
 
                   {/* 원본 본문 보기 */}
@@ -3086,7 +3126,7 @@ ${passage}`;
 
                   {/* 변경된 본문 (문제) */}
                   <h4>다음 본문을 읽고 해석하세요.</h4>
-                  <div className="text-content no-print" style={{background: '#fff3cd', padding: '1.2rem', borderRadius: '8px', border: '1.5px solid #ffeaa7', marginBottom: '1.5rem'}}>
+                  <div className="text-content no-print package01-work02-modified-text" style={{background: '#F5F5F5', backgroundColor: '#F5F5F5', padding: '1.2rem', borderRadius: '0', border: '1px solid transparent', marginBottom: '1.5rem'}}>
                     {renderTextWithUnderlines(quizItem.work02Data.modifiedText || '', quizItem.work02Data.replacements || [], false)}
                   </div>
                       
@@ -3148,12 +3188,23 @@ ${passage}`;
                   )}
 
                   {/* 번역 */}
-                  <div className="translation-section no-print">
-                    <h4>본문 해석:</h4>
-                    <div className="translation-content" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px', border: '1.5px solid #c8e6c9'}}>
-                      {quizItem.translatedText}
+                  {quizItem.translatedText && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work02-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.translatedText}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             }
@@ -3161,98 +3212,110 @@ ${passage}`;
             // Work_03 (빈칸 단어 문제) 표시
             if (quizItem.workTypeId === '03' && quizItem.work03Data) {
               return (
-                <div key={`work-03-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-03-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  <div className="work-header">
-                    <h3 style={{
-                      fontSize: '1.3rem',
-                      fontWeight: '700',
-                      color: '#000',
-                      margin: '0 0 1rem 0',
-                      padding: '0'
-                    }}>#03. 빈칸(단어) 문제</h3>
+                  <div className="quiz-item-header package01-work03-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
+                  }}>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 빈칸(단어) 추론
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#03
+                    </span>
                   </div>
                   
                   {/* 문제 지시문 */}
-                  <div className="problem-instruction work-03-problem-instruction" style={{
-                    fontWeight: '800',
-                    fontSize: '1.18rem',
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '1.2rem',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
+                  <div className="problem-instruction package01-work03-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>다음 빈칸에 들어갈 가장 적절한 단어를 고르세요.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#03</span>
+                    다음 빈칸에 들어갈 단어로 가장 적절한 것을 고르시오.
                   </div>
 
                   {/* 문제 본문 */}
-                  <div className="problem-passage work-03-problem-passage" style={{
-                    background: '#f7f8fc',
-                    border: '1.5px solid #e3e6f0',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    marginBottom: '1rem',
-                    fontSize: '1.08rem',
-                    lineHeight: '1.7',
-                    fontFamily: 'inherit'
+                  <div className="problem-passage package01-work03-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
                   }}>
                     {quizItem.work03Data.blankedText}
                   </div>
 
                   {/* 선택지 */}
-                  <div className="problem-options work-03-problem-options" style={{
-                    background: '#f8f9fa',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                    marginBottom: '1rem'
+                  <div className="problem-options package01-work03-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
                   }}>
                     {quizItem.work03Data.options.map((option, optionIndex) => (
-                      <label key={optionIndex} className="option" style={{
+                      <div key={optionIndex} className="option" style={{
                         display: 'block',
-                        background: '#fff',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '6px',
-                        padding: '0.8rem 1rem',
-                        margin: '0.5rem 0',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
                         fontSize: '1rem',
-                        fontFamily: 'inherit'
+                        margin: '0.5rem 0',
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
                       }}>
-                        <input
-                          type="radio"
-                          name={`work-03-${index}`}
-                          value={optionIndex}
-                          style={{ marginRight: '0.5rem' }}
-                        />
-                        {option}
+                        {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}
                         {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work03Data && quizItem.work03Data.answerIndex === optionIndex && (
-                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
-                      </label>
+                      </div>
                     ))}
                   </div>
 
                   {/* 번역 */}
-                  <div className="translation-section no-print">
-                    <h4>본문 해석:</h4>
-                    <div className="translation-content" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px', border: '1.5px solid #c8e6c9'}}>
-                      {quizItem.translatedText}
+                  {quizItem.translatedText && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work03-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.translatedText}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             }
@@ -3260,196 +3323,220 @@ ${passage}`;
             // Work_04 (빈칸 구 문제) 표시
             if (quizItem.workTypeId === '04' && quizItem.work04Data) {
               return (
-                <div key={`work-04-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-04-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000',
-                    margin: '0 0 1rem 0',
-                    padding: '0'
+                  <div className="quiz-item-header package01-work04-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    #04. 빈칸(구) 문제
-                  </h3>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 빈칸(구) 추론
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#04
+                    </span>
+                  </div>
 
                   {/* 문제 제목 */}
-                  <div className="problem-instruction work-04-problem-instruction" style={{
-                    fontWeight: '800',
-                    fontSize: '1.18rem',
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '1.2rem',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
+                  <div className="problem-instruction package01-work04-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>문제: 다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#04</span>
+                    다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.
                   </div>
 
                   {/* 문제 본문 */}
-                  <div className="problem-passage work-04-problem-passage" style={{
-                    background: '#f7f8fc',
-                    border: '1.5px solid #e3e6f0',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    marginBottom: '1rem',
-                    fontSize: '1.08rem',
-                    lineHeight: '1.7',
-                    fontFamily: 'inherit'
+                  <div className="problem-passage package01-work04-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
                   }}>
                     {quizItem.work04Data.blankedText}
                   </div>
 
                   {/* 선택지 */}
-                  <div className="problem-options work-04-problem-options" style={{
-                    background: '#f8f9fa',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                    marginBottom: '1rem'
+                  <div className="problem-options package01-work04-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
                   }}>
                     {quizItem.work04Data.options.map((option, optionIndex) => (
-                      <label key={optionIndex} className="option" style={{
+                      <div key={optionIndex} className="option" style={{
                         display: 'block',
-                        background: '#fff',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '6px',
-                        padding: '0.8rem 1rem',
+                        fontSize: '1rem',
                         margin: '0.5rem 0',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
                       }}>
-                        <input
-                          type="radio"
-                          name={`work04-${index}`}
-                          value={optionIndex}
-                          style={{ marginRight: '0.8rem' }}
-                        />
-                        {['①', '②', '③', '④', '⑤'][optionIndex]} {option}
+                        {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}
                         {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work04Data && quizItem.work04Data.answerIndex === optionIndex && (
-                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
-                      </label>
+                      </div>
                     ))}
                   </div>
 
                   {/* 번역 */}
-                  <div className="translation-section no-print">
-                    <h4>본문 해석:</h4>
-                    <div className="translation-content" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px', border: '1.5px solid #c8e6c9'}}>
-                      {quizItem.translatedText}
+                  {quizItem.translatedText && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work04-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.translatedText}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             }
 
             if (quizItem.workTypeId === '05' && quizItem.work05Data) {
               return (
-                <div key={`work-05-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-05-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000',
-                    margin: '0 0 1rem 0',
-                    padding: '0'
+                  <div className="quiz-item-header package01-work05-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    #05. 빈칸(문장) 문제
-                  </h3>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 빈칸(문장) 추론
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#05
+                    </span>
+                  </div>
 
                   {/* 문제 제목 */}
-                  <div className="problem-instruction work-05-problem-instruction" style={{
-                    fontWeight: '800',
-                    fontSize: '1.18rem',
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '1.2rem',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
+                  <div className="problem-instruction package01-work05-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>문제: 다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#05</span>
+                    다음 빈칸에 들어갈 가장 적절한 문장을 고르시오.
                   </div>
 
                   {/* 문제 본문 */}
-                  <div className="problem-passage work-05-problem-passage" style={{
-                    background: '#f7f8fc',
-                    border: '1.5px solid #e3e6f0',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    marginBottom: '1.5rem',
-                    fontSize: '1.1rem',
-                    lineHeight: '1.7',
-                    fontFamily: 'inherit'
+                  <div className="problem-passage package01-work05-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
                   }}>
                     {quizItem.work05Data.blankedText}
                   </div>
 
                   {/* 선택지 */}
-                  <div className="problem-options work-05-problem-options" style={{
-                    background: '#f8f9fa',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                    marginBottom: '1rem'
+                  <div className="problem-options package01-work05-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
                   }}>
                     {quizItem.work05Data.options.map((option, optionIndex) => (
-                      <label key={optionIndex} className="option" style={{
+                      <div key={optionIndex} className="option" style={{
                         display: 'block',
-                        background: '#fff',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '6px',
-                        padding: '0.8rem 1rem',
-                        marginBottom: '0.5rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
                         fontSize: '1rem',
-                        lineHeight: '1.5'
+                        margin: '0.5rem 0',
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
                       }}>
-                        <input
-                          type="radio"
-                          name={`work-05-${index}`}
-                          value={optionIndex}
-                          style={{ marginRight: '0.5rem' }}
-                        />
-                        {option}
+                        {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}
                         {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work05Data && quizItem.work05Data.answerIndex === optionIndex && (
-                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
-                      </label>
+                      </div>
                     ))}
                   </div>
 
                   {/* 번역 */}
-                  <div className="translation-section no-print">
-                    <h4>본문 해석:</h4>
-                    <div className="translation-content" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px', border: '1.5px solid #c8e6c9'}}>
-                      {quizItem.translatedText}
+                  {quizItem.translatedText && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work05-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.translatedText}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             }
@@ -3457,200 +3544,230 @@ ${passage}`;
             // Work_06 (문장 위치 찾기) 표시
             if (quizItem.workTypeId === '06' && quizItem.work06Data) {
               return (
-                <div key={`work-06-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-06-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000',
-                    margin: '0 0 1rem 0',
-                    padding: '0'
+                  <div className="quiz-item-header package01-work06-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    #06. 문장 위치 찾기 문제
-                  </h3>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 문장 위치 찾기
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#06
+                    </span>
+                  </div>
 
                   {/* 문제 제목 */}
-                  <div className="work-06-title" style={{
-                    fontWeight: 800,
-                    fontSize: '1rem !important',
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 0.5rem',
-                    borderRadius: '8px',
-                    marginBottom: '1.2rem',
-                    display: 'block',
-                    width: '100%'
+                  <div className="problem-instruction package01-work06-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    문제: 아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                    아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
                   </div>
 
                   {/* 빠진 문장 표시 */}
-                  <div className="work-06-missing-sentence" style={{
+                  <div className="work-06-missing-sentence package01-work06-missing-sentence" style={{
                     border: '2px solid #222',
                     borderRadius: '6px',
-                    background: '#f7f8fc',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
                     padding: '0.8em 1.2em',
-                    marginTop: '1rem',
-                    marginBottom: '1rem',
+                    marginTop: '1.5rem',
+                    marginBottom: '1.5rem',
                     fontWeight: 700,
-                    fontSize: '1rem !important'
+                    fontSize: '1rem'
                   }}>
-                    <span style={{color: '#222'}}>주요 문장:</span> <span style={{color: '#6a5acd'}}>{quizItem.work06Data.missingSentence}</span>
+                    <span style={{color: '#222'}}>주요 문장 : </span> <span className="package01-work06-missing-sentence-text" style={{color: '#000000'}}>{quizItem.work06Data.missingSentence}</span>
                   </div>
 
                   {/* 번호가 매겨진 본문 */}
-                  <div className="work-06-passage" style={{
-                    fontSize: '1rem !important',
+                  <div className="problem-passage package01-work06-passage" style={{
+                    fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0.3rem 0 0 0',
-                    background: '#FFF3CD',
-                    borderRadius: '8px',
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
                     padding: '1rem',
                     fontFamily: 'inherit',
-                    color: '#222',
-                    whiteSpace: 'pre-line',
-                    border: '1.5px solid #e3e6f0'
+                    color: '#333',
+                    whiteSpace: 'pre-line'
                   }}>
                     {quizItem.work06Data.numberedPassage}
                   </div>
 
                   {/* 정답 표시 */}
-                  {printMode === 'with-answer' && (
-                    <div className="work-06-answer" style={{
+                  {(printMode === 'with-answer' || showQuizDisplay) && (
+                    <div className="work-06-answer no-print" style={{
                       marginTop: '0',
                       marginBottom: '0',
                       color: '#1976d2',
                       fontWeight: '700',
-                      fontSize: '1rem !important'
+                      fontSize: '1rem'
                     }}>
                       정답: {`①②③④⑤`[quizItem.work06Data.answerIndex] || quizItem.work06Data.answerIndex + 1}
                     </div>
                   )}
 
                   {/* 번역 */}
-                  <div className="translation-section no-print">
-                    <h4>본문 해석:</h4>
-                    <div className="work-06-translation" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px', border: '1.5px solid #c8e6c9'}}>
-                      {quizItem.translatedText}
+                  {quizItem.translatedText && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work06-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.translatedText}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             }
 
             if (quizItem.workTypeId === '07' && quizItem.work07Data) {
               return (
-                <div key={`work-07-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-07-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000',
-                    margin: '0 0 1rem 0',
-                    padding: '0'
+                  <div className="quiz-item-header package01-work07-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    #07. 주제 추론 문제
-                  </h3>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 주제 추론
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#07
+                    </span>
+                  </div>
 
                   {/* 문제 제목 */}
-                  <div className="work-07-title" style={{
-                    fontWeight: '800',
-                    fontSize: '1.18rem',
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '1.2rem',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
+                  <div className="problem-instruction package01-work07-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>문제: 다음 본문의 주제를 가장 잘 나타내는 문장을 고르세요.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#07</span>
+                    다음 본문의 주제를 가장 잘 나타내는 문장을 고르시오.
                   </div>
 
                   {/* 본문 */}
-                  <div className="work-07-passage" style={{
-                    background: '#FFF3CD',
-                    border: '1.5px solid #e3e6f0',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    marginBottom: '1.5rem',
-                    fontSize: '1.1rem',
-                    lineHeight: '1.7',
-                    fontFamily: 'inherit'
+                  <div className="problem-passage package01-work07-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
                   }}>
                     {quizItem.work07Data.passage}
                   </div>
 
                   {/* 선택지 */}
-                  <div className="problem-options work-07-problem-options" style={{
-                    background: '#f8f9fa',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                    marginBottom: '1rem'
+                  <div className="problem-options package01-work07-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
                   }}>
                     {quizItem.work07Data.options.map((option, optionIndex) => (
-                      <label key={optionIndex} className="option" style={{
+                      <div key={optionIndex} className="option" style={{
                         display: 'block',
-                        background: '#fff',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '6px',
-                        padding: '0.8rem 1rem',
-                        marginBottom: '0.5rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
                         fontSize: '1rem',
-                        lineHeight: '1.5'
+                        margin: '0.5rem 0',
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
                       }}>
-                        <div style={{display: 'flex', alignItems: 'flex-start'}}>
-                          <input
-                            type="radio"
-                            name={`work-07-${index}`}
-                            value={optionIndex}
-                            style={{ marginRight: '0.5rem', marginTop: '0.1rem' }}
-                          />
-                          <div>
-                            <div style={{fontWeight: '500'}}>
-                              {String.fromCharCode(65 + optionIndex)}. {option}
-                              {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work07Data && quizItem.work07Data.answerIndex === optionIndex && (
-                                <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
-                              )}
-                            </div>
-                            {quizItem.work07Data?.optionTranslations && quizItem.work07Data?.optionTranslations[optionIndex] && (
-                              <div style={{fontSize:'0.85rem', color:'#666', marginTop:'0.3rem'}}>
-                                {quizItem.work07Data?.optionTranslations[optionIndex]}
-                              </div>
+                        <div>
+                          <div style={{fontWeight: '500'}}>
+                            {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}
+                            {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work07Data && quizItem.work07Data.answerIndex === optionIndex && (
+                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                             )}
                           </div>
+                          {quizItem.work07Data?.optionTranslations && quizItem.work07Data?.optionTranslations[optionIndex] && (
+                            <div style={{fontSize:'0.85rem', color:'#666', marginTop:'0.3rem'}}>
+                              {quizItem.work07Data?.optionTranslations[optionIndex]}
+                            </div>
+                          )}
                         </div>
-                      </label>
+                      </div>
                     ))}
                   </div>
 
                   {/* 번역 */}
-                  <div className="translation-section no-print">
-                    <h4>본문 해석:</h4>
-                    <div className="work-07-translation" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px', border: '1.5px solid #c8e6c9'}}>
-                      {quizItem.translatedText}
+                  {quizItem.translatedText && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work07-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.translatedText}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             }
@@ -3658,82 +3775,110 @@ ${passage}`;
             // Work_08 제목 추론 문제
             if (quizItem.workTypeId === '08' && quizItem.work08Data) {
               return (
-                <div key={`work-08-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-08-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <div className="work-08-title" style={{
-                    marginBottom: '0.8rem',
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000'
+                  <div className="quiz-item-header package01-work08-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    #08. 제목 추론 문제
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 제목 추론
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#08
+                    </span>
                   </div>
 
                   {/* 문제 지시사항 */}
-                  <div className="work-08-missing-sentence" style={{
-                    background: '#000',
-                    color: '#fff',
-                    borderRadius: '8px',
-                    padding: '0.8rem 1.2rem',
-                    marginBottom: '0.8rem',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                  <div className="problem-instruction package01-work08-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>문제: 다음 본문에 가장 적합한 제목을 고르세요.</span>
-                    <span style={{fontSize: '0.9rem', color: '#FFD700'}}>유형#08</span>
+                    다음 본문에 가장 적합한 제목을 고르시오.
                   </div>
 
                   {/* 본문 */}
-                  <div className="work-08-passage" style={{
-                    background: '#FFF3CD',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    marginBottom: '1.5rem',
+                  <div className="problem-passage package01-work08-passage" style={{
                     fontSize: '1rem',
-                    lineHeight: '1.6',
-                    color: '#212529'
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
                   }}>
                     {quizItem.work08Data.passage}
                   </div>
 
                   {/* 선택지 */}
-                  <div className="work-08-options" style={{marginBottom: '1.5rem'}}>
+                  <div className="problem-options package01-work08-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
+                  }}>
                     {quizItem.work08Data.options.map((option, optionIndex) => (
-                      <div key={optionIndex} style={{
-                        padding: '0.8rem',
-                        marginBottom: '0.5rem',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '6px',
-                        backgroundColor: '#fff',
+                      <div key={optionIndex} className="option" style={{
+                        display: 'block',
                         fontSize: '1rem',
-                        lineHeight: '1.5'
+                        margin: '0.5rem 0',
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
                       }}>
                         {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}
                         {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work08Data && quizItem.work08Data.answerIndex === optionIndex && (
-                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
                       </div>
                     ))}
                   </div>
 
                   {/* 번역 */}
-                  <div className="translation-section no-print">
-                    <h4>본문 해석:</h4>
-                    <div className="work-08-translation" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px', border: '1.5px solid #c8e6c9'}}>
-                      {quizItem.translatedText}
+                  {quizItem.translatedText && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work08-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.translatedText}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             }
@@ -3745,97 +3890,93 @@ ${passage}`;
               };
 
               return (
-                <div key={`work-10-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-10-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <div className="work-10-header" style={{
-                    marginBottom: '0.8rem',
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000'
+                  <div className="quiz-item-header package01-work10-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    #10. 다중 어법 오류 문제
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 다중 어법 오류
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#10
+                    </span>
                   </div>
 
                   {/* 문제 지시사항 */}
-                  <div className="work-10-title" style={{
-                    background: '#000',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '0.6rem',
-                    fontSize: '1.13rem',
-                    fontWeight: '800',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
+                  <div className="problem-instruction package01-work10-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
-                    <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#10</span>
+                    다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수를 고르시오.
                   </div>
 
                   {/* 본문 */}
-                  <div className="work-10-passage" style={{
-                    fontSize: '1.08rem',
+                  <div className="problem-passage package01-work10-passage" style={{
+                    fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '1.2rem 0',
-                    background: '#FFF3CD',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    fontFamily: 'inherit'
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
                   }}>
                     <span dangerouslySetInnerHTML={{__html: (quizItem.work10Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
 
                   {/* 객관식 옵션 */}
-                  <div className="work-10-options" style={{
-                    margin: '1.5rem 0',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.8rem'
+                  <div className="problem-options package01-work10-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
                   }}>
                     {quizItem.work10Data.options.map((option, optionIndex) => (
-                      <div key={optionIndex} style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        padding: '0.8rem 1rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
-                        backgroundColor: '#fff',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        fontSize: '1.05rem'
+                      <div key={optionIndex} className="option" style={{
+                        display: 'inline-block',
+                        fontSize: '1rem',
+                        margin: '0.5rem 1.2rem 0 0',
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
                       }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}>
-                          <span style={{
-                            marginRight: '1rem',
-                            fontWeight: '700',
-                            color: '#333'
-                          }}>
-                            {optionIndex + 1}.
-                          </span>
-                          <span style={{fontWeight: '600'}}>{option}개</span>
-                          {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work10Data && quizItem.work10Data.answerIndex === optionIndex && (
-                            <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
-                          )}
-                        </div>
+                        {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}개
+                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work10Data && quizItem.work10Data.answerIndex === optionIndex && (
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                        )}
                         {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work10Data && quizItem.work10Data.answerIndex === optionIndex && (
                           <div style={{
                             fontSize: '0.85rem',
                             color: '#666',
                             marginTop: '0.2rem',
-                            marginLeft: '0',
-                            paddingLeft: '0',
                             fontStyle: 'italic',
                             lineHeight: '1.2',
                             display: 'block',
@@ -3851,29 +3992,23 @@ ${passage}`;
                   </div>
 
                   {/* 번역 */}
-                  <div className="work-10-translation" style={{
-                    marginTop: '1.5rem',
-                    padding: '1rem',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px',
-                    border: '1px solid #dee2e6'
-                  }}>
-                    <div style={{
-                      fontSize: '1rem',
-                      fontWeight: '600',
-                      color: '#1976d2',
-                      marginBottom: '0.5rem'
-                    }}>
-                      본문 해석
+                  {quizItem.work10Data.translation && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work10-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.work10Data.translation}
+                      </div>
                     </div>
-                    <div style={{
-                      fontSize: '0.95rem',
-                      lineHeight: 1.6,
-                      color: '#333'
-                    }}>
-                      {quizItem.work10Data.translation}
-                    </div>
-                  </div>
+                  )}
                 </div>
               );
             }
@@ -3881,56 +4016,71 @@ ${passage}`;
             // Work_11 문장별 해석 문제
             if (quizItem.workTypeId === '11' && quizItem.work11Data) {
               return (
-                <div key={`work-11-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-11-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <div className="work-11-header" style={{
-                    marginBottom: '0.8rem',
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000'
+                  <div className="quiz-item-header package01-work11-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    #11. 본문 문장별 해석 문제
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 문장별 해석
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#11
+                    </span>
                   </div>
 
                   {/* 문제 지시사항 */}
-                  <div className="work-11-title" style={{
-                    background: '#000',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '0.6rem',
-                    fontSize: '1.13rem',
-                    fontWeight: '800',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
+                  <div className="problem-instruction package01-work11-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>다음 본문의 각 문장을 한국어로 해석하세요.</span>
-                    <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#11</span>
+                    다음 본문의 각 문장을 한국어로 해석하시오.
                   </div>
 
                   {/* 문장별 해석 문제 */}
-                  <div className="work-11-content" style={{
-                    margin: '1.2rem 0'
+                  <div className="sentences-container package01-work11-sentences-container" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
                   }}>
                     {quizItem.work11Data?.sentences.map((sentence, sentenceIndex) => (
-                      <div key={sentenceIndex} className="sentence-item" style={{
-                        background: '#FFF3CD',
-                        borderRadius: '8px',
+                      <div key={sentenceIndex} className="sentence-item package01-work11-sentence-item" style={{
+                        background: '#ffffff',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '0',
                         padding: '0.3rem 1.2rem',
-                        border: '1.5px solid #e3e6f0',
+                        border: '1px solid transparent',
                         marginBottom: '1rem',
                         fontFamily: 'inherit',
-                        transition: 'border-color 0.2s',
-                        boxShadow: '0 1px 4px rgba(44,62,80,0.04)'
+                        boxShadow: 'none'
                       }}>
                         <div className="sentence-header" style={{
                           display: 'flex',
@@ -3947,10 +4097,10 @@ ${passage}`;
                             lineHeight: 1
                           }}>{sentenceIndex + 1}.</span>
                           <span className="sentence-content" style={{
-                            fontSize: '1.05rem',
-                            lineHeight: '1.2',
-                            color: '#232946',
-                            fontFamily: 'Noto Sans KR, Segoe UI, Apple SD Gothic Neo, Arial, sans-serif',
+                            fontSize: '1rem',
+                            lineHeight: '1.7',
+                            color: '#333',
+                            fontFamily: 'inherit',
                             flex: 1,
                             verticalAlign: 'baseline'
                           }}>{sentence}</span>
@@ -3973,12 +4123,13 @@ ${passage}`;
                   </div>
 
                   {/* 정답 표시 */}
-                  <div className="work-11-answer" style={{
+                  <div className="work-11-answer package01-work11-answer" style={{
                     marginTop: '1.5rem',
                     padding: '1rem',
-                    backgroundColor: '#e8f5e8',
-                    borderRadius: '8px',
-                    border: '2px solid #4caf50'
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    borderRadius: '0',
+                    border: '1px solid #e0e0e0'
                   }}>
                     <div style={{
                       fontSize: '1rem',
@@ -3989,17 +4140,18 @@ ${passage}`;
                       정답
                     </div>
                     {quizItem.work11Data?.sentences.map((sentence, sentenceIndex) => (
-                      <div key={sentenceIndex} style={{
+                      <div key={sentenceIndex} className="package01-work11-answer-item" style={{
                         marginBottom: '1rem',
                         padding: '0.8rem',
-                        backgroundColor: '#F1F8E9',
-                        borderRadius: '6px',
-                        border: '1px solid #c8e6c9'
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        borderRadius: '0',
+                        border: '1px solid transparent'
                       }}>
-                        <div style={{
+                        <div className="package01-work11-answer-sentence" style={{
                           fontSize: '0.95rem',
                           fontWeight: '600',
-                          color: '#1976d2',
+                          color: '#000000',
                           marginBottom: '0.3rem'
                         }}>
                           {sentenceIndex + 1}. {sentence}
@@ -4021,99 +4173,98 @@ ${passage}`;
             // Work_13 빈칸 채우기 문제 (단어-주관식)
             if (quizItem.workTypeId === '13' && quizItem.work13Data) {
               return (
-                <div key={`work-13-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-13-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <div className="work-13-header" style={{
-                    marginBottom: '0.8rem',
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000',
-                    textAlign: 'left'
-                  }}>
-                    #13. 빈칸 채우기 문제 (단어-주관식)
-                  </div>
-
-                  {/* 문제 지시사항 */}
-                  <div className="work-13-title" style={{
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '1.2rem',
-                    fontSize: '1.13rem',
-                    fontWeight: '800',
-                    display: 'flex',
+                  <div className="quiz-item-header package01-work13-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
-                    <span style={{
-                      fontSize: '0.9rem',
-                      fontWeight: '700',
-                      color: '#FFD700'
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 빈칸(단어) 채우기
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
                     }}>
                       유형#13
                     </span>
                   </div>
 
-                  {/* 빈칸 본문 */}
-                  <div style={{
-                    fontSize: '1.08rem',
-                    lineHeight: 1.7,
-                    margin: '1.2rem 0',
-                    background: '#FFF3CD',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    fontFamily: 'inherit',
-                    border: '2px solid #e3e6f0'
+                  {/* 문제 지시사항 */}
+                  <div className="problem-instruction package01-work13-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    {formatBlankedText(
+                    다음 빈칸에 들어갈 단어를 직접 입력하시오.
+                  </div>
+
+                  {/* 빈칸 본문 */}
+                  <div className="problem-passage package01-work13-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
+                  }}>
+                    <div dangerouslySetInnerHTML={{ __html: formatBlankedText(
                       quizItem.work13Data.blankedText || '',
                       quizItem.work13Data.correctAnswers || []
-                    )}
+                    ) }} />
                   </div>
 
                   {/* 정답 표시 */}
-                  <div style={{
-                    marginTop: '1.2rem',
-                    color: '#1976d2',
-                    fontWeight: 700
-                  }}>
-                    <span style={{color: '#1976d2'}}>
-                      정답: {quizItem.work13Data.correctAnswers?.join(', ') || '정답 없음'}
-                    </span>
-                  </div>
+                  {(printMode === 'with-answer' || showQuizDisplay) && (
+                    <div className="no-print package01-work13-answer" style={{
+                      marginTop: '1.2rem',
+                      color: '#000000',
+                      fontWeight: 700
+                    }}>
+                      <span style={{color: '#000000'}}>
+                        정답: {quizItem.work13Data.correctAnswers?.join(', ') || '정답 없음'}
+                      </span>
+                    </div>
+                  )}
 
                   {/* 한국어 번역 */}
-                  <div style={{
-                    marginTop: '1.2rem',
-                    padding: '1rem',
-                    backgroundColor: '#F1F8E9',
-                    borderRadius: '8px',
-                    border: '2px solid #e3e6f0'
-                  }}>
-                    <div style={{
-                      fontWeight: '700',
-                      marginBottom: '0.5rem',
-                      color: '#000'
-                    }}>
-                      본문 해석:
+                  {quizItem.work13Data.translation && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work13-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.work13Data.translation}
+                      </div>
                     </div>
-                    <div style={{
-                      fontSize: '1rem',
-                      lineHeight: 1.6,
-                      color: '#333'
-                    }}>
-                      {quizItem.work13Data.translation}
-                    </div>
-                  </div>
+                  )}
                 </div>
               );
             }
@@ -4121,138 +4272,136 @@ ${passage}`;
             // Work_14 빈칸 채우기 문제 (문장-주관식)
             if (quizItem.workTypeId === '14' && quizItem.work14Data) {
               return (
-                <div key={`work-14-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-14-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <div className="work-14-header" style={{
-                    marginBottom: '0.8rem',
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000'
-                  }}>
-                    #14. 빈칸 채우기 문제 (문장-주관식)
-                  </div>
-
-                  {/* 문제 지시사항 */}
-                  <div className="work-14-title" style={{
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '1.2rem',
-                    fontSize: '1.13rem',
-                    fontWeight: '800',
-                    display: 'flex',
+                  <div className="quiz-item-header package01-work14-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    <span>다음 빈칸에 들어갈 문장을 직접 입력하시오.</span>
-                    <span style={{
-                      fontSize: '0.9rem',
-                      fontWeight: '700',
-                      color: '#FFD700'
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 빈칸(문장) 채우기
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
                     }}>
                       유형#14
                     </span>
                   </div>
 
-                  {/* 빈칸 본문 */}
-                  <div style={{
-                    fontSize: '1.08rem',
-                    lineHeight: 1.7,
-                    margin: '1.2rem 0',
-                    background: '#FFF3CD',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    fontFamily: 'inherit',
-                    border: '2px solid #e3e6f0',
-                    whiteSpace: 'pre-wrap',
-                    wordWrap: 'break-word',
-                    overflowWrap: 'break-word',
-                    overflow: 'hidden'
+                  {/* 문제 지시사항 */}
+                  <div className="problem-instruction package01-work14-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    {formatBlankedText(
+                    다음 빈칸에 들어갈 문장을 직접 입력하시오.
+                  </div>
+
+                  {/* 빈칸 본문 */}
+                  <div className="problem-passage package01-work14-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
+                  }}>
+                    <div dangerouslySetInnerHTML={{ __html: formatBlankedText(
                       quizItem.work14Data.blankedText || '',
                       quizItem.work14Data.correctAnswers || []
-                    )}
+                    ) }} />
                   </div>
 
                   {/* 정답 표시 */}
-                  <div style={{
-                    marginTop: '1.2rem',
-                    color: '#1976d2',
-                    fontWeight: 700
-                  }}>
-                    <div style={{color: '#1976d2', marginBottom: '0.5rem'}}>
-                      정답 문장들:
+                  {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work14Data.selectedSentences && (
+                    <div className="no-print package01-work14-answer" style={{
+                      marginTop: '1.2rem',
+                      color: '#000000',
+                      fontWeight: 700
+                    }}>
+                      <div style={{color: '#000000', marginBottom: '0.5rem'}}>
+                        정답 문장들:
+                      </div>
+                      {quizItem.work14Data.selectedSentences.map((sentence, idx) => {
+                        const alphabetLabel = String.fromCharCode(65 + idx); // A=65, B=66, C=67...
+                        // 정답 문장에서 빈칸 형식 제거
+                        let cleanSentence = sentence || '';
+                        if (cleanSentence) {
+                          // 패턴 1: (____________________A____________________) 형식 (긴 언더스코어, 알파벳 앞뒤)
+                          cleanSentence = cleanSentence.replace(/\(_{5,}[A-Z]_{5,}\)/g, '').trim();
+                          // 패턴 2: (_+A_+) - 언더스코어 앞뒤 (짧은 경우)
+                          cleanSentence = cleanSentence.replace(/\(_+[A-Z]_+\)/g, '').trim();
+                          // 패턴 3: ( A _+ ) 또는 ( A_+ )
+                          cleanSentence = cleanSentence.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
+                          cleanSentence = cleanSentence.replace(/\(\s*[A-Z]_+\s*\)/g, '').trim();
+                          // 패턴 4: (A_+) - 공백 없는 경우
+                          cleanSentence = cleanSentence.replace(/\([A-Z]_+\)/g, '').trim();
+                          // 패턴 5: ( _+ ) 일반 빈칸
+                          cleanSentence = cleanSentence.replace(/\(_+\)/g, '').trim();
+                          // 패턴 6: 공백 포함 모든 패턴
+                          cleanSentence = cleanSentence.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
+                          // 패턴 7: 언더스코어가 3개 이상이고 알파벳이 포함된 모든 패턴
+                          cleanSentence = cleanSentence.replace(/\([^)]*_{3,}[^)]*[A-Z][^)]*\)/g, '').trim();
+                          cleanSentence = cleanSentence.replace(/\([^)]*[A-Z][^)]*_{3,}[^)]*\)/g, '').trim();
+                        }
+                        
+                        return (
+                          <div key={idx} className="package01-work14-answer-item" style={{
+                            marginBottom: '0.3rem',
+                            padding: '0.5rem',
+                            backgroundColor: '#f5f5f5',
+                            background: '#f5f5f5',
+                            borderRadius: '0',
+                            fontSize: '0.95rem',
+                            lineHeight: 1.4,
+                            color: '#000000'
+                          }}>
+                            {alphabetLabel}. {cleanSentence || sentence}
+                          </div>
+                        );
+                      })}
                     </div>
-                    {quizItem.work14Data.selectedSentences?.map((sentence, idx) => {
-                      const alphabetLabel = String.fromCharCode(65 + idx); // A=65, B=66, C=67...
-                      // 정답 문장에서 빈칸 형식 제거
-                      let cleanSentence = sentence || '';
-                      if (cleanSentence) {
-                        // 패턴 1: (____________________A____________________) 형식 (긴 언더스코어, 알파벳 앞뒤)
-                        cleanSentence = cleanSentence.replace(/\(_{5,}[A-Z]_{5,}\)/g, '').trim();
-                        // 패턴 2: (_+A_+) - 언더스코어 앞뒤 (짧은 경우)
-                        cleanSentence = cleanSentence.replace(/\(_+[A-Z]_+\)/g, '').trim();
-                        // 패턴 3: ( A _+ ) 또는 ( A_+ )
-                        cleanSentence = cleanSentence.replace(/\(\s*[A-Z]\s*_+\s*\)/g, '').trim();
-                        cleanSentence = cleanSentence.replace(/\(\s*[A-Z]_+\s*\)/g, '').trim();
-                        // 패턴 4: (A_+) - 공백 없는 경우
-                        cleanSentence = cleanSentence.replace(/\([A-Z]_+\)/g, '').trim();
-                        // 패턴 5: ( _+ ) 일반 빈칸
-                        cleanSentence = cleanSentence.replace(/\(_+\)/g, '').trim();
-                        // 패턴 6: 공백 포함 모든 패턴
-                        cleanSentence = cleanSentence.replace(/\(\s*[A-Z]?\s*_+\s*[A-Z]?\s*\)/g, '').trim();
-                        // 패턴 7: 언더스코어가 3개 이상이고 알파벳이 포함된 모든 패턴
-                        cleanSentence = cleanSentence.replace(/\([^)]*_{3,}[^)]*[A-Z][^)]*\)/g, '').trim();
-                        cleanSentence = cleanSentence.replace(/\([^)]*[A-Z][^)]*_{3,}[^)]*\)/g, '').trim();
-                      }
-                      
-                      return (
-                        <div key={idx} style={{
-                          marginBottom: '0.3rem',
-                          padding: '0.5rem',
-                          backgroundColor: '#E3F2FD',
-                          borderRadius: '4px',
-                          fontSize: '0.95rem',
-                          lineHeight: 1.4
-                        }}>
-                          {alphabetLabel}. {cleanSentence || sentence}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  )}
 
                   {/* 한국어 번역 */}
-                  <div style={{
-                    marginTop: '1.2rem',
-                    padding: '1rem',
-                    backgroundColor: '#F1F8E9',
-                    borderRadius: '8px',
-                    border: '2px solid #e3e6f0'
-                  }}>
-                    <div style={{
-                      fontWeight: '700',
-                      marginBottom: '0.5rem',
-                      color: '#000'
-                    }}>
-                      본문 해석:
+                  {quizItem.work14Data.translation && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work14-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.work14Data.translation}
+                      </div>
                     </div>
-                    <div style={{
-                      fontSize: '1rem',
-                      lineHeight: 1.6,
-                      color: '#333'
-                    }}>
-                      {quizItem.work14Data.translation}
-                    </div>
-                  </div>
+                  )}
                 </div>
               );
             }
@@ -4266,81 +4415,87 @@ ${passage}`;
               const answerNumber = `①②③④⑤`[quizItem.work09Data.answerIndex] || `${quizItem.work09Data.answerIndex + 1}`;
 
               return (
-                <div key={`work-09-${index}`} className="work-section" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
+                <div key={`work-09-${index}`} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
                   padding: '1.5rem',
-                  marginBottom: '2rem',
                   backgroundColor: '#fff',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
                 }}>
-                  {/* 문제 유형 제목 */}
-                  <div className="work-09-header" style={{
-                    marginBottom: '0.8rem',
-                    fontSize: '1.3rem',
-                    fontWeight: '700',
-                    color: '#000'
+                  <div className="quiz-item-header package01-work09-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
                   }}>
-                    #09. 어법 오류 문제
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {index + 1} : 어법 오류
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#09
+                    </span>
                   </div>
 
                   {/* 문제 지시사항 */}
-                  <div className="work-09-title" style={{
-                    background: '#222',
-                    color: '#fff',
-                    padding: '0.7rem 1.2rem',
-                    borderRadius: '8px',
-                    marginBottom: '0.6rem',
-                    fontSize: '1.13rem',
-                    fontWeight: '800',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    width: '100%'
+                  <div className="problem-instruction package01-work09-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
                   }}>
-                    <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
-                    <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>유형#09</span>
+                    다음 글의 밑줄 친 부분 중, 어법상 틀린 것을 고르시오.
                   </div>
 
                   {/* 본문 */}
-                  <div className="work-09-passage" style={{
-                    fontSize: '1.08rem',
+                  <div className="problem-passage package01-work09-passage" style={{
+                    fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '1.2rem 0',
-                    background: '#FFF3CD',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    fontFamily: 'inherit'
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
                   }}>
                     <span dangerouslySetInnerHTML={{__html: (quizItem.work09Data.passage || '').replace(/\n/g, '<br/>')}} />
                   </div>
 
                   {/* 선택지 */}
-                  <div className="work-09-options" style={{
-                    margin: '1.5rem 0',
-                    fontSize: '1.08rem'
+                  <div className="problem-options package01-work09-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
                   }}>
                     {quizItem.work09Data.options.map((option, optionIndex) => (
-                      <div key={optionIndex} style={{
+                      <div key={optionIndex} className="option" style={{
+                        display: 'block',
+                        fontSize: '1rem',
                         margin: '0.5rem 0',
-                        padding: '0.8rem',
-                        background: '#f8f9fa',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '6px',
-                        display: 'flex',
-                        alignItems: 'center'
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
                       }}>
-                        <span style={{
-                          marginRight: '0.8rem',
-                          fontWeight: '700',
-                          color: '#495057',
-                          minWidth: '2rem'
-                        }}>
-                          {`①②③④⑤⑥`[optionIndex] || `${optionIndex + 1}.`}
-                        </span>
-                        <span>{option}</span>
+                        {`①②③④⑤⑥`[optionIndex] || `${optionIndex + 1}.`} {option}
                         {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work09Data && quizItem.work09Data.answerIndex === optionIndex && (
-                          <span style={{color:'#FF0000', fontWeight:800, marginLeft:8}}> (정답)</span>
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
                       </div>
                     ))}
@@ -4366,19 +4521,23 @@ ${passage}`;
                   )}
 
                   {/* 번역 */}
-                  <div className="work-09-translation" style={{
-                    background: '#f1f8e9',
-                    border: '1.5px solid #c8e6c9',
-                    borderRadius: '8px',
-                    padding: '1.2rem',
-                    marginTop: '1.5rem',
-                    fontSize: '1rem',
-                    lineHeight: 1.7,
-                    color: '#2e7d32'
-                  }}>
-                    <strong>본문 해석:</strong><br />
-                    {quizItem.translatedText}
-                  </div>
+                  {quizItem.work09Data.translation && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content package01-work09-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quizItem.work09Data.translation}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             }

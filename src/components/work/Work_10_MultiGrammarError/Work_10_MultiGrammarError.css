@@ -811,4 +811,53 @@
   .points-container {
     text-align: center;
   }
+}
+
+/* Work_10 전용 스타일 - 인쇄(문제) 화면 디자인 */
+.problem-passage.work10-passage {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+.problem-instruction.work10-instruction {
+  background: #f5f5f5 !important;
+  background-color: #f5f5f5 !important;
+  color: #000 !important;
+  text-align: left !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.problem-options.work10-options {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+.option.work10-option {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+  cursor: default !important;
+}
+
+/* Work_10 전용 한글해석 컨테이너 - 배경색 변경 */
+.quiz-item-card .translation-content.work10-translation,
+.quiz-display .translation-content.work10-translation,
+.quiz-content .translation-content.work10-translation,
+.quiz-generator .translation-content.work10-translation,
+.translation-content.work10-translation,
+.translation-section .translation-content.work10-translation,
+div.translation-content.work10-translation {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
+  border: 1px solid transparent !important;
+}
+
+/* 모든 translation-content 중에서 work10-translation만 적용 */
+.translation-content.work10-translation[style*="background"],
+.translation-content.work10-translation[style*="backgroundColor"] {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
 } 

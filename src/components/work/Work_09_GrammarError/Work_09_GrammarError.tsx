@@ -43,7 +43,6 @@ const Work_09_GrammarError: React.FC = () => {
   const [inputMode, setInputMode] = useState<InputMode>('text');
 
   const [quizzes, setQuizzes] = useState<(GrammarQuiz & { id?: string })[]>([]);
-  const [selectedAnswers, setSelectedAnswers] = useState<{[key: string]: number | null}>({});
   
   const [isLoading, setIsLoading] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -228,7 +227,6 @@ const Work_09_GrammarError: React.FC = () => {
 
     setIsLoading(true);
     setQuizzes([]);
-    setSelectedAnswers({});
     let deductedPoints = 0;
     
     try {
@@ -442,7 +440,6 @@ const Work_09_GrammarError: React.FC = () => {
 
   const resetQuiz = () => {
     setQuizzes([]);
-    setSelectedAnswers({});
     setItems([{ id: Date.now().toString(), inputType: 'text', text: '', pastedImageUrl: null, isExpanded: true, isExtracting: false, error: '', imageFile: null }]);
     setIsLoading(false);
   };
@@ -502,57 +499,106 @@ const Work_09_GrammarError: React.FC = () => {
 
             {quizzes.map((quiz, idx) => {
               const quizId = quiz.id || `quiz-${idx}`;
-              const selected = selectedAnswers[quizId] ?? null;
               
               return (
-                <div key={quizId} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
-                  <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#09</span>
-            </div>
+                <div key={quizId} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
+                  padding: '1.5rem',
+                  backgroundColor: '#fff',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
+                }}>
+                  <div className="quiz-item-header work09-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
+                  }}>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {idx + 1} : 어법 오류 찾기
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#09
+                    </span>
+                  </div>
 
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                          <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?</span>
-                          <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#09</span>
-                        </div>
+                  <div className="problem-instruction work09-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
+                  }}>
+                    다음 글의 밑줄 친 부분 중, 어법상 틀린 것은?
+                  </div>
                   
-                  <div className="problem-passage" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', background:'#f7f8fc', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-                          <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
-                        </div>
+                  <div className="problem-passage work09-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
+                  }}>
+                    <span dangerouslySetInnerHTML={{__html: (quiz.passage || '').replace(/\n/g, '<br/>')}} />
+                  </div>
                   
-                  <div className="problem-options" style={{margin:'1.2rem 0'}}>
+                  <div className="problem-options work09-options" style={{
+                    margin: '0 0 1.5rem 0',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
+                  }}>
                     {quiz.options.map((opt, i) => (
-                      <label key={i} style={{display:'block', fontSize:'1.08rem', margin:'0.4rem 0', cursor:'pointer', fontWeight: selected === i ? 700 : 400, color: selected === i ? '#6a5acd' : '#222', fontFamily:'inherit'}}>
-                        <input
-                          type="radio"
-                          name={`grammar-quiz-${quizId}`}
-                          checked={selected === i}
-                          onChange={() => setSelectedAnswers(prev => ({ ...prev, [quizId]: i }))}
-                          style={{marginRight:'0.7rem'}}
-                        />
+                      <div key={i} className="option work09-option" style={{
+                        display: 'block',
+                        fontSize: '1rem',
+                        margin: '0.5rem 0',
+                        padding: '0.5rem 1rem',
+                        fontFamily: 'inherit',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        border: '1px solid transparent',
+                        borderRadius: '0',
+                        color: '#333'
+                      }}>
                         {`①②③④⑤`[i] || `${i+1}.`} {opt}
-                        {selected !== null && quiz.answerIndex === i && (
-                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}>(정답)</span>
-                        )}
-                      </label>
+                      </div>
                     ))}
-                        </div>
-                  
-                  {selected !== null && (
-                    <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
-                      정답: {`①②③④⑤`[quiz.answerIndex] || quiz.answerIndex+1} {quiz.options[quiz.answerIndex]}
-                      <div style={{marginTop:'0.7rem', color:'#1976d2', fontWeight:400, fontSize:'1rem'}}>
-                        정답의 원래(정상) 단어/구: {quiz.original}
+                  </div>
+
+                  {quiz.translation && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content work09-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quiz.translation}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                      <div className="translation-section" style={{marginTop:'1.2rem'}}>
-                        <h3 style={{fontSize:'1.05rem', color:'#222', marginBottom:'0.5rem'}}>본문 해석</h3>
-                        <div style={{background: '#f1f8e9', padding: '1rem', borderRadius: '8px', border: '1.5px solid #c8e6c9', fontSize: '0.98rem', lineHeight: '1.6'}}>
-                          {quiz.translation}
-                        </div>
-                         </div>
-                       </div>
-                     )}
-                        </div>
               );
             })}
                         </div>

@@ -641,28 +641,87 @@ const Work_13_BlankFillWord: React.FC = () => {
               const quizId = quiz.id || `quiz-${idx}`;
               
               return (
-                <div key={quizId} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
-                  <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#13</span>
+                <div key={quizId} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
+                  padding: '1.5rem',
+                  backgroundColor: '#fff',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
+                }}>
+                  <div className="quiz-item-header work13-header" style={{ 
+                    marginBottom: '1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e0e0e0',
+                    paddingBottom: '0.5rem'
+                  }}>
+                    <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                      문제 {idx + 1} : 빈칸(단어) 채우기
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      유형#13
+                    </span>
                   </div>
 
-                  <div className="problem-instruction" style={{fontWeight:800, fontSize:'1.13rem', background:'#222', color:'#fff', padding:'0.7rem 1.2rem', borderRadius:'8px', marginBottom:'0.6rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                    <span>다음 빈칸에 들어갈 단어를 직접 입력하시오.</span>
-                    <span style={{fontSize:'0.9rem', fontWeight:'700', color:'#FFD700'}}>유형#13</span>
+                  <div className="problem-instruction work13-instruction" style={{
+                    fontWeight: 500, 
+                    fontSize: '0.95rem', 
+                    background: '#f5f5f5', 
+                    color: '#000', 
+                    padding: '0.6rem 1rem', 
+                    borderRadius: '0', 
+                    marginBottom: '1.5rem',
+                    textAlign: 'left',
+                    borderTop: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0'
+                  }}>
+                    다음 빈칸에 들어갈 단어를 직접 입력하시오.
                   </div>
                   
-                  <div className="problem-text" style={{fontSize:'1.08rem', lineHeight:1.7, margin:'1.2rem 0', borderRadius:'8px', padding:'1.2rem', fontFamily:'inherit'}}>
-                    {formatBlankedText(
+                  <div className="problem-passage work13-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 1.5rem 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
+                  }}>
+                    <div dangerouslySetInnerHTML={{ __html: formatBlankedText(
                       quiz.blankedText || '',
                       quiz.correctAnswers || []
-                    )}
+                    ) }} />
                   </div>
 
                   {/* 정답 표시 */}
                   <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
                     <span style={{color: '#1976d2'}}>정답 : {quiz.correctAnswers?.join(', ') || '정답 없음'}</span>
                   </div>
+
+                  {quiz.translation && (
+                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
+                      <div className="translation-content work13-translation" style={{
+                        background: '#F5F5F5',
+                        backgroundColor: '#F5F5F5',
+                        padding: '1rem',
+                        borderRadius: '0',
+                        fontSize: '1rem',
+                        lineHeight: 1.7,
+                        color: '#333',
+                        border: '1px solid transparent'
+                      }}>
+                        {quiz.translation}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

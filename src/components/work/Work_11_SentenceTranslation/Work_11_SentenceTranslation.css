@@ -1108,4 +1108,31 @@
   border-bottom: none !important;
   border-left: none !important;
   border-right: none !important;
+}
+
+/* Work_11 전용 스타일 - 인쇄(문제) 화면 디자인 */
+.problem-instruction.work11-instruction {
+  background: #f5f5f5 !important;
+  background-color: #f5f5f5 !important;
+  color: #000 !important;
+  text-align: left !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.sentences-container.work11-sentences-container {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+.sentence-item.work11-sentence-item {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.sentence-item.work11-sentence-item:hover {
+  border-color: transparent !important;
 } 

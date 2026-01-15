@@ -47,11 +47,11 @@ const PrintFormatWork06New: React.FC<PrintFormatWork06NewProps> = ({ quizzes, is
       meta: { workTypeId }
     });
 
-    // 3. 주요 문장 (missingSentence) - 하단 간격 최소화 (글자 크기는 CSS 기본 규칙 사용, 왼쪽 들여쓰기 제거)
+    // 3. 주요 문장 (missingSentence) - 하단 간격 최소화 (글자 크기는 CSS 기본 규칙 사용, 왼쪽 패딩 추가)
     // 정답 모드에서는 주요 문장을 별도로 표시하지 않고 본문에 통합하므로 렌더링하지 않음
     if (!isAnswerMode) {
-    const missingSentenceHtml = `<div class="print-passage print-passage-work01-11 work06-missing-sentence" style="border-radius: 6px; background: #f7f8fc; padding: 0.8em 0 !important; padding-top: 0.8em !important; padding-bottom: 0.8em !important; padding-left: 0 !important; padding-right: 0 !important; margin-bottom: 0 !important; margin-left: 0 !important; font-weight: 700; box-sizing: border-box;">
-      <span style="color: #222;">주요 문장:</span> <span style="color: #6a5acd;">${quiz.missingSentence}</span>
+    const missingSentenceHtml = `<div class="print-passage print-passage-work01-11 work06-missing-sentence" style="border: 1px solid #ccc; border-radius: 6px; background: #ffffff; background-color: #ffffff; padding: 0.8em 1.2em !important; padding-top: 0.8em !important; padding-bottom: 0.8em !important; padding-left: 1.2em !important; padding-right: 1.2em !important; margin-bottom: 0 !important; margin-left: 0 !important; font-weight: 700; box-sizing: border-box;">
+      <span style="color: #222;">주요 문장 :  </span><span style="color: #000;">${quiz.missingSentence}</span>
     </div>`;
     sections.push({
       type: 'html',
@@ -173,18 +173,26 @@ const PrintFormatWork06New: React.FC<PrintFormatWork06NewProps> = ({ quizzes, is
             overflow: hidden !important;
           }
         }
-        /* 유형#06 주요 문장과 영어 본문 사이 간격 제거 및 왼쪽 들여쓰기 제거 (카드 컨테이너 제거됨) */
+        /* 유형#06 주요 문장과 영어 본문 사이 간격 제거 및 왼쪽 패딩 추가 (카드 컨테이너 제거됨) */
         .work06-print .print-column .work06-missing-sentence,
         .work06-print .work06-missing-sentence {
           margin-bottom: 0 !important;
           margin-left: 0 !important;
-          padding-left: 0 !important;
+          padding-left: 1.2em !important;
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          border: 1px solid #ccc !important;
+          border-radius: 6px !important;
         }
         /* 주요문장 컨테이너의 .print-passage 기본 padding 오버라이드 */
         .work06-print .print-column .work06-missing-sentence.print-passage,
         .work06-print .work06-missing-sentence.print-passage {
           margin-left: 0 !important;
-          padding-left: 0 !important;
+          padding-left: 1.2em !important;
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          border: 1px solid #ccc !important;
+          border-radius: 6px !important;
         }
         .work06-print .print-column .work06-numbered-passage,
         .work06-print .work06-numbered-passage {
