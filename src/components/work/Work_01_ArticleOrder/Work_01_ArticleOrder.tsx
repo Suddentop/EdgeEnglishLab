@@ -124,7 +124,7 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
   const [quizzes, setQuizzes] = useState<Quiz[]>([]); // 생성된 퀴즈 배열
   // 항상 규칙 기반 분할 사용 (AI 기반 분할 옵션 제거)
   const [showScreenshotHelp, setShowScreenshotHelp] = useState(false);
-  const [quizFormat, setQuizFormat] = useState<'normal' | 'exam'>('normal'); // 문제 형식: 일반 또는 모의고사
+  const [quizFormat, setQuizFormat] = useState<'normal' | 'exam'>('exam'); // 문제 형식: 일반 또는 모의고사 (기본값: 모의고사 형식)
   
 
   // 포인트 관련 상태
@@ -516,20 +516,44 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
           {/* 생성된 문제 상세 리스트 */}
           <div className="generated-quizzes-list">
             {quizzes.map((quiz, idx) => (
-              <div key={quiz.id || idx} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
-                <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                  <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#01</span>
+              <div key={quiz.id || idx} className="quiz-item-card" style={{ 
+                marginBottom: '2rem', 
+                padding: '1.5rem',
+                backgroundColor: '#fff',
+                border: '1px solid #e0e0e0',
+                borderRadius: '0'
+              }}>
+                <div className="quiz-item-header" style={{ 
+                  marginBottom: '1rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid #e0e0e0',
+                  paddingBottom: '0.5rem'
+                }}>
+                  <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                    문제 {idx + 1} : 문단 순서 맞추기
+                  </h3>
+                  <span style={{ 
+                    fontSize: '0.9rem', 
+                    color: '#666',
+                    fontWeight: '500'
+                  }}>
+                    유형#01
+                  </span>
                 </div>
 
                 <div className="problem-instruction" style={{
-                  fontWeight:800, 
-                  fontSize:'1.1rem', 
-                  background:'#222', 
-                  color:'#fff', 
-                  padding:'0.7rem 0.8rem', 
-                  borderRadius:'8px', 
-                  marginBottom: quiz.format === 'exam' ? '4rem' : '1rem'
+                  fontWeight: 500, 
+                  fontSize: '0.95rem', 
+                  background: '#f5f5f5', 
+                  color: '#000', 
+                  padding: '0.6rem 1rem', 
+                  borderRadius: '0', 
+                  marginBottom: quiz.format === 'exam' ? '1.5rem' : '1rem',
+                  textAlign: 'center',
+                  borderTop: '1px solid #e0e0e0',
+                  borderBottom: '1px solid #e0e0e0'
                 }}>
                   {quiz.instruction || (quiz.format === 'exam' ? '주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.' : '문제 : 다음 단락들을 의미에 맞게 가장 적절히 배열한 것을 고르세요.')}
                 </div>
@@ -538,9 +562,9 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
                   <>
                     {/* 모의고사 형식: 고정된 첫 번째 단락을 박스 안에 표시 */}
                     <div className="fixed-paragraph-box" style={{
-                      border: '2px solid #333',
+                      border: '1px solid #000',
                       borderRadius: '8px',
-                      padding: '0.5rem 1rem', // 상하 패딩 50% 감소: 1rem -> 0.5rem
+                      padding: '0.6rem 1rem',
                       marginTop: '1rem',
                       marginBottom: '1.5rem',
                       backgroundColor: '#fff',
@@ -552,30 +576,70 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
                     </div>
                     
                     {/* 나머지 3개 단락 */}
-                    <div className="problem-passage">
+                    <div className="problem-passage work01-passage" style={{ 
+                      marginBottom: '1.5rem',
+                      backgroundColor: '#ffffff',
+                      background: '#ffffff',
+                      border: '1px solid transparent'
+                    }}>
                       {quiz.shuffledParagraphs.map((paragraph) => (
-                        <div key={paragraph.id} className="shuffled-paragraph" style={{ padding: '0.8rem 0.5rem', fontSize: '1rem', color: '#333' }}>
-                          <strong>({paragraph.label})</strong> {paragraph.content}
+                        <div key={paragraph.id} className="shuffled-paragraph work01-paragraph" style={{ 
+                          padding: '0.5rem 0', 
+                          fontSize: '1rem', 
+                          color: '#333',
+                          lineHeight: '1.6',
+                          marginBottom: '0.5rem',
+                          border: '1px solid transparent',
+                          backgroundColor: '#ffffff',
+                          background: '#ffffff'
+                        }}>
+                          <strong>({paragraph.label}) </strong>{paragraph.content}
                         </div>
                       ))}
                     </div>
                   </>
                 ) : (
                   /* 일반 형식: 기존 레이아웃 */
-                  <div className="problem-passage">
+                  <div className="problem-passage work01-passage" style={{ 
+                    marginBottom: '1.5rem',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    border: '1px solid transparent'
+                  }}>
                     {quiz.shuffledParagraphs.map((paragraph) => (
-                      <div key={paragraph.id} className="shuffled-paragraph" style={{ padding: '0.8rem 0.5rem', fontSize: '1rem', color: '#333' }}>
-                        <strong>{paragraph.label}:</strong> {paragraph.content}
+                      <div key={paragraph.id} className="shuffled-paragraph work01-paragraph" style={{ 
+                        padding: '0.5rem 0', 
+                        fontSize: '1rem', 
+                        color: '#333',
+                        lineHeight: '1.6',
+                        marginBottom: '0.5rem',
+                        border: '1px solid transparent',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff'
+                      }}>
+                        <strong>({paragraph.label}) </strong>{paragraph.content}
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div className="problem-options">
+                <div className="problem-options work01-options" style={{ 
+                  marginTop: '1rem',
+                  backgroundColor: '#ffffff',
+                  background: '#ffffff',
+                  border: '1px solid transparent'
+                }}>
                   {quiz.choices.map((choice, cIdx) => (
-                    <div key={cIdx} className="option" style={{ 
-                      backgroundColor: cIdx === quiz.answerIndex ? '#e3f2fd' : 'transparent',
-                      borderColor: cIdx === quiz.answerIndex ? '#2196f3' : '#e0e0e0'
+                    <div key={cIdx} className="option work01-option" style={{ 
+                      backgroundColor: '#ffffff',
+                      background: '#ffffff',
+                      border: '1px solid transparent',
+                      borderRadius: '0',
+                      padding: '0.5rem 1rem',
+                      marginBottom: '0.5rem',
+                      fontSize: '1rem',
+                      lineHeight: '1.5',
+                      color: '#333'
                     }}>
                       {['①', '②', '③', '④', '⑤'][cIdx]} {quiz.format === 'exam' ? choice.join(' - ') : choice.join(' → ')}
                       {cIdx === quiz.answerIndex && <span style={{ marginLeft: '10px', color: '#1976d2', fontWeight: 'bold', fontSize: '0.9rem' }}>(정답)</span>}
@@ -621,21 +685,21 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
             <input
               type="radio"
               name="quizFormat"
-              value="normal"
-              checked={quizFormat === 'normal'}
-              onChange={(e) => setQuizFormat(e.target.value as 'normal' | 'exam')}
-            />
-            <span>일반 문제 형식</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <input
-              type="radio"
-              name="quizFormat"
               value="exam"
               checked={quizFormat === 'exam'}
               onChange={(e) => setQuizFormat(e.target.value as 'normal' | 'exam')}
             />
             <span>모의고사 형식</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <input
+              type="radio"
+              name="quizFormat"
+              value="normal"
+              checked={quizFormat === 'normal'}
+              onChange={(e) => setQuizFormat(e.target.value as 'normal' | 'exam')}
+            />
+            <span>일반 문제 형식</span>
           </label>
         </div>
       </div>

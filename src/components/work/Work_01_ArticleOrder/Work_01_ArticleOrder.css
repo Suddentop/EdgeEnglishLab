@@ -250,15 +250,35 @@
   font-size: 1.05rem;
   line-height: 1.8;
   margin-bottom: 2rem;
-  padding: 1.5rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  border-left: 4px solid #4a90e2;
+  padding: 0;
+  background-color: #ffffff !important; /* 흰색 배경 - !important로 강제 적용 */
+  background: #ffffff !important; /* 흰색 배경 - !important로 강제 적용 */
+  border: 1px solid transparent !important; /* 투명 테두리 */
+  border-radius: 0;
+  border-left: none;
+  box-shadow: none; /* 음영 효과 제거 */
+}
+
+/* Work_01 전용 클래스로 더 구체적인 선택자 사용 */
+.problem-passage.work01-passage {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
 }
 
 .shuffled-paragraph {
   margin-bottom: 1rem;
+  border: 1px solid transparent !important; /* 투명 테두리 */
+  background-color: #ffffff !important; /* 흰색 배경 - !important로 강제 적용 */
+  background: #ffffff !important; /* 흰색 배경 - !important로 강제 적용 */
   }
+
+/* Work_01 전용 클래스로 더 구체적인 선택자 사용 */
+.shuffled-paragraph.work01-paragraph {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
   
 .shuffled-paragraph:last-child {
   margin-bottom: 0;
@@ -276,6 +296,20 @@
 .option:hover {
   background-color: #f5f5f5;
   border-color: #bbb;
+}
+
+/* Work_01 전용 답안 선택지 컨테이너 */
+.problem-options.work01-options {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+}
+
+/* Work_01 전용 답안 선택지 */
+.option.work01-option {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
 }
 
 .answer-section {
