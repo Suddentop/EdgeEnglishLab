@@ -3930,18 +3930,34 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
 };
 
 // Work_11 문장 번역 문제 인쇄 컴포넌트 - 새로운 동적 페이지네이션 사용
+// ⚠️ 중요: 인쇄(문제)와 인쇄(정답)은 완전히 독립적으로 페이지 분할이 계산됨
+// printMode 값에 따라 includeAnswer prop이 달라지고, 이에 따라 각 문장의 높이 계산이 달라짐
+// 인쇄(문제): 해석 영역이 최소 높이만 사용 → 각 문장 높이가 작음 → 더 많은 문장이 한 페이지에 배치됨
+// 인쇄(정답): 해석 영역이 실제 텍스트 높이 사용 → 각 문장 높이가 큼 → 더 적은 문장이 한 페이지에 배치됨
+// 따라서 인쇄(문제)에서 1~10번이 첫 페이지, 11~15번이 두 번째 페이지라면,
+// 인쇄(정답)에서는 1~8번이 첫 페이지, 9~15번이 두 번째 페이지처럼 다르게 분할될 수 있음
 const PrintFormatPackage01Work11: React.FC<{
   work11Data: SentenceTranslationQuiz;
   printMode: 'no-answer' | 'with-answer';
 }> = ({ work11Data, printMode }) => {
   if (!work11Data) return null;
 
+  const includeAnswer = printMode === 'with-answer';
+  
+  console.log(`🖨️ [패키지#01-유형#11] ${printMode === 'with-answer' ? '인쇄(정답)' : '인쇄(문제)'} 모드 렌더링:`, {
+    printMode,
+    includeAnswer,
+    sentencesCount: work11Data.sentences?.length || 0,
+    translationsCount: work11Data.translations?.length || 0,
+    note: '인쇄(문제)와 인쇄(정답)은 독립적으로 페이지 분할이 계산됩니다.'
+  });
+
   return (
     <div className="only-print work-11-print">
       <Work11DynamicPrintPages
         sentences={work11Data.sentences}
         translations={work11Data.translations}
-        includeAnswer={printMode === 'with-answer'}
+        includeAnswer={includeAnswer}
         printMode={printMode}
         customHeader={<PrintHeaderPackage01 />}
       />

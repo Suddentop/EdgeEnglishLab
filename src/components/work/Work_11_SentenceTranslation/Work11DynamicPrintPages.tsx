@@ -117,14 +117,20 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
     translationsCount: translations.length,
     includeAnswer,
     printMode,
-    mode: includeAnswer ? '인쇄(정답)' : '인쇄(문제)'
+    mode: includeAnswer ? '인쇄(정답)' : '인쇄(문제)',
+    note: '⚠️ 인쇄(문제)와 인쇄(정답)은 독립적으로 페이지 분할이 계산됩니다.'
   });
 
   // 동적 페이지 분할 계산 (더 정교한 로직)
-  // 인쇄(문제)와 인쇄(정답) 페이지는 독립적으로 페이지 분할이 계산됨
+  // ⚠️ 중요: 인쇄(문제)와 인쇄(정답) 페이지는 완전히 독립적으로 페이지 분할이 계산되어야 함
   // includeAnswer 값에 따라 각 문장 컨테이너의 높이가 달라지므로 페이지 분할 결과가 다름
   // 인쇄(문제)에는 한글 해석이 없어 각 문제의 높이가 더 작으므로, 더 많은 문제가 한 페이지에 배치될 수 있음
+  // 인쇄(정답)에는 한글 해석이 포함되어 각 문제의 높이가 더 크므로, 더 적은 문제가 한 페이지에 배치될 수 있음
+  // 따라서 인쇄(문제)에서 1~10번이 첫 페이지, 11~15번이 두 번째 페이지라면,
+  // 인쇄(정답)에서는 1~8번이 첫 페이지, 9~15번이 두 번째 페이지처럼 다르게 분할될 수 있음
   const pageBreakIndices = useMemo(() => {
+    // 독립성 보장: includeAnswer 값에 따라 완전히 다른 계산이 이루어짐
+    console.log(`🔄 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 페이지 분할 계산 시작 - 독립적 계산 보장`);
     if (sentences.length === 0) return [0];
     
     // 헤더 높이 계산 (a4-page-header: height: 1.5cm = 56.7px)
@@ -170,7 +176,9 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
     // 후속 페이지 사용 가능한 높이
     const subsequentPageAvailableHeight = effectiveContentHeight - subsequentPageInstructionHeight - topMargin - safetyMargin;
     
-    console.log(`📏 페이지 분할 계산 (${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'} 모드):`, {
+    console.log(`📏 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 페이지 분할 계산 시작:`, {
+      mode: includeAnswer ? '인쇄(정답)' : '인쇄(문제)',
+      includeAnswer: includeAnswer,
       actualContentHeight: `${actualContentHeight.toFixed(2)}px`,
       effectiveContentHeight: `${effectiveContentHeight.toFixed(2)}px`,
       headerHeight: `${headerHeight}px`,
@@ -180,7 +188,9 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
       subsequentPageAvailableHeight: `${subsequentPageAvailableHeight.toFixed(2)}px`,
       topMargin: `${topMargin}px`,
       safetyMargin: `${safetyMargin}px`,
-      includeAnswer: includeAnswer
+      note: includeAnswer 
+        ? '인쇄(정답): 해석 포함으로 각 문장 높이가 더 큼 → 더 적은 문장이 한 페이지에 배치됨'
+        : '인쇄(문제): 해석 없음으로 각 문장 높이가 더 작음 → 더 많은 문장이 한 페이지에 배치됨'
     });
     
     const breaks: number[] = [0]; // 첫 페이지는 항상 0번 인덱스부터 시작
@@ -192,8 +202,26 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
       const translation = translations[i] || '';
       
       // 현재 문장 컨테이너 높이 계산 (실제 인덱스 사용)
-      // includeAnswer 값에 따라 높이가 달라지므로 인쇄(문제)와 인쇄(정답)의 페이지 분할이 독립적으로 계산됨
+      // ⚠️ 중요: includeAnswer 값에 따라 높이가 달라지므로 인쇄(문제)와 인쇄(정답)의 페이지 분할이 독립적으로 계산됨
+      // 인쇄(문제): 해석 영역이 최소 높이(20.8px)만 사용 → 전체 높이가 작음
+      // 인쇄(정답): 해석 영역이 실제 텍스트 높이 사용 → 전체 높이가 큼
       const containerHeight = calculateSentenceContainerHeight(sentence, translation, includeAnswer, i);
+      
+      // 디버깅: 각 문장의 높이 차이 확인
+      if (i < 3 || i === sentences.length - 1) {
+        const problemHeight = calculateSentenceContainerHeight(sentence, translation, false, i);
+        const answerHeight = calculateSentenceContainerHeight(sentence, translation, true, i);
+        console.log(`📊 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 문장 ${i + 1} 높이 비교:`, {
+          currentMode: includeAnswer ? '인쇄(정답)' : '인쇄(문제)',
+          currentHeight: `${containerHeight.toFixed(2)}px`,
+          problemModeHeight: `${problemHeight.toFixed(2)}px`,
+          answerModeHeight: `${answerHeight.toFixed(2)}px`,
+          heightDifference: `${Math.abs(answerHeight - problemHeight).toFixed(2)}px`,
+          note: includeAnswer 
+            ? `인쇄(정답) 높이가 인쇄(문제)보다 ${(answerHeight - problemHeight).toFixed(2)}px 큼 → 페이지 분할이 다를 수 있음`
+            : `인쇄(문제) 높이가 인쇄(정답)보다 ${(problemHeight - answerHeight).toFixed(2)}px 작음 → 페이지 분할이 다를 수 있음`
+        });
+      }
       
       // 현재 페이지의 사용 가능한 높이 결정
       const availableHeight = isFirstPage ? firstPageAvailableHeight : subsequentPageAvailableHeight;
@@ -254,6 +282,10 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
     console.log(`📚 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 총 ${breaks.length}페이지 생성 (분할 인덱스: [${breaks.join(', ')}])`);
     console.log(`📊 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 문장 처리 확인: 총 ${sentences.length}개 문장`);
     console.log(`📊 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 마지막 페이지: ${lastPageStartIndex}~${lastPageEndIndex - 1}번 문장 (${lastPageSentenceCount}개)`);
+    
+    // ⚠️ 독립성 검증: 인쇄(문제)와 인쇄(정답)의 페이지 분할이 다를 수 있음을 명확히 표시
+    console.log(`✅ [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 페이지 분할 계산 완료 - 이 결과는 ${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'} 모드에만 적용됨`);
+    console.log(`ℹ️  참고: 인쇄(문제)와 인쇄(정답)은 서로 다른 페이지 분할 결과를 가질 수 있습니다.`);
     
     // 모든 문장이 포함되었는지 검증
     let totalCovered = 0;
