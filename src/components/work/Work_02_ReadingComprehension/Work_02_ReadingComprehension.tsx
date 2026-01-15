@@ -9,7 +9,6 @@ import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPo
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
 import { extractTextFromImage, callOpenAI } from '../../../services/common';
-import { CostEstimateDisplay } from '../../common/CostEstimateDisplay';
 import '../../../styles/PrintFormat.css';
 import PrintFormatWork02New from './PrintFormatWork02New';
 import { processWithConcurrency } from '../../../utils/concurrency';
@@ -631,19 +630,39 @@ Korean translation:`;
       }
       const halfLength = Math.ceil(replacements.length / 2);
     return (
-        <table className="replacements-table">
+        <table className="replacements-table work02-replacements-table" style={{
+          borderCollapse: 'collapse',
+          width: '100%',
+          border: '1px solid #666',
+          backgroundColor: '#ffffff'
+        }}>
               <thead>
                 <tr>
-                    <th>원래 단어</th><th>교체된 단어</th><th>원래 단어</th><th>교체된 단어</th>
+                    <th style={{ width: '25%' }}>원래 단어</th>
+                    <th style={{ width: '25%' }}>교체된 단어</th>
+                    <th style={{ width: '25%' }}>원래 단어</th>
+                    <th style={{ width: '25%' }}>교체된 단어</th>
                 </tr>
               </thead>
               <tbody>
                 {Array.from({ length: halfLength }, (_, i) => (
                     <tr key={i}>
-                        <td>{replacements[i*2]?.original} <span className="original-meaning">({replacements[i*2]?.originalMeaning})</span></td>
-                        <td>{replacements[i*2]?.replacement} <span className="replacement-meaning">({replacements[i*2]?.replacementMeaning})</span></td>
-                        <td>{replacements[i*2+1]?.original} <span className="original-meaning">({replacements[i*2+1]?.originalMeaning})</span></td>
-                        <td>{replacements[i*2+1]?.replacement} <span className="replacement-meaning">({replacements[i*2+1]?.replacementMeaning})</span></td>
+                        <td style={{ width: '25%' }}>
+                          {replacements[i*2]?.original || ''}
+                          {replacements[i*2]?.originalMeaning && <span className="original-meaning"> ({replacements[i*2]?.originalMeaning})</span>}
+                        </td>
+                        <td style={{ width: '25%', backgroundColor: '#f5f5f5' }}>
+                          {replacements[i*2]?.replacement || ''}
+                          {replacements[i*2]?.replacementMeaning && <span className="replacement-meaning"> ({replacements[i*2]?.replacementMeaning})</span>}
+                        </td>
+                        <td style={{ width: '25%' }}>
+                          {replacements[i*2+1]?.original || ''}
+                          {replacements[i*2+1]?.originalMeaning && <span className="original-meaning"> ({replacements[i*2+1]?.originalMeaning})</span>}
+                        </td>
+                        <td style={{ width: '25%', backgroundColor: '#f5f5f5' }}>
+                          {replacements[i*2+1]?.replacement || ''}
+                          {replacements[i*2+1]?.replacementMeaning && <span className="replacement-meaning"> ({replacements[i*2+1]?.replacementMeaning})</span>}
+                        </td>
                   </tr>
                 ))}
               </tbody>
@@ -683,17 +702,61 @@ Korean translation:`;
                 </div>
 
             {quizzes.map((quiz, idx) => (
-                <div key={idx} className="quiz-item-card" style={{ marginBottom: '3rem', borderTop: '2px solid #eee', paddingTop: '2rem' }}>
-                    <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                        <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#02</span>
+                <div key={idx} className="quiz-item-card" style={{ 
+                  marginBottom: '2rem', 
+                  padding: '1.5rem',
+                  backgroundColor: '#fff',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '0'
+                }}>
+                    <div className="quiz-item-header" style={{ 
+                      marginBottom: '1rem', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      borderBottom: '1px solid #e0e0e0',
+                      paddingBottom: '0.5rem'
+                    }}>
+                        <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
+                          문제 {idx + 1} : 유사단어 독해
+                        </h3>
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          color: '#666',
+                          fontWeight: '500'
+                        }}>
+                          유형#02
+                        </span>
                 </div>
 
-                    <div className="problem-title" style={{fontWeight: '800', fontSize: '1rem', background: '#222', color: '#fff', padding: '0.7rem 0.5rem', borderRadius: '8px', marginBottom: '1rem'}}>
-                          문제: 다음 본문을 읽고 해석하세요
+                    <div className="problem-instruction work02-instruction" style={{
+                      fontWeight: 500, 
+                      fontSize: '0.95rem', 
+                      background: '#f5f5f5', 
+                      color: '#000', 
+                      padding: '0.6rem 1rem', 
+                      borderRadius: '0', 
+                      marginBottom: '1.5rem',
+                      textAlign: 'left',
+                      borderTop: '1px solid #e0e0e0',
+                      borderBottom: '1px solid #e0e0e0'
+                    }}>
+                          다음 본문을 읽고 해석하세요
                   </div>
 
-                    <div className="text-content" style={{background: '#fff3cd', padding: '1.2rem', borderRadius: '8px', marginBottom: '1.5rem'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
+                    <div className="text-content work02-text-content" style={{
+                      background: '#ffffff', 
+                      backgroundColor: '#ffffff',
+                      padding: '1rem', 
+                      borderRadius: '0', 
+                      marginBottom: '1.5rem',
+                      border: '1px solid transparent',
+                      fontSize: '1rem',
+                      lineHeight: '1.6',
+                      color: '#333',
+                      borderBottom: '1px solid #e0e0e0',
+                      paddingBottom: '1.5rem'
+                    }} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                   </div>
 
                     <h3>교체된 단어들:</h3>
@@ -701,7 +764,7 @@ Korean translation:`;
 
                     <div className="translation-section" style={{marginTop:'2rem'}}>
                         <h3>본문 해석:</h3>
-                        <div className="translation-content" style={{background: '#f1f8e9', padding: '1.2rem', borderRadius: '8px'}}>
+                        <div className="translation-content work02-translation" style={{background: '#f5f5f5', backgroundColor: '#f5f5f5', padding: '1.2rem', borderRadius: '8px'}}>
                             {quiz.translation}
                     </div>
                           </div>
@@ -767,17 +830,6 @@ Korean translation:`;
                       rows={6}
                       style={{ marginTop: '10px', width: '100%' }}
         />
-        {item.text && item.text.trim().length >= 10 && (
-          <CostEstimateDisplay
-            inputText={item.text}
-            workTypeId="02"
-            options={{
-              includeTranslation: true,
-              sentenceCount: Math.ceil(item.text.split(/[.!?]+/).length)
-            }}
-            className="cost-estimate-item"
-          />
-        )}
         {item.error && <div className="error-message">❌ {item.error}</div>}
         </div>
              )}

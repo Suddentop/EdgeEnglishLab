@@ -485,6 +485,25 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Work_02 전용 지시문 스타일 - 인쇄(문제) 화면 디자인 (유형#01과 동일) */
+.problem-instruction.work02-instruction {
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  background: #f5f5f5 !important;
+  color: #000 !important;
+  padding: 0.6rem 1rem !important;
+  border-radius: 0 !important;
+  margin-bottom: 1.5rem !important;
+  text-align: left !important;
+  border-top: 1px solid #e0e0e0 !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  display: block !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
 /* 개선된 파일 업로드 스타일 */
 .input-guide {
   display: flex;
@@ -829,7 +848,7 @@
   width: 100% !important;
   border-collapse: collapse !important;
   background: white !important;
-  border: 1px solid #ddd !important;
+  border: 1px solid #666 !important; /* 진한 회색 격자 */
   margin-top: 0.7rem !important;
 }
 
@@ -847,10 +866,10 @@
   padding: 0.64rem 0.8rem !important; /* 상·하 20% 감소 */
   text-align: center !important;
   font-size: 12px !important;
-  border-top: 0.5px solid #aaaaaa !important;
-  border-bottom: 0.5px solid #aaaaaa !important;
-  border-left: 0.5px solid #aaaaaa !important;
-  border-right: 0.5px solid #aaaaaa !important;
+  border-top: 1px solid #666 !important; /* 진한 회색 격자 */
+  border-bottom: 1px solid #666 !important; /* 진한 회색 격자 */
+  border-left: 1px solid #666 !important; /* 진한 회색 격자 */
+  border-right: 1px solid #666 !important; /* 진한 회색 격자 */
 }
 
 /* 인쇄(정답)용 테이블 헤더 */
@@ -867,10 +886,10 @@
 /* 화면 표시용 테이블 셀 */
 .quiz-generator .replacements-table.no-print td {
   padding: 0.48rem 0.8rem !important; /* 상·하 20% 감소 */
-  border-top: 0.5px solid #aaaaaa !important;
-  border-bottom: 0.5px solid #aaaaaa !important;
-  border-left: 0.5px solid #aaaaaa !important;
-  border-right: 0.5px solid #aaaaaa !important;
+  border-top: 1px solid #666 !important; /* 진한 회색 격자 */
+  border-bottom: 1px solid #666 !important; /* 진한 회색 격자 */
+  border-left: 1px solid #666 !important; /* 진한 회색 격자 */
+  border-right: 1px solid #666 !important; /* 진한 회색 격자 */
   text-align: left !important;
   vertical-align: middle !important;
   font-size: 1rem !important;
@@ -886,7 +905,7 @@
 }
 
 .replacements-table tr:last-child td {
-  border-bottom: 1px solid #ddd !important;
+  border-bottom: 1px solid #666 !important; /* 진한 회색 격자 */
 }
 
 .replacements-table tr:nth-child(even) {
@@ -907,13 +926,13 @@
 
 .original-meaning {
   font-size: 0.8rem;
-  color: #666;
+  color: #333; /* 회색 하이라이트 제거 - 검은색으로 변경 */
   font-style: italic;
 }
 
 .replacement-meaning {
   font-size: 0.8rem;
-  color: #1976d2;
+  color: #333; /* 회색 하이라이트 제거 - 검은색으로 변경 */
   font-style: italic;
 }
 
@@ -1119,7 +1138,7 @@
 .quiz-generator table.replacements-table.no-print,
 table.replacements-table.no-print,
 .replacements-table.no-print {
-  border: 1px solid #aaaaaa !important;
+  border: 1px solid #666 !important; /* 진한 회색 격자 */
   border-collapse: collapse !important;
 }
 
@@ -1128,7 +1147,7 @@ table.replacements-table.no-print th,
 .replacements-table.no-print th {
   padding: 0.8rem !important;
   line-height: 1.4 !important;
-  border: 0.5px solid #aaaaaa !important;
+  border: 1px solid #666 !important; /* 진한 회색 격자 */
 }
 
 .quiz-generator table.replacements-table.no-print td,
@@ -1136,7 +1155,7 @@ table.replacements-table.no-print td,
 .replacements-table.no-print td {
   padding: 0.6rem 0.8rem !important;
   line-height: 1.4 !important;
-  border: 0.5px solid #aaaaaa !important;
+  border: 1px solid #666 !important; /* 진한 회색 격자 */
 }
 
 /* 인쇄(정답)용 테이블만 - 조정된 크기 */
@@ -1174,9 +1193,70 @@ table.replacements-table.no-print td,
   background: #f1f8e9 !important;
 }
 
-/* 화면용 변경된 본문(문제) 배경색 - 노란색 유지 */
+/* 화면용 변경된 본문(문제) 배경색 - 흰색으로 변경 */
 .quiz-generator .text-content.no-print {
-  background: #fff3cd !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+/* Work_02 전용 본문 컨텐츠 스타일 */
+.text-content.work02-text-content {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid transparent !important;
+  border-bottom: 1px solid #e0e0e0 !important; /* 회색 구분선 */
+}
+
+/* Work_02 전용 교체된 단어 테이블 - 심플한 디자인, 동일한 컬럼 너비 */
+.replacements-table.work02-replacements-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background: #ffffff !important;
+  border: 1px solid #666 !important;
+  margin-top: 0.7rem !important;
+}
+
+.replacements-table.work02-replacements-table th,
+.quiz-display .replacements-table th {
+  width: 25% !important;
+  border: 1px solid #666 !important; /* 진한 회색 격자 */
+  background: #ffffff !important;
+  color: #333 !important;
+  font-weight: 500 !important;
+  padding: 0.4rem 0.8rem !important; /* 상하 패딩 감소: 0.6rem -> 0.4rem */
+  text-align: center !important;
+  font-size: 0.95rem !important;
+}
+
+.replacements-table.work02-replacements-table td,
+.quiz-display .replacements-table td {
+  width: 25% !important;
+  border: 1px solid #666 !important; /* 진한 회색 격자 */
+  background: #ffffff !important;
+  padding: 0.4rem 0.8rem !important; /* 상하 패딩 감소: 0.6rem -> 0.4rem */
+  text-align: left !important;
+  vertical-align: middle !important;
+  font-size: 1rem !important;
+  color: #333 !important;
+}
+
+/* 교체된 단어 열(2번째, 4번째 컬럼) 배경색 연한 회색 */
+.replacements-table.work02-replacements-table td:nth-child(2),
+.replacements-table.work02-replacements-table td:nth-child(4),
+.quiz-display .replacements-table td:nth-child(2),
+.quiz-display .replacements-table td:nth-child(4) {
+  background: #f5f5f5 !important; /* 연한 회색 배경 */
+}
+
+.replacements-table.work02-replacements-table tr:nth-child(even) {
+  background: #ffffff !important;
+}
+
+/* Work_02 전용 한글해석 컨테이너 - 배경색 변경 */
+.quiz-display .translation-content.work02-translation,
+.translation-content.work02-translation {
+  background: #f5f5f5 !important;
+  background-color: #f5f5f5 !important;
 }
 
 .quiz-generator .problem-passage.translation *,
