@@ -706,14 +706,16 @@
 @media print {
   /* 유형#11 인쇄(문제) 페이지 문장 컨테이너 - 연한 노란색 */
   .work11-print-problem-sentence {
-    background: #FFF3CD !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
   /* 유형#11 인쇄(정답) 페이지 문장 컨테이너 - 연한 녹색으로 변경 */
   .work11-print-answer-sentence {
-    background: #F1F8E9 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -736,7 +738,8 @@
   
   /* 유형#11 인쇄(정답) 페이지 해석 컨테이너 - 연한 녹색 (기존 유지) */
   .work11-print-answer-translation {
-    background: #F1F8E9 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }

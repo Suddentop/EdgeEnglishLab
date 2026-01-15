@@ -22,50 +22,86 @@ const A4_CONFIG = {
   CONTENT_HEIGHT: 1048,     // px (1123 - 25 - 25 - 30)
 };
 
-// 텍스트 높이 계산 함수
+// 텍스트 높이 계산 함수 (더 정교한 계산)
 const calculateContainerHeight = (text: string, padding: number = 0, fontSize: number = 16, lineHeight: number = 1.2): number => {
-  const availableWidthPx = A4_CONFIG.CONTENT_WIDTH - 40; // 좌우 패딩 고려
-  const charWidthPx = fontSize * 0.55; // 한글/영문 평균 문자 폭
+  if (!text || text.trim().length === 0) {
+    return padding;
+  }
+  
+  // a4-page-content의 padding: 0 1cm 1cm 1cm = 좌우 37.8px (1cm = 37.8px)
+  // 컨테이너 내부 padding: 0.3rem 1rem = 좌우 16px (1rem = 16px)
+  // 실제 사용 가능한 너비 = CONTENT_WIDTH - 좌우 패딩 (37.8px * 2) - 컨테이너 내부 패딩 (16px * 2)
+  const availableWidthPx = A4_CONFIG.CONTENT_WIDTH - (37.8 * 2) - (16 * 2); // 약 638px
+  
+  // 문자 폭 계산 (영문/숫자: 0.5 * fontSize, 한글: 0.95 * fontSize, 평균: 0.6 * fontSize)
+  const charWidthPx = fontSize * 0.6;
   const charsPerLine = Math.floor(availableWidthPx / charWidthPx);
-  const lines = Math.ceil(text.length / charsPerLine);
+  
+  // 줄 수 계산 (최소 1줄)
+  const lines = Math.max(1, Math.ceil(text.length / charsPerLine));
+  
+  // 실제 높이 = 줄 수 * 줄 높이 + 패딩
   return (lines * fontSize * lineHeight) + padding;
 };
 
-// 각 문장 컨테이너 높이 계산
+// 각 문장 컨테이너 높이 계산 (더 정교한 계산)
 const calculateSentenceContainerHeight = (
   sentence: string, 
   translation: string, 
-  includeAnswer: boolean
+  includeAnswer: boolean,
+  sentenceIndex: number
 ): number => {
-  // 문장 번호 + 문장 텍스트 높이 (fontSize: 1rem = 16px, lineHeight: 1.2)
-  // 문장 번호는 약 3~4자 정도 공간을 차지하므로 "1. " 을 포함해서 계산
-  const sentenceText = `${1}. ${sentence}`;
+  // 문장 번호 텍스트 (예: "1. ", "10. ", "100. ")
+  const indexText = `${sentenceIndex + 1}. `;
+  const sentenceText = `${indexText}${sentence}`;
+  
+  // 문장 텍스트 높이 (fontSize: 1rem = 16px, lineHeight: 1.2)
   const sentenceHeight = calculateContainerHeight(sentenceText, 0, 16, 1.2);
   
-  // 문장 하단 마진 (marginBottom: 0.2rem)
+  // 문장 하단 마진 (marginBottom: 0.2rem = 3.2px)
   const sentenceMarginBottom = 0.2 * 16; // 3.2px
   
-  // 컨테이너 내부 패딩 (padding: 0.3rem 1rem 0.2rem 1rem = 위 4.8px, 아래 3.2px)
+  // 컨테이너 내부 패딩 (padding: 0.3rem 1rem 0.2rem 1rem)
   const containerPaddingTop = 0.3 * 16; // 4.8px
   const containerPaddingBottom = 0.2 * 16; // 3.2px
   
   // 해석 영역 높이
+  // 인쇄(문제)와 인쇄(정답) 페이지의 페이지 분할은 독립적으로 계산되어야 함
+  // 인쇄(문제)에는 한글 해석이 없기 때문에 각 문제의 높이가 인쇄(정답)과 다름
   let translationHeight = 0;
   if (includeAnswer) {
-    // 정답 포함: fontSize: 0.8rem = 12.8px, lineHeight: 1.2
+    // 인쇄(정답) 모드: 실제 해석 텍스트 높이를 계산
+    // fontSize: 0.8rem = 12.8px, lineHeight: 1.2
     translationHeight = calculateContainerHeight(translation, 0, 12.8, 1.2);
-    // marginTop: 0.1rem + paddingBottom: 0.2rem
-    translationHeight += 0.1 * 16 + 0.2 * 16; // 1.6px + 3.2px = 4.8px
+    // marginTop: 0.1rem (1.6px) + paddingBottom: 0.2rem (3.2px)
+    translationHeight += (0.1 * 16) + (0.2 * 16); // 4.8px
   } else {
-    // 정답 없음: height: 24px (고정), marginTop: 0.3rem
-    translationHeight = 24 + (0.3 * 16); // 24px + 4.8px = 28.8px
+    // 인쇄(문제) 모드: 해석 영역이 표시되지 않으므로 최소 높이만 사용
+    // CSS @media print에서 .work11-dynamic-page-template .work11-print-problem-sentence > div:last-child
+    // height: 1rem !important (16px)로 오버라이드됨
+    // 실제 렌더링: height: 1rem (16px) + marginTop: 0.3rem (4.8px) = 20.8px
+    // 인쇄(문제) 모드에서는 CSS에서 오버라이드된 실제 높이를 사용
+    // 하지만 실제로는 더 작을 수 있으므로 약간 보수적으로 계산
+    translationHeight = 16 + (0.3 * 16); // 20.8px (1rem + 0.3rem)
   }
   
-  // 컨테이너 하단 마진 (marginBottom: 0.5rem)
-  const containerMarginBottom = 0.5 * 16; // 8px
+  // 컨테이너 하단 마진
+  // CSS에서 실제 적용되는 마진: margin-bottom: 1.5rem (인쇄 모드)
+  // 인라인 스타일: marginBottom: '0.5rem' (8px)
+  // 하지만 CSS @media print에서 .work11-dynamic-page-template .work11-print-problem-sentence,
+  // .work11-dynamic-page-template .work11-print-answer-sentence에 margin-bottom: 1.5rem이 적용됨
+  // 인쇄(문제) 모드에서는 실제 렌더링과의 차이를 고려하여 약간 줄임
+  const containerMarginBottom = includeAnswer 
+    ? 1.5 * 16  // 인쇄(정답): 24px (CSS에서 실제 적용되는 값)
+    : 1.2 * 16; // 인쇄(문제): 19.2px (실제로는 약간 작을 수 있음)
   
+  // 총 높이 계산
+  // 실제 렌더링과의 차이를 보정하기 위해 약간의 여유를 둠
   const totalHeight = sentenceHeight + sentenceMarginBottom + containerPaddingTop + containerPaddingBottom + translationHeight + containerMarginBottom;
   
+  // 계산 오차 보정 제거: 실제 렌더링과 계산의 차이가 과대평가되고 있으므로
+  // 오차 보정 없이 실제 계산값을 그대로 사용
+  // (안전 마진이 이미 페이지 레벨에서 적용되므로 컨테이너 레벨에서는 불필요)
   return totalHeight;
 };
 
@@ -80,59 +116,159 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
     sentencesCount: sentences.length,
     translationsCount: translations.length,
     includeAnswer,
-    printMode
+    printMode,
+    mode: includeAnswer ? '인쇄(정답)' : '인쇄(문제)'
   });
 
-  // 동적 페이지 분할 계산
+  // 동적 페이지 분할 계산 (더 정교한 로직)
+  // 인쇄(문제)와 인쇄(정답) 페이지는 독립적으로 페이지 분할이 계산됨
+  // includeAnswer 값에 따라 각 문장 컨테이너의 높이가 달라지므로 페이지 분할 결과가 다름
+  // 인쇄(문제)에는 한글 해석이 없어 각 문제의 높이가 더 작으므로, 더 많은 문제가 한 페이지에 배치될 수 있음
   const pageBreakIndices = useMemo(() => {
     if (sentences.length === 0) return [0];
     
-    // 문제 제목 높이 계산
-    // fontSize: 1rem = 16px, lineHeight: 1.2, padding: 0.7rem = 11.2px (위아래)
-    // 실제 높이는 텍스트 높이 + padding
-    const instructionText = "다음 본문의 각 문장을 한국어로 해석하세요.";
-    const instructionTextHeight = calculateContainerHeight(instructionText, 0, 16, 1.2);
-    const instructionPadding = 0.7 * 16 * 2; // 위아래 패딩 (0.7rem)
-    const instructionMarginBottom = 1.2 * 16; // marginBottom: 1.2rem
-    const instructionHeight = instructionTextHeight + instructionPadding + instructionMarginBottom;
+    // 헤더 높이 계산 (a4-page-header: height: 1.5cm = 56.7px)
+    const headerHeight = 56.7; // 1.5cm = 56.7px
     
-    // 페이지 상단 여백 (marginTop: 0.9rem)
+    // a4-page-content의 padding: 0 1cm 1cm 1cm = 상하 37.8px
+    const contentPaddingTop = 0; // 상단 패딩 없음
+    const contentPaddingBottom = 37.8; // 하단 패딩 1cm
+    
+    // 첫 페이지 제목 높이 계산
+    const firstPageInstructionText = "다음 본문의 각 문장을 한국어로 해석하세요.";
+    const firstPageInstructionTextHeight = calculateContainerHeight(firstPageInstructionText, 0, 16, 1.2);
+    const firstPageInstructionPadding = 0.7 * 16 * 2; // 위아래 패딩 (0.7rem * 2)
+    const firstPageInstructionMarginBottom = 1.2 * 16; // marginBottom: 1.2rem
+    const firstPageInstructionHeight = firstPageInstructionTextHeight + firstPageInstructionPadding + firstPageInstructionMarginBottom;
+    
+    // 후속 페이지 제목 높이 계산 (더 짧은 텍스트)
+    const subsequentPageInstructionText = `번역할 문장들 (계속) - X페이지`;
+    const subsequentPageInstructionTextHeight = calculateContainerHeight(subsequentPageInstructionText, 0, 16, 1.2);
+    const subsequentPageInstructionHeight = subsequentPageInstructionTextHeight + firstPageInstructionPadding + firstPageInstructionMarginBottom;
+    
+    // 페이지 상단 여백 (marginTop: 0.9rem = 14.4px)
     const topMargin = 0.9 * 16; // 14.4px
     
-    // 사용 가능한 높이 (A4 콘텐츠 높이 - 제목 - 상단 여백 - 안전 마진)
-    const safetyMargin = 50; // px
-    const availableHeight = A4_CONFIG.CONTENT_HEIGHT - instructionHeight - topMargin - safetyMargin;
+    // 실제 사용 가능한 콘텐츠 높이 계산
+    // A4 페이지 높이 (1123px) - 헤더 높이 - 콘텐츠 하단 패딩
+    const actualContentHeight = A4_CONFIG.PAGE_HEIGHT - headerHeight - contentPaddingBottom;
     
-    console.log('📏 페이지 분할 계산:', {
-      availableHeight: `${availableHeight}px`,
-      instructionHeight: `${instructionHeight}px`,
+    // PDF 생성 시 실제 사용 가능한 높이를 더 정확하게 계산
+    // 콘솔 로그에서 확인: PDF 생성 시 요소 높이가 600px로 제한됨
+    // 하지만 실제 인쇄 시에는 브라우저가 자동으로 페이지를 분할하므로
+    // 계산된 높이를 신뢰하되, 더 보수적인 안전 마진 사용
+    const effectiveContentHeight = actualContentHeight;
+    
+    // 안전 마진 조정 (문장이 잘리지 않도록 적절한 여유 확보)
+    // 인쇄(문제) 모드에서는 해석이 없어 높이 계산이 더 정확하므로 안전 마진을 줄임
+    // 인쇄(정답) 모드에서는 해석 텍스트 높이 계산 오차를 고려하여 더 큰 마진 사용
+    const safetyMargin = includeAnswer ? 30 : 15; // px (인쇄(문제)는 더 작은 마진)
+    
+    // 첫 페이지 사용 가능한 높이
+    const firstPageAvailableHeight = effectiveContentHeight - firstPageInstructionHeight - topMargin - safetyMargin;
+    
+    // 후속 페이지 사용 가능한 높이
+    const subsequentPageAvailableHeight = effectiveContentHeight - subsequentPageInstructionHeight - topMargin - safetyMargin;
+    
+    console.log(`📏 페이지 분할 계산 (${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'} 모드):`, {
+      actualContentHeight: `${actualContentHeight.toFixed(2)}px`,
+      effectiveContentHeight: `${effectiveContentHeight.toFixed(2)}px`,
+      headerHeight: `${headerHeight}px`,
+      firstPageInstructionHeight: `${firstPageInstructionHeight.toFixed(2)}px`,
+      subsequentPageInstructionHeight: `${subsequentPageInstructionHeight.toFixed(2)}px`,
+      firstPageAvailableHeight: `${firstPageAvailableHeight.toFixed(2)}px`,
+      subsequentPageAvailableHeight: `${subsequentPageAvailableHeight.toFixed(2)}px`,
       topMargin: `${topMargin}px`,
-      safetyMargin: `${safetyMargin}px`
+      safetyMargin: `${safetyMargin}px`,
+      includeAnswer: includeAnswer
     });
     
     const breaks: number[] = [0]; // 첫 페이지는 항상 0번 인덱스부터 시작
     let currentPageHeight = 0;
+    let isFirstPage = true;
     
     for (let i = 0; i < sentences.length; i++) {
       const sentence = sentences[i];
       const translation = translations[i] || '';
       
-      // 현재 문장 컨테이너 높이 계산
-      const containerHeight = calculateSentenceContainerHeight(sentence, translation, includeAnswer);
+      // 현재 문장 컨테이너 높이 계산 (실제 인덱스 사용)
+      // includeAnswer 값에 따라 높이가 달라지므로 인쇄(문제)와 인쇄(정답)의 페이지 분할이 독립적으로 계산됨
+      const containerHeight = calculateSentenceContainerHeight(sentence, translation, includeAnswer, i);
+      
+      // 현재 페이지의 사용 가능한 높이 결정
+      const availableHeight = isFirstPage ? firstPageAvailableHeight : subsequentPageAvailableHeight;
       
       // 현재 페이지에 추가했을 때 높이 초과 여부 확인
-      if (currentPageHeight + containerHeight > availableHeight && currentPageHeight > 0) {
-        // 현재 페이지가 가득 찼으므로 다음 페이지로
+      const remainingSpace = availableHeight - currentPageHeight;
+      
+      // 인쇄(문제) 모드에서는 계산 오차를 고려하여 약간의 여유를 두고 분할
+      // 인쇄(정답) 모드에서는 해석 텍스트 높이 계산 오차가 클 수 있으므로 더 보수적으로 분할
+      const threshold = includeAnswer ? 0 : 5; // 인쇄(문제)는 5px 여유를 두고 분할
+      const wouldExceed = currentPageHeight + containerHeight > (availableHeight - threshold);
+      
+      // 페이지 분할 조건 (명확한 로직):
+      // 1. 추가 시 높이를 초과하면 무조건 다음 페이지로 (단, 첫 페이지이고 현재 페이지가 비어있으면 예외)
+      // 2. 단일 문장이 한 페이지를 초과하는 경우 (매우 긴 문장 처리)
+      // 3. 그 외의 경우 현재 페이지에 추가
+      
+      // 추가 시 높이를 초과하고, 현재 페이지에 이미 내용이 있으면 무조건 다음 페이지로
+      if (wouldExceed && currentPageHeight > 0) {
         breaks.push(i);
         currentPageHeight = containerHeight;
-        console.log(`📄 페이지 분할: ${i}번 문장부터 새 페이지 시작 (누적 높이: ${currentPageHeight.toFixed(2)}px)`);
+        isFirstPage = false; // 다음 페이지는 후속 페이지
+        const overflow = (currentPageHeight + containerHeight) - (availableHeight - threshold);
+        console.log(`📄 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 페이지 분할: ${i}번 문장부터 새 페이지 시작 (누적 높이: ${currentPageHeight.toFixed(2)}px, 사용 가능: ${availableHeight.toFixed(2)}px, 남은 공간: ${remainingSpace.toFixed(2)}px, 문장 높이: ${containerHeight.toFixed(2)}px, 추가 시 초과: ${overflow.toFixed(2)}px, threshold: ${threshold}px)`);
+      } else if (containerHeight > availableHeight && currentPageHeight > 0) {
+        // 단일 문장이 한 페이지를 초과하는 경우 (매우 긴 문장 처리)
+        // 현재 페이지에 이미 내용이 있으면 다음 페이지로 이동
+        breaks.push(i);
+        currentPageHeight = containerHeight;
+        isFirstPage = false;
+        console.warn(`⚠️ ${i}번 문장이 한 페이지를 초과하여 다음 페이지로 이동 (높이: ${containerHeight.toFixed(2)}px > 사용 가능: ${availableHeight.toFixed(2)}px)`);
       } else {
         // 현재 페이지에 추가
         currentPageHeight += containerHeight;
+        
+        // 단일 문장이 한 페이지를 초과하지만 첫 페이지인 경우 (강제로 포함)
+        if (containerHeight > availableHeight && currentPageHeight === containerHeight) {
+          console.warn(`⚠️ 경고: ${i}번 문장이 한 페이지를 초과하지만 첫 페이지이므로 포함 (높이: ${containerHeight.toFixed(2)}px > 사용 가능: ${availableHeight.toFixed(2)}px)`);
+        } else {
+          console.log(`✅ [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] ${i}번 문장 추가 (높이: ${containerHeight.toFixed(2)}px, 누적: ${currentPageHeight.toFixed(2)}px/${availableHeight.toFixed(2)}px, 남은 공간: ${(availableHeight - currentPageHeight).toFixed(2)}px)`);
+        }
       }
     }
     
-    console.log(`📚 총 ${breaks.length}페이지 생성 (분할 인덱스: [${breaks.join(', ')}])`);
+    // 마지막 페이지가 제대로 생성되었는지 확인
+    const lastBreakIndex = breaks[breaks.length - 1];
+    if (lastBreakIndex >= sentences.length) {
+      console.error(`❌ 오류: 마지막 분할 인덱스 ${lastBreakIndex}가 문장 수 ${sentences.length}를 초과합니다!`);
+    }
+    
+    // 모든 문장이 포함되었는지 확인
+    // breaks 배열의 마지막 값이 마지막 문장의 인덱스보다 작거나 같아야 함
+    // 마지막 페이지는 breaks[마지막]부터 sentences.length까지 포함
+    const lastPageStartIndex = breaks[breaks.length - 1];
+    const lastPageEndIndex = sentences.length;
+    const lastPageSentenceCount = lastPageEndIndex - lastPageStartIndex;
+    
+    console.log(`📚 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 총 ${breaks.length}페이지 생성 (분할 인덱스: [${breaks.join(', ')}])`);
+    console.log(`📊 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 문장 처리 확인: 총 ${sentences.length}개 문장`);
+    console.log(`📊 [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 마지막 페이지: ${lastPageStartIndex}~${lastPageEndIndex - 1}번 문장 (${lastPageSentenceCount}개)`);
+    
+    // 모든 문장이 포함되었는지 검증
+    let totalCovered = 0;
+    for (let i = 0; i < breaks.length; i++) {
+      const start = breaks[i];
+      const end = i < breaks.length - 1 ? breaks[i + 1] : sentences.length;
+      totalCovered += (end - start);
+      console.log(`  [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 페이지 ${i + 1}: ${start}~${end - 1}번 문장 (${end - start}개)`);
+    }
+    
+    if (totalCovered !== sentences.length) {
+      console.error(`❌ [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 오류: 문장이 누락되었습니다! 총 ${sentences.length}개 중 ${totalCovered}개만 포함됨`);
+    } else {
+      console.log(`✅ [${includeAnswer ? '인쇄(정답)' : '인쇄(문제)'}] 모든 문장이 포함되었습니다! (총 ${totalCovered}개)`);
+    }
     
     return breaks;
   }, [sentences, translations, includeAnswer]);
@@ -147,16 +283,10 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
       pageBreakInside: 'avoid',
       breakInside: 'avoid',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      backgroundColor: '#ffffff',
+      border: '2px solid #0000ff' // 파란색: 문장 컨테이너
     };
-
-    if (includeAnswer) {
-      containerStyle.backgroundColor = '#F1F8E9';
-      containerStyle.border = '1px solid #e3f2fd';
-    } else {
-      containerStyle.backgroundColor = '#FFF3CD';
-      containerStyle.border = '1px solid #e3f2fd';
-    }
 
     return (
       <div 
@@ -168,7 +298,8 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           fontSize: '1rem',
           lineHeight: '1.2',
           color: '#000',
-          marginBottom: '0.2rem'
+          marginBottom: '0.2rem',
+          border: '1px solid #8800ff' // 보라색: 문장 텍스트 영역
         }}>
           <span style={{fontWeight: 'bold', color: '#333'}}>
             {index + 1}. 
@@ -180,17 +311,20 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           <div style={{
             fontSize: '0.8rem',
             lineHeight: '1.2',
-            color: '#1976d2',
+            color: '#000000',
             fontWeight: '500',
             marginTop: '0.1rem',
-            paddingBottom: '0.2rem'
+            paddingBottom: '0.2rem',
+            border: '1px solid #ff00ff' // 분홍색: 해석 영역 (정답 모드)
           }}>
             {translation}
           </div>
         ) : (
           <div style={{
             height: '24px',
-            marginTop: '0.3rem'
+            marginTop: '0.3rem',
+            border: '1px dashed #cccccc', // 회색 점선: 해석 영역 (문제 모드, 숨김)
+            backgroundColor: '#f0f0f0' // 배경색으로 영역 표시
           }}>
           </div>
         )}
@@ -223,7 +357,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           position: 'relative',
           display: 'flex',
           flexDirection: 'column',
-          border: 'none'
+          border: '3px solid #ff0000' // 빨간색: 페이지 컨테이너
         }}
       >
         <div className="a4-page-header" style={{
@@ -231,7 +365,8 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           height: '1.5cm',
           flexShrink: 0,
           padding: '0.5cm 0.3cm 0 0.3cm',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          border: '2px solid #ff8800' // 주황색: 헤더 영역
         }}>
           {customHeader || <PrintHeaderWork01 />}
         </div>
@@ -241,7 +376,8 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           flex: 1,
           padding: '0 1cm 1cm 1cm',
           boxSizing: 'border-box',
-          overflow: 'visible'
+          overflow: 'visible',
+          border: '2px solid #ffdd00' // 노란색: 콘텐츠 영역
         }}>
           <div className="problem-instruction" data-work-type="11" style={{
             fontWeight: 800,
@@ -254,7 +390,8 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            width: '100%'
+            width: '100%',
+            border: '2px solid #00ff00' // 초록색: 제목/지시사항 영역
           }}>
             <span>
               {pageIndex === 0 
@@ -271,21 +408,54 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
             </span>
           </div>
           
-          <div style={{ marginTop: '0.9rem' }}>
-            {pageSentences.map((sentence, index) => 
-              renderContainer(sentence, pageTranslations[index], startIndex + index, pageIndex + 1)
-            )}
+          <div style={{ 
+            marginTop: '0.9rem',
+            border: '2px solid #00ffff' // 청록색: 상단 마진 영역
+          }}>
+            {pageSentences.map((sentence, index) => {
+              const actualIndex = startIndex + index;
+              const translation = pageTranslations[index] || translations[actualIndex] || '';
+              console.log(`  📝 페이지 ${pageIndex + 1} - 문장 ${actualIndex + 1} 렌더링:`, {
+                sentence: sentence.substring(0, 50) + '...',
+                hasTranslation: !!translation,
+                translationLength: translation.length
+              });
+              return renderContainer(sentence, translation, actualIndex, pageIndex + 1);
+            })}
           </div>
         </div>
       </div>
     );
   };
 
+  // 렌더링 전 최종 검증
+  console.log('🔍 최종 렌더링 검증:', {
+    totalPages,
+    totalSentences: sentences.length,
+    totalTranslations: translations.length,
+    pageBreakIndices,
+    includeAnswer
+  });
+  
+  // 모든 문장이 포함되었는지 확인
+  const allIndicesCovered = pageBreakIndices.every((breakIndex, idx) => {
+    const nextBreak = idx < pageBreakIndices.length - 1 ? pageBreakIndices[idx + 1] : sentences.length;
+    return breakIndex >= 0 && breakIndex < sentences.length && nextBreak <= sentences.length;
+  });
+  
+  if (!allIndicesCovered) {
+    console.error('❌ 오류: 페이지 분할 인덱스가 유효하지 않습니다!');
+  }
+  
   return (
     <div className="work11-dynamic-print-container">
-      {Array.from({ length: totalPages }, (_, index) => 
-        renderPage(index)
-      )}
+      {Array.from({ length: totalPages }, (_, index) => {
+        const page = renderPage(index);
+        if (!page) {
+          console.error(`❌ 페이지 ${index + 1} 렌더링 실패`);
+        }
+        return page;
+      })}
     </div>
   );
 };

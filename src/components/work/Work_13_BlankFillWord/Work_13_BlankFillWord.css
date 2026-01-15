@@ -372,16 +372,18 @@
 
 /* 유형#13 전용 인쇄 스타일 - 독립적 관리 */
 @media print {
-  /* 유형#13 인쇄(문제) 페이지 문제본문 컨테이너 - 연한 노란색 */
+  /* 유형#13 인쇄(문제) 페이지 문제본문 컨테이너 - 흰색 */
   .work13-print-problem-text {
-    background: #FFF3CD !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* 유형#13 인쇄(정답) 페이지 문제본문 컨테이너 - 연한 노란색 */
+  /* 유형#13 인쇄(정답) 페이지 문제본문 컨테이너 - 흰색 */
   .work13-print-answer-text {
-    background: #FFF3CD !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }

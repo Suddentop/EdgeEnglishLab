@@ -243,6 +243,51 @@
     margin-right: 0 !important;
     margin-top: 0 !important;
     margin-bottom: 0.8rem !important; /* 하단 마진을 0.8rem으로 설정 */
+    background: #f5f5f5 !important;
+    background-color: #f5f5f5 !important;
+    color: #000 !important;
+    border-radius: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01 인쇄 페이지 문제제목 컨테이너 - 배경색, 텍스트 색상, 모서리 강제 적용 */
+  .only-print .problem-instruction[style],
+  .only-print .problem-instruction[style*="background"],
+  .only-print .problem-instruction[style*="color"],
+  .only-print .problem-instruction[style*="borderRadius"] {
+    background: #f5f5f5 !important;
+    background-color: #f5f5f5 !important;
+    color: #000 !important;
+    border-radius: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01 인쇄 페이지 문제제목 내부 텍스트 색상 강제 적용 */
+  .only-print .problem-instruction span,
+  .only-print .problem-instruction span[style],
+  .only-print .a4-page-content .problem-instruction span,
+  .only-print .a4-page-content .problem-instruction span[style] {
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01 인쇄 페이지 문제제목 컨테이너 - 최고 우선순위 오버라이드 */
+  .only-print .a4-page-content .problem-instruction,
+  .only-print .a4-page-content .problem-instruction[style],
+  .only-print .a4-page-template .a4-page-content .problem-instruction,
+  .only-print .a4-page-template .a4-page-content .problem-instruction[style],
+  .only-print .a4-page-content .problem-instruction[style*="background"],
+  .only-print .a4-page-content .problem-instruction[style*="color"],
+  .only-print .a4-page-content .problem-instruction[style*="borderRadius"] {
+    background: #f5f5f5 !important;
+    background-color: #f5f5f5 !important;
+    color: #000 !important;
+    border-radius: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   .only-print .problem-passage {
@@ -255,6 +300,59 @@
     padding-right: 1rem !important;
     padding-top: 0.5rem !important;
     padding-bottom: 0.3rem !important;
+    color: #000000 !important;
+  }
+  
+  /* 패키지#01-유형#09 인쇄 페이지 영어본문 컨테이너 테두리 색상 흰색 강제 적용 */
+  .only-print.work-09-print div[style*="padding"],
+  .only-print.work-09-print div[style*="background"],
+  .only-print.print-answer-mode.work-09-print div[style*="padding"],
+  .only-print.print-answer-mode.work-09-print div[style*="background"],
+  .only-print.work-09-print .a4-page-content > div[style*="marginTop"],
+  .only-print.print-answer-mode.work-09-print .a4-page-content > div[style*="marginTop"] {
+    border: 1px solid #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01-유형#02 인쇄 페이지 영어본문 내 모든 텍스트 검정색 강제 적용 */
+  .only-print.work-02-print .problem-passage,
+  .only-print.work-02-print .problem-passage *,
+  .only-print.work-02-print .problem-passage u,
+  .only-print.work-02-print .problem-passage strong,
+  .only-print.work-02-print .problem-passage u strong,
+  .only-print.work-02-print .problem-passage span,
+  .only-print.work-02-print .problem-passage u span,
+  .only-print.work-02-print .problem-passage strong span,
+  .only-print.print-answer-mode.work-02-print .problem-passage,
+  .only-print.print-answer-mode.work-02-print .problem-passage *,
+  .only-print.print-answer-mode.work-02-print .problem-passage u,
+  .only-print.print-answer-mode.work-02-print .problem-passage strong,
+  .only-print.print-answer-mode.work-02-print .problem-passage u strong,
+  .only-print.print-answer-mode.work-02-print .problem-passage span,
+  .only-print.print-answer-mode.work-02-print .problem-passage u span,
+  .only-print.print-answer-mode.work-02-print .problem-passage strong span,
+  .only-print.work-02-print .a4-page-content .problem-passage,
+  .only-print.work-02-print .a4-page-content .problem-passage *,
+  .only-print.work-02-print .a4-page-content .problem-passage u,
+  .only-print.work-02-print .a4-page-content .problem-passage strong,
+  .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage,
+  .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage *,
+  .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage u,
+  .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage strong {
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01-유형#02 인쇄 페이지 영어본문 내 인라인 스타일 오버라이드 */
+  .only-print.work-02-print .problem-passage[style*="color"],
+  .only-print.work-02-print .problem-passage *[style*="color"],
+  .only-print.print-answer-mode.work-02-print .problem-passage[style*="color"],
+  .only-print.print-answer-mode.work-02-print .problem-passage *[style*="color"] {
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* 유형#02, 03, 04 전용: problem-passage 클래스에 1rem 강제 적용 (최고 우선순위) */
@@ -289,6 +387,12 @@
   .only-print.print-answer-mode .a4-page-template .a4-page-content .problem-options.package01-work04-options,
   .only-print.print-answer-mode .a4-page-template .a4-page-content .option.option-print.package01-work04-options {
     margin-top: 0 !important;
+    border: 1px solid #ffffff !important;
+    padding: 0.4rem 0.3rem !important;
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   /* 최고 우선순위 오버라이드 - 모든 다른 규칙보다 우선 */
@@ -299,6 +403,12 @@
   .only-print.print-answer-mode .a4-page-template .a4-page-content .problem-options.package01-work04-options[style],
   .only-print.print-answer-mode .a4-page-template .a4-page-content .option.option-print.package01-work04-options[style] {
     margin-top: 0 !important;
+    border: 1px solid #ffffff !important;
+    padding: 0.4rem 0.3rem !important;
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* 패키지#01-유형#03 전용: 영어본문과 4지선다 정답 사이 간격 조정 */
@@ -336,13 +446,23 @@
   
   /* 유형#05의 4지선다 항목을 1행으로만 배치 */
   .only-print.print-answer-mode.work-05-print .a4-page-content .option,
-  .only-print.print-answer-mode.work-05-print .option {
+  .only-print.print-answer-mode.work-05-print .option,
+  .only-print.work-05-print .a4-page-content .option,
+  .only-print.work-05-print .option {
     display: block !important;
     width: 100% !important;
     float: none !important;
     clear: both !important;
     flex: none !important;
     column-span: none !important;
+    border: 1px solid #ffffff !important;
+    padding: 0.4rem 0.3rem !important;
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   /* 유형#10의 4지선다 항목을 1행으로만 배치 */
@@ -357,6 +477,14 @@
     flex: none !important;
     column-span: none !important;
     flex-direction: column !important;
+    border: 1px solid #ffffff !important;
+    padding: 0.4rem 0.3rem !important;
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   /* 유형#10의 quiz-content 컨테이너가 3열 배치를 방지 */
@@ -468,6 +596,41 @@
     margin-top: 0.3rem !important;
   }
   
+  /* 패키지#01-유형#06 인쇄 페이지 주요문장 컨테이너 - 배경색 흰색, 영어문장 검정색, 너비 98% */
+  .only-print .missing-sentence-box,
+  .only-print.work-06-print .missing-sentence-box,
+  .only-print.print-answer-mode.work-06-print .missing-sentence-box,
+  .only-print .a4-page-content .missing-sentence-box,
+  .only-print .a4-page-template .a4-page-content .missing-sentence-box {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    width: 98% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01-유형#06 인쇄(문제) 페이지 주요문장 컨테이너 - 너비 98%, 중앙정렬, 테두리 1px */
+  .only-print.work-06-print:not(.print-answer-mode) .missing-sentence-box,
+  .only-print.work-06-print:not(.print-answer-mode) .a4-page-content .missing-sentence-box,
+  .only-print.work-06-print:not(.print-answer-mode) .a4-page-template .a4-page-content .missing-sentence-box {
+    width: 98% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    border: 1px solid #222 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .only-print .missing-sentence-box span,
+  .only-print.work-06-print .missing-sentence-box span,
+  .only-print.print-answer-mode.work-06-print .missing-sentence-box span,
+  .only-print .a4-page-content .missing-sentence-box span,
+  .only-print .a4-page-template .a4-page-content .missing-sentence-box span {
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
   .only-print .problem-options {
     font-size: 1rem !important;
     margin-left: 0 !important;
@@ -531,8 +694,20 @@
     margin-bottom: 0.1rem !important;
   }
   
-  .only-print .option {
+  .only-print .option,
+  .only-print .a4-page-content .option,
+  .only-print .a4-page-template .a4-page-content .option,
+  .only-print .option[style],
+  .only-print .a4-page-content .option[style] {
     font-size: 1rem !important;
+    border: 1px solid #ffffff !important;
+    padding: 0.4rem 0.3rem !important;
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   .only-print .answer-section {
@@ -565,6 +740,14 @@
     font-size: 1rem !important;
   }
   
+  /* 패키지#01 인쇄(정답) 마지막 페이지 한글해석은 제외 - 더 큰 폰트 크기 적용 */
+  .only-print .a4-page-content .print-translation-content,
+  .only-print .a4-page-content .print-translation-content *,
+  .only-print .a4-page-content .print-translation-title,
+  .only-print .a4-page-content .print-translation-title * {
+    font-size: 1.2rem !important;
+  }
+  
   /* 한글 해석 부분은 작은 글씨로 설정 */
   .only-print .korean-translation {
     font-size: 0.5rem !important;
@@ -576,6 +759,92 @@
     line-height: 1.2 !important;
     margin-bottom: 0.3rem !important;
     padding: 0.2rem 0.5rem !important;
+  }
+  
+  /* 패키지#01-유형#11 인쇄 페이지 영어문장 컨테이너 배경색 흰색 강제 적용 */
+  .only-print.work-11-print .work11-print-problem-sentence,
+  .only-print.work-11-print .work11-print-problem-sentence[style],
+  .only-print.print-answer-mode.work-11-print .work11-print-problem-sentence,
+  .only-print.print-answer-mode.work-11-print .work11-print-problem-sentence[style] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01-유형#11 인쇄(정답) 페이지 컨테이너 배경색 흰색 강제 적용 */
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence,
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence[style],
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-translation,
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-translation[style] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01-유형#11 인쇄(정답) 페이지 한글 문장해석 폰트색 검정색 강제 적용 */
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence div,
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence div[style],
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence div[style*="color"],
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-translation,
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-translation[style],
+  .only-print.print-answer-mode.work-11-print .work11-print-answer-translation[style*="color"] {
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01-유형#13, #14 인쇄(정답) 페이지 영어단어/문장 폰트색 검정색 강제 적용 */
+  .only-print.print-answer-mode.work-13-print span[style*="color: #1976d2"],
+  .only-print.print-answer-mode.work-13-print span[style*="color:#1976d2"],
+  .only-print.print-answer-mode.work-13-print span[style*="color: #1976D2"],
+  .only-print.print-answer-mode.work-13-print span[style*="color:#1976D2"],
+  .only-print.print-answer-mode.work-14-print span[style*="color: #1976d2"],
+  .only-print.print-answer-mode.work-14-print span[style*="color:#1976d2"],
+  .only-print.print-answer-mode.work-14-print span[style*="color: #1976D2"],
+  .only-print.print-answer-mode.work-14-print span[style*="color:#1976D2"] {
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01-유형#13, #14 인쇄 페이지 영어문장 컨테이너 배경색 흰색 강제 적용 */
+  .only-print.work-13-print .package01-work13-problem-text,
+  .only-print.work-13-print .package01-work13-problem-text[style],
+  .only-print.work-13-print .package01-work13-answer-text,
+  .only-print.work-13-print .package01-work13-answer-text[style],
+  .only-print.print-answer-mode.work-13-print .package01-work13-problem-text,
+  .only-print.print-answer-mode.work-13-print .package01-work13-problem-text[style],
+  .only-print.print-answer-mode.work-13-print .package01-work13-answer-text,
+  .only-print.print-answer-mode.work-13-print .package01-work13-answer-text[style],
+  .only-print.work-14-print .package01-work14-problem-text,
+  .only-print.work-14-print .package01-work14-problem-text[style],
+  .only-print.work-14-print .package01-work14-answer-text,
+  .only-print.work-14-print .package01-work14-answer-text[style],
+  .only-print.print-answer-mode.work-14-print .package01-work14-problem-text,
+  .only-print.print-answer-mode.work-14-print .package01-work14-problem-text[style],
+  .only-print.print-answer-mode.work-14-print .package01-work14-answer-text,
+  .only-print.print-answer-mode.work-14-print .package01-work14-answer-text[style] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01-유형#13, #14 인쇄(정답) 페이지 translation 컨테이너 배경색 흰색 강제 적용 */
+  .only-print.print-answer-mode.work-13-print .package01-work13-translation,
+  .only-print.print-answer-mode.work-13-print .package01-work13-translation[style],
+  .only-print.print-answer-mode.work-13-print .package01-work13-translation-container,
+  .only-print.print-answer-mode.work-13-print .package01-work13-translation-container[style],
+  .only-print.print-answer-mode.work-14-print .package01-work14-translation,
+  .only-print.print-answer-mode.work-14-print .package01-work14-translation[style],
+  .only-print.print-answer-mode.work-14-print .package01-work14-translation-container,
+  .only-print.print-answer-mode.work-14-print .package01-work14-translation-container[style] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .work-11-print .work11-print-answer-sentence div,
@@ -646,6 +915,82 @@
   .only-print .print-translation-content {
     line-height: 1 !important;
   }
+  
+  /* 패키지#01 인쇄(정답) 마지막 페이지 한글해석 컨테이너 배경색 흰색 강제 적용 */
+  .only-print .print-translation-section,
+  .only-print .print-translation-section[style],
+  .only-print.print-answer-mode .print-translation-section,
+  .only-print.print-answer-mode .print-translation-section[style] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01 인쇄(정답) 마지막 페이지 본문해석 컨테이너 테두리 색상 및 패딩 강제 적용 */
+  .only-print .print-translation-section,
+  .only-print .print-translation-section[style],
+  .only-print.print-answer-mode .print-translation-section,
+  .only-print.print-answer-mode .print-translation-section[style] {
+    border: 1.5px solid #666666 !important;
+    padding: 1.5rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01 인쇄(정답) 마지막 페이지 본문해석 제목 폰트색 검정색 강제 적용 */
+  .only-print .print-translation-title,
+  .only-print .print-translation-title[style],
+  .only-print.print-answer-mode .print-translation-title,
+  .only-print.print-answer-mode .print-translation-title[style] {
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01 인쇄(정답) 마지막 페이지 한글해석 컨테이너 내부 한글 폰트 크기 더 크게 - 최고 우선순위 */
+  .only-print .a4-page-template .a4-page-content .print-translation-section .print-translation-content,
+  .only-print .a4-page-template .a4-page-content .print-translation-section .print-translation-content[style],
+  .only-print .a4-page-content .print-translation-content,
+  .only-print .a4-page-content .print-translation-content[style],
+  .only-print .a4-page-template .a4-page-content .print-translation-content,
+  .only-print .a4-page-template .a4-page-content .print-translation-content[style],
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-section .print-translation-content,
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-section .print-translation-content[style],
+  .only-print.print-answer-mode .a4-page-content .print-translation-content,
+  .only-print.print-answer-mode .a4-page-content .print-translation-content[style],
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-content,
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-content[style],
+  .only-print .print-translation-content,
+  .only-print .print-translation-content[style],
+  .only-print.print-answer-mode .print-translation-content,
+  .only-print.print-answer-mode .print-translation-content[style] {
+    font-size: 1.2rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01 인쇄(정답) 마지막 페이지 본문해석 제목 폰트 크기 더 크게 - 최고 우선순위 */
+  .only-print .a4-page-template .a4-page-content .print-translation-section .print-translation-title,
+  .only-print .a4-page-template .a4-page-content .print-translation-section .print-translation-title[style],
+  .only-print .a4-page-content .print-translation-title,
+  .only-print .a4-page-content .print-translation-title[style],
+  .only-print .a4-page-template .a4-page-content .print-translation-title,
+  .only-print .a4-page-template .a4-page-content .print-translation-title[style],
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-section .print-translation-title,
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-section .print-translation-title[style],
+  .only-print.print-answer-mode .a4-page-content .print-translation-title,
+  .only-print.print-answer-mode .a4-page-content .print-translation-title[style],
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-title,
+  .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-title[style],
+  .only-print .print-translation-title,
+  .only-print .print-translation-title[style],
+  .only-print.print-answer-mode .print-translation-title,
+  .only-print.print-answer-mode .print-translation-title[style] {
+    font-size: 1.2rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 
   /* 인라인 스타일 오버라이드 - 모든 유형의 줄간격 통일 - 50% 증가 */
   .only-print [style*="line-height"] {
@@ -667,6 +1012,14 @@
   .only-print .a4-page-content,
   .only-print .a4-page-content * {
     font-size: 1rem !important;
+  }
+  
+  /* 패키지#01 인쇄(정답) 마지막 페이지 한글해석은 제외 - 더 큰 폰트 크기 적용 */
+  .only-print .a4-page-content .print-translation-content,
+  .only-print .a4-page-content .print-translation-content *,
+  .only-print .a4-page-content .print-translation-title,
+  .only-print .a4-page-content .print-translation-title * {
+    font-size: 1.2rem !important;
   }
 
   /* 번역 내용 스타일 */
@@ -782,8 +1135,18 @@
     line-height: 1.4 !important;
   }
   
-  .only-print .option {
+  .only-print .option,
+  .only-print .a4-page-content .option,
+  .only-print .a4-page-template .a4-page-content .option {
     page-break-inside: avoid !important;
+    border: 1px solid #ffffff !important;
+    padding: 0.4rem 0.3rem !important;
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
     /* margin-bottom: 0.3rem !important; - 인라인 스타일과 충돌하므로 제거 */
   }
   
@@ -851,6 +1214,31 @@
       left: 0;
       right: 0;
       top: 0;
+    }
+    
+    /* 패키지#01 인쇄 페이지 문제제목 컨테이너 - 인쇄 미디어 쿼리 내 강제 적용 */
+    .only-print .problem-instruction,
+    .only-print .problem-instruction[style],
+    .only-print .a4-page-content .problem-instruction,
+    .only-print .a4-page-content .problem-instruction[style],
+    .only-print .a4-page-template .a4-page-content .problem-instruction,
+    .only-print .a4-page-template .a4-page-content .problem-instruction[style] {
+      background: #f5f5f5 !important;
+      background-color: #f5f5f5 !important;
+      color: #000 !important;
+      border-radius: 0 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01 인쇄 페이지 문제제목 내부 텍스트 색상 - 인쇄 미디어 쿼리 내 강제 적용 */
+    .only-print .problem-instruction span,
+    .only-print .problem-instruction span[style],
+    .only-print .a4-page-content .problem-instruction span,
+    .only-print .a4-page-content .problem-instruction span[style] {
+      color: #000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     
     /* 인쇄 시 자동 페이지 생성을 위한 설정 */
@@ -936,6 +1324,204 @@
     .option {
       page-break-inside: avoid;
       margin-bottom: 0.5rem;
+      border: 1px solid #ffffff !important;
+      padding: 0.4rem 0.3rem !important;
+      padding-left: 0.3rem !important;
+      padding-right: 0.3rem !important;
+      padding-top: 0.4rem !important;
+      padding-bottom: 0.4rem !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01-유형#11 인쇄 페이지 영어문장 컨테이너 배경색 흰색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print.work-11-print .work11-print-problem-sentence,
+    .only-print.work-11-print .work11-print-problem-sentence[style],
+    .only-print.print-answer-mode.work-11-print .work11-print-problem-sentence,
+    .only-print.print-answer-mode.work-11-print .work11-print-problem-sentence[style] {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01-유형#11 인쇄(정답) 페이지 컨테이너 배경색 흰색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence,
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence[style],
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-translation,
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-translation[style] {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01-유형#11 인쇄(정답) 페이지 한글 문장해석 폰트색 검정색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence div,
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence div[style],
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-sentence div[style*="color"],
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-translation,
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-translation[style],
+    .only-print.print-answer-mode.work-11-print .work11-print-answer-translation[style*="color"] {
+      color: #000000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01-유형#13, #14 인쇄(정답) 페이지 영어단어/문장 폰트색 검정색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print.print-answer-mode.work-13-print span[style*="color: #1976d2"],
+    .only-print.print-answer-mode.work-13-print span[style*="color:#1976d2"],
+    .only-print.print-answer-mode.work-13-print span[style*="color: #1976D2"],
+    .only-print.print-answer-mode.work-13-print span[style*="color:#1976D2"],
+    .only-print.print-answer-mode.work-14-print span[style*="color: #1976d2"],
+    .only-print.print-answer-mode.work-14-print span[style*="color:#1976d2"],
+    .only-print.print-answer-mode.work-14-print span[style*="color: #1976D2"],
+    .only-print.print-answer-mode.work-14-print span[style*="color:#1976D2"] {
+      color: #000000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01-유형#13, #14 인쇄 페이지 영어문장 컨테이너 배경색 흰색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print.work-13-print .package01-work13-problem-text,
+    .only-print.work-13-print .package01-work13-problem-text[style],
+    .only-print.work-13-print .package01-work13-answer-text,
+    .only-print.work-13-print .package01-work13-answer-text[style],
+    .only-print.print-answer-mode.work-13-print .package01-work13-problem-text,
+    .only-print.print-answer-mode.work-13-print .package01-work13-problem-text[style],
+    .only-print.print-answer-mode.work-13-print .package01-work13-answer-text,
+    .only-print.print-answer-mode.work-13-print .package01-work13-answer-text[style],
+    .only-print.work-14-print .package01-work14-problem-text,
+    .only-print.work-14-print .package01-work14-problem-text[style],
+    .only-print.work-14-print .package01-work14-answer-text,
+    .only-print.work-14-print .package01-work14-answer-text[style],
+    .only-print.print-answer-mode.work-14-print .package01-work14-problem-text,
+    .only-print.print-answer-mode.work-14-print .package01-work14-problem-text[style],
+    .only-print.print-answer-mode.work-14-print .package01-work14-answer-text,
+    .only-print.print-answer-mode.work-14-print .package01-work14-answer-text[style] {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01-유형#13, #14 인쇄(정답) 페이지 translation 컨테이너 배경색 흰색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print.print-answer-mode.work-13-print .package01-work13-translation,
+    .only-print.print-answer-mode.work-13-print .package01-work13-translation[style],
+    .only-print.print-answer-mode.work-13-print .package01-work13-translation-container,
+    .only-print.print-answer-mode.work-13-print .package01-work13-translation-container[style],
+    .only-print.print-answer-mode.work-14-print .package01-work14-translation,
+    .only-print.print-answer-mode.work-14-print .package01-work14-translation[style],
+    .only-print.print-answer-mode.work-14-print .package01-work14-translation-container,
+    .only-print.print-answer-mode.work-14-print .package01-work14-translation-container[style] {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01-유형#09 인쇄 페이지 영어본문 컨테이너 테두리 색상 흰색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print.work-09-print div[style*="padding"],
+    .only-print.work-09-print div[style*="background"],
+    .only-print.print-answer-mode.work-09-print div[style*="padding"],
+    .only-print.print-answer-mode.work-09-print div[style*="background"],
+    .only-print.work-09-print .a4-page-content > div[style*="marginTop"],
+    .only-print.print-answer-mode.work-09-print .a4-page-content > div[style*="marginTop"] {
+      border: 1px solid #ffffff !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01-유형#02 인쇄 페이지 영어본문 내 모든 텍스트 검정색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print.work-02-print .problem-passage,
+    .only-print.work-02-print .problem-passage *,
+    .only-print.work-02-print .problem-passage u,
+    .only-print.work-02-print .problem-passage strong,
+    .only-print.work-02-print .problem-passage u strong,
+    .only-print.print-answer-mode.work-02-print .problem-passage,
+    .only-print.print-answer-mode.work-02-print .problem-passage *,
+    .only-print.print-answer-mode.work-02-print .problem-passage u,
+    .only-print.print-answer-mode.work-02-print .problem-passage strong,
+    .only-print.print-answer-mode.work-02-print .problem-passage u strong {
+      color: #000000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01 인쇄(정답) 마지막 페이지 한글해석 컨테이너 배경색 흰색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print .print-translation-section,
+    .only-print .print-translation-section[style],
+    .only-print.print-answer-mode .print-translation-section,
+    .only-print.print-answer-mode .print-translation-section[style] {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01 인쇄(정답) 마지막 페이지 본문해석 컨테이너 테두리 색상 및 패딩 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print .print-translation-section,
+    .only-print .print-translation-section[style],
+    .only-print.print-answer-mode .print-translation-section,
+    .only-print.print-answer-mode .print-translation-section[style] {
+      border: 1.5px solid #666666 !important;
+      padding: 1.5rem !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01 인쇄(정답) 마지막 페이지 본문해석 제목 폰트색 검정색 강제 적용 (인쇄 미디어 쿼리 내부) */
+    .only-print .print-translation-title,
+    .only-print .print-translation-title[style],
+    .only-print.print-answer-mode .print-translation-title,
+    .only-print.print-answer-mode .print-translation-title[style] {
+      color: #000000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01 인쇄(정답) 마지막 페이지 한글해석 컨테이너 내부 한글 폰트 크기 더 크게 (인쇄 미디어 쿼리 내부) - 최고 우선순위 */
+    .only-print .a4-page-template .a4-page-content .print-translation-section .print-translation-content,
+    .only-print .a4-page-template .a4-page-content .print-translation-section .print-translation-content[style],
+    .only-print .a4-page-content .print-translation-content,
+    .only-print .a4-page-content .print-translation-content[style],
+    .only-print .a4-page-template .a4-page-content .print-translation-content,
+    .only-print .a4-page-template .a4-page-content .print-translation-content[style],
+    .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-section .print-translation-content,
+    .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-section .print-translation-content[style],
+    .only-print.print-answer-mode .a4-page-content .print-translation-content,
+    .only-print.print-answer-mode .a4-page-content .print-translation-content[style],
+    .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-content,
+    .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-content[style],
+    .only-print .print-translation-content,
+    .only-print .print-translation-content[style],
+    .only-print.print-answer-mode .print-translation-content,
+    .only-print.print-answer-mode .print-translation-content[style] {
+      font-size: 1.2rem !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* 패키지#01 인쇄(정답) 마지막 페이지 본문해석 제목 폰트 크기 더 크게 (인쇄 미디어 쿼리 내부) - 최고 우선순위 */
+    .only-print .a4-page-template .a4-page-content .print-translation-section .print-translation-title,
+    .only-print .a4-page-template .a4-page-content .print-translation-section .print-translation-title[style],
+    .only-print .a4-page-content .print-translation-title,
+    .only-print .a4-page-content .print-translation-title[style],
+    .only-print .a4-page-template .a4-page-content .print-translation-title,
+    .only-print .a4-page-template .a4-page-content .print-translation-title[style],
+    .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-section .print-translation-title,
+    .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-section .print-translation-title[style],
+    .only-print.print-answer-mode .a4-page-content .print-translation-title,
+    .only-print.print-answer-mode .a4-page-content .print-translation-title[style],
+    .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-title,
+    .only-print.print-answer-mode .a4-page-template .a4-page-content .print-translation-title[style],
+    .only-print .print-translation-title,
+    .only-print .print-translation-title[style],
+    .only-print.print-answer-mode .print-translation-title,
+    .only-print.print-answer-mode .print-translation-title[style] {
+      font-size: 1.2rem !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     
     /* 답안 섹션 */
@@ -1090,9 +1676,9 @@
   }
   
   /* 유형#06 전용: 영어본문 영역에 1rem 강제 적용 */
-  .only-print.work-06-print div[style*="background:'#FFF3CD'"],
-  .only-print.work-06-print div[style*="background:#FFF3CD"],
-  .only-print.work-06-print div[style*="background: #FFF3CD"],
+  .only-print.work-06-print div[style*="background:'#ffffff'"],
+  .only-print.work-06-print div[style*="background:#ffffff"],
+  .only-print.work-06-print div[style*="background: #ffffff"],
   .only-print.work-06-print div[style*="fontSize:'1rem !important'"],
   .only-print.work-06-print div[style*="fontSize: '1rem !important'"],
   .only-print.work-06-print div[style*="fontSize:1rem !important"],
@@ -1103,9 +1689,9 @@
   }
   
   /* 유형#07 전용: 영어본문만 1rem 강제 적용 */
-  .only-print.work-07-print div[style*="background:'#fff3cd'"],
-  .only-print.work-07-print div[style*="background:#fff3cd"],
-  .only-print.work-07-print div[style*="background: #fff3cd"] {
+  .only-print.work-07-print div[style*="background:'#ffffff'"],
+  .only-print.work-07-print div[style*="background:#ffffff"],
+  .only-print.work-07-print div[style*="background: #ffffff"] {
     font-size: 1rem !important;
   }
   
@@ -1116,9 +1702,9 @@
   }
   
   /* 유형#10 전용: 영어본문만 0.2rem 강제 적용 */
-  .only-print.work-10-print div[style*="background:'#FFF3CD'"],
-  .only-print.work-10-print div[style*="background:#FFF3CD"],
-  .only-print.work-10-print div[style*="background: #FFF3CD"],
+  .only-print.work-10-print div[style*="background:'#ffffff'"],
+  .only-print.work-10-print div[style*="background:#ffffff"],
+  .only-print.work-10-print div[style*="background: #ffffff"],
   .only-print.work-10-print div[style*="fontSize:'0.2rem'"],
   .only-print.work-10-print div[style*="fontSize: '0.2rem'"],
   .only-print.work-10-print div[style*="fontSize:0.2rem"] {
@@ -1438,7 +2024,7 @@
   }
   
   .only-print .problem-passage:not(.translation) {
-    background: #FFF3CD !important;
+    background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }

@@ -10,6 +10,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { createQuiz } from '../../../utils/textProcessor';
 import { Quiz, SentenceTranslationQuiz } from '../../../types/types';
 import { generateWork02Quiz, Work02QuizData } from '../../../services/work02Service';
+import { generateWork01ExamQuiz } from '../../../services/work01Service';
 import { imageToTextWithOpenAIVision, splitSentences, countWordsInSentence, filterValidSentences, generateBlankQuizWithAI } from '../../../services/work14Service';
 import { generateWork04Quiz as generateWork04QuizService } from '../../../services/work04Service';
 import { generateWork05Quiz as generateWork05QuizService } from '../../../services/work05Service';
@@ -752,75 +753,28 @@ const Package_01_MultiQuizGenerater: React.FC = () => {
 
   // Work_01 (문장 순서 맞추기) 문제 생성 함수
   const generateWork01Quiz = async (inputText: string, useAI: boolean = false): Promise<Quiz> => {
-    console.log('🔍 Work_01 문제 생성 시작...');
+    console.log('🔍 Work_01 모의고사 형식 문제 생성 시작...');
     console.log('📝 입력 텍스트 길이:', inputText.length);
     console.log('🤖 AI 사용 여부:', useAI);
     
     try {
-      const quiz = await createQuiz(inputText, useAI);
+      // 모의고사 형식으로 문제 생성
+      const quiz = await generateWork01ExamQuiz(inputText, useAI);
       
-      // 섞기 결과 검증
-      console.log('🔍 섞기 결과 검증...');
-      const shuffledLabels = quiz.shuffledParagraphs.map(p => p.label);
-      const correctLabels = quiz.correctOrder;
-      
-      console.log('📊 섞기 결과 분석:');
-      console.log('- 섞인 순서 (라벨):', shuffledLabels);
-      console.log('- 원본 순서 (라벨):', correctLabels);
-      
-      // 전체 텍스트 번역 수행
-      console.log('🌐 전체 텍스트 번역 시작...');
-      let translation = '';
-      try {
-        if (true) { // 프록시 서버 사용을 위해 항상 true로 설정
-          const response = await callOpenAIAPI({
-          model: 'gpt-4o',
-          messages: [
-            {
-                  role: 'system',
-              content: 'You are a professional English to Korean translator. Translate the given English text into natural Korean. Maintain the original paragraph structure and formatting.'
-            },
-            {
-                  role: 'user',
-              content: inputText
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.3
-        });
-        
-          if (response.ok) {
-            const data = await response.json();
-            translation = data.choices[0].message.content;
-            console.log('✅ 번역 완료');
-          } else {
-            console.error('❌ 번역 API 오류:', response.status);
-            translation = '번역 실패';
-          }
-        } else {
-          console.warn('⚠️ OpenAI API 키가 없습니다.');
-          translation = '번역 불가 (API 키 없음)';
-        }
-      } catch (error) {
-        console.error('❌ 번역 실패:', error);
-        translation = '번역 실패';
-      }
-      
-      console.log('✅ Work_01 퀴즈 생성 완료:', {
+      console.log('✅ Work_01 모의고사 형식 퀴즈 생성 완료:', {
         originalText: quiz.originalText,
         shuffledParagraphs: quiz.shuffledParagraphs,
         correctOrder: quiz.correctOrder,
         choices: quiz.choices,
         answerIndex: quiz.answerIndex,
-        translation: translation
+        fixedParagraph: quiz.fixedParagraph,
+        format: quiz.format,
+        translation: quiz.translation
       });
       
-      return {
-        ...quiz,
-        translation: translation
-      };
+      return quiz;
     } catch (error) {
-      console.error('❌ Work_01 문제 생성 실패:', error);
+      console.error('❌ Work_01 모의고사 형식 문제 생성 실패:', error);
       throw error;
     }
   };
@@ -1562,14 +1516,9 @@ ${passage}`;
     return data.choices[0].message.content.trim();
   };
 
-  // Work_09 (어법 변형 문제) 문제 생성 함수 - work09Service 사용
-  // generateWork09Quiz는 work09Service.ts의 개선된 함수를 사용
-
-  // Work_10 (다중 어법 오류 문제) 문제 생성 함수
-  const generateWork10Quiz = async (inputText: string): Promise<MultiGrammarQuiz> => {
-    // work10Service의 함수 사용 (패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음)
-    return await generateWork10QuizService(inputText);
-  };
+  // Work_09와 Work_10은 원래 서비스 함수를 직접 사용
+  // (패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined)
+  // 원래 유형#09와 유형#10이 사용하는 금지목록(FORBIDDEN_TRANSFORMATIONS_PROMPT, FORBIDDEN_EXAMPLES_PROMPT, EXCLUDE_RULES_PROMPT)이 자동으로 적용됨
   
   const generateWork10Quiz_OLD = async (inputText: string): Promise<MultiGrammarQuiz> => {
     console.log('🔍 Work_10 문제 생성 시작...');
@@ -2075,7 +2024,22 @@ ${passage}`;
       switch (workType.id) {
         case '01': // 문장 순서 맞추기
           quizData = await generateWork01Quiz(inputText, useAI);
-          translatedText = quizData.translation;
+          // 유형#01의 경우, quizData.translation은 A, B, C 단락의 번역만 포함
+          // 전체 본문 번역은 originalText를 번역해야 함
+          // originalText를 번역한 전체 본문 번역 생성
+          if (quizData.originalText) {
+            try {
+              translatedText = await translateToKorean(quizData.originalText);
+              console.log('✅ 유형#01 전체 본문 번역 완료');
+            } catch (error) {
+              console.error('❌ 전체 본문 번역 실패:', error);
+              // fallback: quizData.translation 사용 (A, B, C 단락 번역)
+              translatedText = quizData.translation || '';
+            }
+          } else {
+            // originalText가 없으면 quizData.translation 사용
+            translatedText = quizData.translation || '';
+          }
           break;
           
         case '02': // 독해 문제
@@ -2114,12 +2078,18 @@ ${passage}`;
           break;
           
         case '09': // 어법 변형 문제
-          quizData = await generateWork09QuizService(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
+          // 원래 유형#09와 동일한 로직 사용 (previouslySelectedWords는 undefined)
+          // 금지목록: FORBIDDEN_TRANSFORMATIONS_PROMPT, FORBIDDEN_EXAMPLES_PROMPT, EXCLUDE_RULES_PROMPT, validateTransformation
+          // work09Service.ts의 generateWork09Quiz 함수가 workGrammarRules.ts의 금지목록을 사용
+          quizData = await generateWork09QuizService(inputText, undefined);
           translatedText = quizData.translation;
           break;
           
         case '10': // 다중 어법 오류 문제
-          quizData = await generateWork10Quiz(inputText);
+          // 원래 유형#10과 동일한 로직 사용 (previouslySelectedWords는 undefined)
+          // 금지목록: EXCLUDE_RULES_PROMPT
+          // work10Service.ts의 generateWork10Quiz 함수가 workGrammarRules.ts의 금지목록을 사용
+          quizData = await generateWork10QuizService(inputText, undefined);
           translatedText = quizData.translation;
           break;
           
@@ -2710,7 +2680,7 @@ ${passage}`;
 
     // React 18 방식으로 렌더링
     const root = ReactDOM.createRoot(printContainer);
-    root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={true} />);
+    root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={true} translatedText={translatedText} />);
 
     const activateAnswerContainer = () => {
       const inner = printContainer.querySelector('.print-container');
@@ -3006,7 +2976,7 @@ ${passage}`;
                     </span>
                   </div>
                   
-                  {/* 문제 지시문 */}
+                  {/* 문제 지시문 - 모의고사 형식 */}
                   <div className="problem-instruction package01-work01-instruction" style={{
                     fontWeight: 500, 
                     fontSize: '0.95rem', 
@@ -3019,14 +2989,36 @@ ${passage}`;
                     borderTop: '1px solid #e0e0e0',
                     borderBottom: '1px solid #e0e0e0'
                   }}>
-                    다음 단락들을 원래 순서대로 배열한 것을 고르시오.
+                    {quizItem.quiz.format === 'exam' && quizItem.quiz.instruction 
+                      ? quizItem.quiz.instruction 
+                      : '주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.'}
                   </div>
 
-                  {/* 섞인 단락들 */}
+                  {/* 모의고사 형식: 고정된 첫 번째 단락을 박스 안에 표시 */}
+                  {quizItem.quiz.format === 'exam' && quizItem.quiz.fixedParagraph && (
+                    <div className="fixed-paragraph-box" style={{
+                      border: '1px solid #000',
+                      borderRadius: '8px',
+                      padding: '0.6rem 1rem',
+                      marginTop: '1rem',
+                      marginBottom: '0',
+                      backgroundColor: '#fff',
+                      fontSize: '1rem !important',
+                      lineHeight: '1.6',
+                      color: '#333',
+                      fontFamily: 'inherit'
+                    }}>
+                      <div className="fixed-paragraph-content" style={{ fontSize: '1.1rem', lineHeight: '1.6', fontFamily: 'inherit', color: '#333' }}>
+                        {quizItem.quiz.fixedParagraph}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 나머지 3개 단락 - 모의고사 형식 */}
                   <div className="problem-passage package01-work01-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -3035,15 +3027,23 @@ ${passage}`;
                     color: '#333'
                   }}>
                     {quizItem.quiz.shuffledParagraphs.map((paragraph, pIndex) => (
-                      <div key={paragraph.id} className="shuffled-paragraph" style={{ marginBottom: '0.5rem' }}>
-                        <strong>{paragraph.label}:</strong> {paragraph.content}
+                      <div key={paragraph.id} className="shuffled-paragraph" style={{ 
+                        marginBottom: '0.5rem',
+                        padding: '0.5rem 0',
+                        fontSize: '1rem',
+                        color: '#333',
+                        lineHeight: '1.6',
+                        fontFamily: 'inherit'
+                      }}>
+                        <strong>({paragraph.label}) </strong>{paragraph.content}
                       </div>
                     ))}
                   </div>
 
-                  {/* 선택지 */}
+                  {/* 선택지 - 모의고사 형식 */}
                   <div className="problem-options package01-work01-options" style={{
                     margin: '0 0 1.5rem 0',
+                    marginTop: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
@@ -3061,7 +3061,7 @@ ${passage}`;
                         borderRadius: '0',
                         color: '#333'
                       }}>
-                        {`①②③④⑤`[cIndex] || `${cIndex+1}.`} {choice.join(' → ')}
+                        {`①②③④⑤`[cIndex] || `${cIndex+1}.`} {quizItem.quiz?.format === 'exam' ? choice.join(' - ') : choice.join(' → ')}
                         {(printMode === 'with-answer' || showQuizDisplay) && quizItem.quiz && quizItem.quiz.answerIndex === cIndex && (
                           <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
@@ -3133,49 +3133,38 @@ ${passage}`;
                   {/* 교체된 단어 목록 (하나의 4열 테이블) */}
                   <h4>교체된 단어들:</h4>
                   {quizItem.work02Data?.replacements && quizItem.work02Data.replacements.length > 0 ? (
-                    <table className="replacements-table no-print">
+                    <table className="replacements-table work02-replacements-table no-print" style={{
+                      borderCollapse: 'collapse',
+                      width: '100%',
+                      border: '1px solid #666',
+                      backgroundColor: '#ffffff'
+                    }}>
                       <thead>
                         <tr>
-                          <th>원래 단어</th>
-                          <th>교체된 단어</th>
-                          <th>원래 단어</th>
-                          <th>교체된 단어</th>
+                          <th style={{ width: '25%' }}>원래 단어</th>
+                          <th style={{ width: '25%' }}>교체된 단어</th>
+                          <th style={{ width: '25%' }}>원래 단어</th>
+                          <th style={{ width: '25%' }}>교체된 단어</th>
                         </tr>
                       </thead>
                       <tbody>
                         {Array.from({ length: Math.ceil((quizItem.work02Data?.replacements.length || 0) / 2) }, (_, rowIndex) => (
                           <tr key={rowIndex}>
-                            <td>
-                              {quizItem.work02Data?.replacements[rowIndex * 2] && (
-                                <>
-                                  <span className="original-word">{quizItem.work02Data.replacements[rowIndex * 2].original}</span>
-                                  <span className="original-meaning">({quizItem.work02Data.replacements[rowIndex * 2].originalMeaning})</span>
-                                </>
-                              )}
+                            <td style={{ width: '25%' }}>
+                              {quizItem.work02Data?.replacements[rowIndex * 2]?.original || ''}
+                              {quizItem.work02Data?.replacements[rowIndex * 2]?.originalMeaning && <span className="original-meaning"> ({quizItem.work02Data.replacements[rowIndex * 2].originalMeaning})</span>}
                             </td>
-                            <td>
-                              {quizItem.work02Data?.replacements[rowIndex * 2] && (
-                                <>
-                                  <span className="replacement-word">{quizItem.work02Data.replacements[rowIndex * 2].replacement}</span>
-                                  <span className="replacement-meaning">({quizItem.work02Data.replacements[rowIndex * 2].replacementMeaning})</span>
-                                </>
-                              )}
+                            <td style={{ width: '25%', backgroundColor: '#f5f5f5' }}>
+                              {quizItem.work02Data?.replacements[rowIndex * 2]?.replacement || ''}
+                              {quizItem.work02Data?.replacements[rowIndex * 2]?.replacementMeaning && <span className="replacement-meaning"> ({quizItem.work02Data.replacements[rowIndex * 2].replacementMeaning})</span>}
                             </td>
-                            <td>
-                              {quizItem.work02Data?.replacements[rowIndex * 2 + 1] && (
-                                <>
-                                  <span className="original-word">{quizItem.work02Data.replacements[rowIndex * 2 + 1].original}</span>
-                                  <span className="original-meaning">({quizItem.work02Data.replacements[rowIndex * 2 + 1].originalMeaning})</span>
-                                </>
-                              )}
+                            <td style={{ width: '25%' }}>
+                              {quizItem.work02Data?.replacements[rowIndex * 2 + 1]?.original || ''}
+                              {quizItem.work02Data?.replacements[rowIndex * 2 + 1]?.originalMeaning && <span className="original-meaning"> ({quizItem.work02Data.replacements[rowIndex * 2 + 1].originalMeaning})</span>}
                             </td>
-                            <td>
-                              {quizItem.work02Data?.replacements[rowIndex * 2 + 1] && (
-                                <>
-                                  <span className="replacement-word">{quizItem.work02Data.replacements[rowIndex * 2 + 1].replacement}</span>
-                                  <span className="replacement-meaning">({quizItem.work02Data.replacements[rowIndex * 2 + 1].replacementMeaning})</span>
-                                </>
-                              )}
+                            <td style={{ width: '25%', backgroundColor: '#f5f5f5' }}>
+                              {quizItem.work02Data?.replacements[rowIndex * 2 + 1]?.replacement || ''}
+                              {quizItem.work02Data?.replacements[rowIndex * 2 + 1]?.replacementMeaning && <span className="replacement-meaning"> ({quizItem.work02Data.replacements[rowIndex * 2 + 1].replacementMeaning})</span>}
                             </td>
                           </tr>
                         ))}
@@ -3968,25 +3957,11 @@ ${passage}`;
                         borderRadius: '0',
                         color: '#333'
                       }}>
-                        {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}개
+                        {`①②③④⑤⑥⑦⑧⑨`[optionIndex] || `${optionIndex+1}.`} {option}개
                         {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work10Data && quizItem.work10Data.answerIndex === optionIndex && (
                           <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
-                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work10Data && quizItem.work10Data.answerIndex === optionIndex && (
-                          <div style={{
-                            fontSize: '0.85rem',
-                            color: '#666',
-                            marginTop: '0.2rem',
-                            fontStyle: 'italic',
-                            lineHeight: '1.2',
-                            display: 'block',
-                            width: '100%'
-                          }}>
-                            어법상 틀린 단어 : {quizItem.work10Data?.wrongIndexes.map(idx => 
-                              `${'①②③④⑤⑥⑦⑧'[idx]}${quizItem.work10Data?.transformedWords[idx]} → ${quizItem.work10Data?.originalWords[idx]}`
-                            ).join(', ')}
-                          </div>
-                        )}
+                        {/* 어법상 틀린 단어 목록은 인쇄(정답) 페이지에만 표시됨 */}
                       </div>
                     ))}
                   </div>

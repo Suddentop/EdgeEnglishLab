@@ -815,8 +815,8 @@
 }
 
 .problem-passage {
-  background: #FFF3CD !important;
-  background-color: #FFF3CD !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
   border: 1.5px solid #e3e6f0;
   border-radius: 8px;
   padding: 0.75rem !important;
@@ -856,7 +856,7 @@
   margin-bottom: 0.5rem;
   background: #fff;
   border-radius: 6px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #ffffff;
   font-size: 1rem;
   line-height: 1.4;
   color: #333;
@@ -976,23 +976,29 @@
   background: #f8f9fa !important;
   color: #495057 !important;
   font-weight: 600 !important;
-  padding: 0.3rem 0.4rem !important;
+  padding: 0.15rem 0.4rem !important;
   text-align: center !important;
   border: 1px solid #e2e8f0 !important;
   font-size: 0.7rem !important;
+  line-height: 1.0 !important;
 }
 
 .quiz-generator .replacements-table td {
-  padding: 0.2rem 0.3rem !important;
+  padding: 0.1rem 0.3rem !important;
   border: 1px solid #e2e8f0 !important;
   text-align: left !important;
   vertical-align: top !important;
   font-size: 0.65rem !important;
-  line-height: 1.2 !important;
+  line-height: 1.0 !important;
 }
 
 .quiz-generator .replacements-table tr:last-child td {
   border-bottom: none !important;
+}
+
+.quiz-generator .replacements-table tbody tr:first-child td {
+  padding: 0.05rem 0.3rem !important;
+  line-height: 0.9 !important;
 }
 
 .quiz-generator .replacements-table tr:nth-child(even) {
@@ -1006,22 +1012,22 @@
 /* 패키지#02 전용 단어 스타일 - 더 구체적인 선택자 사용 */
 .quiz-generator .replacements-table .original-word {
   font-weight: 600 !important;
-  color: #2d3748 !important;
+  color: #000000 !important;
   font-size: 0.65rem !important;
   background: none !important;
   padding: 0 !important;
   margin: 0 !important;
-  line-height: 1.1 !important;
+  line-height: 1.0 !important;
 }
 
 .quiz-generator .replacements-table .replacement-word {
   font-weight: 600 !important;
-  color: #1976d2 !important;
+  color: #000000 !important;
   font-size: 0.65rem !important;
   background: none !important;
   padding: 0 !important;
   margin: 0 !important;
-  line-height: 1.1 !important;
+  line-height: 1.0 !important;
 }
 
 .quiz-generator .replacements-table .original-meaning {
@@ -1031,7 +1037,7 @@
   background: none !important;
   padding: 0 !important;
   margin: 0 !important;
-  line-height: 1.0 !important;
+  line-height: 0.9 !important;
 }
 
 .quiz-generator .replacements-table .replacement-meaning {
@@ -1041,7 +1047,7 @@
   background: none !important;
   padding: 0 !important;
   margin: 0 !important;
-  line-height: 1.0 !important;
+  line-height: 0.9 !important;
 }
 
 /* 인쇄용 스타일 - 패키지#02 전용 */
@@ -1095,7 +1101,7 @@
   }
   
   .quiz-generator .replacements-table .replacement-word {
-    color: #1976d2 !important;
+    color: #000000 !important;
     font-weight: normal !important;
     font-size: 0.35rem !important;
     line-height: 0.8 !important;
@@ -1158,23 +1164,24 @@
 
 /* 패키지#01 유형#13 전용 인쇄 스타일 - 독립적 관리 */
 @media print {
-  /* 패키지#01 유형#13 인쇄(문제) 페이지 문제본문 컨테이너 - 연한 노란색 */
+  /* 패키지#01 유형#13 인쇄(문제) 페이지 문제본문 컨테이너 - 흰색 */
   .work-13-print .package01-work13-problem-text {
-    background: #FFF3CD !important;
+    background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* 패키지#01 유형#13 인쇄(정답) 페이지 문제본문 컨테이너 - 연한 노란색 */
+  /* 패키지#01 유형#13 인쇄(정답) 페이지 문제본문 컨테이너 - 흰색 */
   .work-13-print .package01-work13-answer-text {
-    background: #FFF3CD !important;
+    background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* 패키지#01 유형#13 인쇄(정답) 페이지 본문해석 컨테이너 - 연한 녹색 */
+  /* 패키지#01 유형#13 인쇄(정답) 페이지 본문해석 컨테이너 - 흰색 */
   .work-13-print .package01-work13-translation {
-    background: #F1F8E9 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -1182,23 +1189,24 @@
 
 /* 패키지#01 유형#14 전용 인쇄 스타일 - 독립적 관리 */
 @media print {
-  /* 패키지#01 유형#14 인쇄(문제) 페이지 문제본문 컨테이너 - 연한 노란색 */
+  /* 패키지#01 유형#14 인쇄(문제) 페이지 문제본문 컨테이너 - 흰색 */
   .work-14-print .package01-work14-problem-text {
-    background: #FFF3CD !important;
+    background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* 패키지#01 유형#14 인쇄(정답) 페이지 문제본문 컨테이너 - 연한 노란색 */
+  /* 패키지#01 유형#14 인쇄(정답) 페이지 문제본문 컨테이너 - 흰색 */
   .work-14-print .package01-work14-answer-text {
-    background: #FFF3CD !important;
+    background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   
-  /* 패키지#01 유형#14 인쇄(정답) 페이지 본문해석 컨테이너 - 연한 녹색 */
+  /* 패키지#01 유형#14 인쇄(정답) 페이지 본문해석 컨테이너 - 흰색 */
   .work-14-print .package01-work14-translation {
-    background: #F1F8E9 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -1374,8 +1382,139 @@
   margin-top: 1.5rem !important;
 }
 
+/* 패키지#01 Work_01 고정단락박스 폰트 크기 - 내부 div는 더 크게 */
+.fixed-paragraph-box,
+.quiz-item-card .fixed-paragraph-box,
+.quiz-display .fixed-paragraph-box,
+.package-quiz-container .fixed-paragraph-box {
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+  color: #333 !important;
+}
+
+/* 고정단락박스 내부 div 폰트 크기 - 최우선 적용 */
+.fixed-paragraph-content,
+.fixed-paragraph-box > div,
+.fixed-paragraph-box > div[style],
+.quiz-item-card .fixed-paragraph-box > div,
+.quiz-item-card .fixed-paragraph-box > div[style],
+.quiz-item-card .fixed-paragraph-content,
+.quiz-display .fixed-paragraph-box > div,
+.quiz-display .fixed-paragraph-box > div[style],
+.quiz-display .fixed-paragraph-content,
+.package-quiz-container .fixed-paragraph-box > div,
+.package-quiz-container .fixed-paragraph-box > div[style],
+.package-quiz-container .fixed-paragraph-content {
+  font-size: 1.1rem !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+  color: #333 !important;
+}
+
+.fixed-paragraph-box *,
+.quiz-item-card .fixed-paragraph-box *,
+.quiz-display .fixed-paragraph-box *,
+.package-quiz-container .fixed-paragraph-box * {
+  font-size: 1.1rem !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+  color: #333 !important;
+}
+
+/* 인라인 스타일이 있어도 강제 적용 */
+.fixed-paragraph-box[style],
+.quiz-item-card .fixed-paragraph-box[style],
+.quiz-display .fixed-paragraph-box[style],
+.package-quiz-container .fixed-paragraph-box[style] {
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+  color: #333 !important;
+}
+
+.fixed-paragraph-box[style] > div,
+.fixed-paragraph-box[style] .fixed-paragraph-content,
+.quiz-item-card .fixed-paragraph-box[style] > div,
+.quiz-item-card .fixed-paragraph-box[style] .fixed-paragraph-content,
+.quiz-display .fixed-paragraph-box[style] > div,
+.quiz-display .fixed-paragraph-box[style] .fixed-paragraph-content,
+.package-quiz-container .fixed-paragraph-box[style] > div,
+.package-quiz-container .fixed-paragraph-box[style] .fixed-paragraph-content {
+  font-size: 1.1rem !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+  color: #333 !important;
+}
+
+.fixed-paragraph-box[style] *,
+.quiz-item-card .fixed-paragraph-box[style] *,
+.quiz-display .fixed-paragraph-box[style] *,
+.package-quiz-container .fixed-paragraph-box[style] * {
+  font-size: 1.1rem !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+  color: #333 !important;
+}
+
 /* 패키지#01 Work_06 주요문장 영어 문장 폰트 색상 검정색으로 변경 */
 .package01-work06-missing-sentence-text {
+  color: #000000 !important;
+}
+
+/* 패키지#01 Work_02 교체된 단어 테이블 - 원래 유형#02와 동일한 디자인 */
+.quiz-display .replacements-table.work02-replacements-table,
+.quiz-item-card .replacements-table.work02-replacements-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background: #ffffff !important;
+  border: 1px solid #666 !important;
+  margin-top: 0.7rem !important;
+}
+
+.quiz-display .replacements-table.work02-replacements-table th,
+.quiz-item-card .replacements-table.work02-replacements-table th {
+  width: 25% !important;
+  border: 1px solid #666 !important;
+  background: #ffffff !important;
+  color: #333 !important;
+  font-weight: 500 !important;
+  padding: 0.4rem 0.8rem !important;
+  text-align: center !important;
+  font-size: 0.95rem !important;
+}
+
+.quiz-display .replacements-table.work02-replacements-table td,
+.quiz-item-card .replacements-table.work02-replacements-table td {
+  width: 25% !important;
+  border: 1px solid #666 !important;
+  background: #ffffff !important;
+  padding: 0.4rem 0.8rem !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+  font-size: 1rem !important;
+  color: #333 !important;
+}
+
+.quiz-display .replacements-table.work02-replacements-table td:nth-child(2),
+.quiz-display .replacements-table.work02-replacements-table td:nth-child(4),
+.quiz-item-card .replacements-table.work02-replacements-table td:nth-child(2),
+.quiz-item-card .replacements-table.work02-replacements-table td:nth-child(4) {
+  background: #f5f5f5 !important;
+}
+
+.quiz-display .replacements-table.work02-replacements-table tr:nth-child(even),
+.quiz-item-card .replacements-table.work02-replacements-table tr:nth-child(even) {
+  background: #ffffff !important;
+}
+
+/* 패키지#01 Work_02 교체된 단어 테이블 내 영어 단어 폰트 색상 검정색으로 변경 */
+.quiz-display .replacements-table .original-word,
+.quiz-display .replacements-table .replacement-word,
+.quiz-item-card .replacements-table .original-word,
+.quiz-item-card .replacements-table .replacement-word,
+.replacements-table .original-word,
+.replacements-table .replacement-word {
   color: #000000 !important;
 }
 
