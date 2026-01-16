@@ -816,14 +816,26 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         }
 
         case '09': {
-          const quiz = await generateWork09Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
+          // ✅ 원래 유형#09와 동일한 로직 사용 (src/services/work09Service.ts의 generateWork09Quiz 함수)
+          // ✅ src/services/workGrammarRules.ts의 금지목록이 자동 적용됨:
+          //    - FORBIDDEN_TRANSFORMATIONS_PROMPT (프롬프트에 포함)
+          //    - FORBIDDEN_EXAMPLES_PROMPT (프롬프트에 포함)
+          //    - EXCLUDE_RULES_PROMPT (단어 선택 시 필터링)
+          //    - validateTransformation() (코드 레벨 검증)
+          // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined
+          const quiz = await generateWork09Quiz(inputText);
           quizItem.work09Data = quiz;
           quizItem.translatedText = quiz.translation;
           break;
         }
 
         case '10': {
-          const quiz = await generateWork10Quiz(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
+          // ✅ 원래 유형#10과 동일한 로직 사용 (src/services/work10Service.ts의 generateWork10Quiz 함수)
+          // ✅ src/services/workGrammarRules.ts의 금지목록이 자동 적용됨:
+          //    - EXCLUDE_RULES_PROMPT (단어 선택 시 필터링)
+          //    - validateTransformation() (코드 레벨 검증, work09Service.ts의 transformWord 함수 재사용)
+          // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined
+          const quiz = await generateWork10Quiz(inputText);
           quizItem.work10Data = quiz;
           quizItem.translatedText = quiz.translation;
           break;

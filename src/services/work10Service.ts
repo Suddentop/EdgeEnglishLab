@@ -291,58 +291,58 @@ ${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
 응답 형식 (JSON 배열, 최소 20개 이상 추출):
 ["word1", "word2", "word3", ...]`;
 
-  const candidateResponse = await callOpenAI({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: 'You are a helpful assistant that extracts grammatical words from text. Return only valid JSON arrays.' },
-      { role: 'user', content: candidatePrompt }
-    ],
-    temperature: 0.3,
-    max_tokens: 2000,
-  });
+    const candidateResponse = await callOpenAI({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant that extracts grammatical words from text. Return only valid JSON arrays.' },
+        { role: 'user', content: candidatePrompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000,
+    });
 
-  if (!candidateResponse.ok) {
-    throw new Error(`OpenAI API 오류: ${candidateResponse.status}`);
-  }
-
-  const candidateData = await candidateResponse.json();
-  let candidateContent = candidateData.choices[0].message.content.trim();
-  
-  if (candidateContent.includes('```json') || candidateContent.includes('```Json') || candidateContent.includes('```')) {
-    candidateContent = candidateContent.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
-  }
-
-  let candidateWords: string[] = [];
-  try {
-    candidateWords = JSON.parse(candidateContent);
-    if (!Array.isArray(candidateWords) || candidateWords.length < 15) {
-      throw new Error('후보 단어가 부족합니다.');
+    if (!candidateResponse.ok) {
+      throw new Error(`OpenAI API 오류: ${candidateResponse.status}`);
     }
-  } catch (parseError) {
-    console.error('후보 단어 파싱 실패:', candidateContent);
-    throw new Error('후보 단어 추출에 실패했습니다.');
-  }
+
+    const candidateData = await candidateResponse.json();
+    let candidateContent = candidateData.choices[0].message.content.trim();
+    
+    if (candidateContent.includes('```json') || candidateContent.includes('```Json') || candidateContent.includes('```')) {
+      candidateContent = candidateContent.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+    }
+
+    let candidateWords: string[] = [];
+    try {
+      candidateWords = JSON.parse(candidateContent);
+    if (!Array.isArray(candidateWords) || candidateWords.length < 15) {
+        throw new Error('후보 단어가 부족합니다.');
+      }
+    } catch (parseError) {
+      console.error('후보 단어 파싱 실패:', candidateContent);
+      throw new Error('후보 단어 추출에 실패했습니다.');
+    }
 
   // Step 2: 유효한 후보 단어 필터링 + 등위접속사 제외
   const coordinatingConjunctions = ['or', 'and', 'but', 'nor', 'for', 'so', 'yet'];
-  const validCandidateWords: string[] = [];
-  for (const word of candidateWords) {
+    const validCandidateWords: string[] = [];
+    for (const word of candidateWords) {
     // 등위접속사 제외
     if (coordinatingConjunctions.includes(word.toLowerCase())) {
       continue;
     }
-    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
-    if (regex.test(passage)) {
-      validCandidateWords.push(word);
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+      if (regex.test(passage)) {
+        validCandidateWords.push(word);
+      }
     }
-  }
 
-  if (validCandidateWords.length < 8) {
-    throw new Error(`본문에서 어법 변형 가능한 단어가 부족합니다. (${validCandidateWords.length}개 발견, 최소 8개 필요)`);
-  }
+    if (validCandidateWords.length < 8) {
+      throw new Error(`본문에서 어법 변형 가능한 단어가 부족합니다. (${validCandidateWords.length}개 발견, 최소 8개 필요)`);
+    }
 
-  console.log(`✅ 본문에서 추출된 유효한 후보 단어: ${validCandidateWords.length}개`);
+    console.log(`✅ 본문에서 추출된 유효한 후보 단어: ${validCandidateWords.length}개`);
 
   // Step 3: 문장별 후보 추출
   const sentences = passage.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(s => s.length > 0);
@@ -497,8 +497,8 @@ ${targetWordCount === 8 ? '["word1", "word2", "word3", "word4", "word5", "word6"
   - ✅ 올바른 선택: ["prior"] (1개만 선택, "prior to"는 하나의 구이므로 "prior"만 선택)
   - ❌ 잘못된 선택: ["prior", "to"] (2개 선택 금지, "prior to"를 분리하지 마세요)`;
 
-      const response = await callOpenAI({
-        model: 'gpt-4o',
+    const response = await callOpenAI({
+      model: 'gpt-4o',
         messages: [
           { 
             role: 'system', 
@@ -539,20 +539,20 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
         ],
         temperature: 0.1,
         max_tokens: 1000,
-      });
+    });
 
-      if (!response.ok) {
-        throw new Error(`OpenAI API 오류: ${response.status}`);
-      }
+    if (!response.ok) {
+      throw new Error(`OpenAI API 오류: ${response.status}`);
+    }
 
-      const data = await response.json();
-      const content = data.choices[0].message.content.trim();
-
+    const data = await response.json();
+    const content = data.choices[0].message.content.trim();
+    
       let wordsJson = content;
-      if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+    if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
         wordsJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
-      }
-
+    }
+    
       let words: string[];
       try {
         words = JSON.parse(wordsJson);
@@ -563,21 +563,21 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
           continue;
         }
         throw new Error(`AI 응답 형식 오류: JSON 파싱에 실패했습니다.`);
-      }
-      
+    }
+
       if (!Array.isArray(words)) {
         throw new Error('선택된 단어가 배열 형식이 아닙니다.');
-      }
-      
+    }
+
       // 문장 수에 따라 유연하게 처리 (최소 5개, 최대 8개)
       const expectedCount = Math.min(8, sentenceCandidates.length);
       // 단어 수가 맞지 않아도 일단 진행 (나중에 자동 수정)
       if (words.length < 5) {
         throw new Error(`선택된 단어가 너무 적습니다: ${words.length}개 (최소 5개 필요)`);
-      }
-      
+    }
+
       // 검증: 각 문장의 후보 목록에 있는지 확인 및 wordSentenceMap 구축
-      const invalidWords: string[] = [];
+    const invalidWords: string[] = [];
       const wordSentenceMap: { [word: string]: number } = {};
       
       for (const word of words) {
@@ -586,7 +586,7 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
         
         // 모든 문장을 확인하여 해당 단어가 어느 문장에 속하는지 찾기
         for (const item of sentenceCandidates) {
-          const wordLower = word.trim().toLowerCase();
+      const wordLower = word.trim().toLowerCase();
           const isInCandidates = item.candidates.some(candidate => candidate.trim().toLowerCase() === wordLower);
           
           if (isInCandidates) {
@@ -618,11 +618,11 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
         }
         
         if (!found) {
-          invalidWords.push(word);
-        }
+        invalidWords.push(word);
       }
-      
-      if (invalidWords.length > 0) {
+    }
+    
+    if (invalidWords.length > 0) {
         const errorMsg = `유효한 후보 목록에 없는 단어를 선택했습니다: ${invalidWords.join(', ')}. 각 문장의 "가능한 후보 단어" 목록에서만 선택하세요.`;
         console.warn(`⚠️ 유효하지 않은 단어 선택됨 (재시도 ${retryCount + 1}/${maxRetries}): ${invalidWords.join(', ')}`);
         if (retryCount < maxRetries - 1) {
@@ -630,9 +630,9 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
           retryCount++;
           continue;
         }
-        throw new Error(`유효한 후보 목록에 없는 단어가 선택되었습니다: ${invalidWords.join(', ')}`);
-      }
-      
+      throw new Error(`유효한 후보 목록에 없는 단어가 선택되었습니다: ${invalidWords.join(', ')}`);
+    }
+
       // 본문 존재 여부 최종 검증
       const missingWords: string[] = [];
       for (const word of words) {
@@ -650,8 +650,8 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
           continue;
         }
         throw new Error(`본문에 존재하지 않는 단어가 선택되었습니다: ${missingWords.join(', ')}`);
-      }
-      
+    }
+
       // 중복 제거: 같은 단어가 여러 번 선택된 경우 제거
       const uniqueWords: string[] = [];
       const seenWords = new Set<string>();
@@ -666,8 +666,8 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
       if (uniqueWords.length !== words.length) {
         console.warn(`⚠️ 중복 단어 제거: ${words.length}개 → ${uniqueWords.length}개`);
         words = uniqueWords;
-      }
-      
+    }
+    
       // 같은 문장에 여러 단어가 선택된 경우, 각 문장에서 첫 번째만 유지
       const sentenceWordCount: { [sentenceIndex: number]: string[] } = {};
       const sentenceFirstWord: { [sentenceIndex: number]: string } = {};
@@ -681,8 +681,8 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
           }
           sentenceWordCount[sentenceIndex].push(word);
         }
-      }
-      
+    }
+
       // 각 문장에서 첫 번째 단어만 유지
       const correctedWords: string[] = [];
       const usedSentences = new Set<number>();
@@ -787,9 +787,9 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
           // 보완할 수 없으면 재시도
           const errorMsg = `수정 후 단어 수가 부족하고 보완할 수 없습니다: ${words.length}개 (필요: ${targetWordCount}개, 사용 가능한 후보: ${uniqueCandidates.length}개). 재시도합니다.`;
           console.warn(`⚠️ ${errorMsg}`);
-          if (retryCount < maxRetries - 1) {
+             if (retryCount < maxRetries - 1) {
             previousErrors.push(errorMsg);
-            retryCount++;
+               retryCount++;
             continue;
           }
           // 최소 5개 이상이면 허용 (유형#10은 3-8개 오류이므로)
@@ -801,15 +801,15 @@ EXAMPLES OF INCORRECT SELECTION (FORBIDDEN):
             throw new Error(`단어 수가 부족합니다: ${words.length}개 (최소 5개 필요)`);
           }
         }
-      }
-      
+    }
+
       // 단어 수가 정확히 맞는지 확인
       if (words.length !== targetWordCount) {
         // 초과된 경우 앞에서부터 targetWordCount개만 사용
         if (words.length > targetWordCount) {
           console.warn(`⚠️ 단어 수가 초과되어 앞에서 ${targetWordCount}개만 사용: ${words.length}개 → ${targetWordCount}개`);
           words = words.slice(0, targetWordCount);
-        }
+    }
       }
       
       console.log(`✅ 단어 선택 성공 (시도 ${retryCount + 1}):`, words);

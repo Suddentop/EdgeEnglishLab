@@ -13,7 +13,7 @@ export const FORBIDDEN_TRANSFORMATIONS_PROMPT = `
 - Transformations that create unrelated words from different word families
 - **🚨 CRITICAL: Adding "-ing" to modal verbs is ABSOLUTELY FORBIDDEN** (e.g., "could" → "coulding", "should" → "shoulding", "would" → "woulding" are FORBIDDEN - these words do not exist in English)
 - **Modal verb transformations:** You CAN swap modal verbs with each other (e.g., "could" → "should" or "would" → "could" is ALLOWED), but you CANNOT add "-ing" to them
-- **🚨 CRITICAL: Creating non-existent words by adding "-ly" to adverbs/conjunctions is ABSOLUTELY FORBIDDEN** (e.g., "however" → "howeverly", "rather" → "ratherly" are FORBIDDEN - these words do not exist in English. "however" and "rather" are already adverbs/conjunctions and cannot be made into adverbs again)
+- **🚨 CRITICAL: Creating non-existent words by adding "-ly" to adverbs/conjunctions/wh-words is ABSOLUTELY FORBIDDEN** (e.g., "however" → "howeverly", "rather" → "ratherly", "what" → "whatly", "why" → "whyly", "where" → "wherely", "how" → "howly", "whatever" → "whateverly" are FORBIDDEN - these words do not exist in English and are never used. "however", "rather", "what", "why", "where", "how", "whatever" are already adverbs/conjunctions/wh-words and cannot be made into adverbs again)
 - **🚨 CRITICAL: Transforming subject pronouns to possessive forms is ABSOLUTELY FORBIDDEN** (e.g., "it" → "its", "they" → "their", "he" → "his", "she" → "her", "I" → "my", "you" → "your", "this" → "this's" (doesn't exist), "that" → "that's" (contraction, not possessive), "those" → "those's" (doesn't exist), "these" → "these's" (doesn't exist) when used as subjects are FORBIDDEN - these are too simple and mechanical transformations)
 - **🚨 CRITICAL: Transforming subject pronouns to other subject pronouns is ABSOLUTELY FORBIDDEN** (e.g., "they" → "those", "this" → "that", "these" → "those", "I" → "you", "he" → "she" are FORBIDDEN - these are simple pronoun swaps, not grammar errors)
 - **🚨 CRITICAL: Breaking subject-verb agreement with be-verbs is ABSOLUTELY FORBIDDEN** (e.g., "they are" → "they am", "I am" → "I is", "you are" → "you am", "he is" → "he am", "she is" → "she am", "that is" → "that are", "this is" → "this am" are FORBIDDEN - these break basic subject-verb agreement). **ALLOWED:** Tense changes like "is" → "was", "are" → "were" are allowed, but number agreement must be maintained.
@@ -41,13 +41,13 @@ export const FORBIDDEN_EXAMPLES_PROMPT = `
 - **"to + 동사원형" → "to + 동사ing" 변형:** "to continue" → "to continuing" is FORBIDDEN (e.g., "to rely" → "to relying", "to fill" → "to filling" are FORBIDDEN - this pattern does not exist in English). **✅ ALLOWED:** "to continue" → "continuing" (to 제거), "to continue" → "to be continuing", "to continue" → "to have been continued" are ALLOWED.
 - **Coordinating Conjunctions Selection:** Selecting "or", "and", "but", "nor", "for", "so", "yet" for grammar transformation is FORBIDDEN (e.g., "or" → "and", "and" → "or" are FORBIDDEN - these are simple word swaps, not meaningful grammar errors that require interpretation or judgment).
 - **Breaking Basic Grammar Rules After Modal Verbs:** "can prey" → "can praying" is FORBIDDEN (e.g., "can prey" → "can praying" breaks the basic rule that modal verbs must be followed by the base form of the verb). Similarly, "can rely" → "can relying", "can consist" → "can consisting", "can fill" → "can filling" are FORBIDDEN. **CRITICAL:** When transforming a verb that comes after a modal verb, you MUST maintain the modal + base verb structure. **ALLOWED:** "can prey" → "can be preying" is ALLOWED (modal + be + v-ing is correct), "can prey" → "can have preyed" is ALLOWED (modal + have + p.p is correct), or you can swap modals (e.g., "can prey" → "should prey", "may prey" → "might prey"). But you CANNOT simply change the base verb to v-ing form without a be-verb helper.
-- **Creating Non-Existent Words:** "however" → "howeverly" is FORBIDDEN (e.g., "however" → "howeverly" creates a word that does not exist in English). Similarly, "rather" → "ratherly" is FORBIDDEN. **CRITICAL:** You MUST NOT create words that do not exist in English by adding "-ly" to words that are already adverbs/conjunctions. "however" and "rather" are already adverbs/conjunctions and cannot be made into adverbs again.
+- **Creating Non-Existent Words:** "however" → "howeverly" is FORBIDDEN (e.g., "however" → "howeverly" creates a word that does not exist in English). Similarly, "rather" → "ratherly", "what" → "whatly", "why" → "whyly", "where" → "wherely", "how" → "howly", "whatever" → "whateverly" are FORBIDDEN. **CRITICAL:** You MUST NOT create words that do not exist in English by adding "-ly" to words that are already adverbs/conjunctions/wh-words. "however", "rather", "what", "why", "where", "how", "whatever" are already adverbs/conjunctions/wh-words and cannot be made into adverbs again. These words ("whatly", "whyly", "wherely", "howly", "whateverly", "howeverly") are never used in English and must not be created.
 `;
 
 /**
  * 후보 단어 추출 프롬프트용 제외 규칙 텍스트
  */
-export const EXCLUDE_RULES_PROMPT = `**제외:** 조동사+동사원형, 규칙과거형(-ed), 3인칭-s/-es(동사원형+-s/-es), 단순 단복수, 기본 관사(a/an/the), 단순 전치사, 초급 시제, be동사 단순형(it was/were, they was/were 등), 주어-동사 시제일치(1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es), 고유명사, **🚨 to 부정사 단순 변형 절대 금지**(to+동사원형 → to+동사ing, 예: to rely → to relying, to fill → to filling 등 - 이 패턴은 영어에 존재하지 않음), **🚨 주어-be동사 수일치 깨는 변형 절대 금지**(they are → they am, I am → I is, you are → you am, he is → he am, she is → she am, that is → that are, this is → this am 등 - 시제 변경은 허용되지만 수일치는 유지되어야 함), **🚨 존재하지 않는 단어 생성 절대 금지**(however → howeverly, rather → ratherly 등 - 이미 부사/접속사인 단어에 "-ly"를 추가하는 것은 금지), **🚨 주어 대명사를 다른 주어 대명사로 변형 절대 금지**(they → those, this → that, these → those, I → you, he → she 등 - 단순한 대명사 교체는 의미 있는 문법 오류가 아님), **🚨 be동사를 단순히 "being"으로 변형 절대 금지**(is → being, are → being, there is → there being, Language is → Language being 등 - 너무 단순하고 기계적인 변형), **🚨 일반동사를 주어+동사ing로 변경 절대 금지**(work → working, rely → relying, consist → consisting 등 - 주어+동사ing 구조는 be동사가 필요함. "they work" → "they are working"는 허용되지만 "they work" → "they working"는 금지), **🚨 조동사 다음 동사를 단순히 동사ing로 변형 절대 금지**(can prey → can praying, can rely → can relying, can consist → can consisting 등 - 조동사 다음에는 동사원형이 와야 하는 기본 어법을 무시함. "can prey" → "can be preying"는 허용되지만 "can prey" → "can praying"는 금지), **🚨 등위접속사 선택 절대 금지**(or, and, but, nor, for, so, yet 등 - 단순한 단어 교체이며 의미 있는 문법 오류가 아님)`;
+export const EXCLUDE_RULES_PROMPT = `**제외:** 조동사+동사원형, 규칙과거형(-ed), 3인칭-s/-es(동사원형+-s/-es), 단순 단복수, 기본 관사(a/an/the), 단순 전치사, 초급 시제, be동사 단순형(it was/were, they was/were 등), 주어-동사 시제일치(1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es), 고유명사, **🚨 to 부정사 단순 변형 절대 금지**(to+동사원형 → to+동사ing, 예: to rely → to relying, to fill → to filling 등 - 이 패턴은 영어에 존재하지 않음), **🚨 주어-be동사 수일치 깨는 변형 절대 금지**(they are → they am, I am → I is, you are → you am, he is → he am, she is → she am, that is → that are, this is → this am 등 - 시제 변경은 허용되지만 수일치는 유지되어야 함), **🚨 존재하지 않는 단어 생성 절대 금지**(however → howeverly, rather → ratherly, what → whatly, why → whyly, where → wherely, how → howly, whatever → whateverly 등 - 이미 부사/접속사/wh-단어인 단어에 "-ly"를 추가하는 것은 금지. 이런 단어들(whatly, whyly, wherely, howly, whateverly, howeverly)은 영어에 존재하지 않고 사용되지도 않으므로 억지로 만들지 말 것), **🚨 주어 대명사를 다른 주어 대명사로 변형 절대 금지**(they → those, this → that, these → those, I → you, he → she 등 - 단순한 대명사 교체는 의미 있는 문법 오류가 아님), **🚨 be동사를 단순히 "being"으로 변형 절대 금지**(is → being, are → being, there is → there being, Language is → Language being 등 - 너무 단순하고 기계적인 변형), **🚨 일반동사를 주어+동사ing로 변경 절대 금지**(work → working, rely → relying, consist → consisting 등 - 주어+동사ing 구조는 be동사가 필요함. "they work" → "they are working"는 허용되지만 "they work" → "they working"는 금지), **🚨 조동사 다음 동사를 단순히 동사ing로 변형 절대 금지**(can prey → can praying, can rely → can relying, can consist → can consisting 등 - 조동사 다음에는 동사원형이 와야 하는 기본 어법을 무시함. "can prey" → "can be preying"는 허용되지만 "can prey" → "can praying"는 금지), **🚨 등위접속사 선택 절대 금지**(or, and, but, nor, for, so, yet 등 - 단순한 단어 교체이며 의미 있는 문법 오류가 아님)`;
 
 /**
  * 코드 레벨 검증 함수들
@@ -80,7 +80,7 @@ export function validateTransformation(
     };
   }
 
-  // 2. 부사/접속사에 "-ly"를 부적절하게 추가하는 패턴 검증
+  // 2. 부사/접속사/wh-단어에 "-ly"를 부적절하게 추가하는 패턴 검증
   const forbiddenAdverbLyPatterns = [
     { base: 'however', forbidden: 'howeverly' },
     { base: 'rather', forbidden: 'ratherly' },
@@ -89,6 +89,11 @@ export function validateTransformation(
     { base: 'furthermore', forbidden: 'furthermorely' },
     { base: 'therefore', forbidden: 'thereforely' },
     { base: 'thus', forbidden: 'thusly' },
+    { base: 'what', forbidden: 'whatly' },
+    { base: 'why', forbidden: 'whyly' },
+    { base: 'where', forbidden: 'wherely' },
+    { base: 'how', forbidden: 'howly' },
+    { base: 'whatever', forbidden: 'whateverly' },
   ];
   
   const forbiddenAdverbLy = forbiddenAdverbLyPatterns.some(pattern => 
@@ -101,7 +106,7 @@ export function validateTransformation(
     );
     return {
       isValid: false,
-      errorMessage: `부사/접속사에 "-ly"를 부적절하게 추가한 변형("${originalWord}" → "${transformedWord}")은 절대 금지됩니다. "${pattern?.base}"는 이미 부사/접속사이므로 "-ly"를 추가할 수 없습니다.`
+      errorMessage: `부사/접속사/wh-단어에 "-ly"를 부적절하게 추가한 변형("${originalWord}" → "${transformedWord}")은 절대 금지됩니다. "${pattern?.base}"는 이미 부사/접속사/wh-단어이므로 "-ly"를 추가할 수 없습니다. "${transformedWord}"는 영어에 존재하지 않고 사용되지도 않는 단어입니다.`
     };
   }
 

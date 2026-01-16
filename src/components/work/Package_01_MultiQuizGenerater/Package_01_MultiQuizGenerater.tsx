@@ -1516,9 +1516,20 @@ ${passage}`;
     return data.choices[0].message.content.trim();
   };
 
-  // Work_09와 Work_10은 원래 서비스 함수를 직접 사용
-  // (패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined)
-  // 원래 유형#09와 유형#10이 사용하는 금지목록(FORBIDDEN_TRANSFORMATIONS_PROMPT, FORBIDDEN_EXAMPLES_PROMPT, EXCLUDE_RULES_PROMPT)이 자동으로 적용됨
+  // ============================================
+  // ⚠️ 중요: Work_09와 Work_10은 원래 서비스 함수를 직접 사용
+  // ============================================
+  // ✅ 패키지#01-유형#09, #10은 src/services/work09Service.ts, work10Service.ts의 함수를 사용
+  // ✅ src/services/workGrammarRules.ts의 모든 금지목록이 자동으로 적용됨:
+  //    - FORBIDDEN_TRANSFORMATIONS_PROMPT: AI 프롬프트에 포함
+  //    - FORBIDDEN_EXAMPLES_PROMPT: AI 프롬프트에 포함
+  //    - EXCLUDE_RULES_PROMPT: 단어 선택 시 필터링
+  //    - validateTransformation(): 코드 레벨 검증 함수
+  // ✅ 패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined
+  // ============================================
+  // 아래 함수들(selectWords, transformWord, generateWork10Quiz_OLD 등)은 사용되지 않음 (레거시 코드)
+  // 실제 사용되는 함수: generateWork09QuizService, generateWork10QuizService (2084, 2092줄)
+  // ============================================
   
   const generateWork10Quiz_OLD = async (inputText: string): Promise<MultiGrammarQuiz> => {
     console.log('🔍 Work_10 문제 생성 시작...');
@@ -2078,17 +2089,23 @@ ${passage}`;
           break;
           
         case '09': // 어법 변형 문제
-          // 원래 유형#09와 동일한 로직 사용 (previouslySelectedWords는 undefined)
-          // 금지목록: FORBIDDEN_TRANSFORMATIONS_PROMPT, FORBIDDEN_EXAMPLES_PROMPT, EXCLUDE_RULES_PROMPT, validateTransformation
-          // work09Service.ts의 generateWork09Quiz 함수가 workGrammarRules.ts의 금지목록을 사용
+          // ✅ 원래 유형#09와 동일한 로직 사용 (src/services/work09Service.ts의 generateWork09Quiz 함수)
+          // ✅ src/services/workGrammarRules.ts의 금지목록이 자동 적용됨:
+          //    - FORBIDDEN_TRANSFORMATIONS_PROMPT (프롬프트에 포함)
+          //    - FORBIDDEN_EXAMPLES_PROMPT (프롬프트에 포함)
+          //    - EXCLUDE_RULES_PROMPT (단어 선택 시 필터링)
+          //    - validateTransformation() (코드 레벨 검증)
+          // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined
           quizData = await generateWork09QuizService(inputText, undefined);
           translatedText = quizData.translation;
           break;
           
         case '10': // 다중 어법 오류 문제
-          // 원래 유형#10과 동일한 로직 사용 (previouslySelectedWords는 undefined)
-          // 금지목록: EXCLUDE_RULES_PROMPT
-          // work10Service.ts의 generateWork10Quiz 함수가 workGrammarRules.ts의 금지목록을 사용
+          // ✅ 원래 유형#10과 동일한 로직 사용 (src/services/work10Service.ts의 generateWork10Quiz 함수)
+          // ✅ src/services/workGrammarRules.ts의 금지목록이 자동 적용됨:
+          //    - EXCLUDE_RULES_PROMPT (단어 선택 시 필터링)
+          //    - validateTransformation() (코드 레벨 검증, work09Service.ts의 transformWord 함수 재사용)
+          // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined
           quizData = await generateWork10QuizService(inputText, undefined);
           translatedText = quizData.translation;
           break;

@@ -316,8 +316,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
       breakInside: 'avoid',
       display: 'flex',
       flexDirection: 'column',
-      backgroundColor: '#ffffff',
-      border: '2px solid #0000ff' // 파란색: 문장 컨테이너
+      backgroundColor: '#ffffff'
     };
 
     return (
@@ -330,8 +329,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           fontSize: '1rem',
           lineHeight: '1.2',
           color: '#000',
-          marginBottom: '0.2rem',
-          border: '1px solid #8800ff' // 보라색: 문장 텍스트 영역
+          marginBottom: '0.2rem'
         }}>
           <span style={{fontWeight: 'bold', color: '#333'}}>
             {index + 1}. 
@@ -347,16 +345,18 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
             fontWeight: '500',
             marginTop: '0.1rem',
             paddingBottom: '0.2rem',
-            border: '1px solid #ff00ff' // 분홍색: 해석 영역 (정답 모드)
+            paddingTop: '0.2rem',
+            paddingLeft: '0.5rem',
+            paddingRight: '0.5rem',
+            backgroundColor: '#f5f5f5', // 연한 회색 하이라이트
+            borderRadius: '4px'
           }}>
             {translation}
           </div>
         ) : (
           <div style={{
             height: '24px',
-            marginTop: '0.3rem',
-            border: '1px dashed #cccccc', // 회색 점선: 해석 영역 (문제 모드, 숨김)
-            backgroundColor: '#f0f0f0' // 배경색으로 영역 표시
+            marginTop: '0.3rem'
           }}>
           </div>
         )}
@@ -388,8 +388,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           pageBreakInside: 'avoid',
           position: 'relative',
           display: 'flex',
-          flexDirection: 'column',
-          border: '3px solid #ff0000' // 빨간색: 페이지 컨테이너
+          flexDirection: 'column'
         }}
       >
         <div className="a4-page-header" style={{
@@ -397,8 +396,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           height: '1.5cm',
           flexShrink: 0,
           padding: '0.5cm 0.3cm 0 0.3cm',
-          boxSizing: 'border-box',
-          border: '2px solid #ff8800' // 주황색: 헤더 영역
+          boxSizing: 'border-box'
         }}>
           {customHeader || <PrintHeaderWork01 />}
         </div>
@@ -408,8 +406,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           flex: 1,
           padding: '0 1cm 1cm 1cm',
           boxSizing: 'border-box',
-          overflow: 'visible',
-          border: '2px solid #ffdd00' // 노란색: 콘텐츠 영역
+          overflow: 'visible'
         }}>
           <div className="problem-instruction" data-work-type="11" style={{
             fontWeight: 800,
@@ -422,8 +419,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            width: '100%',
-            border: '2px solid #00ff00' // 초록색: 제목/지시사항 영역
+            width: '100%'
           }}>
             <span>
               {pageIndex === 0 
@@ -441,8 +437,7 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           </div>
           
           <div style={{ 
-            marginTop: '0.9rem',
-            border: '2px solid #00ffff' // 청록색: 상단 마진 영역
+            marginTop: '0.9rem'
           }}>
             {pageSentences.map((sentence, index) => {
               const actualIndex = startIndex + index;

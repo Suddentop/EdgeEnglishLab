@@ -325,9 +325,9 @@ ${sentenceList}
 결과는 아래 JSON 배열 형식으로만 반환하세요:
 ["word1", "word2", "word3", "word4", "word5"]`;
 
-      const response = await callOpenAI({
-        model: 'gpt-4o',
-        messages: [
+  const response = await callOpenAI({
+    model: 'gpt-4o',
+    messages: [
           { role: 'system', content: `You are a helpful assistant that selects words from a provided list. 
 
 CRITICAL RULES (MUST FOLLOW):
@@ -346,27 +346,27 @@ For each word you want to select:
 - Step 3: Check if you have already selected a word from that sentence
 - Step 4: If both checks pass, you can select the word
 - Step 5: If any check fails, DO NOT select the word` },
-          { role: 'user', content: selectionPrompt }
-        ],
+      { role: 'user', content: selectionPrompt }
+    ],
         temperature: 0.2,
-        max_tokens: 1000,
-      });
+    max_tokens: 1000,
+  });
 
-      if (!response.ok) {
-        throw new Error(`OpenAI API 오류: ${response.status}`);
-      }
+  if (!response.ok) {
+    throw new Error(`OpenAI API 오류: ${response.status}`);
+  }
 
-      const data = await response.json();
-      const content = data.choices[0].message.content.trim();
+  const data = await response.json();
+  const content = data.choices[0].message.content.trim();
 
-      // 마크다운 코드 블록 제거
-      let wordsJson = content;
-      if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
-        wordsJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
-      }
+  // 마크다운 코드 블록 제거
+  let wordsJson = content;
+  if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+    wordsJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+  }
 
       let words: string[];
-      try {
+  try {
         words = JSON.parse(wordsJson);
       } catch (jsonError) {
         console.warn(`⚠️ JSON 파싱 실패 (재시도 ${retryCount + 1}/${maxRetries}):`, jsonError instanceof Error ? jsonError.message : String(jsonError));
@@ -376,21 +376,21 @@ For each word you want to select:
         }
         throw new Error(`AI 응답 형식 오류: JSON 파싱에 실패했습니다.`);
       }
-      if (!Array.isArray(words) || words.length !== 5) {
-        throw new Error('선택된 단어가 5개가 아닙니다.');
-      }
-      
+    if (!Array.isArray(words) || words.length !== 5) {
+      throw new Error('선택된 단어가 5개가 아닙니다.');
+    }
+    
       // 선택된 단어가 각 문장의 후보 목록에 있는지 검증 (코드 레벨 검증)
-      const invalidWords: string[] = [];
+    const invalidWords: string[] = [];
       const wordSentenceMap: { [word: string]: number } = {}; // 각 단어가 어느 문장에 속하는지
       
-      for (const word of words) {
+    for (const word of words) {
         let found = false;
         let sentenceIndex = -1;
         
         // 각 문장별 후보 목록에서 단어 찾기
         for (const item of sentenceCandidates) {
-          const wordLower = word.trim().toLowerCase();
+      const wordLower = word.trim().toLowerCase();
           const isInCandidates = item.candidates.some(candidate => candidate.trim().toLowerCase() === wordLower);
           
           if (isInCandidates) {
@@ -407,11 +407,11 @@ For each word you want to select:
         }
         
         if (!found) {
-          invalidWords.push(word);
-        }
+        invalidWords.push(word);
       }
-      
-      if (invalidWords.length > 0) {
+    }
+    
+    if (invalidWords.length > 0) {
         const errorMsg = `유효한 후보 목록에 없는 단어를 선택했습니다: ${invalidWords.join(', ')}. 각 문장의 "가능한 후보 단어" 목록에서만 선택하세요.`;
         console.warn(`⚠️ 유효하지 않은 단어 선택됨 (재시도 ${retryCount + 1}/${maxRetries}): ${invalidWords.join(', ')}`);
         if (retryCount < maxRetries - 1) {
@@ -419,28 +419,28 @@ For each word you want to select:
           retryCount++;
           continue;
         }
-        throw new Error(`유효한 후보 목록에 없는 단어가 선택되었습니다: ${invalidWords.join(', ')}`);
+      throw new Error(`유효한 후보 목록에 없는 단어가 선택되었습니다: ${invalidWords.join(', ')}`);
+    }
+    
+    // 본문 존재 여부 최종 검증
+    const missingWords: string[] = [];
+    for (const word of words) {
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+      if (!regex.test(passage)) {
+        missingWords.push(word);
       }
-      
-      // 본문 존재 여부 최종 검증
-      const missingWords: string[] = [];
-      for (const word of words) {
-        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
-        if (!regex.test(passage)) {
-          missingWords.push(word);
-        }
-      }
-      
-      if (missingWords.length > 0) {
+    }
+    
+    if (missingWords.length > 0) {
         console.warn(`⚠️ 본문에 존재하지 않는 단어 (재시도 ${retryCount + 1}/${maxRetries}): ${missingWords.join(', ')}`);
         if (retryCount < maxRetries - 1) {
           retryCount++;
           continue;
         }
-        throw new Error(`본문에 존재하지 않는 단어가 선택되었습니다: ${missingWords.join(', ')}`);
-      }
-      
+      throw new Error(`본문에 존재하지 않는 단어가 선택되었습니다: ${missingWords.join(', ')}`);
+    }
+    
       // 같은 문장에 여러 단어가 선택되었는지 검증 (코드 레벨 검증)
       const sentenceWordCount: { [sentenceIndex: number]: string[] } = {};
       for (const word of words) {
@@ -478,7 +478,7 @@ For each word you want to select:
       // 모든 검증 통과
       console.log(`✅ 단어 선택 성공 (시도 ${retryCount + 1}):`, words);
       previousErrors = []; // 성공 시 에러 기록 초기화
-      return words;
+    return words;
       
     } catch (parseError: any) {
       // 예상치 못한 에러 (API 에러 등)
