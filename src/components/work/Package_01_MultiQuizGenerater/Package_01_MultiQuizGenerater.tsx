@@ -2457,6 +2457,27 @@ ${passage}`;
     setSelectedWorkTypes(allWorkTypesFalse);
   };
 
+  // 본문에서 교체된 단어에 하이라이트 표시 - 패키지#02와 동일한 함수
+  const renderTextWithHighlight = (text: string, replacements: any[]) => {
+    if (!replacements || replacements.length === 0) return text;
+    
+    const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+    let result = '';
+    
+    sentences.forEach((sentence, index) => {
+      const replacement = replacements[index];
+      if (replacement) {
+        const word = replacement.replacement;
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        result += sentence.replace(regex, `<span class="print-word-highlight">${word}</span>`) + ' ';
+      } else {
+        result += sentence + ' ';
+      }
+    });
+    
+    return result.trim();
+  };
+
   // 본문에서 교체된 단어에 밑줄 표시 - Work_02와 동일한 함수
   const renderTextWithUnderlines = (text: string, replacements: WordReplacement[], isOriginal: boolean = true) => {
     if (!replacements || replacements.length === 0) return text;
@@ -3019,6 +3040,9 @@ ${passage}`;
                       padding: '0.6rem 1rem',
                       marginTop: '1rem',
                       marginBottom: '0',
+                      marginLeft: 'auto',
+                      marginRight: 'auto',
+                      width: '92%',
                       backgroundColor: '#fff',
                       fontSize: '1rem !important',
                       lineHeight: '1.6',
@@ -3039,17 +3063,17 @@ ${passage}`;
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
-                    padding: '1rem',
+                    padding: '0.5rem',
                     fontFamily: 'inherit',
                     color: '#333'
                   }}>
                     {quizItem.quiz.shuffledParagraphs.map((paragraph, pIndex) => (
                       <div key={paragraph.id} className="shuffled-paragraph" style={{ 
-                        marginBottom: '0.5rem',
-                        padding: '0.5rem 0',
+                        marginBottom: pIndex < (quizItem.quiz?.shuffledParagraphs?.length || 0) - 1 ? '-0.4rem' : '0',
+                        padding: '0',
                         fontSize: '1rem',
                         color: '#333',
-                        lineHeight: '1.6',
+                        lineHeight: '1.3',
                         fontFamily: 'inherit'
                       }}>
                         <strong>({paragraph.label}) </strong>{paragraph.content}
@@ -3059,8 +3083,10 @@ ${passage}`;
 
                   {/* 선택지 - 모의고사 형식 */}
                   <div className="problem-options package01-work01-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.75rem 0',
                     marginTop: '0',
+                    paddingTop: '0',
+                    paddingBottom: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
@@ -3069,17 +3095,19 @@ ${passage}`;
                       <div key={cIndex} className="option" style={{
                         display: 'block',
                         fontSize: '1rem',
-                        margin: '0.5rem 0',
-                        padding: '0.5rem 1rem',
+                        margin: '0.25rem 0',
+                        padding: '0.25rem 0.5rem',
                         fontFamily: 'inherit',
                         backgroundColor: '#ffffff',
                         background: '#ffffff',
                         border: '1px solid transparent',
                         borderRadius: '0',
-                        color: '#333'
+                        color: '#333',
+                        cursor: 'default',
+                        textDecoration: 'none'
                       }}>
                         {`①②③④⑤`[cIndex] || `${cIndex+1}.`} {quizItem.quiz?.format === 'exam' ? choice.join(' - ') : choice.join(' → ')}
-                        {(printMode === 'with-answer' || showQuizDisplay) && quizItem.quiz && quizItem.quiz.answerIndex === cIndex && (
+                        {quizItem.quiz?.answerIndex === cIndex && (
                           <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                         )}
                       </div>
@@ -3135,17 +3163,25 @@ ${passage}`;
                     다음 본문을 읽고 해석하시오.
                   </div>
 
-                  {/* 원본 본문 보기 */}
-                  <h4>원본 본문:</h4>
-                  <div className="text-content no-print" style={{padding: '1.2rem', marginBottom: '1.5rem', border: '1.5px solid #e3e6f0', borderRadius: '8px'}}>
-                    {renderTextWithUnderlines(quizItem.work02Data.originalText || '', quizItem.work02Data.replacements || [], true)}
-                  </div>
-
                   {/* 변경된 본문 (문제) */}
-                  <h4>다음 본문을 읽고 해석하세요.</h4>
-                  <div className="text-content no-print package01-work02-modified-text" style={{background: '#F5F5F5', backgroundColor: '#F5F5F5', padding: '1.2rem', borderRadius: '0', border: '1px solid transparent', marginBottom: '1.5rem'}}>
-                    {renderTextWithUnderlines(quizItem.work02Data.modifiedText || '', quizItem.work02Data.replacements || [], false)}
-                  </div>
+                  <div className="problem-passage package01-work01-passage" style={{
+                    fontSize: '1rem',
+                    lineHeight: 1.7,
+                    margin: '0 0 0 0',
+                    background: '#ffffff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid transparent',
+                    padding: '1rem',
+                    fontFamily: 'inherit',
+                    color: '#333'
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: renderTextWithHighlight(
+                      quizItem.work02Data.modifiedText || '', 
+                      quizItem.work02Data.replacements || []
+                    )
+                  }}
+                  />
                       
                   {/* 교체된 단어 목록 (하나의 4열 테이블) */}
                   <h4>교체된 단어들:</h4>
@@ -3265,11 +3301,12 @@ ${passage}`;
                   <div className="problem-passage package01-work03-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
-                    padding: '1rem',
+                    padding: '1rem 1rem 0 1rem',
+                    paddingBottom: '0',
                     fontFamily: 'inherit',
                     color: '#333'
                   }}>
@@ -3278,7 +3315,9 @@ ${passage}`;
 
                   {/* 선택지 */}
                   <div className="problem-options package01-work03-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
+                    paddingTop: '0',
+                    paddingBottom: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
@@ -3288,7 +3327,9 @@ ${passage}`;
                         display: 'block',
                         fontSize: '1rem',
                         margin: '0.5rem 0',
-                        padding: '0.5rem 1rem',
+                        padding: '0 1rem',
+                        paddingTop: '0',
+                        paddingBottom: '0',
                         fontFamily: 'inherit',
                         backgroundColor: '#ffffff',
                         background: '#ffffff',
@@ -3306,7 +3347,7 @@ ${passage}`;
 
                   {/* 번역 */}
                   {quizItem.translatedText && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '0.4rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content package01-work03-translation" style={{
                         background: '#F5F5F5',
@@ -3376,7 +3417,7 @@ ${passage}`;
                   <div className="problem-passage package01-work04-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -3389,7 +3430,9 @@ ${passage}`;
 
                   {/* 선택지 */}
                   <div className="problem-options package01-work04-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
+                    paddingTop: '0',
+                    paddingBottom: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
@@ -3398,7 +3441,8 @@ ${passage}`;
                       <div key={optionIndex} className="option" style={{
                         display: 'block',
                         fontSize: '1rem',
-                        margin: '0.5rem 0',
+                        margin: '0',
+                        marginBottom: '0',
                         padding: '0.5rem 1rem',
                         fontFamily: 'inherit',
                         backgroundColor: '#ffffff',
@@ -3417,7 +3461,7 @@ ${passage}`;
 
                   {/* 번역 */}
                   {quizItem.translatedText && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '0.4rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content package01-work04-translation" style={{
                         background: '#F5F5F5',
@@ -3486,7 +3530,7 @@ ${passage}`;
                   <div className="problem-passage package01-work05-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -3499,7 +3543,9 @@ ${passage}`;
 
                   {/* 선택지 */}
                   <div className="problem-options package01-work05-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
+                    paddingTop: '0',
+                    paddingBottom: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
@@ -3508,7 +3554,8 @@ ${passage}`;
                       <div key={optionIndex} className="option" style={{
                         display: 'block',
                         fontSize: '1rem',
-                        margin: '0.5rem 0',
+                        margin: '0',
+                        marginBottom: '0',
                         padding: '0.5rem 1rem',
                         fontFamily: 'inherit',
                         backgroundColor: '#ffffff',
@@ -3527,7 +3574,7 @@ ${passage}`;
 
                   {/* 번역 */}
                   {quizItem.translatedText && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '0.4rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content package01-work05-translation" style={{
                         background: '#F5F5F5',
@@ -3708,7 +3755,7 @@ ${passage}`;
                   <div className="problem-passage package01-work07-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -3721,44 +3768,59 @@ ${passage}`;
 
                   {/* 선택지 */}
                   <div className="problem-options package01-work07-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
+                    paddingTop: '0',
+                    paddingBottom: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
                   }}>
-                    {quizItem.work07Data.options.map((option, optionIndex) => (
-                      <div key={optionIndex} className="option" style={{
-                        display: 'block',
-                        fontSize: '1rem',
-                        margin: '0.5rem 0',
-                        padding: '0.5rem 1rem',
-                        fontFamily: 'inherit',
-                        backgroundColor: '#ffffff',
-                        background: '#ffffff',
-                        border: '1px solid transparent',
-                        borderRadius: '0',
-                        color: '#333'
-                      }}>
-                        <div>
-                          <div style={{fontWeight: '500'}}>
-                            {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {option}
-                            {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work07Data && quizItem.work07Data.answerIndex === optionIndex && (
-                              <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                    {quizItem.work07Data.options.map((option, optionIndex) => {
+                      // option이 한글인지 영어인지 판단 (한글 문자가 포함되어 있으면 한글로 간주)
+                      const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(option);
+                      // optionTranslations가 영어인지 판단 (한글이 아니면 영어로 간주)
+                      const translation = quizItem.work07Data?.optionTranslations?.[optionIndex];
+                      const isTranslationEnglish = translation && !/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(translation);
+                      
+                      // option이 한글이고 translation이 영어인 경우, 서로 바꿔서 표시
+                      const englishSentence = (isKorean && isTranslationEnglish) ? translation : option;
+                      const koreanTranslation = (isKorean && isTranslationEnglish) ? option : translation;
+                      
+                      return (
+                        <div key={optionIndex} className="option" style={{
+                          display: 'block',
+                          fontSize: '1rem',
+                          margin: '0',
+                          marginBottom: '0',
+                          padding: '0.5rem 1rem',
+                          fontFamily: 'inherit',
+                          backgroundColor: '#ffffff',
+                          background: '#ffffff',
+                          border: '1px solid transparent',
+                          borderRadius: '0',
+                          color: '#333'
+                        }}>
+                          <div>
+                            <div style={{fontWeight: '500'}}>
+                              {`①②③④⑤`[optionIndex] || `${optionIndex+1}.`} {englishSentence}
+                              {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work07Data && quizItem.work07Data.answerIndex === optionIndex && (
+                                <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                              )}
+                            </div>
+                            {koreanTranslation && (
+                              <div style={{fontSize:'0.85rem', color:'#666', marginTop:'0.3rem', paddingLeft:'1.0rem'}}>
+                                {koreanTranslation}
+                              </div>
                             )}
                           </div>
-                          {quizItem.work07Data?.optionTranslations && quizItem.work07Data?.optionTranslations[optionIndex] && (
-                            <div style={{fontSize:'0.85rem', color:'#666', marginTop:'0.3rem'}}>
-                              {quizItem.work07Data?.optionTranslations[optionIndex]}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* 번역 */}
                   {quizItem.translatedText && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '0.4rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content package01-work07-translation" style={{
                         background: '#F5F5F5',
@@ -3828,7 +3890,7 @@ ${passage}`;
                   <div className="problem-passage package01-work08-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -3841,7 +3903,9 @@ ${passage}`;
 
                   {/* 선택지 */}
                   <div className="problem-options package01-work08-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
+                    paddingTop: '0',
+                    paddingBottom: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
@@ -3850,7 +3914,8 @@ ${passage}`;
                       <div key={optionIndex} className="option" style={{
                         display: 'block',
                         fontSize: '1rem',
-                        margin: '0.5rem 0',
+                        margin: '0',
+                        marginBottom: '0',
                         padding: '0.5rem 1rem',
                         fontFamily: 'inherit',
                         backgroundColor: '#ffffff',
@@ -3869,7 +3934,7 @@ ${passage}`;
 
                   {/* 번역 */}
                   {quizItem.translatedText && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '0.4rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content package01-work08-translation" style={{
                         background: '#F5F5F5',
@@ -3943,7 +4008,7 @@ ${passage}`;
                   <div className="problem-passage package01-work10-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -3956,7 +4021,9 @@ ${passage}`;
 
                   {/* 객관식 옵션 */}
                   <div className="problem-options package01-work10-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
+                    paddingTop: '0',
+                    paddingBottom: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
@@ -3985,7 +4052,7 @@ ${passage}`;
 
                   {/* 번역 */}
                   {quizItem.work10Data.translation && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '0.4rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content package01-work10-translation" style={{
                         background: '#F5F5F5',
@@ -4212,7 +4279,7 @@ ${passage}`;
                   <div className="problem-passage package01-work13-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -4229,12 +4296,12 @@ ${passage}`;
                   {/* 정답 표시 */}
                   {(printMode === 'with-answer' || showQuizDisplay) && (
                     <div className="no-print package01-work13-answer" style={{
-                      marginTop: '1.2rem',
+                      marginTop: '0.24rem',
                       color: '#000000',
                       fontWeight: 700
                     }}>
                       <span style={{color: '#000000'}}>
-                        정답: {quizItem.work13Data.correctAnswers?.join(', ') || '정답 없음'}
+                        정답 : {quizItem.work13Data.correctAnswers?.join(', ') || '정답 없음'}
                       </span>
                     </div>
                   )}
@@ -4311,7 +4378,7 @@ ${passage}`;
                   <div className="problem-passage package01-work14-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -4328,12 +4395,12 @@ ${passage}`;
                   {/* 정답 표시 */}
                   {(printMode === 'with-answer' || showQuizDisplay) && quizItem.work14Data.selectedSentences && (
                     <div className="no-print package01-work14-answer" style={{
-                      marginTop: '1.2rem',
+                      marginTop: '0.24rem',
                       color: '#000000',
                       fontWeight: 700
                     }}>
                       <div style={{color: '#000000', marginBottom: '0.5rem'}}>
-                        정답 문장들:
+                        정답 문장들 :
                       </div>
                       {quizItem.work14Data.selectedSentences.map((sentence, idx) => {
                         const alphabetLabel = String.fromCharCode(65 + idx); // A=65, B=66, C=67...
@@ -4454,7 +4521,7 @@ ${passage}`;
                   <div className="problem-passage package01-work09-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -4467,7 +4534,9 @@ ${passage}`;
 
                   {/* 선택지 */}
                   <div className="problem-options package01-work09-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.3rem 0',
+                    paddingTop: '0',
+                    paddingBottom: '0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
                     border: '1px solid transparent'
@@ -4476,7 +4545,8 @@ ${passage}`;
                       <div key={optionIndex} className="option" style={{
                         display: 'block',
                         fontSize: '1rem',
-                        margin: '0.5rem 0',
+                        margin: '0',
+                        marginBottom: '0',
                         padding: '0.5rem 1rem',
                         fontFamily: 'inherit',
                         backgroundColor: '#ffffff',
@@ -4514,7 +4584,7 @@ ${passage}`;
 
                   {/* 번역 */}
                   {quizItem.work09Data.translation && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '0.4rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content package01-work09-translation" style={{
                         background: '#F5F5F5',

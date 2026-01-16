@@ -843,6 +843,13 @@
   margin: 1.5rem 0;
 }
 
+/* 패키지#02-유형#02, 03 본문 해석 컨테이너 배경색 연한 회색 */
+.problem-passage.package01-work02-translation,
+.problem-passage.package01-work03-translation {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
+}
+
 /* Work_02의 translation-container는 제외 */
 .only-print .problem-passage.translation-container {
   background: #F1F8E9 !important;
