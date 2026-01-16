@@ -3,6 +3,7 @@ import PrintHeaderPackage01 from './PrintHeaderPackage01';
 import { SentenceTranslationQuiz } from '../../../types/types';
 import { Quiz } from '../../../types/types';
 import { Work02QuizData } from '../../../services/work02Service';
+import { MultiGrammarQuiz } from '../../../services/work10Service';
 import Work11DynamicPrintPages from '../Work_11_SentenceTranslation/Work11DynamicPrintPages';
 import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization';
 
@@ -108,15 +109,7 @@ interface PrintFormatPackage01Work09Props {
   printMode: 'no-answer' | 'with-answer';
 }
 
-interface MultiGrammarQuiz {
-  passage: string; // 번호/밑줄 적용된 본문
-  options: number[]; // [1,2,3,4,5]
-  answerIndex: number; // 정답(틀린 단어 개수-1)
-  translation: string;
-  originalWords: string[];
-  transformedWords: string[];
-  wrongIndexes: number[];
-}
+// MultiGrammarQuiz는 work10Service에서 import하여 사용
 
 interface PrintFormatPackage01Work10Props {
   work10Data: MultiGrammarQuiz;

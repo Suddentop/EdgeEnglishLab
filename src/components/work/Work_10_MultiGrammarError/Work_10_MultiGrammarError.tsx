@@ -622,6 +622,9 @@ const Work_10_MultiGrammarError: React.FC = () => {
                         color: '#333'
                       }}>
                         {`①②③④⑤`[i] || `${i+1}.`} {opt}개
+                        {quiz.answerIndex === i && (
+                          <span style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
+                        )}
                       </div>
                     ))}
                   </div>

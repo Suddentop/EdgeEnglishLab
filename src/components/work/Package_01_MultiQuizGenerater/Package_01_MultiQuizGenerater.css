@@ -1606,3 +1606,18 @@
   background: #F5F5F5 !important;
   background-color: #F5F5F5 !important;
 }
+
+/* Work_10 유형#10: 번호와 밑줄 스타일 */
+.problem-passage.package01-work10-passage .word-idx {
+  display: inline-block;
+  margin-right: 2px;
+  font-weight: 600;
+  color: #000;
+}
+
+.problem-passage.package01-work10-passage u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1.5px;
+  font-weight: bold;
+}

@@ -1322,3 +1322,18 @@
   border: 1px solid #e2e8f0;
   flex: 1;
 }
+
+/* Work_10 유형#10: 번호와 밑줄 스타일 (패키지#02) */
+.problem-passage.package01-work10-passage .word-idx {
+  display: inline-block;
+  margin-right: 2px;
+  font-weight: 600;
+  color: #000;
+}
+
+.problem-passage.package01-work10-passage u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1.5px;
+  font-weight: bold;
+}

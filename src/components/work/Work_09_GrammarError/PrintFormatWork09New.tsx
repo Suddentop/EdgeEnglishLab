@@ -153,10 +153,12 @@ const PrintFormatWork09New: React.FC<PrintFormatWork09NewProps> = ({ quizzes, is
     if (isAnswerMode) {
       // 정답 설명 (옵션 바로 아래에 표시)
       // type: 'text'로 하여 단순 텍스트로 렌더링 (또는 html)
+      const transformedWord = quiz.options && quiz.answerIndex !== undefined ? quiz.options[quiz.answerIndex] : '';
+      const originalWord = quiz.original || '';
       sections.push({
         type: 'text',
         key: `answer-info-${index}`,
-        text: `(정답: 원래/정상 단어 : ${quiz.original})`,
+        text: `( 어법상 틀린 단어 : ${transformedWord} → ${originalWord} )`,
         meta: { 
           // 스타일링을 위한 메타데이터 (printRenderers에서 처리 필요할 수도 있음, 
           // 하지만 기본 text 타입은 단순 텍스트 div로 렌더링됨)

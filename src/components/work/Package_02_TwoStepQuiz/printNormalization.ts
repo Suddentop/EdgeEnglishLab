@@ -535,12 +535,89 @@ export const normalizeQuizItemForPrint = (
       pushSection(createInstructionSection(workTypeId, instructionText, chunkMeta));
 
       const data = quizItem?.[`work${workTypeId}Data`] || quizData?.[`work${workTypeId}Data`] || quizData;
-      const passage = data?.passage || '';
-      if (passage) {
+      
+      // 유형#10: numberedPassage 우선 사용, 없으면 동적 생성
+      let htmlContent = '';
+      if (data?.numberedPassage) {
+        // numberedPassage가 이미 HTML이므로 그대로 사용
+        htmlContent = data.numberedPassage;
+        console.log('🔍 유형#10: numberedPassage 사용 (항상 로그):', {
+          hasNumberedPassage: true,
+          htmlLength: htmlContent.length,
+          htmlPreview: htmlContent.substring(0, 100)
+        });
+      } else if (data?.passage) {
+        // numberedPassage가 없으면 originalWords와 transformedWords로 동적 생성
+        const originalWords = data?.originalWords || [];
+        const transformedWords = data?.transformedWords || [];
+        
+        if (originalWords.length > 0 && transformedWords.length > 0 && originalWords.length === transformedWords.length) {
+          // 동적 생성 로직 (work10Service의 applyNumberAndUnderlineForWork10와 동일)
+          const circleNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'];
+          const passage = data.passage;
+          const wordPositions: Array<{ originalIndex: number; start: number; end: number }> = [];
+          
+          // 각 단어의 위치 찾기
+          for (let i = 0; i < originalWords.length; i++) {
+            const word = originalWords[i];
+            const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+            const match = regex.exec(passage);
+            
+            if (match) {
+              wordPositions.push({
+                originalIndex: i,
+                start: match.index,
+                end: match.index + match[0].length
+              });
+            }
+          }
+          
+          // 위치 기준으로 정렬
+          wordPositions.sort((a, b) => a.start - b.start);
+          
+          // 뒤에서부터 치환 (인덱스 유지)
+          let numberedPassage = passage;
+          for (let i = wordPositions.length - 1; i >= 0; i--) {
+            const pos = wordPositions[i];
+            const circleNumber = circleNumbers[i];
+            const displayWord = transformedWords[pos.originalIndex];
+            const replacement = `<span class="word-idx">${circleNumber}</span><u>${displayWord}</u>`;
+            
+            numberedPassage = 
+              numberedPassage.substring(0, pos.start) + 
+              replacement + 
+              numberedPassage.substring(pos.end);
+          }
+          
+          // 줄바꿈 처리
+          htmlContent = numberedPassage.replace(/\n/g, '<br/>');
+          
+          console.log('🔧 유형#10: numberedPassage가 없어서 동적으로 생성합니다 (항상 로그):', {
+            hasNumberedPassage: false,
+            originalWordsCount: originalWords.length,
+            transformedWordsCount: transformedWords.length,
+            wordPositionsCount: wordPositions.length,
+            htmlLength: htmlContent.length,
+            htmlPreview: htmlContent.substring(0, 100)
+          });
+        } else {
+          // 동적 생성 불가능: passage만 사용
+          htmlContent = data.passage.replace(/\\n/g, '<br/>');
+          console.warn('⚠️ 유형#10: numberedPassage 동적 생성 불가능, passage만 사용:', {
+            hasOriginalWords: originalWords.length > 0,
+            hasTransformedWords: transformedWords.length > 0,
+            originalWordsCount: originalWords.length,
+            transformedWordsCount: transformedWords.length
+          });
+        }
+      }
+      
+      if (htmlContent) {
         pushSection({
           type: 'html',
           key: `html-${workTypeId}-passage`,
-          html: passage.replace(/\\n/g, '<br/>')
+          html: htmlContent
         });
       }
 

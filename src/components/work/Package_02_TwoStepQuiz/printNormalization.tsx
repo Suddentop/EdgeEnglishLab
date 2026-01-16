@@ -209,10 +209,20 @@ export const normalizeQuizItemForPrint = (
 ): NormalizedQuizItem => {
   const { isAnswerMode, cleanOptionText, renderTextWithHighlight, getTranslatedText } = helpers;
 
-  const workTypeId = quizItem.workTypeId || 'unknown';
+  const workTypeId = String(quizItem.workTypeId || 'unknown'); // 문자열로 변환하여 일관성 보장
   const quizData = quizItem.quiz || quizItem.data || {};
   // chunkMeta가 없으면 undefined로 설정 (정답 섹션은 splitNormalizedItemByHeight에서 처리)
   const chunkMeta = quizItem.chunkMeta || legacyChunkMetaFromItem(quizItem);
+
+  // 디버깅: 유형#10 진입 확인 (항상 로그)
+  if (workTypeId === '10' || workTypeId === 10) {
+    console.log('🔍 유형#10 normalizeQuizItemForPrint 진입 (항상 로그):', {
+      workTypeId,
+      workTypeIdType: typeof workTypeId,
+      quizItemKeys: Object.keys(quizItem || {}),
+      hasWork10Data: !!quizItem?.work10Data
+    });
+  }
 
   const sections: PrintSection[] = [];
   const pushSection = (section: PrintSection | null | undefined) => {
@@ -263,6 +273,15 @@ export const normalizeQuizItemForPrint = (
 
   const titleSection = createTitleSection(workTypeId, chunkMeta);
   pushSection(titleSection);
+
+  // 디버깅: switch 진입 전 확인 (항상 로그)
+  if (workTypeId === '10' || workTypeId === 10) {
+    console.log('🔍 유형#10 switch 진입 전 (항상 로그):', {
+      workTypeId,
+      workTypeIdType: typeof workTypeId,
+      willEnterCase10: workTypeId === '10' || workTypeId === 10
+    });
+  }
 
   switch (workTypeId) {
     case '01': {
@@ -594,9 +613,19 @@ export const normalizeQuizItemForPrint = (
       break;
     }
     case '09':
-    case '10': {
+    case '10':
+    case 9:
+    case 10: {
+      // 디버깅: case 진입 확인 (항상 로그)
+      if (workTypeId === '10' || workTypeId === 10) {
+        console.log('🔍 유형#10 case 진입 (항상 로그):', {
+          workTypeId,
+          workTypeIdType: typeof workTypeId
+        });
+      }
+      
       const instructionText =
-        workTypeId === '09'
+        (workTypeId === '09' || workTypeId === 9)
           ? '다음 영어 본문에 표시된 단어들 중에서 어법상 틀린 것을 고르시오.'
           : '다음 영어 본문에 표시된 단어들 중에서 어법상 틀린 단어의 개수를 고르시오.';
       pushSection(createInstructionSection(workTypeId, instructionText, chunkMeta));
@@ -607,13 +636,113 @@ export const normalizeQuizItemForPrint = (
         quizItem?.quiz?.[`work${workTypeId}Data`] ||
         quizData ||
         quizItem;
-      const passage = data?.passage || '';
+      
+      // 디버깅: 유형#10의 경우 데이터 구조 확인 (항상 로그)
+      if (workTypeId === '10' || workTypeId === 10) {
+        console.log('🔍 유형#10 데이터 구조 확인 (항상 로그):', {
+          workTypeId,
+          hasWork10Data: !!quizItem?.work10Data,
+          hasData: !!data,
+          dataKeys: Object.keys(data || {}),
+          hasNumberedPassage: !!data?.numberedPassage,
+          hasPassage: !!data?.passage,
+          numberedPassagePreview: data?.numberedPassage?.substring(0, 200) || '없음',
+          passagePreview: data?.passage?.substring(0, 200) || '없음',
+          quizItemKeys: Object.keys(quizItem || {}),
+          quizDataKeys: Object.keys(quizData || {})
+        });
+      }
+      
+      // 유형#10의 경우 numberedPassage를 우선 사용 (번호와 밑줄이 적용된 HTML)
+      const isWork10 = workTypeId === '10' || workTypeId === 10;
+      let passage = isWork10
+        ? (data?.numberedPassage || data?.passage || '')
+        : (data?.passage || '');
+      
+      // 유형#10에서 numberedPassage가 없으면 동적으로 생성
+      if (isWork10 && !data?.numberedPassage && data?.passage && Array.isArray(data?.originalWords) && Array.isArray(data?.transformedWords)) {
+        console.log('🔧 유형#10: numberedPassage가 없어서 동적으로 생성합니다.');
+        const circleNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'];
+        const originalWords = data.originalWords;
+        const transformedWords = data.transformedWords;
+        const wordPositions: Array<{ originalIndex: number; start: number; end: number }> = [];
+        
+        // 각 단어의 위치 찾기
+        for (let i = 0; i < originalWords.length; i++) {
+          const word = originalWords[i];
+          const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+          const match = regex.exec(data.passage);
+          
+          if (match) {
+            wordPositions.push({
+              originalIndex: i,
+              start: match.index,
+              end: match.index + match[0].length
+            });
+          }
+        }
+        
+        // 위치 기준으로 정렬
+        wordPositions.sort((a, b) => a.start - b.start);
+        
+        // 뒤에서부터 치환 (인덱스 유지)
+        let numberedPassage = data.passage;
+        for (let i = wordPositions.length - 1; i >= 0; i--) {
+          const pos = wordPositions[i];
+          const circleNumber = circleNumbers[i];
+          const displayWord = transformedWords[pos.originalIndex];
+          const replacement = `<span class="word-idx">${circleNumber}</span><u>${displayWord}</u>`;
+          
+          numberedPassage = 
+            numberedPassage.substring(0, pos.start) + 
+            replacement + 
+            numberedPassage.substring(pos.end);
+        }
+        
+        // 줄바꿈 처리
+        passage = numberedPassage.replace(/\n/g, '<br/>');
+        console.log('✅ 유형#10: numberedPassage 동적 생성 완료', {
+          originalLength: data.passage.length,
+          generatedLength: passage.length,
+          hasWordIdx: passage.includes('word-idx'),
+          hasUnderline: passage.includes('<u>')
+        });
+      }
+      
       if (passage) {
+        // numberedPassage는 이미 HTML 형식이므로 줄바꿈 처리는 필요 없음
+        // 단, 일반 passage의 경우만 줄바꿈 처리
+        const htmlContent = isWork10 && (data?.numberedPassage || passage.includes('word-idx'))
+          ? passage // numberedPassage는 이미 <br/> 포함
+          : passage.replace(/\\n/g, '<br/>');
+        
+        // 디버깅: 유형#10의 경우 HTML 내용 확인 (항상 로그)
+        if (isWork10) {
+          console.log('🔍 유형#10 HTML 내용 확인 (항상 로그):', {
+            hasNumberedPassage: !!data?.numberedPassage,
+            usingNumberedPassage: isWork10 && !!data?.numberedPassage,
+            htmlContentLength: htmlContent.length,
+            htmlContentPreview: htmlContent.substring(0, 300),
+            hasWordIdxInHtml: htmlContent.includes('word-idx'),
+            hasUnderlineInHtml: htmlContent.includes('<u>')
+          });
+        }
+        
         pushSection({
           type: 'html',
           key: `html-${workTypeId}-passage`,
-          html: passage.replace(/\\n/g, '<br/>')
+          html: htmlContent
         });
+      } else {
+        // 디버깅: passage가 없는 경우
+        if (isWork10) {
+          console.warn('⚠️ 유형#10: passage가 없습니다!', {
+            workTypeId,
+            hasData: !!data,
+            dataKeys: Object.keys(data || {})
+          });
+        }
       }
 
       if (Array.isArray(data?.options)) {
@@ -625,9 +754,40 @@ export const normalizeQuizItemForPrint = (
         addOptionsSection(options);
       }
 
+      // 유형#09 인쇄(정답) 모드: 4지선다 아래에 어법 오류 정보 텍스트 추가
+      // 중요: 이 섹션은 options 섹션 다음에 추가되어야 함
+      const isWork09 = workTypeId === '09' || workTypeId === 9;
+      if (isAnswerMode && isWork09) {
+        // 어법 오류 정보 포맷팅
+        let errorText = '';
+        if (data?.original && Array.isArray(data?.options) && data?.answerIndex !== undefined) {
+          const original = data.original;
+          const transformed = data.options[data.answerIndex];
+          if (original && transformed) {
+            errorText = `어법상 틀린 단어: ${original} → ${transformed}`;
+          }
+        }
+        
+        if (errorText) {
+          const testTextSection: PrintSection = {
+            type: 'text',
+            key: `text-${workTypeId}-test-label`,
+            text: errorText
+          };
+          pushSection(testTextSection);
+          console.log('✅ 유형#09 텍스트 섹션 추가:', {
+            workTypeId,
+            isAnswerMode,
+            section: testTextSection,
+            sectionsCount: sections.length,
+            errorText
+          });
+        }
+      }
+
       // 유형#10 인쇄(정답) 모드: 4지선다 아래에 어법 오류 정보 텍스트 추가
       // 중요: 이 섹션은 options 섹션 다음에 추가되어야 함
-      if (isAnswerMode && workTypeId === '10') {
+      if (isAnswerMode && isWork10) {
         // 어법 오류 정보 포맷팅
         let errorText = '유형테스트';
         if (Array.isArray(data?.wrongIndexes) && Array.isArray(data?.originalWords) && Array.isArray(data?.transformedWords)) {
@@ -669,9 +829,9 @@ export const normalizeQuizItemForPrint = (
       }
 
       if (isAnswerMode) {
-        if (workTypeId === '09') {
+        if (isWork09) {
           addAnswerSection([`정답: ${OPTION_LABELS[data?.answerIndex] || '-'}`]);
-        } else if (workTypeId === '10') {
+        } else if (isWork10) {
           const answerOption = Array.isArray(data?.options)
             ? data.options[data.answerIndex]
             : undefined;

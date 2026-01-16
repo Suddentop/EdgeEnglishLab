@@ -1662,6 +1662,23 @@
     margin-left: 0.4rem !important;
     font-size: 9.35pt !important; /* 선택지와 동일한 크기 */
   }
+
+  /* 유형#10 인쇄: 번호와 밑줄 스타일 */
+  .print-html-block .word-idx,
+  .print-html-block-work01-11 .word-idx {
+    display: inline-block !important;
+    margin-right: 2px !important;
+    font-weight: 600 !important;
+    color: #000 !important;
+  }
+
+  .print-html-block u,
+  .print-html-block-work01-11 u {
+    text-decoration: underline !important;
+    text-underline-offset: 2px !important;
+    text-decoration-thickness: 1.5px !important;
+    font-weight: bold !important;
+  }
 }
 
 

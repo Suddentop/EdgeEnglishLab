@@ -18,7 +18,7 @@ import { generateWork06Quiz } from '../../../services/work06Service';
 import { generateWork07Quiz } from '../../../services/work07Service';
 import { generateWork08Quiz } from '../../../services/work08Service';
 import { generateWork09Quiz } from '../../../services/work09Service';
-import { generateWork10Quiz } from '../../../services/work10Service';
+import { generateWork10Quiz, MultiGrammarQuiz } from '../../../services/work10Service';
 import { generateWork11Quiz } from '../../../services/work11Service';
 import { generateBlankFillQuizWithAI } from '../../../services/work13Service';
 import { generateBlankQuizWithAI, imageToTextWithOpenAIVision } from '../../../services/work14Service';
@@ -76,15 +76,7 @@ interface GrammarQuiz {
   original: string;
 }
 
-interface MultiGrammarQuiz {
-  passage: string;
-  options: number[];
-  answerIndex: number;
-  translation: string;
-  originalWords: string[];
-  transformedWords: string[];
-  wrongIndexes: number[];
-}
+// MultiGrammarQuiz는 work10Service에서 import하여 사용
 
 interface SentenceTranslationQuiz {
   sentences: {
@@ -2585,7 +2577,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                     lineHeight: '1.7'
                   }}
                   dangerouslySetInnerHTML={{
-                    __html: quizItem.work10Data.passage.replace(/\n/g, '<br/>')
+                    __html: quizItem.work10Data.numberedPassage || quizItem.work10Data.passage || ''
                   }}
                 />
 

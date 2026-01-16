@@ -195,6 +195,43 @@ export const renderSectionNode = (
           </div>
         );
       }
+      // 유형#09 인쇄(정답) 모드: 텍스트 블록 렌더링
+      if (normalizedItem.workTypeId === '09' && 
+          section.key?.includes('text-09-test-label')) {
+        const displayText = section.text || '';
+        
+        // "어법상 틀린 단어: " 다음에 줄바꿈 처리 및 진하게 표시
+        let formattedText: React.ReactNode = displayText;
+        if (typeof displayText === 'string' && displayText.startsWith('어법상 틀린 단어:')) {
+          const parts = displayText.split('어법상 틀린 단어:');
+          if (parts.length === 2 && parts[1].trim()) {
+            formattedText = (
+              <>
+                <strong>어법상 틀린 단어:</strong> {parts[1].trim()}
+              </>
+            );
+          }
+        }
+        
+        return (
+          <div 
+            key={key} 
+            className="print-text-block print-text-block-work09" 
+            style={{ 
+              minHeight: '0.5cm',
+              padding: '0.1cm',
+              marginTop: '0.01cm',
+              marginBottom: '0.02cm',
+              fontSize: '0.8rem',
+              lineHeight: '1.4',
+              color: '#333'
+            }}
+          >
+            {formattedText}
+          </div>
+        );
+      }
+
       // 유형#10 인쇄(정답) 모드: 텍스트 블록 렌더링 (항상 표시)
       if (normalizedItem.workTypeId === '10' && 
           (section.key?.includes('text-10-test-label') || section.key?.includes('wrong-words'))) {
@@ -297,6 +334,19 @@ export const renderSectionNode = (
         // 유형#13, 14의 경우 줄간격 증가를 위한 클래스 추가
         htmlClassName += ' print-html-block-work13-14';
       }
+      
+      // 유형#10 디버깅: HTML 내용 확인
+      if (normalizedItem.workTypeId === '10') {
+        console.log('🎨 유형#10 HTML 렌더링:', {
+          key: section.key,
+          htmlLength: section.html?.length || 0,
+          htmlPreview: section.html?.substring(0, 300) || '없음',
+          hasWordIdx: section.html?.includes('word-idx') || false,
+          hasUnderline: section.html?.includes('<u>') || false,
+          className: htmlClassName
+        });
+      }
+      
       return section.html ? (
         <div
           key={key}

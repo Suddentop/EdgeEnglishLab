@@ -18,7 +18,7 @@ import { generateWork06Quiz as generateWork06QuizService } from '../../../servic
 import { generateWork07Quiz as generateWork07QuizService } from '../../../services/work07Service';
 import { generateWork08Quiz as generateWork08QuizService } from '../../../services/work08Service';
 import { generateWork09Quiz as generateWork09QuizService } from '../../../services/work09Service';
-import { generateWork10Quiz as generateWork10QuizService } from '../../../services/work10Service';
+import { generateWork10Quiz as generateWork10QuizService, MultiGrammarQuiz } from '../../../services/work10Service';
 import PrintFormatPackage01, { PrintFormatPackage01Work02, PrintFormatPackage01Work03, PrintFormatPackage01Work04, PrintFormatPackage01Work05, PrintFormatPackage01Work06, PrintFormatPackage01Work07, PrintFormatPackage01Work08, PrintFormatPackage01Work09, PrintFormatPackage01Work10, PrintFormatPackage01Work11, PrintFormatPackage01Work13, PrintFormatPackage01Work14 } from './PrintFormatPackage01';
 import './PrintFormatPackage01.css';
 import '../shared/PrintControls.css';
@@ -456,15 +456,7 @@ interface GrammarQuiz {
   original: string; // 정답의 원래(정상) 단어/구
 }
 
-interface MultiGrammarQuiz {
-  passage: string; // 번호/밑줄 적용된 본문
-  options: number[]; // [1,2,3,4,5]
-  answerIndex: number; // 정답(틀린 단어 개수-1)
-  translation: string;
-  originalWords: string[];
-  transformedWords: string[];
-  wrongIndexes: number[];
-}
+// MultiGrammarQuiz는 work10Service에서 import하여 사용
 
 interface PackageQuizItem {
   workType: string;
@@ -1593,7 +1585,8 @@ ${inputText}`;
       const numberedPassage = applyNumberAndUnderlineWork10(inputText, result.originalWords, result.transformedWords, result.wrongIndexes);
 
       const quizData: MultiGrammarQuiz = {
-        passage: numberedPassage,
+        passage: inputText, // 원본 본문
+        numberedPassage: numberedPassage, // 번호/밑줄 적용된 본문
         options,
         answerIndex,
         translation: result.translation,
@@ -3956,10 +3949,6 @@ ${passage}`;
 
             // Work_10 다중 어법 오류 문제
             if (quizItem.workTypeId === '10' && quizItem.work10Data) {
-              const convertMarkdownUnderlineToU = (text: string): string => {
-                return text.replace(/<u>(.*?)<\/u>/g, '<u>$1</u>');
-              };
-
               return (
                 <div key={`work-10-${index}`} className="quiz-item-card" style={{ 
                   marginBottom: '2rem', 
@@ -4016,7 +4005,7 @@ ${passage}`;
                     fontFamily: 'inherit',
                     color: '#333'
                   }}>
-                    <span dangerouslySetInnerHTML={{__html: (quizItem.work10Data.passage || '').replace(/\n/g, '<br/>')}} />
+                    <span dangerouslySetInnerHTML={{__html: quizItem.work10Data.numberedPassage || quizItem.work10Data.passage || ''}} />
                   </div>
 
                   {/* 객관식 옵션 */}
