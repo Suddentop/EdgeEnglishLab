@@ -150,7 +150,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
       if (replacement) {
         const word = replacement.replacement;
         const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        result += sentence.replace(regex, `<span class="print-word-highlight">${word}</span>`) + ' ';
+        result += sentence.replace(regex, `<strong style="font-weight: bold;">${word}</strong>`) + ' ';
       } else {
         result += sentence + ' ';
       }
@@ -1502,9 +1502,9 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                       padding: '0.6rem 1rem',
                       marginTop: '1rem',
                       marginBottom: '0',
-                      marginLeft: 'auto',
-                      marginRight: 'auto',
-                      width: '95%',
+                      marginLeft: '0',
+                      marginRight: '0',
+                      width: '100%',
                       backgroundColor: '#fff',
                       fontSize: '1rem !important',
                       lineHeight: '1.6',

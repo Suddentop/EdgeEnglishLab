@@ -988,6 +988,330 @@
   }
 }
 
+/* 패키지#03 전용 스타일 - 패키지#01과 동일한 디자인 */
+/* 모든 Work 유형 공통 스타일 */
+.problem-instruction.package03-work01-instruction,
+.problem-instruction.package03-work02-instruction,
+.problem-instruction.package03-work07-instruction,
+.problem-instruction.package03-work08-instruction,
+.problem-instruction.package03-work13-instruction,
+.problem-instruction.package03-work14-instruction {
+  background: #f5f5f5 !important;
+  background-color: #f5f5f5 !important;
+  color: #000 !important;
+  text-align: left !important;
+  border-left: none !important;
+  border-right: none !important;
+  border: none !important;
+  border-top: 1px solid #e0e0e0 !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+.problem-passage.package03-work01-passage,
+.problem-passage.package03-work02-passage,
+.problem-passage.package03-work07-passage,
+.problem-passage.package03-work08-passage,
+.problem-passage.package03-work13-passage,
+.problem-passage.package03-work14-passage {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+  border-color: transparent !important;
+}
+
+/* 패키지#03 Work_02 영어본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package03-work02-passage[style*="padding"],
+.quiz-item-card .problem-passage.package03-work02-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#03 Work_07 본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package03-work07-passage[style*="padding"],
+.quiz-item-card .problem-passage.package03-work07-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#03 Work_08 본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package03-work08-passage[style*="padding"],
+.quiz-item-card .problem-passage.package03-work08-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#03 Work_13 본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package03-work13-passage[style*="padding"],
+.quiz-item-card .problem-passage.package03-work13-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#03 Work_14 본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package03-work14-passage[style*="padding"],
+.quiz-item-card .problem-passage.package03-work14-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#03 모든 개별 선택지 폰트 크기 1.1rem으로 변경 */
+.quiz-item-card .problem-options.package03-work01-options .option,
+.quiz-item-card .problem-options.package03-work07-options .option,
+.quiz-item-card .problem-options.package03-work08-options .option {
+  font-size: 1.1rem !important;
+}
+
+/* 패키지#03 Work_07 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package03-work07-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#03 Work_08 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package03-work08-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#03 Work_08 개별 선택지 좌우 패딩 1rem, 상하 패딩 50% 감소 */
+.quiz-item-card .problem-options.package03-work08-options .option {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+
+/* 패키지#03 Work_01 본문 컨테이너 왼쪽 패딩 제거, 오른쪽/상하 패딩 0.5rem */
+.quiz-item-card .problem-passage.package03-work01-passage[style*="padding"],
+.quiz-item-card .problem-passage.package03-work01-passage {
+  padding-left: 0 !important;
+  padding-right: 0.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+/* 패키지#03 Work_01 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package03-work01-options,
+.quiz-item-card .problem-options.package03-work01-options[style*="padding"],
+.package-quiz-container .problem-options.package03-work01-options,
+.package-quiz-container .problem-options.package03-work01-options[style*="padding"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#03 Work_01 개별 선택지 좌우 패딩 1rem */
+.quiz-item-card .problem-options.package03-work01-options .option {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* 패키지#03 Work_13 정답 폰트 색상 검정색으로 변경 */
+.package03-work13-answer {
+  color: #000000 !important;
+}
+
+.package03-work13-answer span {
+  color: #000000 !important;
+}
+
+/* 패키지#03 Work_14 정답 폰트 색상 검정색으로 변경 및 정답 항목 배경색 연한 회색 */
+.package03-work14-answer {
+  color: #000000 !important;
+}
+
+.package03-work14-answer > div {
+  color: #000000 !important;
+}
+
+.package03-work14-answer-item {
+  background-color: #f5f5f5 !important;
+  background: #f5f5f5 !important;
+  color: #000000 !important;
+}
+
+/* 패키지#03 Work_14 정답 영어 문장 폰트 색상 검정색으로 강제 적용 */
+.package03-work14-answer-item,
+.package03-work14-answer-item * {
+  color: #000000 !important;
+}
+
+/* 패키지#03 Work_02 교체된 단어 테이블 - 패키지#01과 동일한 디자인 */
+.quiz-display .replacements-table.work02-replacements-table,
+.quiz-item-card .replacements-table.work02-replacements-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background: #ffffff !important;
+  border: 1px solid #666 !important;
+  margin-top: 0.7rem !important;
+}
+
+.quiz-display .replacements-table.work02-replacements-table th,
+.quiz-item-card .replacements-table.work02-replacements-table th {
+  width: 25% !important;
+  border: 1px solid #666 !important;
+  background: #ffffff !important;
+  color: #333 !important;
+  font-weight: 500 !important;
+  padding: 0.4rem 0.8rem !important;
+  text-align: center !important;
+  font-size: 0.95rem !important;
+}
+
+.quiz-display .replacements-table.work02-replacements-table td,
+.quiz-item-card .replacements-table.work02-replacements-table td {
+  width: 25% !important;
+  border: 1px solid #666 !important;
+  background: #ffffff !important;
+  padding: 0.4rem 0.8rem !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+  font-size: 1rem !important;
+  color: #333 !important;
+}
+
+.quiz-display .replacements-table.work02-replacements-table td:nth-child(2),
+.quiz-display .replacements-table.work02-replacements-table td:nth-child(4),
+.quiz-item-card .replacements-table.work02-replacements-table td:nth-child(2),
+.quiz-item-card .replacements-table.work02-replacements-table td:nth-child(4) {
+  background: #f5f5f5 !important;
+}
+
+.quiz-display .replacements-table.work02-replacements-table tr:nth-child(even),
+.quiz-item-card .replacements-table.work02-replacements-table tr:nth-child(even) {
+  background: #ffffff !important;
+}
+
+/* 패키지#03 Work_02 교체된 단어 테이블 내 영어 단어 폰트 색상 검정색으로 변경 */
+.quiz-display .replacements-table .original-word,
+.quiz-display .replacements-table .replacement-word,
+.quiz-item-card .replacements-table .original-word,
+.quiz-item-card .replacements-table .replacement-word,
+.replacements-table .original-word,
+.replacements-table .replacement-word {
+  color: #000000 !important;
+}
+
+/* 패키지#03 전용 한글해석 컨테이너 - 배경색 변경 */
+.quiz-item-card .translation-content.package03-work01-translation,
+.quiz-item-card .translation-content.package03-work02-translation,
+.quiz-item-card .translation-content.package03-work07-translation,
+.quiz-item-card .translation-content.package03-work08-translation,
+.quiz-item-card .translation-content.package03-work13-translation,
+.quiz-item-card .translation-content.package03-work14-translation,
+.quiz-display .translation-content.package03-work01-translation,
+.quiz-display .translation-content.package03-work02-translation,
+.quiz-display .translation-content.package03-work07-translation,
+.quiz-display .translation-content.package03-work08-translation,
+.quiz-display .translation-content.package03-work13-translation,
+.quiz-display .translation-content.package03-work14-translation,
+.translation-content.package03-work01-translation,
+.translation-content.package03-work02-translation,
+.translation-content.package03-work07-translation,
+.translation-content.package03-work08-translation,
+.translation-content.package03-work13-translation,
+.translation-content.package03-work14-translation,
+.translation-section .translation-content.package03-work01-translation,
+.translation-section .translation-content.package03-work02-translation,
+.translation-section .translation-content.package03-work07-translation,
+.translation-section .translation-content.package03-work08-translation,
+.translation-section .translation-content.package03-work13-translation,
+.translation-section .translation-content.package03-work14-translation {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
+  border: 1px solid transparent !important;
+}
+
+/* 모든 translation-content 중에서 package03-workXX-translation만 적용 */
+.translation-content.package03-work01-translation[style*="background"],
+.translation-content.package03-work02-translation[style*="background"],
+.translation-content.package03-work07-translation[style*="background"],
+.translation-content.package03-work08-translation[style*="background"],
+.translation-content.package03-work13-translation[style*="background"],
+.translation-content.package03-work14-translation[style*="background"],
+.translation-content.package03-work01-translation[style*="backgroundColor"],
+.translation-content.package03-work02-translation[style*="backgroundColor"],
+.translation-content.package03-work07-translation[style*="backgroundColor"],
+.translation-content.package03-work08-translation[style*="backgroundColor"],
+.translation-content.package03-work13-translation[style*="backgroundColor"],
+.translation-content.package03-work14-translation[style*="backgroundColor"] {
+  background: #F5F5F5 !important;
+  background-color: #F5F5F5 !important;
+}
+
+/* 패키지#03 유형별 색상별 테두리 제거 (원래 디자인 테두리만 유지) */
+.package-quiz-container .quiz-item-card {
+  border: 1px solid #e0e0e0 !important;
+}
+
+.package-quiz-container .quiz-item-header.package03-work01-header,
+.package-quiz-container .quiz-item-header.package03-work02-header,
+.package-quiz-container .quiz-item-header.package03-work07-header,
+.package-quiz-container .quiz-item-header.package03-work08-header,
+.package-quiz-container .quiz-item-header.package03-work13-header,
+.package-quiz-container .quiz-item-header.package03-work14-header {
+  border-bottom: 1px solid #e0e0e0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.package-quiz-container .problem-instruction.package03-work01-instruction,
+.package-quiz-container .problem-instruction.package03-work02-instruction,
+.package-quiz-container .problem-instruction.package03-work07-instruction,
+.package-quiz-container .problem-instruction.package03-work08-instruction,
+.package-quiz-container .problem-instruction.package03-work13-instruction,
+.package-quiz-container .problem-instruction.package03-work14-instruction {
+  border-top: 1px solid #e0e0e0 !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.package-quiz-container .problem-body-container.package03-work01-body-container {
+  border: none !important;
+}
+
+.package-quiz-container .fixed-paragraph-box {
+  border: 1px solid #000 !important; /* 고정단락박스 검은색 테두리는 유지 */
+}
+
+.package-quiz-container .problem-passage.package03-work01-passage {
+  border: none !important;
+}
+
+.package-quiz-container .problem-passage.package03-work01-passage .shuffled-paragraph {
+  border: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+}
+
+.package-quiz-container .problem-options.package03-work01-options,
+.package-quiz-container .problem-options.package03-work07-options,
+.package-quiz-container .problem-options.package03-work08-options {
+  border: 1px solid #ffffff !important;
+}
+
+.package-quiz-container .problem-options.package03-work01-options .option,
+.package-quiz-container .problem-options.package03-work07-options .option,
+.package-quiz-container .problem-options.package03-work08-options .option {
+  border: 1px solid #ffffff !important;
+}
+
 /* 화면 중앙 모래시계 오버레이 */
 .centered-hourglass-overlay {
   position: fixed;

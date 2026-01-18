@@ -256,6 +256,11 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                 
           // Work_01: 문단 순서 맞추기
           if (quizItem.workTypeId === '01' && quizData && quizData.shuffledParagraphs) {
+            const isExamFormat = quizData.format === 'exam';
+            const instruction = isExamFormat && quizData.instruction 
+              ? quizData.instruction 
+              : '주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.';
+            
             return (
               <div key={`print-01-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -263,12 +268,40 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
                   <span className="print-question-type-badge">유형#01</span>
                 </div>
                 <div className="print-instruction">
-                  다음 단락들을 원래 순서대로 배열한 것을 고르세요
+                  {instruction}
                 </div>
+                
+                {/* 모의고사 형식: 고정된 첫 번째 단락을 박스 안에 표시 */}
+                {isExamFormat && quizData.fixedParagraph && (
+                  <div className="fixed-paragraph-box" style={{
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    padding: '0.6rem 1rem',
+                    marginTop: '0',
+                    marginBottom: '0.75rem',
+                    backgroundColor: '#fff',
+                    lineHeight: '1.6',
+                    color: '#333'
+                  }}>
+                    {quizData.fixedParagraph}
+                  </div>
+                )}
+                
                 <div className="print-shuffled-paragraphs">
                   {quizData.shuffledParagraphs?.map((para: any, pIndex: number) => (
-                    <div key={pIndex} className="print-paragraph-item">
-                      <strong>{para.label}:</strong> {para.content}
+                    <div key={pIndex} className="print-paragraph-item" style={{
+                      marginTop: '0.1rem',
+                      paddingTop: '0',
+                      paddingBottom: '0',
+                      background: '#ffffff',
+                      borderRadius: '0',
+                      border: '1px solid #ffffff',
+                      fontFamily: 'inherit',
+                      color: '#222',
+                      lineHeight: '1.4',
+                      textIndent: '0'
+                    }}>
+                      <strong>({para.label}) </strong>{para.content}
                     </div>
                   ))}
                 </div>

@@ -634,15 +634,18 @@ export const splitNormalizedItemByHeight = (
     // 유형#13, #14의 경우: instruction 다음에 오는 paragraph/html과 함께 묶어야 함
     const isWork13Or14 = normalizedItem.workTypeId === '13' || normalizedItem.workTypeId === '14';
     
-    // 유형#07, 09, 10의 긴 본문 섹션인지 확인 (페이지 분할 로직에서 사용)
-    const isLongPassageType = normalizedItem.workTypeId === '07' || normalizedItem.workTypeId === '09' || normalizedItem.workTypeId === '10';
+    // 유형#05, 07, 09, 10의 긴 본문 섹션인지 확인 (페이지 분할 로직에서 사용)
+    const isLongPassageType = normalizedItem.workTypeId === '05' || normalizedItem.workTypeId === '07' || normalizedItem.workTypeId === '09' || normalizedItem.workTypeId === '10';
     const isLongPassageSection = isLongPassageType && (section.type === 'paragraph' || section.type === 'html');
     
-    // 유형#07, #09, #10의 경우 본문과 options를 함께 묶어야 함
+    // 유형#05, #07, #09, #10의 경우 본문과 options를 함께 묶어야 함
+    // 유형#05는 paragraph 타입으로 본문을 추가
     // 유형#07은 html 타입으로 본문을 추가하므로 html 타입도 체크
+    const isWork05Passage = normalizedItem.workTypeId === '05' && section.type === 'paragraph';
     const isWork07Passage = normalizedItem.workTypeId === '07' && (section.type === 'paragraph' || section.type === 'html');
     const isWork09Passage = normalizedItem.workTypeId === '09' && section.type === 'html';
     const isWork10Passage = normalizedItem.workTypeId === '10' && section.type === 'html';
+    const isWork05Options = normalizedItem.workTypeId === '05' && section.type === 'options';
     const isWork09Options = normalizedItem.workTypeId === '09' && section.type === 'options';
     const isWork10Options = normalizedItem.workTypeId === '10' && section.type === 'options';
     
@@ -694,7 +697,8 @@ export const splitNormalizedItemByHeight = (
       // 유형#06: paragraph(numbered-passage) + answer (높이 계산에 포함)
       const answerHeight = estimateSectionHeight(nextSection);
       totalHeightForCheck = sectionHeight + answerHeight + 0.4; // answer margin-top 포함
-    } else if (isParagraphOrHtmlSection && nextIsOptions && nextNextIsTranslation) {
+    } else if (isParagraphOrHtmlSection && nextIsOptions && nextNextIsTranslation && !isWork05Passage && !isWork10Passage) {
+      // 유형#05, #10은 이미 특별 처리되므로 제외
       const optionsHeight = estimateSectionHeight(nextSection);
       const translationHeight = estimateSectionHeight(nextNextSection);
       totalHeightForCheck = sectionHeight + optionsHeight + translationHeight;
@@ -1161,6 +1165,455 @@ export const splitNormalizedItemByHeight = (
       }
     }
     
+    // 유형#05의 경우: paragraph + options + translation을 순차적으로 처리
+    // 핵심 원칙: 각 요소를 순차적으로 추가하면서 높이를 체크하고, 단 높이를 넘으면 다음 단으로 이동
+    const isWork05 = normalizedItem.workTypeId === '05';
+    const isWork05Paragraph = isWork05 && section.type === 'paragraph';
+    const nextIsOptionsForWork05 = isWork05 && nextSection?.type === 'options';
+    const nextNextIsTranslationForWork05 = isWork05 && nextNextSection?.type === 'translation';
+    if (isWork05Paragraph && nextIsOptionsForWork05 && nextNextIsTranslationForWork05) {
+      const optionsSection = nextSection;
+      const translationSection = nextNextSection;
+      
+      // 각 섹션의 높이 계산
+      const optionsHeight = estimateSectionHeight(optionsSection);
+      const translationHeight = estimateSectionHeight(translationSection);
+      
+      // 여백 계산 (CSS에서 실제 사용되는 여백)
+      // Paragraph 본문: margin-bottom: 0.25cm (.print-paragraph-item CSS)
+      // Options: margin-top: 0 (없음), margin-bottom: 0.5cm (.print-options CSS)
+      // Translation: margin-top: 0.3cm (.print-translation-section CSS)
+      const marginBetweenParagraphAndOptions = 0.25; // Paragraph margin-bottom(0.25cm)
+      const marginBetweenOptionsAndTranslation = 0.5 + 0.3; // Options margin-bottom(0.5cm) + translation margin-top(0.3cm) = 0.8cm
+      
+      // 현재 높이에서 시작
+      let accumulatedHeight = currentHeight;
+      
+      // 1. Paragraph 본문 추가 (이미 계산됨)
+      accumulatedHeight += sectionHeight;
+      const heightAfterParagraph = accumulatedHeight;
+      
+      // 2. Options 추가 가능한지 체크
+      const heightAfterOptions = accumulatedHeight + optionsHeight + marginBetweenParagraphAndOptions;
+      const canAddOptions = heightAfterOptions <= availableHeight;
+      
+      // 3. Translation 추가 가능한지 체크 (options 포함 여백)
+      const heightAfterTranslation = heightAfterOptions + translationHeight + marginBetweenOptionsAndTranslation;
+      const canAddTranslation = heightAfterTranslation <= availableHeight;
+      
+      // 디버깅: 유형#05 순차적 높이 체크
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📏 유형#05 순차적 높이 체크:', {
+          currentHeight: currentHeight.toFixed(2) + 'cm',
+          paragraphHeight: sectionHeight.toFixed(2) + 'cm',
+          optionsHeight: optionsHeight.toFixed(2) + 'cm',
+          translationHeight: translationHeight.toFixed(2) + 'cm',
+          heightAfterParagraph: heightAfterParagraph.toFixed(2) + 'cm',
+          heightAfterOptions: heightAfterOptions.toFixed(2) + 'cm',
+          heightAfterTranslation: heightAfterTranslation.toFixed(2) + 'cm',
+          availableHeight: availableHeight.toFixed(2) + 'cm',
+          canAddOptions: canAddOptions,
+          canAddTranslation: canAddTranslation
+        });
+      }
+      
+      // 순차적으로 요소 추가
+      // Paragraph 본문은 무조건 추가
+      currentSections.push(clonedSection);
+      currentHeight = heightAfterParagraph;
+      
+      // Options 추가 (가능한 경우)
+      if (canAddOptions) {
+        const clonedOptionsSection = cloneSectionForChunk(optionsSection, chunkIndex, currentSections.length);
+        currentSections.push(clonedOptionsSection);
+        currentHeight = heightAfterOptions;
+        
+        // Translation 추가 가능한지 체크
+        if (canAddTranslation) {
+          // 모두 같은 단에 추가 가능
+          const clonedTranslationSection = cloneSectionForChunk(translationSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTranslationSection);
+          currentHeight = heightAfterTranslation;
+          
+          // options와 translation 섹션을 건너뛰기 (2개)
+          sectionIndex += 2;
+          continue;
+        } else {
+          // Translation은 다음 단으로 이동
+          // 현재 청크 저장하고 새 청크 시작
+          if (currentSections.length > 0) {
+            chunkSectionsList.push(currentSections);
+            chunkIndex++;
+            ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+          }
+          
+          // Translation을 새 청크에 추가
+          const clonedTranslationSection = cloneSectionForChunk(translationSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTranslationSection);
+          currentHeight = estimateSectionHeight(clonedTranslationSection);
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('✅ 유형#05: translation을 다음 단으로 이동 (options까지 포함)', {
+              previousChunkIndex: chunkIndex - 1,
+              newChunkIndex: chunkIndex,
+              translationHeight: translationHeight.toFixed(2) + 'cm'
+            });
+          }
+          
+          sectionIndex += 2;
+          continue;
+        }
+      } else {
+        // Options도 다음 단으로 이동 (Paragraph 본문만 현재 단에)
+        // 현재 청크 저장하고 새 청크 시작
+        if (currentSections.length > 0) {
+          chunkSectionsList.push(currentSections);
+          chunkIndex++;
+          ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+        }
+        
+        // Options와 Translation을 순차적으로 새 청크에 추가
+        const optionsMarginTop = 0; // Options margin-top 없음
+        const clonedOptionsSection = cloneSectionForChunk(optionsSection, chunkIndex, currentSections.length);
+        currentSections.push(clonedOptionsSection);
+        currentHeight += optionsHeight + optionsMarginTop;
+        
+        // Translation 추가 가능한지 체크
+        const translationHeightWithMargin = translationHeight + marginBetweenOptionsAndTranslation;
+        if (currentHeight + translationHeightWithMargin <= availableHeight) {
+          const clonedTranslationSection = cloneSectionForChunk(translationSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTranslationSection);
+          currentHeight += translationHeightWithMargin;
+        } else {
+          // Translation은 또 다음 청크로
+          if (currentSections.length > 0) {
+            chunkSectionsList.push(currentSections);
+            chunkIndex++;
+            ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+          }
+          const clonedTranslationSection = cloneSectionForChunk(translationSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTranslationSection);
+          currentHeight = estimateSectionHeight(clonedTranslationSection);
+        }
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ 유형#05: options를 다음 단으로 이동', {
+            previousChunkIndex: chunkIndex - 1,
+            newChunkIndex: chunkIndex
+          });
+        }
+        
+        sectionIndex += 2;
+        continue;
+      }
+    }
+    
+    // 유형#10의 경우: html + options + (text + answer)를 순차적으로 처리
+    // 핵심 원칙: 각 요소를 순차적으로 추가하면서 높이를 체크하고, 단 높이를 넘으면 다음 단으로 이동
+    const isWork10 = normalizedItem.workTypeId === '10';
+    const isWork10Html = isWork10 && section.type === 'html';
+    const nextIsOptionsForWork10 = isWork10 && nextSection?.type === 'options';
+    const nextNextIsTextForWork10 = isWork10 && nextNextSection?.type === 'text' && nextNextSection?.key?.includes('text-10');
+    const nextNextNextIsAnswerForWork10 = isWork10 && contentSections[sectionIndex + 3]?.type === 'answer';
+    // 유형#10의 경우: html + options + (text + answer) 또는 html + options만 있는 경우
+    if (isWork10Html && nextIsOptionsForWork10) {
+      const optionsSection = nextSection;
+      const textSection = nextNextIsTextForWork10 ? nextNextSection : null;
+      const answerSection = nextNextNextIsAnswerForWork10 ? contentSections[sectionIndex + 3] : null;
+      
+      // 각 섹션의 높이 계산
+      const optionsHeight = estimateSectionHeight(optionsSection);
+      const textHeight = textSection ? estimateSectionHeight(textSection) : 0;
+      const answerHeight = answerSection ? estimateSectionHeight(answerSection) : 0;
+      
+      // 여백 계산 (CSS에서 실제 사용되는 여백)
+      // HTML 본문: margin-bottom: 0.15cm (.print-html-block CSS)
+      // Options: margin-top: 0 (없음), margin-bottom: 0.5cm (.print-options CSS)
+      // Text: margin-top: 0.1cm, margin-bottom: 0.2cm (.print-text-block-work10 CSS)
+      // Answer: margin-top: 0 (없음)
+      const marginBetweenHtmlAndOptions = 0.15; // HTML margin-bottom(0.15cm)
+      const marginBetweenOptionsAndText = 0.5 + 0.1; // Options margin-bottom(0.5cm) + text margin-top(0.1cm) = 0.6cm
+      const marginBetweenTextAndAnswer = 0.2; // text margin-bottom(0.2cm)
+      
+      // 현재 높이에서 시작
+      let accumulatedHeight = currentHeight;
+      
+      // 1. HTML 본문 추가 (이미 계산됨)
+      accumulatedHeight += sectionHeight;
+      const heightAfterHtml = accumulatedHeight;
+      
+      // 2. Options 추가 가능한지 체크
+      const heightAfterOptions = accumulatedHeight + optionsHeight + marginBetweenHtmlAndOptions;
+      const canAddOptions = heightAfterOptions <= availableHeight;
+      
+      // 3. Text 추가 가능한지 체크 (options 포함 여백)
+      const heightAfterText = textSection ? heightAfterOptions + textHeight + marginBetweenOptionsAndText : heightAfterOptions;
+      const canAddText = textSection ? heightAfterText <= availableHeight : true;
+      
+      // 4. Answer 추가 가능한지 체크 (text 포함 여백)
+      const heightAfterAnswer = answerSection && canAddText ? heightAfterText + answerHeight + marginBetweenTextAndAnswer : heightAfterText;
+      const canAddAnswer = answerSection ? heightAfterAnswer <= availableHeight : true;
+      
+      // 디버깅: 유형#10 순차적 높이 체크
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📏 유형#10 순차적 높이 체크:', {
+          currentHeight: currentHeight.toFixed(2) + 'cm',
+          htmlHeight: sectionHeight.toFixed(2) + 'cm',
+          optionsHeight: optionsHeight.toFixed(2) + 'cm',
+          textHeight: textHeight.toFixed(2) + 'cm',
+          answerHeight: answerHeight.toFixed(2) + 'cm',
+          heightAfterHtml: heightAfterHtml.toFixed(2) + 'cm',
+          heightAfterOptions: heightAfterOptions.toFixed(2) + 'cm',
+          heightAfterText: heightAfterText.toFixed(2) + 'cm',
+          heightAfterAnswer: heightAfterAnswer.toFixed(2) + 'cm',
+          availableHeight: availableHeight.toFixed(2) + 'cm',
+          canAddOptions: canAddOptions,
+          canAddText: canAddText,
+          canAddAnswer: canAddAnswer
+        });
+      }
+      
+      // 순차적으로 요소 추가
+      // HTML 본문이 너무 길어서 options를 같은 청크에 넣을 수 없는 경우
+      // 본문만 현재 청크에 추가하고 options는 다음 청크로 이동
+      // 본문 높이가 단 높이의 80%를 넘거나, 본문+options 높이가 단 높이를 넘으면 분리
+      if (heightAfterHtml > availableHeight * 0.8 || heightAfterOptions > availableHeight) {
+        // 본문이 단 높이의 80%를 넘거나 options를 넣을 수 없으면 본문만 현재 청크에 추가
+        currentSections.push(clonedSection);
+        currentHeight = heightAfterHtml;
+        
+        // 현재 청크를 저장하고 새 청크 시작
+        chunkSectionsList.push(currentSections);
+        chunkIndex++;
+        ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+        
+        // Options, Text, Answer를 순차적으로 새 청크에 추가
+        const optionsMarginTop = 0;
+        const clonedOptionsSection = cloneSectionForChunk(optionsSection, chunkIndex, currentSections.length);
+        currentSections.push(clonedOptionsSection);
+        currentHeight += optionsHeight + optionsMarginTop;
+        
+        if (textSection && currentHeight + textHeight + marginBetweenOptionsAndText <= availableHeight) {
+          const clonedTextSection = cloneSectionForChunk(textSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTextSection);
+          currentHeight += textHeight + marginBetweenOptionsAndText;
+          
+          if (answerSection && currentHeight + answerHeight + marginBetweenTextAndAnswer <= availableHeight) {
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight += answerHeight + marginBetweenTextAndAnswer;
+          } else if (answerSection) {
+            // Answer는 또 다음 청크로
+            if (currentSections.length > 0) {
+              chunkSectionsList.push(currentSections);
+              chunkIndex++;
+              ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+            }
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight = estimateSectionHeight(clonedAnswerSection);
+          }
+        } else if (textSection) {
+          // Text도 들어갈 수 없으면
+          if (currentSections.length > 0) {
+            chunkSectionsList.push(currentSections);
+            chunkIndex++;
+            ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+          }
+          const clonedTextSection = cloneSectionForChunk(textSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTextSection);
+          currentHeight = estimateSectionHeight(clonedTextSection);
+          
+          if (answerSection && currentHeight + answerHeight + marginBetweenTextAndAnswer <= availableHeight) {
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight += answerHeight + marginBetweenTextAndAnswer;
+          } else if (answerSection) {
+            // Answer는 또 다음 청크로
+            if (currentSections.length > 0) {
+              chunkSectionsList.push(currentSections);
+              chunkIndex++;
+              ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+            }
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight = estimateSectionHeight(clonedAnswerSection);
+          }
+        }
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ 유형#10: 본문이 너무 길어서 options를 다음 단으로 이동', {
+            previousChunkIndex: chunkIndex - 1,
+            newChunkIndex: chunkIndex,
+            htmlHeight: sectionHeight.toFixed(2) + 'cm',
+            availableHeight: availableHeight.toFixed(2) + 'cm',
+            heightAfterHtml: heightAfterHtml.toFixed(2) + 'cm'
+          });
+        }
+        
+        sectionIndex += 1 + (textSection ? 1 : 0) + (answerSection ? 1 : 0);
+        continue;
+      }
+      
+      // HTML 본문은 무조건 추가
+      currentSections.push(clonedSection);
+      currentHeight = heightAfterHtml;
+      
+      // Options 추가 (가능한 경우)
+      if (canAddOptions) {
+        const clonedOptionsSection = cloneSectionForChunk(optionsSection, chunkIndex, currentSections.length);
+        currentSections.push(clonedOptionsSection);
+        currentHeight = heightAfterOptions;
+        
+        // Text 추가 (있는 경우)
+        if (textSection && canAddText) {
+          const clonedTextSection = cloneSectionForChunk(textSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTextSection);
+          currentHeight = heightAfterText;
+          
+          // Answer 추가 (있는 경우)
+          if (answerSection && canAddAnswer) {
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight = heightAfterAnswer;
+            
+            // options, text, answer 섹션을 건너뛰기
+            sectionIndex += 1 + (textSection ? 1 : 0) + (answerSection ? 1 : 0);
+            continue;
+          } else if (answerSection) {
+            // Answer는 다음 단으로 이동
+            // 현재 청크 저장하고 새 청크 시작
+            if (currentSections.length > 0) {
+              chunkSectionsList.push(currentSections);
+              chunkIndex++;
+              ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+            }
+            
+            // Answer를 새 청크에 추가
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight = estimateSectionHeight(clonedAnswerSection);
+            
+            sectionIndex += 1 + (textSection ? 1 : 0) + (answerSection ? 1 : 0);
+            continue;
+          } else {
+            // text만 있고 answer가 없는 경우
+            sectionIndex += 1 + (textSection ? 1 : 0);
+            continue;
+          }
+        } else if (textSection) {
+          // Text도 다음 단으로 이동
+          // 현재 청크 저장하고 새 청크 시작
+          if (currentSections.length > 0) {
+            chunkSectionsList.push(currentSections);
+            chunkIndex++;
+            ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+          }
+          
+          // Text와 Answer를 순차적으로 새 청크에 추가
+          const textMarginTop = 0.1;
+          const clonedTextSection = cloneSectionForChunk(textSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTextSection);
+          currentHeight += textHeight + textMarginTop;
+          
+          if (answerSection && currentHeight + answerHeight + marginBetweenTextAndAnswer <= availableHeight) {
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight += answerHeight + marginBetweenTextAndAnswer;
+          } else if (answerSection) {
+            // Answer는 또 다음 청크로
+            if (currentSections.length > 0) {
+              chunkSectionsList.push(currentSections);
+              chunkIndex++;
+              ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+            }
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight = estimateSectionHeight(clonedAnswerSection);
+          }
+          
+          sectionIndex += 1 + (textSection ? 1 : 0) + (answerSection ? 1 : 0);
+          continue;
+        } else {
+          // Options만 있고 text/answer가 없는 경우
+          sectionIndex += 1;
+          continue;
+        }
+      } else {
+        // Options도 다음 단으로 이동 (HTML 본문만 현재 단에)
+        // 현재 청크 저장하고 새 청크 시작
+        if (currentSections.length > 0) {
+          chunkSectionsList.push(currentSections);
+          chunkIndex++;
+          ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+        }
+        
+        // Options, Text, Answer를 순차적으로 새 청크에 추가
+        const optionsMarginTop = 0;
+        const clonedOptionsSection = cloneSectionForChunk(optionsSection, chunkIndex, currentSections.length);
+        currentSections.push(clonedOptionsSection);
+        currentHeight += optionsHeight + optionsMarginTop;
+        
+        if (textSection && currentHeight + textHeight + marginBetweenOptionsAndText <= availableHeight) {
+          const clonedTextSection = cloneSectionForChunk(textSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTextSection);
+          currentHeight += textHeight + marginBetweenOptionsAndText;
+          
+          if (answerSection && currentHeight + answerHeight + marginBetweenTextAndAnswer <= availableHeight) {
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight += answerHeight + marginBetweenTextAndAnswer;
+          } else if (answerSection) {
+            // Answer는 또 다음 청크로
+            if (currentSections.length > 0) {
+              chunkSectionsList.push(currentSections);
+              chunkIndex++;
+              ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+            }
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight = estimateSectionHeight(clonedAnswerSection);
+          }
+        } else if (textSection) {
+          // Text도 들어갈 수 없으면
+          if (currentSections.length > 0) {
+            chunkSectionsList.push(currentSections);
+            chunkIndex++;
+            ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+          }
+          const clonedTextSection = cloneSectionForChunk(textSection, chunkIndex, currentSections.length);
+          currentSections.push(clonedTextSection);
+          currentHeight = estimateSectionHeight(clonedTextSection);
+          
+          if (answerSection && currentHeight + answerHeight + marginBetweenTextAndAnswer <= availableHeight) {
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight += answerHeight + marginBetweenTextAndAnswer;
+          } else if (answerSection) {
+            // Answer는 또 다음 청크로
+            if (currentSections.length > 0) {
+              chunkSectionsList.push(currentSections);
+              chunkIndex++;
+              ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
+            }
+            const clonedAnswerSection = cloneSectionForChunk(answerSection, chunkIndex, currentSections.length);
+            currentSections.push(clonedAnswerSection);
+            currentHeight = estimateSectionHeight(clonedAnswerSection);
+          }
+        }
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ 유형#10: options를 다음 단으로 이동', {
+            previousChunkIndex: chunkIndex - 1,
+            newChunkIndex: chunkIndex
+          });
+        }
+        
+        sectionIndex += 1 + (textSection ? 1 : 0) + (answerSection ? 1 : 0);
+        continue;
+      }
+    }
+    
     // 유형#09의 경우: html + options + translation을 순차적으로 처리
     // 핵심 원칙: 각 요소를 순차적으로 추가하면서 높이를 체크하고, 단 높이를 넘으면 다음 단으로 이동
     const isWork09 = normalizedItem.workTypeId === '09';
@@ -1305,8 +1758,9 @@ export const splitNormalizedItemByHeight = (
     }
     
     // paragraph/html + options + translation을 함께 묶어서 처리 (모든 유형에 동일하게 적용)
-    // 단, 유형#10의 경우 options와 translation 사이에 answer가 있을 수 있음
-    if (isParagraphOrHtmlSection && nextIsOptions && nextNextIsTranslation) {
+    // 단, 유형#05, #10의 경우 이미 특별 처리되었으므로 제외
+    // 유형#10의 경우 options와 translation 사이에 answer가 있을 수 있음
+    if (isParagraphOrHtmlSection && nextIsOptions && nextNextIsTranslation && !isWork05Passage && !isWork10Passage) {
       const optionsHeight = estimateSectionHeight(nextSection);
       const translationHeight = estimateSectionHeight(nextNextSection);
       const paragraphOnlyHeight = currentHeight + sectionHeight;
@@ -1316,36 +1770,6 @@ export const splitNormalizedItemByHeight = (
       // 높이 계산에 더 큰 여유를 줘서 과대평가 방지 (15% 여유)
       // 실제로는 공간이 충분한데도 과대평가로 인해 다음 단으로 넘어가는 문제 해결
       const availableHeightWithMargin = availableHeight * 0.85;
-      
-      // 유형#10의 경우: 본문이 길면 본문만 현재 청크에, options/answer/translation은 다음 청크로
-      // (translation은 options/answer 뒤에 오므로 본문과 함께 묶이면 안 됨)
-      if (isWork10Passage) {
-        // 본문만 현재 청크에 추가
-        if (paragraphOnlyHeight <= availableHeightWithMargin) {
-          // 본문만 추가하고 options/answer/translation은 다음 청크로
-          currentSections.push(clonedSection);
-          currentHeight += sectionHeight;
-          continue;
-        } else {
-          // 본문도 들어갈 수 없으면 본문을 다음 청크로 이동
-          // 단, onlyTitlePresent인 경우에는 강제로 현재 청크에 추가 (빈 페이지 방지)
-          if (onlyTitlePresent) {
-            currentSections.push(clonedSection);
-            currentHeight += sectionHeight;
-            continue;
-          }
-          // 본문을 다음 청크로 이동
-          if (currentSections.length > 0) {
-            chunkSectionsList.push(currentSections);
-            chunkIndex++;
-            ({ sections: currentSections, height: currentHeight } = startNewChunk(chunkIndex, false));
-            
-            clonedSection = cloneSectionForChunk(section, chunkIndex, currentSections.length);
-            sectionHeight = estimateSectionHeight(clonedSection);
-            continue;
-          }
-        }
-      }
       
       // 유형#07의 경우: paragraph/html + options는 함께 묶고, translation은 별도로 처리
       if (isWork07Passage && nextIsOptions && nextNextIsTranslation) {
@@ -1481,15 +1905,16 @@ export const splitNormalizedItemByHeight = (
       if (
         currentSections.length > 0
       ) {
-        // 유형#07, #09, #10의 경우: 본문과 options를 함께 묶으려고 시도
+        // 유형#07, #09의 경우: 본문과 options를 함께 묶으려고 시도
         // 단, 본문이 너무 길어서 options를 같은 청크에 넣을 수 없을 때는 분리
-        if ((isWork07Passage || isWork09Passage || isWork10Passage) && nextIsOptions) {
+        // 유형#10은 이미 특별 처리되었으므로 제외
+        if ((isWork07Passage || isWork09Passage) && nextIsOptions) {
           const optionsHeight = estimateSectionHeight(nextSection);
           const passageOptionsHeight = currentHeight + sectionHeight + optionsHeight;
           
           // 본문과 options를 함께 넣을 수 있으면 함께 묶기
           if (passageOptionsHeight <= availableHeight * 1.1) { // 10% 여유
-            // 유형#10: 본문과 options를 함께 현재 청크에 추가
+            // 유형#07, #09: 본문과 options를 함께 현재 청크에 추가
             currentSections.push(clonedSection);
             currentHeight += sectionHeight;
             
@@ -1541,9 +1966,10 @@ export const splitNormalizedItemByHeight = (
         // paragraph + options + translation이 모두 들어갈 수 없는 경우에도 일반 처리로 넘어가도록
         // (onlyTitlePresent인 경우 등)
       }
-    } else if (isParagraphOrHtmlSection && nextIsOptions && !nextIsTranslation) {
+    } else if (isParagraphOrHtmlSection && nextIsOptions && !nextIsTranslation && !isWork10Passage) {
       // paragraph/html + options만 있는 경우 (translation 없음, 문제 모드 등)
-      // 유형#09, #10 등에서 문제 모드일 때 html + options를 함께 묶어서 처리
+      // 유형#09 등에서 문제 모드일 때 html + options를 함께 묶어서 처리
+      // 유형#10은 이미 특별 처리되었으므로 제외
       const optionsHeight = estimateSectionHeight(nextSection);
       const paragraphOnlyHeight = currentHeight + sectionHeight;
       const paragraphOptionsHeight = paragraphOnlyHeight + optionsHeight;
@@ -1551,15 +1977,16 @@ export const splitNormalizedItemByHeight = (
       // 높이 계산에 더 큰 여유를 줘서 과대평가 방지 (15% 여유)
       const availableHeightWithMargin = availableHeight * 0.85;
       
-      // 유형#07, #09, #10의 경우: 본문과 options를 함께 묶으려고 시도
+      // 유형#07, #09의 경우: 본문과 options를 함께 묶으려고 시도
       // 단, 본문이 너무 길어서 options를 같은 청크에 넣을 수 없을 때는 분리
-      if (isWork07Passage || isWork09Passage || isWork10Passage) {
+      // 유형#10은 이미 특별 처리되었으므로 제외
+      if (isWork07Passage || isWork09Passage) {
         const optionsHeight = estimateSectionHeight(nextSection);
         const passageOptionsHeight = currentHeight + sectionHeight + optionsHeight;
         
         // 본문과 options를 함께 넣을 수 있으면 함께 묶기
         if (passageOptionsHeight <= availableHeight * 1.1) { // 10% 여유
-          // 유형#10: 본문과 options를 함께 현재 청크에 추가
+          // 유형#07, #09: 본문과 options를 함께 현재 청크에 추가
           currentSections.push(clonedSection);
           currentHeight += sectionHeight;
           
@@ -1614,9 +2041,10 @@ export const splitNormalizedItemByHeight = (
       if (
         currentSections.length > 0
       ) {
-        // 유형#09, #10의 경우: 본문이 길어서 options를 같은 청크에 넣을 수 없을 때
+        // 유형#09의 경우: 본문이 길어서 options를 같은 청크에 넣을 수 없을 때
         // 본문은 현재 청크에, options는 다음 청크로 넘어가야 함
-        if ((isWork09Passage || isWork10Passage) && nextIsOptions) {
+        // 유형#10은 이미 특별 처리되었으므로 제외
+        if (isWork09Passage && nextIsOptions) {
           // 본문을 현재 청크에 추가
           currentSections.push(clonedSection);
           currentHeight += sectionHeight;
@@ -2411,33 +2839,60 @@ export const distributeNormalizedItemsToPages = (
     
     if (isSameTypeChunk) {
       // 같은 유형의 연속 청크인 경우
-      // 이전 청크가 오른쪽 단(1)에 있었으면 다음 페이지 왼쪽 단부터 시작
-      if (lastItemColumn === 1) {
-        if (columnHeights[0] + itemHeight > availableHeight || 
-            (currentPage[0].length === 0 && currentPage[1].length > 0)) {
-          startNewPage();
-        }
-        targetColumn = 0; // 항상 왼쪽 단부터 시작
-      } else {
-        // 이전 청크가 왼쪽 단에 있었으면 같은 단에 계속 배치 시도
-        // 같은 유형의 연속 청크는 왼쪽 단에 공간이 있으면 왼쪽 단에 계속 배치
-        // 높이 계산에 여유를 두어 과대평가로 인한 오른쪽 단 이동 방지
-        // 사용자가 지적한 대로 왼쪽 컬럼 하단 여백을 최대한 활용하기 위해 여유를 더 늘림
-        const heightMargin = availableHeight * 0.2; // 20% 여유 (과대평가 보정) - 왼쪽 컬럼 여백 활용
-        const leftColumnAvailableSpace = availableHeight - columnHeights[0];
-        
-        // 왼쪽 단에 공간이 있고, 아이템이 들어갈 수 있으면 왼쪽 단에 배치
-        // 여유를 충분히 두어 실제로 들어갈 수 있는 경우를 모두 포함
-        // 사용자가 지적한 대로 왼쪽 컬럼 하단 여백을 최대한 활용
-        if (leftColumnAvailableSpace > 0 && columnHeights[0] + itemHeight <= availableHeight + heightMargin) {
-          targetColumn = 0; // 왼쪽 단에 배치 (여유를 두고 배치)
-        } else if (columnHeights[1] + itemHeight <= availableHeight + heightMargin) {
-          // 왼쪽 단에 정말 안 들어가면 오른쪽 단 시도
-          targetColumn = 1; // 오른쪽 단에 배치
+      // 유형#05, #10의 경우: 본문과 options를 분리했으므로 다른 컬럼에 배치
+      const isWork05Or10Chunk = currentWorkTypeId === '05' || currentWorkTypeId === '10';
+      
+      if (isWork05Or10Chunk) {
+        // 유형#05, #10의 경우: 본문 청크와 options 청크를 분리했으므로
+        // 이전 청크가 왼쪽 단에 있었으면 오른쪽 단에 배치
+        // 이전 청크가 오른쪽 단에 있었으면 다음 페이지 왼쪽 단에 배치
+        if (lastItemColumn === 0) {
+          // 이전 청크가 왼쪽 단에 있었으면 오른쪽 단에 배치
+          const heightMargin = availableHeight * 0.15; // 15% 여유 (과대평가 보정)
+          const rightColumnAvailableSpace = availableHeight - columnHeights[1];
+          
+          if (rightColumnAvailableSpace > 0 && columnHeights[1] + itemHeight <= availableHeight + heightMargin) {
+            targetColumn = 1; // 오른쪽 단에 배치
+          } else {
+            // 오른쪽 단에 정말 안 들어가면 새 페이지
+            startNewPage();
+            targetColumn = 0; // 새 페이지는 왼쪽 컬럼부터 시작
+          }
         } else {
-          // 둘 다 안 들어가면 새 페이지
+          // 이전 청크가 오른쪽 단에 있었으면 다음 페이지 왼쪽 단에 배치
           startNewPage();
           targetColumn = 0; // 새 페이지는 왼쪽 컬럼부터 시작
+        }
+      } else {
+        // 다른 유형의 경우: 기존 로직 유지
+        // 이전 청크가 오른쪽 단(1)에 있었으면 다음 페이지 왼쪽 단부터 시작
+        if (lastItemColumn === 1) {
+          if (columnHeights[0] + itemHeight > availableHeight || 
+              (currentPage[0].length === 0 && currentPage[1].length > 0)) {
+            startNewPage();
+          }
+          targetColumn = 0; // 항상 왼쪽 단부터 시작
+        } else {
+          // 이전 청크가 왼쪽 단에 있었으면 같은 단에 계속 배치 시도
+          // 같은 유형의 연속 청크는 왼쪽 단에 공간이 있으면 왼쪽 단에 계속 배치
+          // 높이 계산에 여유를 두어 과대평가로 인한 오른쪽 단 이동 방지
+          // 사용자가 지적한 대로 왼쪽 컬럼 하단 여백을 최대한 활용하기 위해 여유를 더 늘림
+          const heightMargin = availableHeight * 0.2; // 20% 여유 (과대평가 보정) - 왼쪽 컬럼 여백 활용
+          const leftColumnAvailableSpace = availableHeight - columnHeights[0];
+          
+          // 왼쪽 단에 공간이 있고, 아이템이 들어갈 수 있으면 왼쪽 단에 배치
+          // 여유를 충분히 두어 실제로 들어갈 수 있는 경우를 모두 포함
+          // 사용자가 지적한 대로 왼쪽 컬럼 하단 여백을 최대한 활용
+          if (leftColumnAvailableSpace > 0 && columnHeights[0] + itemHeight <= availableHeight + heightMargin) {
+            targetColumn = 0; // 왼쪽 단에 배치 (여유를 두고 배치)
+          } else if (columnHeights[1] + itemHeight <= availableHeight + heightMargin) {
+            // 왼쪽 단에 정말 안 들어가면 오른쪽 단 시도
+            targetColumn = 1; // 오른쪽 단에 배치
+          } else {
+            // 둘 다 안 들어가면 새 페이지
+            startNewPage();
+            targetColumn = 0; // 새 페이지는 왼쪽 컬럼부터 시작
+          }
         }
       }
     } else if ((isNewType || isNewProblem) && lastItemColumn !== null) {

@@ -243,6 +243,20 @@
   }
 
   /* Work_01 전용 - 가로 A4용 */
+  .print-question-card .fixed-paragraph-box,
+  .fixed-paragraph-box {
+    font-size: 9.3pt !important;
+    line-height: 1.6 !important;
+    color: #333 !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .print-question-card .fixed-paragraph-box[style],
+  .fixed-paragraph-box[style] {
+    font-size: 9.3pt !important;
+    margin-bottom: 0.75rem !important;
+  }
+
   .print-shuffled-paragraphs {
     font-size: 9.3pt;
     line-height: 1.4;
@@ -253,7 +267,17 @@
 
   .print-paragraph-item {
     margin-bottom: 0.15cm;
-    font-size: 9.3pt;
+    font-size: 9.3pt !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border: 1px solid #ffffff !important;
+  }
+
+  .print-paragraph-item[style] {
+    font-size: 9.3pt !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border: 1px solid #ffffff !important;
   }
 
   /* Work_02 전용 */

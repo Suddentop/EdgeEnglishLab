@@ -124,15 +124,15 @@ export const renderSectionNode = (
         );
       }
       if (variant === 'missing-sentence') {
-        // 유형#06: 주요 문장을 진하게 파란색으로 표시
+        // 유형#06: 주요 문장을 검정색으로 표시
         const text = section.text || '';
-        const parts = text.split('주요 문장:');
+        const parts = text.split('주요 문장 :');
         return (
           <div key={key} className="print-paragraph-item print-missing-sentence">
             {parts.length > 1 ? (
               <>
-                <span style={{ fontWeight: 700, color: '#1976d2' }}>주요 문장:</span>
-                {parts[1]}
+                <span style={{ fontWeight: 700, color: '#000' }}>주요 문장 :</span>
+                <span style={{ color: '#000' }}>{parts[1]}</span>
               </>
             ) : (
               text
@@ -318,6 +318,25 @@ export const renderSectionNode = (
         </div>
       ) : null;
     case 'html':
+      // 고정단락박스인 경우 특별 처리 (유형#01) - 패키지#03과 동일하게 처리
+      if (section.key === 'fixed-paragraph-01') {
+        return section.html ? (
+          <div
+            key={key}
+            style={{
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box',
+              marginLeft: '0',
+              marginRight: '0',
+              paddingLeft: '0',
+              paddingRight: '0'
+            }}
+            dangerouslySetInnerHTML={{ __html: section.html }}
+          />
+        ) : null;
+      }
+      
       // 유형#02의 경우 영어 본문이므로 print-passage 클래스 사용
       const isWork02 = normalizedItem.workTypeId === '02';
       const isWork01To11 = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11'].includes(normalizedItem.workTypeId);

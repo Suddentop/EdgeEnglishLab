@@ -464,7 +464,7 @@ export const normalizeQuizItemForPrint = (
         pushSection({
           type: 'paragraph',
           key: 'paragraph-06-missing',
-          text: `주요 문장: ${data.missingSentence}`,
+          text: `주요 문장 : ${data.missingSentence}`,
           meta: { variant: 'missing-sentence' }
         });
       }

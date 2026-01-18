@@ -275,7 +275,7 @@ export const normalizeQuizItemForPrint = (
         pushSection({
           type: 'html',
           key: 'fixed-paragraph-01',
-          html: `<div style="border: 2px solid #333; border-radius: 8px; padding: 0.5rem 1rem; margin-bottom: 1.5rem; background-color: #fff; font-size: 9.4pt; line-height: 1.54; color: #333;">${quizData.fixedParagraph}</div>`
+          html: `<div class="fixed-paragraph-box" style="border: 1px solid #000; border-radius: 8px; padding: 0.6rem 1rem; margin-top: 0; margin-bottom: 0.75rem; background-color: #fff; font-size: 9.3pt; line-height: 1.6; color: #333;">${quizData.fixedParagraph}</div>`
         });
       }
       
@@ -405,7 +405,7 @@ export const normalizeQuizItemForPrint = (
         pushSection({
           type: 'paragraph',
           key: 'paragraph-06-missing',
-          text: `주요 문장: ${data.missingSentence}`,
+          text: `주요 문장 : ${data.missingSentence}`,
           meta: { variant: 'missing-sentence' }
         });
       }

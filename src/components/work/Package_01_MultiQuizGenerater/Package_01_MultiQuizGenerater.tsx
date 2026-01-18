@@ -2462,7 +2462,7 @@ ${passage}`;
       if (replacement) {
         const word = replacement.replacement;
         const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        result += sentence.replace(regex, `<span class="print-word-highlight">${word}</span>`) + ' ';
+        result += sentence.replace(regex, `<strong style="font-weight: bold;">${word}</strong>`) + ' ';
       } else {
         result += sentence + ' ';
       }
