@@ -1204,7 +1204,21 @@ table.replacements-table.no-print td,
   background: #ffffff !important;
   background-color: #ffffff !important;
   border: 1px solid transparent !important;
-  border-bottom: 1px solid #e0e0e0 !important; /* 회색 구분선 */
+  border-bottom: none !important; /* 구분선 제거 */
+  font-size: 1.1rem !important; /* 본문 컨테이너 내부 폰트 크기 */
+  line-height: 1.6 !important;
+  color: #333 !important;
+  padding-left: 0 !important; /* 좌우 패딩 제거 */
+  padding-right: 0 !important; /* 좌우 패딩 제거 */
+  padding-top: 1rem !important; /* 상단 패딩 유지 */
+  padding-bottom: 1.5rem !important; /* 하단 패딩 유지 */
+}
+
+/* 본문 컨테이너 내부 모든 요소에 폰트 크기 적용 */
+.text-content.work02-text-content * {
+  font-size: 1.1rem !important;
+  line-height: 1.6 !important;
+  color: #333 !important;
 }
 
 /* Work_02 전용 교체된 단어 테이블 - 심플한 디자인, 동일한 컬럼 너비 */
@@ -1223,9 +1237,10 @@ table.replacements-table.no-print td,
   background: #ffffff !important;
   color: #333 !important;
   font-weight: 500 !important;
-  padding: 0.4rem 0.8rem !important; /* 상하 패딩 감소: 0.6rem -> 0.4rem */
+  padding: 0.4rem 0.8rem !important; /* 다른 행과 동일한 패딩 */
   text-align: center !important;
-  font-size: 0.95rem !important;
+  font-size: 1rem !important; /* 다른 행과 동일한 폰트 크기 */
+  line-height: 1.4 !important; /* 다른 행과 동일한 줄 간격 */
 }
 
 .replacements-table.work02-replacements-table td,
@@ -1257,6 +1272,7 @@ table.replacements-table.no-print td,
 .translation-content.work02-translation {
   background: #f5f5f5 !important;
   background-color: #f5f5f5 !important;
+  padding: 1.2rem !important; /* 상하좌우 패딩 모두 하단과 동일하게 */
 }
 
 .quiz-generator .problem-passage.translation *,
@@ -1495,4 +1511,41 @@ table.replacements-table.no-print td,
     transform: scale(0.9) !important;
     transform-origin: top left !important;
   }
+}
+
+/* ===== 유형#02 문제 생성 후 페이지 스타일 ===== */
+.text-content.work02-text-content {
+  font-size: 1.1rem !important; /* 본문 컨테이너 내부 폰트 크기 */
+  margin-bottom: 0.3rem !important; /* 교체된 단어들과의 간격 80% 감소 (1.5rem -> 0.3rem) */
+  border-bottom: none !important; /* 영어본문과 교체된 단어들 사이 구분선 제거 */
+  padding-left: 0 !important; /* 좌우 패딩 제거 */
+  padding-right: 0 !important; /* 좌우 패딩 제거 */
+  padding-top: 1rem !important; /* 상단 패딩 유지 */
+  padding-bottom: 1.5rem !important; /* 하단 패딩 유지 */
+}
+
+.text-content.work02-text-content * {
+  font-size: 1.1rem !important; /* 본문 컨테이너 내부 모든 요소 폰트 크기 */
+}
+
+/* 본문컨테이너 바로 다음에 오는 "교체된 단어들:" h3 상단 여백 제거 */
+.quiz-item-card .text-content.work02-text-content + h3,
+.quiz-display .text-content.work02-text-content + h3 {
+  margin-top: 0 !important;
+}
+
+.translation-section {
+  padding: 0 0 1rem 0 !important; /* 상하좌우 패딩 제거, 하단만 유지 */
+  padding-top: 0 !important; /* 상단 패딩 제거 */
+  border-radius: 8px;
+}
+
+/* 해석 섹션 내부 h3 태그 상단 여백 제거 */
+.translation-section h3 {
+  margin-top: 0 !important;
+  margin-bottom: 1rem !important;
+}
+
+.translation-content.work02-translation {
+  padding: 1.2rem !important; /* 상하좌우 패딩 모두 하단과 동일하게 */
 }

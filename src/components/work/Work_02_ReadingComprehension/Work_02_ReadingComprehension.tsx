@@ -747,23 +747,21 @@ Korean translation:`;
                     <div className="text-content work02-text-content" style={{
                       background: '#ffffff', 
                       backgroundColor: '#ffffff',
-                      padding: '1rem', 
+                      padding: '1rem 0 1.5rem 0', 
                       borderRadius: '0', 
-                      marginBottom: '1.5rem',
+                      marginBottom: '0.3rem',
                       border: '1px solid transparent',
-                      fontSize: '1rem',
+                      fontSize: '1.1rem',
                       lineHeight: '1.6',
-                      color: '#333',
-                      borderBottom: '1px solid #e0e0e0',
-                      paddingBottom: '1.5rem'
+                      color: '#333'
                     }} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(quiz.modifiedText, quiz.replacements, false)}}>
                   </div>
 
-                    <h3>교체된 단어들:</h3>
+                    <h3 style={{ marginTop: '0' }}>교체된 단어들:</h3>
                     {renderReplacementsTable(quiz.replacements)}
 
-                    <div className="translation-section" style={{marginTop:'2rem'}}>
-                        <h3>본문 해석:</h3>
+                    <div className="translation-section" style={{marginTop:'2rem', padding: '0 0 1rem 0'}}>
+                        <h3 style={{ marginTop: '0', marginBottom: '1rem' }}>본문 해석:</h3>
                         <div className="translation-content work02-translation" style={{background: '#f5f5f5', backgroundColor: '#f5f5f5', padding: '1.2rem', borderRadius: '8px'}}>
                             {quiz.translation}
                     </div>

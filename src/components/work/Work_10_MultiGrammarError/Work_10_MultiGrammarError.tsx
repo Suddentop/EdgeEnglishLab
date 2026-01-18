@@ -591,7 +591,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                   <div className="problem-passage work10-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -603,17 +603,18 @@ const Work_10_MultiGrammarError: React.FC = () => {
                   </div>
                   
                   <div className="problem-options work10-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.75rem 0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
-                    border: '1px solid transparent'
+                    border: '1px solid transparent',
+                    padding: '0'
                   }}>
                     {quiz.options.map((opt, i) => (
                       <div key={i} className="option work10-option" style={{
                         display: 'inline-block',
                         fontSize: '1rem',
                         margin: '0.5rem 1.2rem 0 0',
-                        padding: '0.5rem 1rem',
+                        padding: '0 1rem',
                         fontFamily: 'inherit',
                         backgroundColor: '#ffffff',
                         background: '#ffffff',
@@ -630,7 +631,7 @@ const Work_10_MultiGrammarError: React.FC = () => {
                   </div>
 
                   {quiz.translation && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '1rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content work10-translation" style={{
                         background: '#F5F5F5',

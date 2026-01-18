@@ -762,10 +762,52 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
                           <span className="sentence-content" style={{ color: '#333' }}>{sentence}</span>
                         </div>
                         <div className="translation-container">
-                          <span className="translation-label">해석:</span>
-                          <div className="translation-answer" style={{marginTop:'0.5rem', color:'#333', fontWeight:400}}>
-                            {quiz.translations[index]}
-                          </div>
+                          <span className="translation-label">해석 : </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 정답 표시 */}
+                  <div className="work-11-answer work11-answer" style={{
+                    marginTop: '1.5rem',
+                    padding: '1rem',
+                    backgroundColor: '#ffffff',
+                    background: '#ffffff',
+                    borderRadius: '0',
+                    border: '1px solid #e0e0e0'
+                  }}>
+                    <div style={{
+                      fontSize: '1rem',
+                      fontWeight: '700',
+                      color: '#1976d2',
+                      marginBottom: '1rem'
+                    }}>
+                      정답
+                    </div>
+                    {quiz.sentences.map((sentence, sentenceIndex) => (
+                      <div key={sentenceIndex} className="work11-answer-item" style={{
+                        marginBottom: '1rem',
+                        padding: '0.8rem',
+                        backgroundColor: '#ffffff',
+                        background: '#ffffff',
+                        borderRadius: '0',
+                        border: '1px solid transparent'
+                      }}>
+                        <div className="work11-answer-sentence" style={{
+                          fontSize: '0.95rem',
+                          fontWeight: '600',
+                          color: '#000000',
+                          marginBottom: '0.3rem'
+                        }}>
+                          {sentenceIndex + 1}. {sentence}
+                        </div>
+                        <div style={{
+                          fontSize: '0.95rem',
+                          color: '#333',
+                          lineHeight: 1.5
+                        }}>
+                          해석 : {quiz.translations[sentenceIndex]}
                         </div>
                       </div>
                     ))}

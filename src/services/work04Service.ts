@@ -110,10 +110,63 @@ ${passage}`;
       throw new Error('AI 응답의 JSON 형식이 올바르지 않습니다.');
     }
 
-    // 정답 구가 본문에 실제로 존재하는지 검증
-    if (!passage.includes(result.options[result.answerIndex])) {
-      throw new Error('정답 구가 본문에 존재하지 않습니다. AI 응답 오류입니다.');
+    // 정답 구가 본문에 실제로 존재하는지 검증 (유연한 검증)
+    const answerPhrase = result.options[result.answerIndex];
+    console.log('🔍 정답 검증 시작:', {
+      answerPhrase: answerPhrase.substring(0, 100) + (answerPhrase.length > 100 ? '...' : ''),
+      answerLength: answerPhrase.length,
+      passageLength: passage.length
+    });
+    
+    // 정확한 매칭 확인
+    const exactMatch = passage.includes(answerPhrase);
+    
+    // 정규화된 매칭 확인 (공백 정규화, 연속 공백을 하나로)
+    const passageNormalized = passage.replace(/\s+/g, ' ').trim();
+    const answerNormalized = answerPhrase.replace(/\s+/g, ' ').trim();
+    const normalizedMatch = passageNormalized.includes(answerNormalized);
+    
+    // 대소문자 무시 매칭 확인
+    const caseInsensitiveMatch = passage.toLowerCase().includes(answerPhrase.toLowerCase());
+    
+    // 정규화 + 대소문자 무시 매칭 확인
+    const fullNormalizedMatch = passageNormalized.toLowerCase().includes(answerNormalized.toLowerCase());
+    
+    console.log('🔍 정답 검증 결과:', {
+      exactMatch,
+      normalizedMatch,
+      caseInsensitiveMatch,
+      fullNormalizedMatch,
+      answerPreview: answerPhrase.substring(0, 50),
+      passagePreview: passage.substring(0, 100)
+    });
+    
+    // 어떤 방식으로든 매칭이 안 되면 에러 발생
+    if (!exactMatch && !normalizedMatch && !caseInsensitiveMatch && !fullNormalizedMatch) {
+      console.error('❌ 정답 구 검증 실패:', {
+        answerPhrase: answerPhrase,
+        answerLength: answerPhrase.length,
+        passagePreview: passage.substring(0, 200),
+        allOptions: result.options
+      });
+      throw new Error(`정답 구가 본문에 존재하지 않습니다. AI 응답 오류입니다. 정답 구: "${answerPhrase.substring(0, 50)}${answerPhrase.length > 50 ? '...' : ''}"`);
     }
+    
+    // 정규화된 버전으로 실제 정답 사용 (일관성 유지)
+    // 우선순위: normalizedMatch > caseInsensitiveMatch > 원본 answerPhrase
+    let actualAnswer = answerPhrase;
+    if (normalizedMatch) {
+      actualAnswer = answerNormalized;
+    } else if (caseInsensitiveMatch) {
+      // 대소문자는 원본 유지하되, 본문에서 찾은 원본 구 사용
+      const passageLower = passage.toLowerCase();
+      const answerLower = answerPhrase.toLowerCase();
+      const index = passageLower.indexOf(answerLower);
+      if (index !== -1) {
+        actualAnswer = passage.substring(index, index + answerPhrase.length);
+      }
+    }
+    console.log('✅ 정답 구 검증 성공. 사용할 정답:', actualAnswer.substring(0, 50));
 
     // blankedText를 프론트엔드에서 직접 생성 (괄호 split 방식, 괄호 안/밖 완벽 구분)
     const replaceFirstOutsideBrackets = (text: string, phrase: string): string => {
@@ -141,7 +194,8 @@ ${passage}`;
       return result;
     };
 
-    const answer = result.options[result.answerIndex];
+    // 검증된 정답 구 사용 (actualAnswer 사용)
+    const answer = actualAnswer;
     console.log('✅ 선택된 정답 구:', answer);
     
     // 이전 선택 구와 중복 확인
@@ -157,11 +211,35 @@ ${passage}`;
       }
     }
     
-    const blankedText = replaceFirstOutsideBrackets(passage, answer);
+    // blankedText 생성 시 정규화된 패턴으로 검색 (더 유연한 매칭)
+    let blankedText = replaceFirstOutsideBrackets(passage, answer);
+    
+    // blankedText 생성 실패 확인 (빈칸이 생성되지 않은 경우)
+    if (!blankedText.includes('(____________________)')) {
+      console.warn('⚠️ 빈칸이 생성되지 않았습니다. 원본 본문 재검색 시도...');
+      // 원본 answer로 재시도
+      const retryBlankedText = replaceFirstOutsideBrackets(passage, result.options[result.answerIndex]);
+      if (retryBlankedText.includes('(____________________)')) {
+        console.log('✅ 원본 answer로 빈칸 생성 성공');
+        blankedText = retryBlankedText;
+      } else {
+        // 본문에서 직접 정답 구 찾기 시도 (대소문자 무시)
+        const passageLower = passage.toLowerCase();
+        const answerLower = answer.toLowerCase();
+        const index = passageLower.indexOf(answerLower);
+        if (index !== -1) {
+          const originalPhrase = passage.substring(index, index + answer.length);
+          console.log('✅ 본문에서 정답 구를 찾았습니다:', originalPhrase.substring(0, 50));
+          blankedText = replaceFirstOutsideBrackets(passage, originalPhrase);
+        } else {
+          throw new Error('본문에서 정답 구를 찾아 빈칸으로 치환할 수 없습니다.');
+        }
+      }
+    }
     result.blankedText = blankedText;
 
-    // 복원 검증
-    const blankRestore = result.blankedText.replace(/\( *_{10,}\)/, answer);
+    // 복원 검증 (더 유연한 패턴 매칭)
+    const blankRestore = result.blankedText.replace(/\( *_{10,}\)/g, answer);
     if (blankRestore.trim() !== passage.trim()) {
       throw new Error('빈칸 본문이 원본 본문과 일치하지 않습니다. AI 응답 오류입니다.');
     }

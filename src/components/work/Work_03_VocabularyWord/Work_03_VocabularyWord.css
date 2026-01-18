@@ -1024,6 +1024,7 @@
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  margin-bottom: 0 !important; /* 본문컨테이너와 선택지컨테이너 사이 간격 제거 */
 }
 
 .problem-instruction.work03-instruction {
@@ -1039,12 +1040,19 @@
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  padding: 0 !important; /* 상하좌우 패딩 제거 */
+  margin-top: 0 !important; /* 본문컨테이너와 선택지컨테이너 사이 간격 제거 */
+  margin-bottom: 0.75rem !important; /* 해석 섹션과의 간격 50% 감소 (1.5rem -> 0.75rem) */
 }
 
 .option.work03-option {
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  padding-top: 0 !important; /* 상하 패딩 제거 */
+  padding-bottom: 0 !important; /* 상하 패딩 제거 */
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
 }
 
 /* Work_03 전용 한글해석 컨테이너 - 배경색 변경 */
@@ -1061,6 +1069,30 @@ div.translation-content.work03-translation {
 }
 
 /* 모든 translation-content 중에서 work03-translation만 적용 */
+
+/* ===== 유형#03 문제 생성 후 페이지 스타일 ===== */
+.problem-passage.work03-passage {
+  margin-bottom: 0 !important; /* 본문컨테이너와 선택지컨테이너 사이 간격 제거 */
+}
+
+.problem-options.work03-options {
+  padding: 0 !important; /* 상하좌우 패딩 제거 */
+  margin-top: 0 !important; /* 본문컨테이너와 선택지컨테이너 사이 간격 제거 */
+  margin-bottom: 0.75rem !important; /* 해석 섹션과의 간격 50% 감소 (1.5rem -> 0.75rem) */
+}
+
+.option.work03-option {
+  padding-top: 0 !important; /* 상하 패딩 제거 */
+  padding-bottom: 0 !important; /* 상하 패딩 제거 */
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.translation-section {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem !important; /* 선택지 컨테이너와의 간격 50% 감소 (2rem -> 1rem) */
+}
 .translation-content.work03-translation[style*="background"],
 .translation-content.work03-translation[style*="backgroundColor"] {
   background: #F5F5F5 !important;

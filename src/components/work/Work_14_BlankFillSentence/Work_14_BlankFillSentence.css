@@ -549,6 +549,17 @@
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  margin-bottom: 0 !important; /* 정답 컨테이너와의 간격 제거 */
+}
+
+/* 정답 문장들 컨테이너 */
+.work14-answer-sentences {
+  margin-top: 0 !important; /* 본문 컨테이너와의 간격 제거 */
+  color: #000000 !important; /* 파란색에서 검정색으로 변경 */
+}
+
+.work14-answer-sentences > div {
+  color: #000000 !important; /* 파란색에서 검정색으로 변경 */
 }
 
 /* Work_14 전용 한글해석 컨테이너 - 배경색 변경 */

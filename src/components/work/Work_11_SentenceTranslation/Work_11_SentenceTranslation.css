@@ -1138,4 +1138,37 @@
 
 .sentence-item.work11-sentence-item:hover {
   border-color: transparent !important;
+}
+
+/* Work_11 정답 컨테이너 스타일 */
+.work-11-answer.work11-answer {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  margin-top: 1.5rem !important;
+  padding: 1rem !important;
+  border-radius: 0 !important;
+}
+
+.work-11-answer.work11-answer > div:first-child {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #1976d2 !important;
+  margin-bottom: 1rem !important;
+}
+
+.work11-answer-item {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+  margin-bottom: 1rem !important;
+  padding: 0.8rem !important;
+  border-radius: 0 !important;
+}
+
+.work11-answer-sentence {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: #000000 !important;
+  margin-bottom: 0.3rem !important;
 } 

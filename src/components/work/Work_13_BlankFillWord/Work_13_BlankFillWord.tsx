@@ -686,7 +686,7 @@ const Work_13_BlankFillWord: React.FC = () => {
                   <div className="problem-passage work13-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -701,8 +701,8 @@ const Work_13_BlankFillWord: React.FC = () => {
                   </div>
 
                   {/* 정답 표시 */}
-                  <div className="problem-answer no-print" style={{marginTop:'1.2rem', color:'#1976d2', fontWeight:700}}>
-                    <span style={{color: '#1976d2'}}>정답 : {quiz.correctAnswers?.join(', ') || '정답 없음'}</span>
+                  <div className="problem-answer no-print" style={{marginTop:'0', color:'#000000', fontWeight:700}}>
+                    <span style={{color: '#000000'}}>정답 : {quiz.correctAnswers?.join(', ') || '정답 없음'}</span>
                   </div>
 
                   {quiz.translation && (

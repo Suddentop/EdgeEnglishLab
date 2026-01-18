@@ -817,7 +817,7 @@ const Work_14_FillSentence: React.FC = () => {
                 <div className="problem-passage work14-passage" style={{
                   fontSize: '1rem',
                   lineHeight: 1.7,
-                  margin: '0 0 1.5rem 0',
+                  margin: '0 0 0 0',
                   background: '#ffffff',
                   backgroundColor: '#ffffff',
                   border: '1px solid transparent',
@@ -854,13 +854,13 @@ const Work_14_FillSentence: React.FC = () => {
                 
                 {/* 정답 문장들 표시 */}
                 {quiz.selectedSentences && quiz.selectedSentences.length > 0 && (
-                  <div style={{
-                    marginTop: '1.2rem',
-                    color: '#1976d2',
+                  <div className="work14-answer-sentences" style={{
+                    marginTop: '0',
+                    color: '#000000',
                     fontWeight: 700
                   }}>
-                    <div style={{color: '#1976d2', marginBottom: '0.5rem'}}>
-                      정답 문장들:
+                    <div style={{color: '#000000', marginBottom: '0.5rem'}}>
+                      정답 문장들 :
                     </div>
                     {quiz.selectedSentences.map((sentence: string, sentenceIdx: number) => {
                       const alphabetLabel = String.fromCharCode(65 + sentenceIdx);
@@ -874,7 +874,7 @@ const Work_14_FillSentence: React.FC = () => {
                         <div key={sentenceIdx} style={{
                           marginBottom: '0.3rem',
                           padding: '0.5rem',
-                          backgroundColor: '#E3F2FD',
+                          backgroundColor: '#F5F5F5',
                           borderRadius: '4px',
                           fontSize: '0.95rem',
                           lineHeight: 1.4

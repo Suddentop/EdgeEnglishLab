@@ -829,6 +829,15 @@
   background-color: #F1F8E9 !important;
 }
 
+/* 인쇄 모드에서 유형#01의 problem-passage 좌우 패딩 제거 */
+@media print {
+  .only-print.work-01-print .problem-passage {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding: 0.75rem 0 !important;
+  }
+}
+
 .shuffled-paragraph {
   margin-bottom: 0.3rem;
   padding: 0.75rem 1.25rem !important;
@@ -839,8 +848,31 @@
   color: #333;
 }
 
+/* 인쇄 모드에서 유형#01의 shuffled-paragraph 좌우 패딩 제거 */
+@media print {
+  .only-print.work-01-print .shuffled-paragraph {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding: 0.75rem 0 !important;
+  }
+}
+
 .shuffled-paragraph:last-child {
   margin-bottom: 0.2rem;
+}
+
+/* 패키지#01 Work_01 개별 섞인 단락 좌측 패딩 0.5rem - 화면 모드만 적용 */
+.quiz-item-card .problem-passage.package01-work01-passage .shuffled-paragraph {
+  padding-left: 0.5rem !important; /* (A), (B), (C) 단락들 0.5rem 들여쓰기 */
+}
+
+/* 인쇄 모드에서 유형#01의 shuffled-paragraph 좌우 패딩 제거 */
+@media print {
+  .only-print.work-01-print .quiz-item-card .problem-passage.package01-work01-passage .shuffled-paragraph,
+  .only-print.work-01-print .problem-passage.package01-work01-passage .shuffled-paragraph {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 }
 
 .problem-options {
@@ -1284,7 +1316,12 @@
   text-align: left !important;
   border-left: none !important;
   border-right: none !important;
+  /* 임시 색상별 테두리 제거 */
+  border: none !important;
+  border-top: 1px solid #e0e0e0 !important;
+  border-bottom: 1px solid #e0e0e0 !important;
 }
+
 
 .problem-passage.package01-work01-passage,
 .problem-passage.package01-work02-passage,
@@ -1301,6 +1338,152 @@
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  /* 임시 색상별 테두리 제거 */
+  border-color: transparent !important;
+}
+
+/* 패키지#01 Work_03 영어본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package01-work03-passage[style*="padding"],
+.quiz-item-card .problem-passage.package01-work03-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#01 Work_03 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package01-work03-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#01 Work_03 개별 선택지 좌우 패딩 1rem */
+.quiz-item-card .problem-options.package01-work03-options .option {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* 패키지#01 Work_04 영어본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package01-work04-passage[style*="padding"],
+.quiz-item-card .problem-passage.package01-work04-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#01 Work_04 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package01-work04-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#01 Work_04 개별 선택지 좌우 패딩 1rem, 상하 패딩 50% 감소 */
+.quiz-item-card .problem-options.package01-work04-options .option {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+
+/* 패키지#01 Work_05 영어본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package01-work05-passage[style*="padding"],
+.quiz-item-card .problem-passage.package01-work05-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#01 Work_05 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package01-work05-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#01 Work_05 개별 선택지 좌우 패딩 1rem, 상하 패딩 50% 감소 */
+.quiz-item-card .problem-options.package01-work05-options .option {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+
+/* 패키지#01 모든 개별 선택지 폰트 크기 1.1rem으로 변경 */
+.quiz-item-card .problem-options.package01-work01-options .option,
+.quiz-item-card .problem-options.package01-work03-options .option,
+.quiz-item-card .problem-options.package01-work04-options .option,
+.quiz-item-card .problem-options.package01-work05-options .option,
+.quiz-item-card .problem-options.package01-work07-options .option,
+.quiz-item-card .problem-options.package01-work08-options .option,
+.quiz-item-card .problem-options.package01-work09-options .option,
+.quiz-item-card .problem-options.package01-work10-options .option {
+  font-size: 1.1rem !important;
+}
+
+/* 패키지#01 Work_07 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package01-work07-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#01 Work_08 영어본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package01-work08-passage[style*="padding"],
+.quiz-item-card .problem-passage.package01-work08-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 패키지#01 Work_08 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package01-work08-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#01 Work_08 개별 선택지 좌우 패딩 1rem, 상하 패딩 50% 감소 */
+.quiz-item-card .problem-options.package01-work08-options .option {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+
+/* 패키지#01 Work_09 영어본문 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .problem-passage.package01-work09-passage[style*="padding"],
+.quiz-item-card .problem-passage.package01-work09-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  margin-bottom: 0.15rem !important; /* 선택지컨테이너와의 간격 50% 감소 (0.3rem -> 0.15rem) */
+}
+
+/* 패키지#01 Work_09 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package01-work09-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#01 Work_09 개별 선택지 좌우 패딩 1rem */
+.quiz-item-card .problem-options.package01-work09-options .option {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* 패키지#01 Work_01 선택지 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-options.package01-work01-options {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 패키지#01 Work_01 개별 선택지 좌우 패딩 1rem */
+.quiz-item-card .problem-options.package01-work01-options .option {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
 }
 
 /* Work_11 문장별 해석 컨테이너 */
@@ -1308,6 +1491,13 @@
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  font-weight: 300 !important; /* 한 단계 낮게 설정 */
+}
+
+/* 패키지#01 Work_11 문장 컨테이너 좌우 패딩 1rem */
+.quiz-item-card .sentences-container.package01-work11-sentences-container {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
 }
 
 .sentence-item.package01-work11-sentence-item {
@@ -1315,6 +1505,12 @@
   background: #ffffff !important;
   border: 1px solid transparent !important;
   box-shadow: none !important;
+}
+
+/* 패키지#01 Work_11 개별 문장 항목 좌우 패딩 제거 */
+.quiz-item-card .sentence-item.package01-work11-sentence-item {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .sentence-item.package01-work11-sentence-item:hover {
@@ -1372,6 +1568,23 @@
   border: 1px solid transparent !important;
 }
 
+/* 패키지#01 Work_02 영어본문 컨테이너 좌우 패딩 제거 */
+.quiz-item-card .problem-passage.package01-work01-passage[style*="padding"],
+.quiz-item-card .problem-passage.package01-work01-passage {
+  padding-left: 0.5rem !important; /* (A), (B), (C) 단락들 0.5rem 들여쓰기 */
+  padding-right: 0.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.quiz-item-card .problem-passage.package01-work02-passage[style*="padding"],
+.quiz-item-card .problem-passage.package01-work02-passage {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
 /* 패키지#01 Work_11 정답 영어 문장 폰트 색상 검정색으로 변경 */
 .package01-work11-answer-sentence {
   color: #000000 !important;
@@ -1380,6 +1593,18 @@
 /* 패키지#01 Work_06 주요문장 컨테이너 상단 간격 추가 */
 .package01-work06-missing-sentence {
   margin-top: 1.5rem !important;
+  margin-bottom: 0 !important; /* 본문영어컨테이너와의 여백 제거 */
+}
+
+/* 패키지#01 Work_06 본문영어컨테이너 여백 설정 */
+.quiz-item-card .problem-passage.package01-work06-passage {
+  margin-top: 0 !important; /* 주요문장컨테이너와의 여백 제거 */
+  margin-bottom: 1.5rem !important; /* 정답컨테이너와의 여백 50% 증가 (1rem -> 1.5rem) */
+}
+
+/* 패키지#01 Work_06 정답컨테이너와 본문해석 컨테이너 사이 여백 증가 */
+.quiz-item-card .work-06-answer {
+  margin-bottom: 2rem !important; /* 본문해석 컨테이너와의 여백 증가 */
 }
 
 /* 패키지#01 Work_01 고정단락박스 폰트 크기 - 내부 div는 더 크게 */
@@ -1620,4 +1845,47 @@
   text-underline-offset: 2px;
   text-decoration-thickness: 1.5px;
   font-weight: bold;
+}
+
+/* 패키지#01 유형#01 색상별 테두리 제거 (원래 디자인 테두리만 유지) */
+.package-quiz-container .quiz-item-card {
+  border: 1px solid #e0e0e0 !important; /* 원래 회색 테두리만 유지 */
+}
+
+.package-quiz-container .quiz-item-header.package01-work01-header {
+  border-bottom: 1px solid #e0e0e0 !important; /* 원래 하단 테두리만 유지 */
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.package-quiz-container .problem-instruction.package01-work01-instruction {
+  border-top: 1px solid #e0e0e0 !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.package-quiz-container .problem-body-container.package01-work01-body-container {
+  border: none !important;
+}
+
+.package-quiz-container .fixed-paragraph-box {
+  border: 1px solid #000 !important; /* 고정단락박스 검은색 테두리는 유지 */
+}
+
+.package-quiz-container .problem-passage.package01-work01-passage {
+  border: none !important;
+}
+
+.package-quiz-container .problem-passage.package01-work01-passage .shuffled-paragraph {
+  border: none !important;
+}
+
+.package-quiz-container .problem-options.package01-work01-options {
+  border: 1px solid #ffffff !important; /* 흰색 테두리 */
+}
+
+.package-quiz-container .problem-options.package01-work01-options .option {
+  border: 1px solid #ffffff !important; /* 개별 선택지 흰색 테두리 */
 }

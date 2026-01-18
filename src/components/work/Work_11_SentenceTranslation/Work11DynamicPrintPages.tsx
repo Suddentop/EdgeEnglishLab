@@ -329,7 +329,8 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
           fontSize: '1rem',
           lineHeight: '1.2',
           color: '#000',
-          marginBottom: '0.2rem'
+          marginBottom: '0.2rem',
+          fontWeight: 300 // 한 단계 낮게 설정
         }}>
           <span style={{fontWeight: 'bold', color: '#333'}}>
             {index + 1}. 

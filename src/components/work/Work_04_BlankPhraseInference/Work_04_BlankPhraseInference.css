@@ -709,6 +709,7 @@
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  margin-bottom: 0 !important; /* 선택지 컨테이너와의 간격 제거 */
 }
 
 .problem-instruction.work04-instruction {
@@ -724,12 +725,18 @@
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  padding: 0 !important; /* 상하좌우 패딩 제거 */
+  margin-top: 0 !important; /* 본문 컨테이너와의 간격 제거 */
 }
 
 .option.work04-option {
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  padding-top: 0 !important; /* 상하 패딩 제거 */
+  padding-bottom: 0 !important; /* 상하 패딩 제거 */
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
 }
 
 /* Work_04 전용 한글해석 컨테이너 - 배경색 변경 */

@@ -519,16 +519,13 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
               <div key={quiz.id || idx} className="quiz-item-card" style={{ 
                 marginBottom: '2rem', 
                 padding: '1.5rem',
-                backgroundColor: '#fff',
-                border: '1px solid #e0e0e0',
-                borderRadius: '0'
+                backgroundColor: '#fff'
               }}>
                 <div className="quiz-item-header" style={{ 
                   marginBottom: '1rem', 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between',
-                  borderBottom: '1px solid #e0e0e0',
                   paddingBottom: '0.5rem'
                 }}>
                   <h3 style={{ margin: 0, color: '#333', fontSize: '1rem', fontWeight: '500' }}>
@@ -561,30 +558,37 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
                 {quiz.format === 'exam' && quiz.fixedParagraph ? (
                   <>
                     {/* 모의고사 형식: 고정된 첫 번째 단락을 박스 안에 표시 */}
-                    <div className="fixed-paragraph-box" style={{
+                    <div 
+                      className="fixed-paragraph-box work01-fixed-paragraph-box" 
+                      style={{
                       border: '1px solid #000',
                       borderRadius: '8px',
                       padding: '0.6rem 1rem',
                       marginTop: '1rem',
                       marginBottom: '1.5rem',
                       backgroundColor: '#fff',
-                      fontSize: '1rem',
+                        fontSize: '1.1rem',
                       lineHeight: '1.6',
                       color: '#333'
-                    }}>
+                      }}
+                    >
+                      <div style={{ fontSize: '1.1rem', lineHeight: '1.6', color: '#333' }}>
                       {quiz.fixedParagraph}
+                      </div>
                     </div>
                     
                     {/* 나머지 3개 단락 */}
                     <div className="problem-passage work01-passage" style={{ 
-                      marginBottom: '1.5rem',
+                      marginTop: '0',
+                      marginBottom: '0.75rem',
                       backgroundColor: '#ffffff',
                       background: '#ffffff',
-                      border: '1px solid transparent'
+                      border: '1px solid transparent',
+                      padding: '0'
                     }}>
                       {quiz.shuffledParagraphs.map((paragraph) => (
                         <div key={paragraph.id} className="shuffled-paragraph work01-paragraph" style={{ 
-                          padding: '0.5rem 0', 
+                          padding: '0', 
                           fontSize: '1rem', 
                           color: '#333',
                           lineHeight: '1.6',
@@ -624,10 +628,11 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
                 )}
 
                 <div className="problem-options work01-options" style={{ 
-                  marginTop: '1rem',
+                  marginTop: '0.5rem',
                   backgroundColor: '#ffffff',
                   background: '#ffffff',
-                  border: '1px solid transparent'
+                  border: '1px solid transparent',
+                  padding: '0'
                 }}>
                   {quiz.choices.map((choice, cIdx) => (
                     <div key={cIdx} className="option work01-option" style={{ 
@@ -635,7 +640,7 @@ const Work_01_ArticleOrder: React.FC<Work_01_ArticleOrderProps> = ({ onQuizGener
                       background: '#ffffff',
                       border: '1px solid transparent',
                       borderRadius: '0',
-                      padding: '0.5rem 1rem',
+                      padding: '0 1rem',
                       marginBottom: '0.5rem',
                       fontSize: '1rem',
                       lineHeight: '1.5',

@@ -358,15 +358,20 @@
 /* 정답 표시 스타일 */
 .problem-answer {
   margin-top: 1.2rem;
-  color: #1976d2;
+  color: #000000 !important;
   font-weight: 700;
   padding: 1rem;
   border-radius: 8px;
   background: #f8f9fa;
 }
 
+.problem-answer span {
+  color: #000000 !important;
+  font-weight: 700;
+}
+
 .correct-answer {
-  color: #1976d2;
+  color: #000000 !important;
   font-weight: 700;
 }
 
@@ -817,6 +822,11 @@
   background-color: #ffffff !important;
   background: #ffffff !important;
   border: 1px solid transparent !important;
+  margin-bottom: 0 !important; /* 정답 컨테이너와의 간격 제거 */
+}
+
+.problem-answer {
+  margin-top: 0 !important; /* 본문 컨테이너와의 간격 제거 */
 }
 
 /* Work_13 전용 한글해석 컨테이너 - 배경색 변경 */

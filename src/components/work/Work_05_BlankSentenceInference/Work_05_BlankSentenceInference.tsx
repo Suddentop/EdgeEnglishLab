@@ -657,7 +657,7 @@ ${englishText}`;
                   <div className="problem-passage work05-passage" style={{
                     fontSize: '1rem',
                     lineHeight: 1.7,
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.75rem 0',
                     background: '#ffffff',
                     backgroundColor: '#ffffff',
                     border: '1px solid transparent',
@@ -669,17 +669,18 @@ ${englishText}`;
                   </div>
                   
                   <div className="problem-options work05-options" style={{
-                    margin: '0 0 1.5rem 0',
+                    margin: '0 0 0.75rem 0',
                     backgroundColor: '#ffffff',
                     background: '#ffffff',
-                    border: '1px solid transparent'
+                    border: '1px solid transparent',
+                    padding: '0'
                   }}>
                     {quiz.options.map((opt, i) => (
                       <div key={i} className="option work05-option" style={{
                         display: 'block',
                         fontSize: '1rem',
                         margin: '0.5rem 0',
-                        padding: '0.5rem 1rem',
+                        padding: '0 1rem',
                         fontFamily: 'inherit',
                         backgroundColor: '#ffffff',
                         background: '#ffffff',
@@ -687,13 +688,13 @@ ${englishText}`;
                         borderRadius: '0',
                         color: '#333'
                       }}>
-                        {`①②③④⑤`[i] || `${i+1}.`} {opt}
+                        {`①②③④⑤`[i] || `${i+1}.`} {opt}{i === quiz.answerIndex ? <span style={{ color: '#0066cc', fontWeight: 'bold' }}> (정답)</span> : ''}
                       </div>
                     ))}
                   </div>
 
                   {quiz.translation && (
-                    <div className="translation-section" style={{ marginTop: '2rem' }}>
+                    <div className="translation-section" style={{ marginTop: '1rem' }}>
                       <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600', color: '#333' }}>본문 해석:</h3>
                       <div className="translation-content work05-translation" style={{
                         background: '#F5F5F5',
