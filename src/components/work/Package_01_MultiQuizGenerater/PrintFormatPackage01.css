@@ -918,6 +918,34 @@
     font-size: 1rem !important;
   }
   
+  /* 고정단락 박스는 제외 - 더 큰 폰트 크기 적용 (유형#01) */
+  .only-print .a4-page-content .fixed-paragraph-box,
+  .only-print .a4-page-content .fixed-paragraph-box *,
+  .only-print .a4-page-content .fixed-paragraph-box > *,
+  .only-print .a4-page-content .fixed-paragraph-box span,
+  .only-print .a4-page-content .work01-fixed-paragraph-print,
+  .only-print .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print .a4-page-content .work01-fixed-paragraph-print span {
+    font-size: 1.0rem !important; /* 고정단락 박스 폰트 크기 */
+  }
+  
+  /* 섞인단락은 제외 - 폰트 크기 1.0rem 적용 (유형#01) */
+  .only-print .a4-page-content .shuffled-paragraph,
+  .only-print .a4-page-content .shuffled-paragraph *,
+  .only-print .a4-page-content .shuffled-paragraph > *,
+  .only-print .a4-page-content .shuffled-paragraph strong,
+  .only-print.work-01-print .a4-page-content .shuffled-paragraph,
+  .only-print.work-01-print .a4-page-content .shuffled-paragraph *,
+  .only-print.work-01-print .a4-page-content .shuffled-paragraph > *,
+  .only-print.work-01-print .a4-page-content .shuffled-paragraph strong,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .shuffled-paragraph,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .shuffled-paragraph *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .shuffled-paragraph > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .shuffled-paragraph strong {
+    font-size: 1.0rem !important; /* 섞인단락 폰트 크기 1.0rem */
+  }
+  
   /* 패키지#01 인쇄(정답) 마지막 페이지 한글해석은 제외 - 더 큰 폰트 크기 적용 */
   .only-print .a4-page-content .print-translation-content,
   .only-print .a4-page-content .print-translation-content *,
@@ -1161,6 +1189,19 @@
   .only-print.print-answer-mode .print-translation-title,
   .only-print.print-answer-mode .print-translation-title[style] {
     color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 패키지#01 인쇄(정답) 마지막 페이지 본문해석 제목: 컨테이너 밖 위에 배치 */
+  .only-print .print-translation-title-outside,
+  .only-print .print-translation-title-outside[style],
+  .only-print.print-answer-mode .print-translation-title-outside,
+  .only-print.print-answer-mode .print-translation-title-outside[style] {
+    font-weight: 800 !important;
+    font-size: 1.2rem !important;
+    color: #000000 !important;
+    margin-bottom: 0.5rem !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -2730,6 +2771,76 @@
     font-weight: 300 !important; /* 한 단계 낮게 설정 */
   }
   
+  /* 유형#01: 고정단락 박스 (fixed-paragraph-box) 폰트 크기 증가 - 최고 우선순위 */
+  .only-print.work-01-print .fixed-paragraph-box,
+  .only-print.work-01-print .fixed-paragraph-box *,
+  .only-print.work-01-print .fixed-paragraph-box > *,
+  .only-print.work-01-print .fixed-paragraph-box span,
+  .only-print.work-01-print .work01-fixed-paragraph-print,
+  .only-print.work-01-print .work01-fixed-paragraph-print *,
+  .only-print.work-01-print .work01-fixed-paragraph-print > *,
+  .only-print.work-01-print .work01-fixed-paragraph-print span,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box *,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box > *,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box span,
+  .only-print.print-answer-mode.work-01-print .work01-fixed-paragraph-print,
+  .only-print.print-answer-mode.work-01-print .work01-fixed-paragraph-print *,
+  .only-print.print-answer-mode.work-01-print .work01-fixed-paragraph-print > *,
+  .only-print.print-answer-mode.work-01-print .work01-fixed-paragraph-print span,
+  .only-print.work-01-print .fixed-paragraph-box[style],
+  .only-print.work-01-print .fixed-paragraph-box[style*="fontSize"],
+  .only-print.work-01-print .fixed-paragraph-box[style*="font-size"],
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box[style*="fontSize"],
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box[style*="font-size"],
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box *,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box > *,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box span,
+  .only-print.work-01-print .a4-page-content .work01-fixed-paragraph-print,
+  .only-print.work-01-print .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print.work-01-print .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print.work-01-print .a4-page-content .work01-fixed-paragraph-print span,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box[style],
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box[style*="fontSize"],
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box[style*="font-size"],
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box span,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .work01-fixed-paragraph-print,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .work01-fixed-paragraph-print span,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box[style*="fontSize"],
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box[style*="font-size"],
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box *,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box > *,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box span,
+  .only-print.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print,
+  .only-print.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print span,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style],
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="fontSize"],
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="font-size"],
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box *,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box span,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print span,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="fontSize"],
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="font-size"] {
+    font-size: 1.0rem !important; /* 폰트 크기 - 모든 규칙 오버라이드 */
+  }
+
   /* 유형#01: 첫줄 들여쓰기 제거 및 좌우 패딩 제거 (최고 우선순위) */
   .only-print.work-01-print .shuffled-paragraph,
   .only-print.work-01-print .shuffled-paragraph *,
@@ -2745,6 +2856,7 @@
   .only-print.work-01-print .a4-page-template .a4-page-content .shuffled-paragraph[style],
   .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .shuffled-paragraph,
   .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .shuffled-paragraph[style] {
+    font-size: 1.0rem !important; /* 폰트 크기 1.0rem */
     text-indent: 0 !important; /* 첫줄 들여쓰기 제거 */
     padding-left: 0 !important; /* 좌우 패딩 제거 - 인라인 스타일 오버라이드 */
     padding-right: 0 !important; /* 좌우 패딩 제거 - 인라인 스타일 오버라이드 */
@@ -2782,6 +2894,24 @@
     padding: 0.75rem 0 !important; /* 상하 패딩만 유지, 좌우 패딩 0으로 절대 강제 */
   }
   
+  /* 유형#01: 고정단락 박스 (fixed-paragraph-box) 폰트 크기 증가 */
+  .only-print.work-01-print .fixed-paragraph-box,
+  .only-print.work-01-print .fixed-paragraph-box *,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box *,
+  .only-print.work-01-print .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box[style],
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box[style],
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style] {
+    font-size: 1.0rem !important; /* 폰트 크기 */
+  }
+
   /* 유형#01: 섞인 단락 박스 (shuffled-paragraph) 좌우 패딩 절대 제거 - Package_01_MultiQuizGenerater.css 규칙 오버라이드 */
   .only-print.work-01-print .shuffled-paragraph,
   .only-print.work-01-print .shuffled-paragraph *,
@@ -2984,6 +3114,76 @@
   .only-print.work-10-print .a4-page-content .problem-passage > div * {
     font-size: 1rem !important; /* 폰트 크기 1rem - 모든 규칙 오버라이드 */
     font-weight: 300 !important; /* 한 단계 낮게 설정 */
+  }
+
+  /* 유형#01: 고정단락 박스 (fixed-paragraph-box) 폰트 크기 증가 (인쇄 모드) - 최고 우선순위 */
+  .only-print.work-01-print .fixed-paragraph-box,
+  .only-print.work-01-print .fixed-paragraph-box *,
+  .only-print.work-01-print .fixed-paragraph-box > *,
+  .only-print.work-01-print .fixed-paragraph-box span,
+  .only-print.work-01-print .work01-fixed-paragraph-print,
+  .only-print.work-01-print .work01-fixed-paragraph-print *,
+  .only-print.work-01-print .work01-fixed-paragraph-print > *,
+  .only-print.work-01-print .work01-fixed-paragraph-print span,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box *,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box > *,
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box span,
+  .only-print.print-answer-mode.work-01-print .work01-fixed-paragraph-print,
+  .only-print.print-answer-mode.work-01-print .work01-fixed-paragraph-print *,
+  .only-print.print-answer-mode.work-01-print .work01-fixed-paragraph-print > *,
+  .only-print.print-answer-mode.work-01-print .work01-fixed-paragraph-print span,
+  .only-print.work-01-print .fixed-paragraph-box[style],
+  .only-print.work-01-print .fixed-paragraph-box[style*="fontSize"],
+  .only-print.work-01-print .fixed-paragraph-box[style*="font-size"],
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box[style*="fontSize"],
+  .only-print.print-answer-mode.work-01-print .fixed-paragraph-box[style*="font-size"],
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box *,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box > *,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box span,
+  .only-print.work-01-print .a4-page-content .work01-fixed-paragraph-print,
+  .only-print.work-01-print .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print.work-01-print .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print.work-01-print .a4-page-content .work01-fixed-paragraph-print span,
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box[style],
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box[style*="fontSize"],
+  .only-print.work-01-print .a4-page-content .fixed-paragraph-box[style*="font-size"],
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box span,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .work01-fixed-paragraph-print,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .work01-fixed-paragraph-print span,
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box[style*="fontSize"],
+  .only-print.print-answer-mode.work-01-print .a4-page-content .fixed-paragraph-box[style*="font-size"],
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box *,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box > *,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box span,
+  .only-print.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print,
+  .only-print.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print span,
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style],
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="fontSize"],
+  .only-print.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="font-size"],
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box *,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box span,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print *,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print > *,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .work01-fixed-paragraph-print span,
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style],
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="fontSize"],
+  .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="font-size"] {
+    font-size: 1.0rem !important; /* 폰트 크기 - 모든 규칙 오버라이드 */
   }
 }
 

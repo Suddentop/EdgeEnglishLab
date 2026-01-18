@@ -763,7 +763,7 @@ const Work_11_SentenceTranslation: React.FC<Work_11_SentenceTranslationProps> = 
                         </div>
                         <div className="translation-container">
                           <span className="translation-label">해석 : </span>
-                        </div>
+                          </div>
                       </div>
                     ))}
                   </div>

@@ -498,18 +498,27 @@ export const renderSectionNode = (
       }
       
       return section.text ? (
-        <div 
-          key={key} 
-          className={`print-translation-section ${section.key === 'translation-last-item' ? 'print-translation-last' : ''}`}
-        >
+        <div key={key}>
           {/* 유형#06의 경우 영어본문과 한글해석 사이에 정답 표시 */}
           {isAnswerMode && normalizedItem.workTypeId === '06' && answerIndex !== undefined && (
             <div className="print-answer-before-translation">
               정답 : {OPTION_LABELS[answerIndex] || '-'}
             </div>
           )}
-          <div className="print-translation-title">본문해석 :</div>
-          <div className="print-translation-content">{section.text}</div>
+          {/* 마지막 해석 섹션의 경우 제목을 컨테이너 밖 위에 배치 */}
+          {section.key === 'translation-last-item' ? (
+            <>
+              <div className="print-translation-title print-translation-title-outside">본문해석 :</div>
+              <div className={`print-translation-section print-translation-last`}>
+                <div className="print-translation-content">{section.text}</div>
+              </div>
+            </>
+          ) : (
+            <div className={`print-translation-section ${section.key === 'translation-last-item' ? 'print-translation-last' : ''}`}>
+              <div className="print-translation-title">본문해석 :</div>
+              <div className="print-translation-content">{section.text}</div>
+            </div>
+          )}
         </div>
       ) : null;
     case 'list':

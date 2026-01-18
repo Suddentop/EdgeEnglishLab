@@ -403,11 +403,60 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
     // 모든 유형이 공유하는 하나의 영어본문의 해석을 맨 마지막 단에 추가
     let lastTranslation: string | null = null;
     if (isAnswerMode && packageQuiz.length > 0) {
-      // 첫 번째 유형의 translation을 가져오기 (모든 유형이 같은 본문을 공유하므로)
-      const firstItem = packageQuiz[0];
-      const translation = getTranslatedText(firstItem, firstItem.quiz || firstItem.data || {});
-      if (translation && translation.trim()) {
-        lastTranslation = translation;
+      // 전체 해석을 찾기: 모든 유형이 공유하는 원본 영어본문의 해석
+      // 유형#01의 경우 섞인 단락 A, B, C의 해석만 포함할 수 있으므로,
+      // 다른 유형의 translatedText를 우선 사용 (전체 본문 해석)
+      
+      // 먼저 유형#01이 아닌 유형의 translatedText 확인 (전체 본문 해석)
+      for (const quizItem of packageQuiz) {
+        // 유형#01이 아닌 경우만 확인 (유형#01은 섞인 단락 해석만 포함할 수 있음)
+        if (quizItem.workTypeId !== '01' && quizItem.translatedText && quizItem.translatedText.trim()) {
+          lastTranslation = quizItem.translatedText;
+          break; // 첫 번째로 찾은 전체 본문 해석 사용
+        }
+      }
+      
+      // 유형#01이 아닌 유형에서 전체 해석을 찾지 못한 경우
+      // 유형#01을 포함하여 다시 확인 (유형#01의 경우 originalText의 전체 해석이 있을 수 있음)
+      if (!lastTranslation) {
+        for (const quizItem of packageQuiz) {
+          // 유형#01의 경우 quiz.originalText의 전체 해석을 확인
+          if (quizItem.workTypeId === '01' && quizItem.quiz) {
+            const work01Quiz = quizItem.quiz;
+            // originalText의 전체 해석 확인
+            if (work01Quiz.originalTranslation && work01Quiz.originalTranslation.trim()) {
+              lastTranslation = work01Quiz.originalTranslation;
+              break;
+            }
+            // originalTranslation이 없으면 translation 확인 (전체 본문 해석일 수 있음)
+            if (work01Quiz.translation && work01Quiz.translation.trim() && 
+                !work01Quiz.translation.includes('[번역 실패')) {
+              // 단락별 번역이 아닌 전체 본문 번역인지 확인
+              // paragraphs가 있고 translation이 단락별 번역의 조합이 아닌 경우에만 사용
+              const isParagraphTranslation = work01Quiz.paragraphs && 
+                work01Quiz.paragraphs.some((p: any) => p.translation && 
+                  work01Quiz.translation.includes(p.translation));
+              
+              if (!isParagraphTranslation) {
+                lastTranslation = work01Quiz.translation;
+                break;
+              }
+            }
+          } else if (quizItem.translatedText && quizItem.translatedText.trim()) {
+            // 다른 유형의 translatedText 확인
+            lastTranslation = quizItem.translatedText;
+            break;
+          }
+        }
+      }
+      
+      // 여전히 전체 해석을 찾지 못한 경우, 첫 번째 유형의 translation 확인
+      if (!lastTranslation) {
+        const firstItem = packageQuiz[0];
+        const translation = getTranslatedText(firstItem, firstItem.quiz || firstItem.data || {});
+        if (translation && translation.trim()) {
+          lastTranslation = translation;
+        }
       }
     }
 

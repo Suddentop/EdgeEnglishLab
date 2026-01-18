@@ -275,18 +275,19 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                     
                     {/* 모의고사 형식: 고정된 첫 번째 단락을 박스 안에 표시 */}
                     {isExamFormat && quiz01.fixedParagraph && (
-                      <div className="fixed-paragraph-box" style={{
+                      <div className="fixed-paragraph-box work01-fixed-paragraph-print" style={{
                         border: '1px solid #000',
                         borderRadius: '8px',
                         padding: '0.6rem 1rem',
                         marginTop: '0',
                         marginBottom: '1.5rem',
                         backgroundColor: '#fff',
-                        fontSize: '1rem',
+                        fontSize: '1.0rem',
                         lineHeight: '1.6',
-                        color: '#333'
+                        color: '#333',
+                        fontFamily: 'inherit'
                       }}>
-                        {quiz01.fixedParagraph}
+                        <span style={{ fontSize: '1.0rem', display: 'block' }}>{quiz01.fixedParagraph}</span>
                       </div>
                     )}
                     
@@ -579,22 +580,23 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                     <PrintHeaderPackage01 />
                   </div>
                   <div className="a4-page-content">
+                    {/* 제목을 컨테이너 밖 위에 배치 */}
+                    <div className="print-translation-title print-translation-title-outside" style={{
+                      fontWeight: 800,
+                      fontSize: '1.2rem',
+                      color: '#000000',
+                      marginBottom: '0.5rem'
+                    }}>
+                      본문해석 :
+                    </div>
                     <div className="print-translation-section" style={{
-                      marginTop: '0.5rem',
+                      marginTop: '0',
                       padding: '1.5rem',
                       background: '#ffffff',
                       backgroundColor: '#ffffff',
                       borderRadius: '8px',
                       border: '1.5px solid #666666'
                     }}>
-                      <div className="print-translation-title" style={{
-                        fontWeight: 800,
-                        fontSize: '1.2rem',
-                        color: '#000000',
-                        marginBottom: '0.8rem'
-                      }}>
-                        본문해석 :
-                      </div>
                       <div className="print-translation-content" style={{
                         fontSize: '1.2rem',
                         lineHeight: '1.7',
@@ -676,18 +678,19 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                 </div>
                 {/* 모의고사 형식: 고정된 첫 번째 단락을 박스 안에 표시 */}
                 {isExamFormat && quiz.fixedParagraph && (
-                  <div className="fixed-paragraph-box" style={{
+                  <div className="fixed-paragraph-box work01-fixed-paragraph-print" style={{
                     border: '1px solid #000',
                     borderRadius: '8px',
                     padding: '0.6rem 1rem',
                     marginTop: '0',
                     marginBottom: '1.5rem',
                     backgroundColor: '#fff',
-                    fontSize: '1rem',
+                    fontSize: '1.0rem',
                     lineHeight: '1.6',
-                    color: '#333'
+                    color: '#333',
+                    fontFamily: 'inherit'
                   }}>
-                    {quiz.fixedParagraph}
+                    <span style={{ fontSize: '1.0rem', display: 'block' }}>{quiz.fixedParagraph}</span>
                   </div>
                 )}
                 {/* 나머지 3개 단락 - 모의고사 형식 */}
@@ -738,7 +741,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                   marginTop: '0',
                   marginBottom: '1.5rem',
                   backgroundColor: '#fff',
-                  fontSize: '1rem',
+                  fontSize: '1.15rem',
                   lineHeight: '1.6',
                   color: '#333'
                 }}>
@@ -791,7 +794,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                       marginTop: '0',
                       marginBottom: '1.5rem',
                       backgroundColor: '#fff',
-                      fontSize: '1rem',
+                      fontSize: '1.15rem',
                       lineHeight: '1.6',
                       color: '#333'
                     }}>
@@ -878,7 +881,7 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                       marginTop: '0',
                       marginBottom: '1.5rem',
                       backgroundColor: '#fff',
-                      fontSize: '1rem',
+                      fontSize: '1.15rem',
                       lineHeight: '1.6',
                       color: '#333'
                     }}>

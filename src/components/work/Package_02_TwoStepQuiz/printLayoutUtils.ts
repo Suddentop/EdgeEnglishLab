@@ -2839,11 +2839,12 @@ export const distributeNormalizedItemsToPages = (
     
     if (isSameTypeChunk) {
       // 같은 유형의 연속 청크인 경우
-      // 유형#05, #10의 경우: 본문과 options를 분리했으므로 다른 컬럼에 배치
+      // 유형#05, #10, #11의 경우: 다음 페이지로 넘어갈 때 올바른 단으로 배치
       const isWork05Or10Chunk = currentWorkTypeId === '05' || currentWorkTypeId === '10';
+      const isWork11Chunk = currentWorkTypeId === '11';
       
-      if (isWork05Or10Chunk) {
-        // 유형#05, #10의 경우: 본문 청크와 options 청크를 분리했으므로
+      if (isWork05Or10Chunk || isWork11Chunk) {
+        // 유형#05, #10, #11의 경우:
         // 이전 청크가 왼쪽 단에 있었으면 오른쪽 단에 배치
         // 이전 청크가 오른쪽 단에 있었으면 다음 페이지 왼쪽 단에 배치
         if (lastItemColumn === 0) {
