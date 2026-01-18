@@ -460,22 +460,78 @@
     padding-right: 0.5rem !important; /* 좌우 패딩 0.5rem */
   }
 
-  /* 유형#03, 04 전용: 인라인 스타일 오버라이드 (최고 우선순위) */
+  /* 유형#02, 03, 04, 05 전용: 인라인 스타일 오버라이드 (최고 우선순위) - 문제 모드와 정답 모드 모두 포함 */
+  .only-print.work-02-print .problem-passage[style],
+  .only-print.work-02-print .problem-passage[style*="padding"],
   .only-print.work-03-print .problem-passage[style],
-  .only-print.work-04-print .problem-passage[style],
-  .only-print.print-answer-mode.work-03-print .problem-passage[style],
-  .only-print.print-answer-mode.work-04-print .problem-passage[style],
-  .only-print.work-03-print .a4-page-content .problem-passage[style],
-  .only-print.work-04-print .a4-page-content .problem-passage[style],
-  .only-print.print-answer-mode.work-03-print .a4-page-content .problem-passage[style],
-  .only-print.print-answer-mode.work-04-print .a4-page-content .problem-passage[style],
+  .only-print.work-03-print .problem-passage[style*="padding"],
   .only-print.work-03-print .problem-passage.package01-work03-passage[style],
+  .only-print.work-03-print .problem-passage.package01-work03-passage[style*="padding"],
+  .only-print.work-04-print .problem-passage[style],
+  .only-print.work-04-print .problem-passage[style*="padding"],
   .only-print.work-04-print .problem-passage.package01-work04-passage[style],
+  .only-print.work-04-print .problem-passage.package01-work04-passage[style*="padding"],
+  .only-print.work-05-print .problem-passage[style],
+  .only-print.work-05-print .problem-passage[style*="padding"],
+  .only-print.work-05-print .problem-passage.package01-work05-passage[style],
+  .only-print.work-05-print .problem-passage.package01-work05-passage[style*="padding"],
+  .only-print.print-answer-mode.work-02-print .problem-passage[style],
+  .only-print.print-answer-mode.work-02-print .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-03-print .problem-passage[style],
+  .only-print.print-answer-mode.work-03-print .problem-passage[style*="padding"],
   .only-print.print-answer-mode.work-03-print .problem-passage.package01-work03-passage[style],
-  .only-print.print-answer-mode.work-04-print .problem-passage.package01-work04-passage[style] {
-    padding: 1rem 0.5rem !important; /* 인라인 스타일 오버라이드: 좌우 패딩 0.5rem */
-    padding-left: 0.5rem !important; /* 좌우 패딩 0.5rem */
-    padding-right: 0.5rem !important; /* 좌우 패딩 0.5rem */
+  .only-print.print-answer-mode.work-03-print .problem-passage.package01-work03-passage[style*="padding"],
+  .only-print.print-answer-mode.work-04-print .problem-passage[style],
+  .only-print.print-answer-mode.work-04-print .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-04-print .problem-passage.package01-work04-passage[style],
+  .only-print.print-answer-mode.work-04-print .problem-passage.package01-work04-passage[style*="padding"],
+  .only-print.print-answer-mode.work-05-print .problem-passage[style],
+  .only-print.print-answer-mode.work-05-print .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-05-print .problem-passage.package01-work05-passage[style],
+  .only-print.print-answer-mode.work-05-print .problem-passage.package01-work05-passage[style*="padding"],
+  .only-print.work-02-print .a4-page-content .problem-passage[style],
+  .only-print.work-02-print .a4-page-content .problem-passage[style*="padding"],
+  .only-print.work-03-print .a4-page-content .problem-passage[style],
+  .only-print.work-03-print .a4-page-content .problem-passage[style*="padding"],
+  .only-print.work-04-print .a4-page-content .problem-passage[style],
+  .only-print.work-04-print .a4-page-content .problem-passage[style*="padding"],
+  .only-print.work-05-print .a4-page-content .problem-passage[style],
+  .only-print.work-05-print .a4-page-content .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage[style],
+  .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-03-print .a4-page-content .problem-passage[style],
+  .only-print.print-answer-mode.work-03-print .a4-page-content .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-04-print .a4-page-content .problem-passage[style],
+  .only-print.print-answer-mode.work-04-print .a4-page-content .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-05-print .a4-page-content .problem-passage[style],
+  .only-print.print-answer-mode.work-05-print .a4-page-content .problem-passage[style*="padding"],
+  .only-print.work-02-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.work-02-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+  .only-print.work-03-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.work-03-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+  .only-print.work-04-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.work-04-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+  .only-print.work-05-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.work-05-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-02-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.print-answer-mode.work-02-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-03-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.print-answer-mode.work-03-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-04-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.print-answer-mode.work-04-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+  .only-print.print-answer-mode.work-05-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.print-answer-mode.work-05-print .a4-page-template .a4-page-content .problem-passage[style*="padding"] {
+    padding-left: 0.5rem !important; /* 좌우 패딩 0.5rem 강제 적용 - 문제 모드와 정답 모드 모두 */
+    padding-right: 0.5rem !important; /* 좌우 패딩 0.5rem 강제 적용 - 문제 모드와 정답 모드 모두 */
+  }
+  
+  /* 유형#03, #04 문제 모드 전용: package01-work03-passage, package01-work04-passage 클래스 없이도 패딩 적용 */
+  .only-print.work-03-print .a4-page-template .a4-page-content .problem-passage,
+  .only-print.work-03-print .a4-page-template .a4-page-content .problem-passage[style],
+  .only-print.work-04-print .a4-page-template .a4-page-content .problem-passage,
+  .only-print.work-04-print .a4-page-template .a4-page-content .problem-passage[style] {
+    padding-left: 0.5rem !important; /* 좌우 패딩 0.5rem 강제 적용 - 문제 모드 */
+    padding-right: 0.5rem !important; /* 좌우 패딩 0.5rem 강제 적용 - 문제 모드 */
   }
 
   /* 패키지#01-유형#02 전용: 영어본문과 교체된 단어들 제목 사이 여백 증가 */
@@ -932,27 +988,64 @@
     print-color-adjust: exact !important;
   }
   
-  /* 패키지#01-유형#13, #14 인쇄 페이지 영어문장 컨테이너 배경색 흰색 강제 적용 */
+  /* 패키지#01-유형#13, #14 인쇄 페이지 영어문장 컨테이너 배경색 흰색 강제 적용 및 줄간격 20% 증가 (1.5 → 1.8) */
   .only-print.work-13-print .package01-work13-problem-text,
   .only-print.work-13-print .package01-work13-problem-text[style],
   .only-print.work-13-print .package01-work13-answer-text,
   .only-print.work-13-print .package01-work13-answer-text[style],
+  .only-print.work-13-print .package01-work13-problem-text[style*="line-height"],
+  .only-print.work-13-print .package01-work13-answer-text[style*="line-height"],
   .only-print.print-answer-mode.work-13-print .package01-work13-problem-text,
   .only-print.print-answer-mode.work-13-print .package01-work13-problem-text[style],
   .only-print.print-answer-mode.work-13-print .package01-work13-answer-text,
   .only-print.print-answer-mode.work-13-print .package01-work13-answer-text[style],
+  .only-print.print-answer-mode.work-13-print .package01-work13-problem-text[style*="line-height"],
+  .only-print.print-answer-mode.work-13-print .package01-work13-answer-text[style*="line-height"],
   .only-print.work-14-print .package01-work14-problem-text,
   .only-print.work-14-print .package01-work14-problem-text[style],
   .only-print.work-14-print .package01-work14-answer-text,
   .only-print.work-14-print .package01-work14-answer-text[style],
+  .only-print.work-14-print .package01-work14-problem-text[style*="line-height"],
+  .only-print.work-14-print .package01-work14-answer-text[style*="line-height"],
   .only-print.print-answer-mode.work-14-print .package01-work14-problem-text,
   .only-print.print-answer-mode.work-14-print .package01-work14-problem-text[style],
   .only-print.print-answer-mode.work-14-print .package01-work14-answer-text,
-  .only-print.print-answer-mode.work-14-print .package01-work14-answer-text[style] {
+  .only-print.print-answer-mode.work-14-print .package01-work14-answer-text[style],
+  .only-print.print-answer-mode.work-14-print .package01-work14-problem-text[style*="line-height"],
+  .only-print.print-answer-mode.work-14-print .package01-work14-answer-text[style*="line-height"] {
     background: #ffffff !important;
     background-color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    line-height: 1.8 !important; /* 줄간격 20% 증가 (1.5 → 1.8) */
+  }
+  
+  /* 패키지#01-유형#13, #14 인쇄 페이지 본문영어컨테이너 줄간격 20% 증가 (1.5 → 1.8) - 별도 규칙 */
+  .only-print.work-13-print .package01-work13-problem-text,
+  .only-print.work-13-print .package01-work13-problem-text *,
+  .only-print.work-13-print .package01-work13-answer-text,
+  .only-print.work-13-print .package01-work13-answer-text *,
+  .only-print.work-13-print .package01-work13-passage,
+  .only-print.work-13-print .package01-work13-passage *,
+  .only-print.print-answer-mode.work-13-print .package01-work13-problem-text,
+  .only-print.print-answer-mode.work-13-print .package01-work13-problem-text *,
+  .only-print.print-answer-mode.work-13-print .package01-work13-answer-text,
+  .only-print.print-answer-mode.work-13-print .package01-work13-answer-text *,
+  .only-print.print-answer-mode.work-13-print .package01-work13-passage,
+  .only-print.print-answer-mode.work-13-print .package01-work13-passage *,
+  .only-print.work-14-print .package01-work14-problem-text,
+  .only-print.work-14-print .package01-work14-problem-text *,
+  .only-print.work-14-print .package01-work14-answer-text,
+  .only-print.work-14-print .package01-work14-answer-text *,
+  .only-print.work-14-print .package01-work14-passage,
+  .only-print.work-14-print .package01-work14-passage *,
+  .only-print.print-answer-mode.work-14-print .package01-work14-problem-text,
+  .only-print.print-answer-mode.work-14-print .package01-work14-problem-text *,
+  .only-print.print-answer-mode.work-14-print .package01-work14-answer-text,
+  .only-print.print-answer-mode.work-14-print .package01-work14-answer-text *,
+  .only-print.print-answer-mode.work-14-print .package01-work14-passage,
+  .only-print.print-answer-mode.work-14-print .package01-work14-passage * {
+    line-height: 1.8 !important; /* 줄간격 20% 증가 (1.5 → 1.8) */
   }
   
   /* 패키지#01-유형#13, #14 인쇄(정답) 페이지 translation 컨테이너 배경색 흰색 강제 적용 */
@@ -1432,6 +1525,85 @@
       page-break-before: auto;
       page-break-after: auto;
       page-break-inside: auto;
+    }
+    
+    /* 패키지#01-유형#02, #03, #04, #05 인쇄 페이지 본문영어컨테이너 좌우 패딩 0.5rem 강제 적용 (인쇄 미디어 쿼리 내부 - 최고 우선순위) */
+    .only-print.work-02-print .problem-passage,
+    .only-print.work-02-print .problem-passage[style],
+    .only-print.work-02-print .problem-passage[style*="padding"],
+    .only-print.work-03-print .problem-passage,
+    .only-print.work-03-print .problem-passage[style],
+    .only-print.work-03-print .problem-passage[style*="padding"],
+    .only-print.work-03-print .problem-passage.package01-work03-passage,
+    .only-print.work-03-print .problem-passage.package01-work03-passage[style],
+    .only-print.work-04-print .problem-passage,
+    .only-print.work-04-print .problem-passage[style],
+    .only-print.work-04-print .problem-passage[style*="padding"],
+    .only-print.work-04-print .problem-passage.package01-work04-passage,
+    .only-print.work-04-print .problem-passage.package01-work04-passage[style],
+    .only-print.work-05-print .problem-passage,
+    .only-print.work-05-print .problem-passage[style],
+    .only-print.work-05-print .problem-passage[style*="padding"],
+    .only-print.work-05-print .problem-passage.package01-work05-passage,
+    .only-print.work-05-print .problem-passage.package01-work05-passage[style],
+    .only-print.print-answer-mode.work-02-print .problem-passage,
+    .only-print.print-answer-mode.work-02-print .problem-passage[style],
+    .only-print.print-answer-mode.work-02-print .problem-passage[style*="padding"],
+    .only-print.print-answer-mode.work-03-print .problem-passage,
+    .only-print.print-answer-mode.work-03-print .problem-passage[style],
+    .only-print.print-answer-mode.work-03-print .problem-passage[style*="padding"],
+    .only-print.print-answer-mode.work-03-print .problem-passage.package01-work03-passage,
+    .only-print.print-answer-mode.work-03-print .problem-passage.package01-work03-passage[style],
+    .only-print.print-answer-mode.work-04-print .problem-passage,
+    .only-print.print-answer-mode.work-04-print .problem-passage[style],
+    .only-print.print-answer-mode.work-04-print .problem-passage[style*="padding"],
+    .only-print.print-answer-mode.work-04-print .problem-passage.package01-work04-passage,
+    .only-print.print-answer-mode.work-04-print .problem-passage.package01-work04-passage[style],
+    .only-print.print-answer-mode.work-05-print .problem-passage,
+    .only-print.print-answer-mode.work-05-print .problem-passage[style],
+    .only-print.print-answer-mode.work-05-print .problem-passage[style*="padding"],
+    .only-print.print-answer-mode.work-05-print .problem-passage.package01-work05-passage,
+    .only-print.print-answer-mode.work-05-print .problem-passage.package01-work05-passage[style],
+    .only-print.work-02-print .a4-page-content .problem-passage,
+    .only-print.work-02-print .a4-page-content .problem-passage[style],
+    .only-print.work-02-print .a4-page-content .problem-passage[style*="padding"],
+    .only-print.work-03-print .a4-page-content .problem-passage,
+    .only-print.work-03-print .a4-page-content .problem-passage[style],
+    .only-print.work-03-print .a4-page-content .problem-passage[style*="padding"],
+    .only-print.work-04-print .a4-page-content .problem-passage,
+    .only-print.work-04-print .a4-page-content .problem-passage[style],
+    .only-print.work-04-print .a4-page-content .problem-passage[style*="padding"],
+    .only-print.work-05-print .a4-page-content .problem-passage,
+    .only-print.work-05-print .a4-page-content .problem-passage[style],
+    .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage,
+    .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage[style],
+    .only-print.print-answer-mode.work-02-print .a4-page-content .problem-passage[style*="padding"],
+    .only-print.print-answer-mode.work-03-print .a4-page-content .problem-passage,
+    .only-print.print-answer-mode.work-03-print .a4-page-content .problem-passage[style],
+    .only-print.print-answer-mode.work-04-print .a4-page-content .problem-passage,
+    .only-print.print-answer-mode.work-04-print .a4-page-content .problem-passage[style],
+    .only-print.print-answer-mode.work-05-print .a4-page-content .problem-passage,
+    .only-print.print-answer-mode.work-05-print .a4-page-content .problem-passage[style],
+    .only-print.work-02-print .a4-page-template .a4-page-content .problem-passage,
+    .only-print.work-02-print .a4-page-template .a4-page-content .problem-passage[style],
+    .only-print.work-03-print .a4-page-template .a4-page-content .problem-passage,
+    .only-print.work-03-print .a4-page-template .a4-page-content .problem-passage[style],
+    .only-print.work-03-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+    .only-print.work-04-print .a4-page-template .a4-page-content .problem-passage,
+    .only-print.work-04-print .a4-page-template .a4-page-content .problem-passage[style],
+    .only-print.work-04-print .a4-page-template .a4-page-content .problem-passage[style*="padding"],
+    .only-print.work-05-print .a4-page-template .a4-page-content .problem-passage,
+    .only-print.work-05-print .a4-page-template .a4-page-content .problem-passage[style],
+    .only-print.print-answer-mode.work-02-print .a4-page-template .a4-page-content .problem-passage,
+    .only-print.print-answer-mode.work-02-print .a4-page-template .a4-page-content .problem-passage[style],
+    .only-print.print-answer-mode.work-03-print .a4-page-template .a4-page-content .problem-passage,
+    .only-print.print-answer-mode.work-03-print .a4-page-template .a4-page-content .problem-passage[style],
+    .only-print.print-answer-mode.work-04-print .a4-page-template .a4-page-content .problem-passage,
+    .only-print.print-answer-mode.work-04-print .a4-page-template .a4-page-content .problem-passage[style],
+    .only-print.print-answer-mode.work-05-print .a4-page-template .a4-page-content .problem-passage,
+    .only-print.print-answer-mode.work-05-print .a4-page-template .a4-page-content .problem-passage[style] {
+      padding-left: 0.5rem !important; /* 좌우 패딩 0.5rem 강제 적용 - 인쇄 미디어 쿼리 내부 */
+      padding-right: 0.5rem !important; /* 좌우 패딩 0.5rem 강제 적용 - 인쇄 미디어 쿼리 내부 */
     }
     
     /* 유형#01은 제외하고 다른 유형만 적용 */

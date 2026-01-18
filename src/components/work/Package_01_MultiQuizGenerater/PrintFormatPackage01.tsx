@@ -1108,7 +1108,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
               <span>다음 본문을 읽고 해석하세요</span>
               <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#02</span>
             </div>
-            <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 0', background:'#ffffff', borderRadius:'0', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#000000', lineHeight:'1.4'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+            <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 0.5rem', background:'#ffffff', borderRadius:'0', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#000000', lineHeight:'1.4'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
             </div>
           </div>
         </div>
@@ -1131,7 +1131,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                 <span>다음 본문을 읽고 해석하세요</span>
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#02</span>
               </div>
-                <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'1rem', padding:'1rem 0', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#000000', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#000000', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                 </div>
                 {work02Data.replacements && work02Data.replacements.length > 0 ? (
                   <div style={{marginTop:'0rem'}}>
@@ -1226,7 +1226,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                 <span>다음 본문을 읽고 해석하세요</span>
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#02</span>
               </div>
-              <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 0', background:'#ffffff', borderRadius:'0', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#000000', lineHeight:'1.4'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+              <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'0.5rem 0.5rem', background:'#ffffff', borderRadius:'0', border:'1.5px solid #e3f2fd', fontFamily:'inherit', color:'#000000', lineHeight:'1.4'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
               </div>
                 {work02Data.replacements && work02Data.replacements.length > 0 ? (
                     <div style={{marginTop:'0rem'}}>
@@ -1315,7 +1315,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                 <span>다음 본문을 읽고 해석하세요</span>
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#02</span>
               </div>
-              <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'1rem', padding:'1rem 0', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#000000', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+              <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#000000', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
               </div>
             </div>
             </div>
@@ -1416,7 +1416,7 @@ const PrintFormatPackage01Work02: React.FC<PrintFormatPackage01Work02Props> = ({
                 <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem', background:'#f5f5f5', color:'#000', padding:'0.7rem 0.5rem', borderRadius:'0', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
                   <span>다음 본문을 읽고 해석하세요</span>
                 </div>
-                <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'1rem', padding:'1rem 0', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#000000', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
+                <div className="problem-passage" style={{marginTop:'0.63rem', marginBottom:'0.8rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#000000', lineHeight:'1.7'}} dangerouslySetInnerHTML={{__html: renderPrintTextWithUnderlines(work02Data.modifiedText, work02Data.replacements, false)}}>
                 </div>
               </div>
             </div>
@@ -1522,7 +1522,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
     const needsSecondPage = work03Data.blankedText.length >= 2000;
     
     return (
-      <div className="only-print">
+      <div className="only-print work-03-print">
         {needsSecondPage ? (
           // 2페이지 분할: 문제제목+본문, 객관식
           <>
@@ -1571,7 +1571,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
                 <span>다음 빈칸에 들어갈 가장 적절한 단어를 고르세요.</span>
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#03</span>
               </div>
-              <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem 0', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+              <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work03Data.blankedText}
               </div>
               {work03Data.options.map((option, index) => (
@@ -1685,7 +1685,7 @@ const PrintFormatPackage01Work03: React.FC<PrintFormatPackage01Work03Props> = ({
     }
 
     return (
-      <div className="only-print print-answer-mode">
+      <div className="only-print print-answer-mode work-03-print">
         {/* 1페이지 */}
         <div className="a4-page-template">
           <div className="a4-page-header">
@@ -1868,7 +1868,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
     const needsSecondPage = work04Data.blankedText.length >= 2000;
     
     return (
-      <div className="only-print">
+      <div className="only-print work-04-print">
         {needsSecondPage ? (
           // 2페이지 분할: 문제제목+본문, 객관식
           <>
@@ -1916,7 +1916,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
                 <span>다음 빈칸에 들어갈 구(phrase)로 가장 적절한 것을 고르시오.</span>
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#04</span>
               </div>
-              <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem 0', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+              <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work04Data.blankedText}
               </div>
               {work04Data.options.map((option, index) => (
@@ -1938,7 +1938,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
     if (answerPageLayout.needsSecondPage) {
       // 2페이지 분할: 1페이지에 문제+정답, 2페이지에 본문해석
       return (
-        <div className="only-print print-answer-mode">
+        <div className="only-print print-answer-mode work-04-print">
           {/* 1페이지: 문제 + 정답 */}
           <div className="a4-page-template">
             <div className="a4-page-header">
@@ -1967,7 +1967,7 @@ const PrintFormatPackage01Work04: React.FC<PrintFormatPackage01Work04Props> = ({
     } else {
       // 1페이지: 문제 + 정답 + 본문해석 모두 포함
       return (
-        <div className="only-print print-answer-mode">
+        <div className="only-print print-answer-mode work-04-print">
           <div className="a4-page-template">
             <div className="a4-page-header">
               <PrintHeaderPackage01 />
@@ -2083,7 +2083,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
               <span>다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
               <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#05</span>
             </div>
-            <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem 0', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+            <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
               {work05Data.blankedText}
             </div>
           </div>
@@ -2118,7 +2118,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                 <span>다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#05</span>
               </div>
-              <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem 0', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+              <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work05Data.blankedText}
               </div>
               {work05Data.options.map((option, index) => (
@@ -2170,7 +2170,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                 <span>다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#05</span>
               </div>
-              <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem 0', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+              <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                 {work05Data.blankedText}
               </div>
                 {work05Data.options.map((option, index) => (
@@ -2205,7 +2205,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                     <span>다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                   <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#05</span>
                   </div>
-                  <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem 0', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {work05Data.blankedText}
                   </div>
                     {work05Data.options.map((option, index) => (
@@ -2242,7 +2242,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                     <span>다음 빈칸에 들어갈 가장 적절한 문장을 고르세요.</span>
                   <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#05</span>
                   </div>
-                  <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem 0', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
+                  <div className="problem-passage package01-work05-passage" style={{marginTop:'0.1rem', marginBottom:'0.5rem', fontSize:'1rem', padding:'1rem 0.5rem', background:'#f7f8fc', borderRadius:'0', border:'1.5px solid #e3e6f0', fontFamily:'inherit', color:'#222', lineHeight:'1.7'}}>
                     {work05Data.blankedText}
                   </div>
                     {work05Data.options.map((option, index) => (
@@ -4131,7 +4131,7 @@ const PrintFormatPackage01Work13: React.FC<{
               borderRadius: '8px', 
               fontFamily: 'inherit', 
               color: '#222', 
-              lineHeight: '1.5', 
+              lineHeight: '1.8', 
               border: '2px solid #e3e6f0'
             }}>
               {formatBlankedText(
@@ -4182,7 +4182,7 @@ const PrintFormatPackage01Work13: React.FC<{
                   borderRadius: '8px', 
                   fontFamily: 'inherit', 
                   color: '#222', 
-                  lineHeight: '1.5', 
+                  lineHeight: '1.8', 
                   border: '2px solid #e3e6f0'
                 }} dangerouslySetInnerHTML={{__html: createTextWithAnswers(
                   formatBlankedText(work13Data.blankedText || '', work13Data.correctAnswers || []),
@@ -4228,7 +4228,7 @@ const PrintFormatPackage01Work13: React.FC<{
                 borderRadius: '8px', 
                 fontFamily: 'inherit', 
                 color: '#222', 
-                lineHeight: '1.5', 
+                lineHeight: '1.8', 
                 border: '2px solid #e3e6f0'
               }}>
                 {(() => {
@@ -4513,7 +4513,7 @@ const PrintFormatPackage01Work14: React.FC<{
               borderRadius: '8px', 
               fontFamily: 'inherit', 
               color: '#222', 
-              lineHeight: '1.5', 
+              lineHeight: '1.8', 
               border: '2px solid #e3e6f0',
               whiteSpace: 'pre-wrap',
               wordWrap: 'break-word',
@@ -4581,7 +4581,7 @@ const PrintFormatPackage01Work14: React.FC<{
                     borderRadius: '8px', 
                     fontFamily: 'inherit', 
                     color: '#222', 
-                    lineHeight: '1.5', 
+                    lineHeight: '1.8', 
                     border: '2px solid #e3e6f0',
                     whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word',
@@ -4652,7 +4652,7 @@ const PrintFormatPackage01Work14: React.FC<{
                 borderRadius: '8px', 
                 fontFamily: 'inherit', 
                 color: '#222', 
-                lineHeight: '1.5', 
+                lineHeight: '1.8', 
                 border: '2px solid #e3e6f0'
               }}
               dangerouslySetInnerHTML={{
