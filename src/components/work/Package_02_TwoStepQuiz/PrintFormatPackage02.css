@@ -560,6 +560,16 @@
     margin-bottom: 0 !important; /* 마진도 제거 */
   }
 
+  /* 유형#06: 헤더와 제목 사이 여백 조정 (카드 자체의 여백은 제거하되, 제목의 margin-top은 유지) */
+  .print-container-answer .print-question-card[data-work-type="06"],
+  .print-container-answer .print-question-card[data-work-type="6"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* 유형#06: 제목의 상단 마진 조정 (첫 번째 카드가 아닌 경우 기본값 유지) */
+  /* 첫 번째 카드의 경우 위의 :first-child 규칙이 적용되므로 여기서는 추가 설정 불필요 */
+
   /* 유형#01 정답 모드: 상하 패딩만 유지, 좌우 패딩 제거 */
   .print-container-answer .print-question-card[data-work-type="01"],
   .print-container-answer .print-question-card[data-work-type="1"] {
@@ -757,6 +767,16 @@
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;
+}
+
+/* 패키지#02-유형#05 인쇄(정답) 페이지: 4지선다 한글해석 왼쪽 들여쓰기 */
+@media print {
+  .print-container-answer .print-question-card[data-work-type="05"] .print-option-translation,
+  .print-container-answer .print-question-card[data-work-type="5"] .print-option-translation,
+  .print-answer-mode .print-question-card[data-work-type="05"] .print-option-translation,
+  .print-answer-mode .print-question-card[data-work-type="5"] .print-option-translation {
+    padding-left: 1rem !important;
+  }
 }
 
   .print-answer-mark {
@@ -1485,6 +1505,14 @@
   /* 첫 번째 카드의 제목: 헤더와의 간격 확보 */
   .print-answer-mode .print-column > .print-question-card:first-child .print-question-title,
   .print-container-answer .print-column > .print-question-card:first-child .print-question-title {
+    margin-top: 0.3cm !important;
+  }
+
+  /* 유형#06: 헤더와 제목 사이 여백 조정 (유형#05와 유사하게 약간의 여백 추가) */
+  .print-answer-mode .print-column > .print-question-card[data-work-type="06"]:first-child .print-question-title,
+  .print-container-answer .print-column > .print-question-card[data-work-type="06"]:first-child .print-question-title,
+  .print-answer-mode .print-column > .print-question-card[data-work-type="6"]:first-child .print-question-title,
+  .print-container-answer .print-column > .print-question-card[data-work-type="6"]:first-child .print-question-title {
     margin-top: 0.3cm !important;
   }
 

@@ -774,7 +774,9 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           }
           quizItem.work05Data = {
             ...quiz,
-            translation
+            translation,
+            // optionTranslations가 있으면 포함
+            optionTranslations: quiz.optionTranslations || undefined
           };
           quizItem.translatedText = translation;
           break;

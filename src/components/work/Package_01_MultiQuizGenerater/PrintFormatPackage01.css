@@ -697,6 +697,14 @@
   .only-print.print-answer-mode .a4-page-template .a4-page-content .problem-options.package01-work05-options[style] {
     margin-top: 0 !important;
   }
+  
+  /* 패키지#01-유형#05 인쇄(정답) 페이지: 4지선다 한글해석 왼쪽 들여쓰기 */
+  .only-print.print-answer-mode.work-05-print .option span[style*="fontSize"],
+  .only-print.print-answer-mode.work-05-print .option span[style*="font-size"],
+  .only-print.print-answer-mode.work-05-print .a4-page-content .option span[style*="fontSize"],
+  .only-print.print-answer-mode.work-05-print .a4-page-content .option span[style*="font-size"] {
+    padding-left: 1rem !important;
+  }
 
   /* 패키지#01-유형#13 전용: 영어본문과 한글해석 사이 간격 50% 감소 */
   .only-print.print-answer-mode.work-13-print .a4-page-template .a4-page-content .package01-work13-passage,

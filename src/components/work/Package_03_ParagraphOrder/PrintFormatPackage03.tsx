@@ -799,6 +799,19 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
 
           // Translation 섹션 (마지막 유형 다음 단에 표시)
           if (quizItem.workTypeId === 'translation' && quizItem.translatedText) {
+            const isLastPage = pageIndex === distributedItems.length - 1;
+            // 마지막 페이지인 경우 "본문해석 :" 제목을 컨테이너 밖 위에 배치
+            if (isLastPage) {
+              return (
+                <div key={`print-translation-${index}`} className="print-question-card">
+                  <div className="print-translation-title print-translation-title-outside">본문해석 :</div>
+                  <div className={`print-translation-section print-translation-last`}>
+                    <div className="print-translation-content">{quizItem.translatedText}</div>
+                  </div>
+                </div>
+              );
+            }
+            // 일반 페이지인 경우 기존 구조 유지
             return (
               <div key={`print-translation-${index}`} className="print-question-card">
                 <div className="print-translation-section">

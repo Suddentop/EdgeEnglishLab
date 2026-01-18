@@ -2185,7 +2185,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                     {work05Data.optionTranslations && work05Data.optionTranslations[index] && (
                     <>
                       <br />
-                      <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
+                      <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'1rem', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
                         {work05Data.optionTranslations[index]}
                       </span>
                     </>
@@ -2220,7 +2220,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                         {work05Data.optionTranslations && work05Data.optionTranslations[index] && (
                       <>
                         <br />
-                        <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
+                        <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'1rem', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
                             {work05Data.optionTranslations[index]}
                         </span>
                       </>
@@ -2257,7 +2257,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
                         {work05Data.optionTranslations && work05Data.optionTranslations[index] && (
                       <>
                         <br />
-                        <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'0', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
+                        <span style={{fontSize:'0.85rem', color:'#666', marginLeft:'0', paddingLeft:'1rem', fontStyle:'italic', lineHeight:'1.2', display:'block'}}>
                             {work05Data.optionTranslations[index]}
                         </span>
                       </>

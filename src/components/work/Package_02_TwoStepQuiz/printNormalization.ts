@@ -384,7 +384,11 @@ export const normalizeQuizItemForPrint = (
       const options = ensureOptionsArray(data?.options || [], helpers).map((option, idx) => ({
         ...option,
         text: cleanOptionText(option.text),
-        isCorrect: isAnswerMode ? data?.answerIndex === idx : undefined
+        isCorrect: isAnswerMode ? data?.answerIndex === idx : undefined,
+        // 유형#05의 경우 optionTranslations가 있으면 각 옵션에 translation 추가
+        translation: isAnswerMode && data?.optionTranslations && Array.isArray(data.optionTranslations) && data.optionTranslations[idx] 
+          ? data.optionTranslations[idx] 
+          : option.translation || undefined
       }));
       addOptionsSection(options);
 
