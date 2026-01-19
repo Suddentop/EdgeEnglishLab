@@ -2170,7 +2170,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
             </div>
             {isLoading && loadingProgress.total > 0 && (
               <div className="loading-progress">
-                ({loadingProgress.current + 1}/{loadingProgress.total})
+                ({loadingProgress.current}/{loadingProgress.total})
               </div>
             )}
           </div>
