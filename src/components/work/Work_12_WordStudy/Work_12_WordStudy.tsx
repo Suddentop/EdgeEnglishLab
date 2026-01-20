@@ -290,12 +290,14 @@ const Work_12_WordStudy: React.FC = () => {
   // 입력 방식 변경
   const handleInputModeChange = (mode: InputMode) => {
     setInputMode(mode);
-    setInputText('');
+    // inputText는 유지 (기존에 입력된 단어 목록 유지)
+    // setInputText(''); // 제거: 기존 입력된 단어 유지
     setImageFile(null);
     setImagePreview(null);
     setQuiz(null);
     setSelectedAnswers({});
-    setExtractedWords([]);
+    // extractedWords는 유지 (기존에 추출된 단어 목록 유지)
+    // setExtractedWords([]); // 제거: 기존 추출된 단어 유지
   };
 
   // 단어 수 제한 체크 및 처리 함수
@@ -430,11 +432,12 @@ const Work_12_WordStudy: React.FC = () => {
           });
         }
         
-        // 60개 초과 시 제한 적용
-        const limitedWords = limitWordsTo60(words);
-        setExtractedWords(limitedWords);
-        // 단어들을 텍스트로 변환하여 textarea에 표시
-        const wordsText = limitedWords.map(word => `${word.english}: ${word.korean}`).join('\n');
+        // 기존 단어에 새 단어 추가 (60개 제한 적용)
+        const currentWords = parseWordsFromTextSimple(inputText);
+        const updatedWords = addWordsWithLimit(words, currentWords);
+        setExtractedWords(updatedWords);
+        // 단어들을 텍스트로 변환하여 textarea에 표시 (기존 텍스트 + 새 텍스트)
+        const wordsText = updatedWords.map(word => `${word.english}: ${word.korean}`).join('\n');
         setInputText(wordsText);
         setTimeout(() => {
           if (textAreaRef.current) {
@@ -543,6 +546,7 @@ const Work_12_WordStudy: React.FC = () => {
     // 텍스트가 변경될 때마다 실제 단어 개수를 계산하여 extractedWords 업데이트
     // (캡처 모드에서 이미지로 추출한 경우나 텍스트 모드에서 입력한 경우 모두 처리)
     if (inputMode === 'capture' || inputMode === 'text') {
+      // 전체 텍스트를 파싱하여 단어 목록 업데이트 (사용자가 직접 편집한 경우)
       const parsedWords = parseWordsFromTextSimple(newText);
       setExtractedWords(parsedWords);
     }

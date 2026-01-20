@@ -53,6 +53,8 @@ const Feedback: React.FC = () => {
   const [replyContent, setReplyContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 10;
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadingReplyImages, setUploadingReplyImages] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -167,6 +169,16 @@ const Feedback: React.FC = () => {
     fetchPosts();
   }, [fetchPosts]);
 
+  // 게시글 목록이 변경될 때 현재 페이지가 유효한 범위인지 확인
+  useEffect(() => {
+    const totalPages = Math.ceil(posts.length / postsPerPage);
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    } else if (posts.length > 0 && currentPage < 1) {
+      setCurrentPage(1);
+    }
+  }, [posts.length, currentPage]);
+
   // 게시글 작성
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,6 +229,7 @@ const Feedback: React.FC = () => {
       setSelectedImages([]);
       setImageUrls([]);
       setIsWriting(false);
+      setCurrentPage(1); // 게시글 작성 후 첫 페이지로 이동
       fetchPosts();
     } catch (error) {
       console.error('게시글 작성 오류:', error);
@@ -379,6 +392,14 @@ const Feedback: React.FC = () => {
   const handleReplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || !selectedPost || !replyContent.trim()) return;
+
+    // 비밀글인 경우 작성자와 관리자만 답글 작성 가능
+    if (selectedPost.isSecret === true) {
+      if (selectedPost.authorId !== currentUser.uid && !checkIsAdmin(userData)) {
+        alert('비밀글에는 작성자와 관리자만 답글을 작성할 수 있습니다.');
+        return;
+      }
+    }
 
     setUploadingReplyImages(true);
     try {
@@ -618,6 +639,21 @@ const Feedback: React.FC = () => {
     setEditingReplyContent('');
     setEditingReplyImages([]);
     setEditingReplyImageUrls([]);
+    // 목록으로 돌아갈 때 현재 페이지 유지 (필요시 1페이지로 리셋하려면 setCurrentPage(1) 추가)
+  };
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(posts.length / postsPerPage);
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  const currentPosts = posts.slice(startIndex, endIndex);
+
+  // 페이지 변경
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   if (!currentUser) {
@@ -673,33 +709,113 @@ const Feedback: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {posts.map((post, index) => (
-                    <tr key={post.id}>
-                      <td>{posts.length - index}</td>
-                      <td>
-                        <button 
-                          className="post-title-btn"
-                          onClick={() => viewPost(post)}
-                        >
-                          {post.isSecret && <span className="secret-indicator">🔒 </span>}
-                          {post.title}
-                          {post.imageUrls && post.imageUrls.length > 0 && (
-                            <span className="image-indicator"> 📷</span>
-                          )}
-                        </button>
-                      </td>
-                      <td>{post.authorName}</td>
-                      <td>
-                        {post.createdAt?.toDate?.() 
-                          ? post.createdAt.toDate().toLocaleDateString()
-                          : '날짜 없음'
-                        }
-                      </td>
-                                             <td>{post.replies?.length || 0}</td>
-                    </tr>
-                  ))}
+                  {currentPosts.map((post, index) => {
+                    const globalIndex = startIndex + index;
+                    return (
+                      <tr key={post.id}>
+                        <td>{posts.length - globalIndex}</td>
+                        <td>
+                          <button 
+                            className="post-title-btn"
+                            onClick={() => viewPost(post)}
+                          >
+                            {post.title}
+                            {post.isSecret && <span className="secret-indicator"> 🔒</span>}
+                            {post.imageUrls && post.imageUrls.length > 0 && (
+                              <span className="image-indicator"> 📷</span>
+                            )}
+                          </button>
+                        </td>
+                        <td>{post.authorName}</td>
+                        <td>
+                          {post.createdAt?.toDate?.() 
+                            ? post.createdAt.toDate().toLocaleDateString()
+                            : '날짜 없음'
+                          }
+                        </td>
+                        <td>{post.replies?.length || 0}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+              
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <div className="pagination" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginTop: '1.5rem',
+                  marginBottom: '1rem',
+                  padding: '0 1rem'
+                }}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.9rem',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      opacity: currentPage === 1 ? 0.5 : 1
+                    }}
+                  >
+                    이전
+                  </button>
+                  
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.25rem',
+                    alignItems: 'center'
+                  }}>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        style={{
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.9rem',
+                          fontWeight: currentPage === page ? '600' : '400',
+                          color: currentPage === page ? '#fff' : '#4b5563',
+                          backgroundColor: currentPage === page ? '#2563eb' : '#f3f4f6',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (currentPage !== page) {
+                            e.currentTarget.style.backgroundColor = '#e5e7eb';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (currentPage !== page) {
+                            e.currentTarget.style.backgroundColor = '#f3f4f6';
+                          }
+                        }}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.9rem',
+                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                      opacity: currentPage === totalPages ? 0.5 : 1
+                    }}
+                  >
+                    다음
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1216,6 +1332,8 @@ const Feedback: React.FC = () => {
               </div>
             )}
 
+            {/* 비밀글이 아닌 경우 또는 작성자/관리자인 경우에만 답글 작성 폼 표시 */}
+            {(!selectedPost.isSecret || selectedPost.authorId === currentUser?.uid || checkIsAdmin(userData)) && (
             <div className="reply-form">
               <h4>답글 작성</h4>
               <form onSubmit={handleReplySubmit}>
@@ -1283,6 +1401,7 @@ const Feedback: React.FC = () => {
                 </button>
               </form>
             </div>
+            )}
           </div>
         </div>
         )}
