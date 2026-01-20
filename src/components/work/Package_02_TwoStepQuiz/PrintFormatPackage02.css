@@ -975,8 +975,8 @@
     margin-bottom: 0.75rem !important;
     display: block !important;
     position: relative !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 1.0rem !important;
+    padding-right: 1.0rem !important;
     padding-top: 0.6rem !important;
     padding-bottom: 0.6rem !important;
   }
@@ -993,8 +993,8 @@
     margin-left: 0 !important;
     margin-right: 0 !important;
     display: block !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 1.0rem !important;
+    padding-right: 1.0rem !important;
     padding-top: 0.6rem !important;
     padding-bottom: 0.6rem !important;
   }
@@ -1013,7 +1013,7 @@
     box-sizing: border-box !important;
   }
 
-  /* 고정단락박스 래퍼 (HTML 문자열을 감싸는 div) - 패딩 제거하고 전체 너비 */
+  /* 고정단락박스 래퍼 (HTML 문자열을 감싸는 div) - 전체 너비 유지, 패딩은 고정단락박스 자체에 적용 */
   .print-question-card > div[style*="width: 100%"] .fixed-paragraph-box,
   .print-column > .print-question-card > div[style*="width: 100%"] .fixed-paragraph-box,
   .print-column .print-question-card > div .fixed-paragraph-box {
@@ -1022,8 +1022,9 @@
     box-sizing: border-box !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    /* 고정단락박스의 패딩은 유지 (위의 규칙에서 설정한 1.0rem 패딩 적용) */
+    padding-left: 1.0rem !important;
+    padding-right: 1.0rem !important;
   }
 
   /* HTML 블록 (유형#02, 09, 10) - 유형#03과 동일한 글씨 크기 */
