@@ -3702,7 +3702,8 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
 
   // A. 문제 제목 + 영어 본문 컨테이너
   const problemTitleHeight = A4_CONFIG.INSTRUCTION_HEIGHT + A4_CONFIG.INSTRUCTION_MARGIN;
-  const englishPassageHeight = calculateContainerHeight(work10Data.passage, 16, 16, 1.7);
+  const passageText = work10Data.numberedPassage || work10Data.passage || '';
+  const englishPassageHeight = calculateContainerHeight(passageText, 16, 16, 1.7);
   const sectionAHeight = problemTitleHeight + englishPassageHeight;
 
   // B. 5지선다 선택항목 컨테이너 (정답만)
@@ -3723,7 +3724,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
     sectionCHeight: sectionCHeight.toFixed(2) + 'px',
     totalHeight: totalHeight.toFixed(2) + 'px',
     effectiveAvailableHeight: effectiveAvailableHeight.toFixed(2) + 'px',
-    passageLength: work10Data.passage.length,
+    passageLength: (work10Data.numberedPassage || work10Data.passage || '').length,
     translationTextLength: (translatedText || '').length
   });
 
@@ -3762,7 +3763,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
   const needsThirdPage = pageLayoutInfo.needsThirdPage;
 
   if (printMode === 'no-answer') {
-    const needsSecondPage = work10Data.passage.length >= 2000;
+    const needsSecondPage = (work10Data.numberedPassage || work10Data.passage || '').length >= 2000;
     
     return (
       <div className="only-print work-10-print">
@@ -3781,9 +3782,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#10</span>
                   </div>
                   <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', paddingTop:'1rem', paddingBottom:'1rem', paddingLeft:'0', paddingRight:'0', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#222', lineHeight:'1.7', textIndent:'0', fontWeight:300}}>
-                    {(work10Data.passage || '').split('\n').map((line, idx) => (
-                      <div key={idx} style={{textIndent:'0'}} dangerouslySetInnerHTML={{__html: line}} />
-                    ))}
+                    <span dangerouslySetInnerHTML={{__html: work10Data.numberedPassage || work10Data.passage || ''}} />
                   </div>
                 </div>
               </div>
@@ -3801,9 +3800,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#10</span>
                   </div>
                   <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', paddingTop:'1rem', paddingBottom:'1rem', paddingLeft:'0', paddingRight:'0', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#222', lineHeight:'1.7', textIndent:'0', fontWeight:300}}>
-                    {(work10Data.passage || '').split('\n').map((line, idx) => (
-                      <div key={idx} style={{textIndent:'0'}} dangerouslySetInnerHTML={{__html: line}} />
-                    ))}
+                    <span dangerouslySetInnerHTML={{__html: work10Data.numberedPassage || work10Data.passage || ''}} />
                   </div>
                   {work10Data.options.map((option, index) => (
                     <div key={index} className="option" style={{
@@ -3833,9 +3830,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#10</span>
               </div>
               <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', paddingTop:'1rem', paddingBottom:'1rem', paddingLeft:'0', paddingRight:'0', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#222', lineHeight:'1.7', textIndent:'0'}}>
-                {convertMarkdownUnderlineToU(work10Data.passage || '').split('\n').map((line, idx) => (
-                  <div key={idx} style={{textIndent:'0'}} dangerouslySetInnerHTML={{__html: line}} />
-                ))}
+                <span dangerouslySetInnerHTML={{__html: work10Data.numberedPassage || work10Data.passage || ''}} />
               </div>
               {work10Data.options.map((option, index) => (
                 <div key={index} className="option" style={{
@@ -3872,9 +3867,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                     <span>다음 글의 밑줄 친 부분 중, 어법상 틀린 것의 개수는?</span>
                   </div>
                   <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', paddingTop:'1rem', paddingBottom:'1rem', paddingLeft:'0', paddingRight:'0', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#222', lineHeight:'1.7', textIndent:'0', fontWeight:300}}>
-                    {(work10Data.passage || '').split('\n').map((line, idx) => (
-                      <div key={idx} style={{textIndent:'0'}} dangerouslySetInnerHTML={{__html: line}} />
-                    ))}
+                    <span dangerouslySetInnerHTML={{__html: work10Data.numberedPassage || work10Data.passage || ''}} />
                   </div>
                   {work10Data.options.map((option, index) => (
                     <div key={index} className="option" style={{fontSize:'1rem', marginTop:'0.5rem', paddingLeft:'0.3rem', paddingRight:'0.3rem', marginBottom: index === work10Data.options.length - 1 ? '1rem' : '0', display:'block', width:'100%', clear:'both' as const}}>
@@ -3913,9 +3906,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#10</span>
               </div>
               <div className="problem-passage" style={{marginTop:'0.1rem', fontSize:'1rem', paddingTop:'1rem', paddingBottom:'1rem', paddingLeft:'0', paddingRight:'0', background:'#ffffff', borderRadius:'0', fontFamily:'inherit', color:'#222', lineHeight:'1.7', textIndent:'0'}}>
-                {convertMarkdownUnderlineToU(work10Data.passage || '').split('\n').map((line, idx) => (
-                  <div key={idx} style={{textIndent:'0'}} dangerouslySetInnerHTML={{__html: line}} />
-                ))}
+                <span dangerouslySetInnerHTML={{__html: work10Data.numberedPassage || work10Data.passage || ''}} />
               </div>
               {work10Data.options.map((option, index) => (
                 <div key={index} className="option" style={{fontSize:'1rem', marginTop:'0.5rem', paddingLeft:'0.3rem', paddingRight:'0.3rem', marginBottom: index === work10Data.options.length - 1 ? '1rem' : '0', display:'block', width:'100%', clear:'both' as const}}>
@@ -3923,7 +3914,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                   {printMode === 'with-answer' && work10Data.answerIndex === index && (
                     <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                   )}
-              </div>
+                </div>
               ))}
               {printMode === 'with-answer' && work10Data.wrongIndexes && work10Data.wrongIndexes.length > 0 && (
                 <div style={{fontSize:'1rem', marginTop:'0.5rem', paddingLeft:'0.3rem', paddingRight:'0.3rem', color:'#000', fontWeight:700}}>
