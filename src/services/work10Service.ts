@@ -278,11 +278,17 @@ async function selectWordsForWork10(
 
 ${EXCLUDE_RULES_PROMPT}
 
-**우선:** 관계사, 분사구문, 가정법, 병렬구조, 수일치(고난도), 대명사, 접속사vs전치사, 의미상 주어/논리 오류, **to 부정사 복잡 구조**(to+be+동사ing, to+have been+p.p 등)
+**🚨 필수 포함: 형용사/부사 관련 단어 반드시 추출**
+- 형용사/부사 관련 어법 문제를 만들 수 있는 단어를 **반드시 포함**하세요
+- 예: possible, clear, necessary, important, significant, likely, certain, obvious, apparent, essential, crucial, vital, evident, distinct, precise, accurate, careful, serious 등
+- 부사: possibly, clearly, necessarily, importantly, significantly, likely, certainly, obviously, apparently, essentially, crucially, vitally, evidently, distinctly, precisely, accurately, carefully, seriously 등
+- 보어 자리에 쓰이는 형용사나 수식어로 쓰이는 부사가 있는 경우 반드시 추출
+
+**우선:** 관계사, 분사구문, 가정법, 병렬구조, 수일치(고난도), 대명사, 접속사vs전치사, 의미상 주어/논리 오류, **to 부정사 복잡 구조**(to+be+동사ing, to+have been+p.p 등), **형용사/부사 (반드시 포함)**
 
 **추출 기준:**
 - 본문에 실제로 존재하는 단어만 (형태 그대로)
-- 문법적으로 변형 가능한 단어 우선 (준동사, 동사, 형용사/부사, 전치사, 관계사/접속사)
+- 문법적으로 변형 가능한 단어 우선 (준동사, 동사, **형용사/부사 (필수)**, 전치사, 관계사/접속사)
 
 본문:
 ${passage}
@@ -436,11 +442,16 @@ ${sentenceList}
 8. **중요:** 정확히 ${targetWordCount}개 단어를 선택해야 합니다. ${targetWordCount}개보다 많거나 적으면 안 됩니다.
 
 **선정 기준:**
-1. **복잡한 구문 내 문법 판단이 필요한 단어** 우선 (관계사절, 분사구문, 가정법, 도치 등)
-2. **🚨 필수 어법 유형 다양성 (${targetWordCount}개 선택 시 반드시 서로 다른 어법 유형):**
+1. **🚨 필수: 형용사/부사 관련 단어 반드시 1개 이상 선택**
+   - 보어 자리에 쓰이는 형용사 (possible, clear, necessary, important, significant, likely, certain, obvious, apparent, essential, crucial, vital, evident, distinct, precise, accurate, careful, serious 등)
+   - 수식어로 쓰이는 부사 (possibly, clearly, necessarily, importantly, significantly, likely, certainly, obviously, apparently, essentially, crucially, vitally, evidently, distinctly, precisely, accurately, carefully, seriously 등)
+   - 형용사/부사 변형이 가능한 단어를 **반드시 1개 이상** 선택하세요
+   - 예: "It remains possible" → "It remains possibly" (possible→possibly), "The result is clear" → "The result is clearly" (clear→clearly)
+2. **복잡한 구문 내 문법 판단이 필요한 단어** 우선 (관계사절, 분사구문, 가정법, 도치 등)
+3. **🚨 필수 어법 유형 다양성 (${targetWordCount}개 선택 시 반드시 서로 다른 어법 유형):**
    아래 어법 유형들을 최대한 다양하게 포함해야 함 (동일 어법 반복 절대 금지):
+   - **형용사 vs 부사 (반드시 1개 이상 포함 - 필수)**
    - 관계대명사와 관계부사 (where, when, how 등)
-   - 형용사 vs 부사
    - 5형식에서 목적격 보어
    - 능동/수동 문제
    - 과거분사/현재분사
@@ -448,6 +459,7 @@ ${sentenceList}
    - 도치
    - 수의 일치 (주어+동사)
    **${targetWordCount}개 문제는 모두 서로 다른 어법 유형이어야 하며, 가능한 한 위 목록의 어법 유형들을 다양하게 포함해야 함**
+   **🚨 형용사/부사 관련 어법(형용사 vs 부사)은 반드시 ${targetWordCount}개 중 1개 이상 포함되어야 함. (보어 자리 vs 수식어, possible→possibly, clear→clearly, necessary→necessarily 등)**
 3. **의미 해석 영향:** 틀리면 문장 의미 해석에 실제 영향이 있어야 함
 4. **우선 순서:** 준동사 > 동사 > 형용사/부사 > 전치사 > 관계사/접속사
 

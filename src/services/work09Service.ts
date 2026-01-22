@@ -68,6 +68,54 @@ export async function generateWork09Quiz(
       throw new Error(`단어 선정 실패: 관계대명사/관계부사/접속사가 ${finalRelativeCount}개 선택되었습니다. 최대 1개만 허용됩니다.`);
     }
 
+    // Step 1.5: 선택된 5개 단어의 어법 유형 다양성 검증 (최대 5회 재시도 - 형용사/부사 포함 강제)
+    let grammarDiversityValid = false;
+    let grammarDiversityRetryCount = 0;
+    const maxGrammarDiversityRetries = 5;
+    
+    while (!grammarDiversityValid && grammarDiversityRetryCount < maxGrammarDiversityRetries) {
+      const grammarTypesResult = await evaluateGrammarTypesForWords(words, passage);
+      console.log('📋 선택된 단어들의 어법 유형:', grammarTypesResult);
+      
+      // 중복된 어법 유형이 있는지 확인
+      const typeCounts: { [key: string]: number } = {};
+      grammarTypesResult.forEach(item => {
+        const type = item.grammarType;
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+      });
+      
+      const duplicateTypes = Object.entries(typeCounts).filter(([_, count]) => count > 1);
+      
+      if (duplicateTypes.length > 0) {
+        console.warn(`⚠️ 중복된 어법 유형 발견 (재시도 ${grammarDiversityRetryCount + 1}/${maxGrammarDiversityRetries}):`, duplicateTypes);
+        words = await selectWords(passage, previouslySelectedWords);
+        console.log('✅ 재선택된 단어들:', words);
+        grammarDiversityRetryCount++;
+        continue;
+      }
+      
+      // 형용사/부사 관련 어법이 반드시 1개 이상 포함되어야 함
+      const hasAdjAdv = grammarTypesResult.some(item => {
+        const g = item.grammarType || '';
+        return (g.includes('Adjective') && g.includes('Adverb')) || (g.includes('형용사') && g.includes('부사'));
+      });
+      if (!hasAdjAdv) {
+        console.warn(`⚠️ 형용사/부사 관련 어법 미포함 (재시도 ${grammarDiversityRetryCount + 1}/${maxGrammarDiversityRetries}). 현재: ${grammarTypesResult.map(i => `${i.word}: ${i.grammarType}`).join(', ')}`);
+        // 형용사/부사 관련 단어를 명시적으로 포함하도록 재선택
+        words = await selectWords(passage, previouslySelectedWords);
+        console.log('✅ 재선택된 단어들:', words);
+        grammarDiversityRetryCount++;
+        continue;
+      }
+      
+      grammarDiversityValid = true;
+      console.log('✅ 어법 유형 다양성 검증 통과:', grammarTypesResult.map(item => `${item.word}: ${item.grammarType}`).join(', '));
+    }
+    
+    if (!grammarDiversityValid) {
+      console.warn(`⚠️ 어법 유형 다양성 검증 실패 (${maxGrammarDiversityRetries}회 재시도 후). 계속 진행합니다.`);
+    }
+
     // Step 2: 난이도 평가 (선택된 5개 단어 중 가장 난이도 높은 단어 선정)
     const difficultyResult = await evaluateDifficulty(words, passage);
     console.log('✅ 난이도 평가 결과:', difficultyResult);
@@ -138,11 +186,17 @@ async function selectWords(
 
 ${EXCLUDE_RULES_PROMPT}
 
-**우선:** 관계사, 분사구문, 가정법, 병렬구조, 수일치(고난도), 대명사, 접속사vs전치사, 의미상 주어/논리 오류, **to 부정사 복잡 구조**(to+be+동사ing, to+have been+p.p 등)
+**🚨 필수 포함: 형용사/부사 관련 단어 반드시 추출**
+- 형용사/부사 관련 어법 문제를 만들 수 있는 단어를 **반드시 포함**하세요
+- 예: possible, clear, necessary, important, significant, likely, certain, obvious, apparent, essential, crucial, vital, evident, distinct, precise, accurate, careful, serious, careful, careful, careful 등
+- 부사: possibly, clearly, necessarily, importantly, significantly, likely, certainly, obviously, apparently, essentially, crucially, vitally, evidently, distinctly, precisely, accurately, carefully, seriously 등
+- 보어 자리에 쓰이는 형용사나 수식어로 쓰이는 부사가 있는 경우 반드시 추출
+
+**우선:** 관계사, 분사구문, 가정법, 병렬구조, 수일치(고난도), 대명사, 접속사vs전치사, 의미상 주어/논리 오류, **to 부정사 복잡 구조**(to+be+동사ing, to+have been+p.p 등), **형용사/부사 (반드시 포함)**
 
 **추출 기준:**
 - 본문에 실제로 존재하는 단어만 (형태 그대로)
-- 문법적으로 변형 가능한 단어 우선 (준동사, 동사, 형용사/부사, 전치사, 관계사/접속사)
+- 문법적으로 변형 가능한 단어 우선 (준동사, 동사, **형용사/부사 (필수)**, 전치사, 관계사/접속사)
 
 본문:
 ${passage}
@@ -286,18 +340,48 @@ ${sentenceList}
 5. **절대 금지:** 한 문장에서 2개 이상의 단어를 선택하는 것 (이 규칙 위반 시 자동 실패)
 
 **선정 기준:**
-1. **복잡한 구문 내 문법 판단이 필요한 단어** 우선 (관계사절, 분사구문, 가정법, 도치 등)
-2. **🚨 필수 어법 유형 다양성 (5개 선택 시 반드시 서로 다른 어법 유형):**
+1. **🚨 필수: 형용사/부사 관련 단어 반드시 1개 이상 선택**
+   - 보어 자리에 쓰이는 형용사 (possible, clear, necessary, important, significant, likely, certain, obvious, apparent, essential, crucial, vital, evident, distinct, precise, accurate, careful, serious 등)
+   - 수식어로 쓰이는 부사 (possibly, clearly, necessarily, importantly, significantly, likely, certainly, obviously, apparently, essentially, crucially, vitally, evidently, distinctly, precisely, accurately, carefully, seriously 등)
+   - 형용사/부사 변형이 가능한 단어를 **반드시 1개 이상** 선택하세요
+   - 예: "It remains possible" → "It remains possibly" (possible→possibly), "The result is clear" → "The result is clearly" (clear→clearly)
+2. **복잡한 구문 내 문법 판단이 필요한 단어** 우선 (관계사절, 분사구문, 가정법, 도치 등)
+3. **🚨 필수 어법 유형 다양성 (5개 선택 시 반드시 서로 다른 어법 유형):**
    아래 어법 유형들을 최대한 다양하게 포함해야 함 (동일 어법 반복 절대 금지):
+   - **형용사 vs 부사 (반드시 1개 이상 포함 - 필수)**
    - 관계대명사와 관계부사 (where, when, how 등)
-   - 형용사 vs 부사
    - 5형식에서 목적격 보어
-   - 능동/수동 문제
-   - 과거분사/현재분사
+   - 능동/수동 문제 (Voice)
+   - 과거분사/현재분사 (Participle)
    - 대동사 (Do, Be)
    - 도치
    - 수의 일치 (주어+동사)
+   - 동명사 vs 부정사 (Gerund vs Infinitive)
+   - 병렬 구조 (Parallel Structure)
+   - 가정법 (Subjunctive Mood)
    **5개 문제는 모두 서로 다른 어법 유형이어야 하며, 가능한 한 위 목록의 어법 유형들을 다양하게 포함해야 함**
+   **🚨 형용사/부사 관련 어법(형용사 vs 부사)은 반드시 5개 중 1개 이상 포함되어야 함. (보어 자리 vs 수식어, possible→possibly, clear→clearly, necessary→necessarily 등)**
+   
+   **🚨 절대 금지 - 같은 어법 유형 중복:**
+   - ❌ 시제 문제(Tense) 2개 이상 선택 금지 (예: was/were, 동사원형+-s/-es 등)
+   - ❌ 수동태(Voice) 2개 이상 선택 금지
+   - ❌ 완료형(Have + Past Participle) 2개 이상 선택 금지
+   - ❌ 분사(Participle) 2개 이상 선택 금지
+   - ❌ 같은 어법 유형이 2개 이상 선택되면 자동 실패 및 재시도
+   
+   **✅ 올바른 예시 (형용사 vs 부사 반드시 포함):**
+   - 단어 1: 형용사 vs 부사 - 1개 (필수) ✅
+   - 단어 2: 수동태 (Voice) - 1개만 ✅
+   - 단어 3: 분사 (Participle) - 1개만 ✅
+   - 단어 4: 관계대명사 vs 관계부사 - 1개만 ✅
+   - 단어 5: 동명사 vs 부정사 등 - 1개만 ✅
+   
+   **❌ 잘못된 예시 (절대 금지):**
+   - 단어 1: 시제 문제 (Tense) ❌
+   - 단어 2: 시제 문제 (Tense) ❌ (중복!)
+   - 단어 3: 수동태 (Voice) ❌
+   - 단어 4: 수동태 (Voice) ❌ (중복!)
+   - 단어 5: 완료형 (Have + PP) ❌
 3. **의미 해석 영향:** 틀리면 문장 의미 해석에 실제 영향이 있어야 함
 4. **우선 순서:** 준동사 > 동사 > 형용사/부사 > 전치사 > 관계사/접속사
 
@@ -476,6 +560,23 @@ For each word you want to select:
       }
       
       // 모든 검증 통과
+      // 형용사/부사 관련 단어가 포함되었는지 사전 검증 (선택적)
+      // 일반적인 형용사/부사 패턴 단어 확인
+      const commonAdjAdvWords = ['possible', 'clear', 'necessary', 'important', 'significant', 'likely', 'certain', 'obvious', 'apparent', 'essential', 'crucial', 'vital', 'evident', 'distinct', 'precise', 'accurate', 'careful', 'serious', 'possibly', 'clearly', 'necessarily', 'importantly', 'significantly', 'likely', 'certainly', 'obviously', 'apparently', 'essentially', 'crucially', 'vitally', 'evidently', 'distinctly', 'precisely', 'accurately', 'carefully', 'seriously'];
+      const hasAdjAdvWord = words.some(w => {
+        const wordLower = w.toLowerCase().trim();
+        return commonAdjAdvWords.some(adjAdv => wordLower === adjAdv || wordLower.includes(adjAdv));
+      });
+      
+      if (!hasAdjAdvWord && retryCount < maxRetries - 1) {
+        // 형용사/부사 관련 단어가 없으면 재시도 (마지막 시도가 아니면)
+        const errorMsg = '형용사/부사 관련 단어가 선택되지 않았습니다. 형용사/부사 변형이 가능한 단어(possible, clear, necessary, important, significant, likely, certain, obvious, apparent, essential, crucial, vital, evident, distinct, precise, accurate, careful, serious 등 또는 이들의 부사형)를 반드시 1개 이상 포함하세요.';
+        console.warn(`⚠️ ${errorMsg} (재시도 ${retryCount + 1}/${maxRetries})`);
+        previousErrors.push(errorMsg);
+        retryCount++;
+        continue;
+      }
+      
       console.log(`✅ 단어 선택 성공 (시도 ${retryCount + 1}):`, words);
       previousErrors = []; // 성공 시 에러 기록 초기화
     return words;
@@ -494,6 +595,126 @@ For each word you want to select:
   }
   
   throw new Error(`단어 선택이 ${maxRetries}회 재시도 후에도 실패했습니다.`);
+}
+
+/**
+ * 선택된 단어들의 어법 유형 평가 (어법 다양성 검증용)
+ * @param words - 선택된 단어 배열
+ * @param passage - 영어 본문
+ * @returns 각 단어의 어법 유형 정보
+ */
+async function evaluateGrammarTypesForWords(
+  words: string[],
+  passage: string
+): Promise<Array<{ index: number; word: string; grammarType: string }>> {
+  const prompt = `**수능 고난도 어법 오류 문제 - 단어별 어법 유형 평가**
+
+다음 5개 단어 각각에 대해, 이 단어를 변형할 때 사용할 수 있는 **주요 어법 유형**을 평가하세요.
+
+**선택된 단어들:**
+${words.map((word, idx) => `${idx + 1}. "${word}"`).join('\n')}
+
+**본문:**
+${passage}
+
+**어법 유형 목록:**
+1. Subject-Verb Agreement (Far Subject) - 주어-동사 수 일치 (수식어구로 멀어진 주어)
+2. Relative Pronoun vs Relative Adverb - 관계대명사 vs 관계부사 (불완전/완전 문장)
+3. Participle (Present vs Past) - 현재분사 vs 과거분사 (능동/수동 관계)
+4. Gerund vs Infinitive - 동명사 vs 부정사 (목적어, 보어 자리)
+5. Parallel Structure - 병렬 구조 (등위접속사 앞뒤 형태)
+6. Adjective vs Adverb - 형용사 vs 부사 (보어 자리 vs 수식어)
+7. Voice (Active vs Passive) - 능동태 vs 수동태 (목적어 유무 등)
+8. Preposition + Relative Pronoun - 전치사+관계대명사 (완전한 문장)
+9. Indirect Question Word Order - 간접의문문 어순
+10. Subjunctive Mood - 가정법 (과거, 과거완료, 혼합)
+11. Tense (Simple Past/Present/Future) - 시제 (단순 시제 변형)
+12. Have + Past Participle - 완료형 (have/has/had + 과거분사)
+
+**평가 방법:**
+- 각 단어에 대해 위 목록 중에서 **가장 적합한 어법 유형 1개**를 선택하세요
+- 단어의 문맥과 문장 구조를 고려하여 평가하세요
+- 같은 어법 유형이 여러 단어에 할당되지 않도록 최대한 다양하게 선택하세요
+
+**🚨 필수 규칙 (절대 준수):**
+- **형용사/부사 관련 어법(Adjective vs Adverb)은 반드시 5개 중 1개 이상 포함되어야 함**
+- 보어 자리(be동사/연결동사 다음)에 쓰이는 형용사나 수식어로 쓰이는 부사가 있으면 **반드시 "Adjective vs Adverb" 유형을 할당**하세요
+- 예시: "It remains possible" → possible은 보어 자리이므로 "Adjective vs Adverb" 할당
+- 예시: "The result is clear" → clear는 보어 자리이므로 "Adjective vs Adverb" 할당
+- 예시: "It is necessary" → necessary는 보어 자리이므로 "Adjective vs Adverb" 할당
+- 예시: "clearly stated" → clearly는 수식어이므로 "Adjective vs Adverb" 할당 가능
+- **형용사/부사 변형이 가능한 단어가 하나라도 있으면 반드시 그 단어에 "Adjective vs Adverb"를 할당하세요**
+- 시제 문제(Tense)나 완료형(Have + Past Participle)은 가능한 한 피하고, 다른 어법 유형을 우선 선택하세요
+- 5개 단어가 모두 서로 다른 어법 유형을 가져야 합니다
+
+아래 JSON 형식으로만 응답하세요 (정확히 5개 항목을 반환해야 합니다):
+{
+  "grammarTypes": [
+    ${words.map((word, idx) => `{ "index": ${idx}, "word": "${word}", "grammarType": "Adjective vs Adverb" }`).join(',\n    ')}
+  ]
+}
+
+**⚠️ 필수:** 반드시 5개 항목을 모두 반환하고, 각 단어마다 서로 다른 어법 유형을 할당해야 합니다.`;
+
+  const response = await callOpenAI({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a grammar expert specializing in Korean CSAT (Suneung) English section. You evaluate the grammar types that can be applied to each word for creating diverse grammar error questions.'
+      },
+      { role: 'user', content: prompt }
+    ],
+    temperature: 0.3,
+    max_tokens: 1000,
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API 오류: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content.trim();
+
+  let resultJson = content;
+  if (content.includes('```json') || content.includes('```Json') || content.includes('```')) {
+    resultJson = content.replace(/```(?:json|Json)?\s*\n?/g, '').replace(/```\s*$/g, '').trim();
+  }
+
+  try {
+    const result = JSON.parse(resultJson);
+
+    if (!result.grammarTypes || !Array.isArray(result.grammarTypes)) {
+      throw new Error('grammarTypes 배열이 올바르지 않습니다.');
+    }
+
+    if (result.grammarTypes.length !== words.length) {
+      throw new Error(`grammarTypes 배열의 길이가 ${words.length}이 아닙니다. (실제: ${result.grammarTypes.length}개)`);
+    }
+
+    // 검증: 각 단어가 원본 배열에 있는지 확인
+    const grammarTypeResults = result.grammarTypes.map((item: any) => {
+      const wordLower = item.word.trim().toLowerCase();
+      const foundIndex = words.findIndex(w => w.trim().toLowerCase() === wordLower);
+      
+      if (foundIndex === -1) {
+        throw new Error(`평가된 단어 "${item.word}"가 선택된 단어 목록에 없습니다.`);
+      }
+
+      return {
+        index: foundIndex,
+        word: words[foundIndex],
+        grammarType: item.grammarType || 'Unknown'
+      };
+    });
+
+    console.log('✅ 어법 유형 평가 완료:', grammarTypeResults);
+    return grammarTypeResults;
+
+  } catch (parseError) {
+    console.error('어법 유형 평가 파싱 실패:', resultJson);
+    throw new Error(`어법 유형 평가에 실패했습니다: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+  }
 }
 
 /**
@@ -652,9 +873,19 @@ export async function transformWord(
   ];
   
   const maxRetries = 3;
+  let previousErrors: string[] = [];
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     console.log(`어법 변형 시도 ${attempt}/${maxRetries}...`);
+    
+    // 이전 시도에서 발생한 에러 메시지 추가
+    const previousErrorsText = previousErrors.length > 0 ? `
+**🚨 CRITICAL - Previous Attempt Errors (MUST AVOID):**
+The following errors occurred in previous attempts. You MUST NOT repeat these mistakes:
+${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
+
+**You MUST choose a DIFFERENT transformation that does NOT trigger any of the above errors.**
+` : '';
     
     // 이미 사용된 어법 유형을 피하도록 프롬프트 구성
     const usedGrammarTypesText = usedGrammarTypes.length > 0 ? `
@@ -683,8 +914,20 @@ Original words: ${JSON.stringify(words)}
 Target word index: ${answerIndex} (word: "${words[answerIndex]}")
 Grammar types: ${grammarTypes.join(', ')}
 ${usedGrammarTypesText}
+${previousErrorsText}
 
 **IMPORTANT:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). Do NOT transform any other word.
+
+**🚨 CRITICAL - Personal Pronoun + Verb Transformation Rule (ABSOLUTELY MANDATORY):**
+If the target word "${words[answerIndex]}" is a verb that appears after a personal pronoun (I/you/we/they/he/she/it) in the sentence, you MUST follow these rules:
+- ❌ **ABSOLUTELY FORBIDDEN:** Simply changing the verb to "verb+ing" (e.g., "suggest" → "suggesting", "work" → "working", "believe" → "believing")
+- ❌ **ABSOLUTELY FORBIDDEN:** Changing to 3rd person singular "-s" form when the subject is plural (e.g., "They suggest" → "They suggests")
+- ✅ **REQUIRED:** Use one of these patterns:
+  1. Passive: "They suggest" → "They are suggested"
+  2. Perfect passive: "They suggest" → "They have been suggested"
+  3. Future: "They suggest" → "They will suggest"
+  4. Modal + base: "They suggest" → "They would suggest" / "They should suggest" / "They could suggest"
+  5. Modal + have + p.p.: "They suggest" → "They would have suggested"
 
 **Principle:** Generate errors that require interpretation/judgment, NOT simple mechanical rules.
 
@@ -708,8 +951,14 @@ When transforming a word, you MUST NOT break basic grammar rules:
   - ❌ FORBIDDEN: "can prey" → "can praying" (breaks modal + base verb rule)
   - ✅ ALLOWED: "can prey" → "can be preying" (modal + be + v-ing is correct)
   - ✅ **ALLOWED: Modal verb swapping is ENCOURAGED** (e.g., "would" → "should", "should" → "could", "could" → "would" are ALLOWED - swapping modal verbs creates meaningful grammar errors and is a valid CSAT-level grammar transformation)
-- **Subject + verb structure requires proper verb form**
+- **Personal pronoun + verb structure requires proper verb form**
   - ❌ FORBIDDEN: "they work" → "they working" (needs be-verb helper)
+  - ❌ FORBIDDEN: "They suggest" → "They suggesting" (ungrammatical - main verb as -ing without be-verb)
+  - ❌ FORBIDDEN: "We believe" → "We believing" (ungrammatical)
+  - ✅ ALLOWED: "They suggest" → "They are suggested" (passive)
+  - ✅ ALLOWED: "They suggest" → "They have been suggested" (perfect passive)
+  - ✅ ALLOWED: "They suggest" → "They will suggest" (future)
+  - ✅ ALLOWED: "They suggest" → "They would suggest" / "They should suggest" / "They could suggest" (modal + base)
   - ✅ ALLOWED: "they work" → "they are working" (be-verb + v-ing is correct)
 - **"to + base verb" cannot become "to + verb-ing"**
   - ❌ FORBIDDEN: "to continue" → "to continuing" (this pattern doesn't exist)
@@ -730,15 +979,15 @@ ${usedGrammarTypes.map((type, idx) => `- ${type}`).join('\n')}
 ` : ''}
 Each word must create a DIFFERENT grammar error type. Do NOT repeat the same grammar type.
 - All errors must be UNIQUE grammar types from the Grammar types list above
-- **Prioritize these grammar types for maximum diversity:**
-  * Relative pronouns/adverbs (where, when, how)
-  * Adjective vs Adverb
-  * Objective complement (5-pattern)
-  * Active vs Passive
-  * Past participle vs Present participle
-  * Do-support, Be-verb
-  * Inversion
-  * Subject-verb agreement
+- **Prioritize these grammar types for maximum diversity (순서대로 우선순위):**
+  * **1순위: Adjective vs Adverb (형용사 vs 부사) — 반드시 포함.** 보어 자리 vs 수식어(possible→possibly, clear→clearly, necessary→necessarily, important→importantly, significant→significantly 등). 형용사/부사 변형이 가능한 단어가 있으면 **반드시 이 유형을 선택**하세요.
+  * 2순위: Relative pronouns/adverbs (where, when, how)
+  * 3순위: Objective complement (5-pattern)
+  * 4순위: Active vs Passive
+  * 5순위: Past participle vs Present participle
+  * 6순위: Do-support, Be-verb
+  * 7순위: Inversion
+  * 8순위: Subject-verb agreement
 
 **Requirements:**
 1. Must affect meaning interpretation (not just mechanically wrong)
@@ -752,9 +1001,17 @@ Each word must create a DIFFERENT grammar error type. Do NOT repeat the same gra
 **🔥 Examples of High-Quality CSAT Errors (Prioritize These):**
 - **(Participle):** Changing a correct past participle (p.p.) to a present participle (v-ing) where the passive meaning is required, or vice versa. *Example: "The data [collected -> collecting] by the sensors..."*
 - **(Subject-Verb Agreement):** Changing the verb number when the subject is separated by a long modifier clause. *Example: "The detailed analysis of the samples [show -> shows] that..."*
+- **(Voice - Personal Pronoun + Verb):** When transforming a verb that follows a personal pronoun (I/you/we/they/he/she/it), you MUST use passive, perfect passive, future, or modal forms. **CRITICAL EXAMPLES:**
+  - ✅ **ALLOWED:** "They suggest" → "They are suggested" (passive)
+  - ✅ **ALLOWED:** "They suggest" → "They have been suggested" (perfect passive)
+  - ✅ **ALLOWED:** "They suggest" → "They will suggest" (future)
+  - ✅ **ALLOWED:** "They suggest" → "They would suggest" / "They should suggest" / "They could suggest" (modal + base)
+  - ❌ **FORBIDDEN:** "They suggest" → "They suggesting" (ungrammatical - main verb as -ing without be-verb)
+  - ❌ **FORBIDDEN:** "They suggest" → "They suggests" (too easy - 3rd plural + singular verb)
+  - Same rules apply to ALL verbs: "We work" → "We are worked" / "We will work" / "We would work" ✅, but NOT "We working" ❌
 - **(Gerund vs Infinitive):** Changing a gerund to an infinitive or vice versa in specific contexts. *Example: "I enjoy [reading -> to read] books."*
 - **(Complex Infinitive):** Using complex infinitive structures (to+be+v-ing, to+have been+p.p) instead of simple transformations. *Example: "The goal is [to be improving -> to improve]" or "She seems [to have been injured -> to be injured]". **🚨 ABSOLUTELY FORBIDDEN:** "to + 동사원형" → "to + 동사ing" (e.g., "to continue" → "to continuing" is FORBIDDEN - this pattern does not exist). **✅ ALLOWED:** "to + 동사원형" → "동사+ing" (e.g., "to continue" → "continuing"), "to + 동사원형" → "to be + 과거분사" (e.g., "to continue" → "to be continued"), "to + 동사원형" → "to be + 동사ing" (e.g., "to continue" → "to be continuing"), "to + 동사원형" → "to have been + 과거분사" (e.g., "to continue" → "to have been continued").
-- **(Adjective/Adverb):** Changing an adjective complement to an adverb. *Example: "It remains [possible -> possibly]..."*
+- **(Adjective/Adverb — 반드시 포함 권장):** Changing an adjective complement to an adverb, or adverb to adjective where needed. *Examples: "It remains [possible -> possibly]...", "The result is [clearly -> clear]...", "It is [necessary -> necessarily]..."* 형용사/부사 관련 어법은 5개 선택지에 반드시 1개 이상 포함되어야 함.
 - **(Voice):** Changing active to passive or vice versa incorrectly. *Example: "The problem [was solved -> solved] by the team."*
 - **(Preposition):** Changing a correct preposition to an incorrect one. *Example: "depend [on -> of] something"*
 - **(Relative Clause - Use Sparingly):** Only if necessary, changing 'which' to 'where' or 'what' to 'that' in complex relative clauses. *Example: "The house [in which -> which] he lived..."* (✅ "which" and "where" are related - both relative pronouns/adverbs)
@@ -854,14 +1111,16 @@ Example 2 (if transforming "which" in a 5-word array):
       ) || placeholders.some(p => result.original.toUpperCase().includes(p.toUpperCase()));
       
       if (hasPlaceholder) {
+        const errorMsg = 'AI가 플레이스홀더를 반환했습니다. 실제 영어 단어를 사용해야 합니다.';
         if (attempt < maxRetries) {
           console.warn(`⚠️ 플레이스홀더가 포함된 응답 발견. 재시도 ${attempt + 1}/${maxRetries}...`);
           console.warn('응답 내용:', result);
+          previousErrors.push(errorMsg);
           continue;
         } else {
           // 최종 시도에서도 플레이스홀더가 있으면 에러
           console.error('❌ 플레이스홀더가 포함된 최종 응답:', result);
-          throw new Error('AI가 플레이스홀더를 반환했습니다. 실제 영어 단어를 사용해야 합니다.');
+          throw new Error(errorMsg);
         }
       }
 
@@ -882,11 +1141,14 @@ Example 2 (if transforming "which" in a 5-word array):
       // 공통 검증 함수 사용
       const validation = validateTransformation(originalWord, transformedWord);
       if (!validation.isValid) {
-        console.warn(`⚠️ ${validation.errorMessage} 재시도...`);
+        const errorMsg = validation.errorMessage || '변형 검증에 실패했습니다.';
+        console.warn(`⚠️ ${errorMsg} 재시도...`);
         if (attempt < maxRetries) {
+          // 이전 에러 메시지를 저장하여 다음 시도에서 프롬프트에 포함
+          previousErrors.push(errorMsg);
           continue;
         } else {
-          throw new Error(validation.errorMessage || '변형 검증에 실패했습니다.');
+          throw new Error(errorMsg);
         }
       }
 

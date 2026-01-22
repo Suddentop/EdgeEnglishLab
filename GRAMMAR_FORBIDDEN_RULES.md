@@ -132,21 +132,33 @@
 
 ---
 
-### 1.8 주어+동사를 주어+동사ing로 변경 금지 (be동사 없이)
-- **금지**: be동사 없이 주어+동사를 주어+동사ing로 변경
+### 1.8 인칭대명사+동사 → 인칭대명사+동사ing 금지 (be동사 없이) — 공통 규칙
+
+**문장에 "인칭대명사(I/you/we/they/he/she/it) + 동사"가 나올 때** 적용되는 공통 규칙입니다. 특정 동사(suggest 등)만이 아닌 **모든 동사**에 적용됩니다.
+
+- **금지**: 동사를 단순히 "동사+ing"로 바꿔 **"인칭대명사+동사ing"** 로 만드는 것
 - **예시**:
-  - `"they work" → "they working"` ❌
-  - `"they rely" → "they relying"` ❌
-  - `"it consist" → "it consisting"` ❌
-  - `"they fill" → "they filling"` ❌
-- **허용**: be동사를 포함한 변형은 허용
-  - `"they work" → "they are working"` ✅
-  - `"they rely" → "they are relying"` ✅
-- **이유**: 주어+동사ing 구조는 be동사가 필요하며, be동사 없이는 비문법적 구조가 됨
+  - `"They suggest" → "They suggesting"` ❌
+  - `"We work" → "We working"` ❌
+  - `"They rely" → "They relying"` ❌
+  - `"They say" → "They saying"` ❌
+- **이유**: 주어+동사ing 구조는 be동사가 필요하며, be동사 없이는 비문이다.
+
+**✅ 인칭대명사+동사에서 동사를 변형할 때 허용 (우선 사용):**
+  - **인칭대명사 + 수동태**: `They are suggested`, `We are told`
+  - **인칭대명사 + have/has been + 과거분사**: `They have been suggested`, `We have been told`
+  - **인칭대명사 + will + 동사원형**: `They will suggest`, `We will work`
+  - **인칭대명사 + would/could/should + 동사원형**: `They would suggest`, `We could believe`
 
 ---
 
-### 1.9 "to + 동사원형" → "to + 동사ing" 변형 금지
+### 1.9 3인칭 복수 주어(They, We 등) + 단수동사(-s/-es) 금지
+
+- **금지**: `"They suggest" → "They suggests"`, `"We believe" → "We believes"` 등 (난이도 너무 낮음)
+
+---
+
+### 1.10 "to + 동사원형" → "to + 동사ing" 변형 금지
 - **금지**: to 부정사에서 "to + 동사원형"을 "to + 동사ing"로 변형
 - **예시**:
   - `"to continue" → "to continuing"` ❌
@@ -162,7 +174,7 @@
 
 ---
 
-### 1.10 등위접속사 선택 금지
+### 1.11 등위접속사 선택 금지
 - **금지**: 등위접속사를 선택하여 어법 변형 문제 생성
 - **등위접속사 목록**: `or`, `and`, `but`, `nor`, `for`, `so`, `yet`
 - **예시**:
@@ -173,7 +185,7 @@
 
 ---
 
-### 1.11 조동사 다음 동사를 단순히 동사ing로 변형 금지
+### 1.12 조동사 다음 동사를 단순히 동사ing로 변형 금지
 - **금지**: 조동사 다음 동사를 be동사 없이 단순히 동사ing로 변형
 - **예시**:
   - `"can prey" → "can praying"` ❌
@@ -211,7 +223,8 @@
 - **존재하지 않는 단어 생성**: `however → howeverly`, `what → whatly` 등
 - **주어 대명사를 다른 주어 대명사로 변형**: `they → those`, `this → that` 등
 - **be동사를 단순히 "being"으로 변형**: `is → being`, `are → being` 등
-- **일반동사를 주어+동사ing로 변경**: `work → working` (be동사 없이)
+- **인칭대명사+동사에서 동사를 단순히 동사+ing로**: `They suggest → They suggesting`, `We work → We working` 등 금지. 변형 시 인칭대명사+수동태, 인칭대명사+have/has been+과거분사, 인칭대명사+will+동사원형, 인칭대명사+would/could/should+동사원형 사용
+- **3인칭 복수 주어(They, We) + 단수동사(-s)**: `They suggest → They suggests`, `We believe → We believes` (난이도 너무 낮음)
 - **조동사 다음 동사를 단순히 동사ing로 변형**: `can prey → can praying` 등
 - **등위접속사 선택**: `or`, `and`, `but`, `nor`, `for`, `so`, `yet` 등
 
@@ -227,12 +240,13 @@
 3. 주어 대명사를 소유격으로 변형 검증
 4. 주어 대명사를 다른 주어 대명사로 변형 검증
 5. be동사를 단순히 "being"으로 변형 검증
-6. 일반동사를 주어+동사ing로 변경 검증 (be동사 없이)
-7. 주어-be동사 수일치 깨는 변형 검증
-8. 완전히 다른 단어인지 확인
-9. "to + 동사ing" 패턴 검증
-10. 등위접속사 선택 검증
-11. 조동사 다음 동사를 단순히 동사ing로 변형 검증
+6. **인칭대명사+동사 → 인칭대명사+동사ing 금지 검증** (모든 동사 공통, be동사 없이)
+7. **3인칭 복수 주어 + 단수동사(-s) 검증**: `suggest → suggests`, `believe → believes` 등 금지
+8. 주어-be동사 수일치 깨는 변형 검증
+9. 완전히 다른 단어인지 확인
+10. "to + 동사ing" 패턴 검증
+11. 등위접속사 선택 검증
+12. 조동사 다음 동사를 단순히 동사ing로 변형 검증
 
 ### 3.2 검증 결과
 - **isValid: false**: 금지된 변형으로 판단, errorMessage 제공
