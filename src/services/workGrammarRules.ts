@@ -22,6 +22,7 @@ export const FORBIDDEN_TRANSFORMATIONS_PROMPT = `
 - **🚨 CRITICAL: "to + 동사원형" → "to + 동사ing" 변형은 절대 금지** (e.g., "to continue" → "to continuing", "to rely" → "to relying", "to fill" → "to filling" are ABSOLUTELY FORBIDDEN - this pattern does not exist in English). **✅ ALLOWED infinitive transformations:** "to + 동사원형" → "동사+ing" (e.g., "to continue" → "continuing" is ALLOWED), "to + 동사원형" → "to be + 과거분사" (e.g., "to continue" → "to be continued" is ALLOWED), "to + 동사원형" → "to be + 동사ing" (e.g., "to continue" → "to be continuing" is ALLOWED), "to + 동사원형" → "to have been + 과거분사" (e.g., "to continue" → "to have been continued" is ALLOWED).
 - **🚨 CRITICAL: Selecting coordinating conjunctions (or, and, but, nor, for, so, yet) for grammar transformation is ABSOLUTELY FORBIDDEN** (e.g., "or" → "and", "and" → "or", "but" → "and" are FORBIDDEN - these are simple word swaps, not meaningful grammar errors that require interpretation or judgment).
 - **🚨 CRITICAL: Breaking basic grammar rules when transforming words after modal verbs is ABSOLUTELY FORBIDDEN** (e.g., "can prey" → "can praying" is FORBIDDEN - this breaks the basic rule that modal verbs must be followed by the base form of the verb. **ALLOWED:** "can prey" → "can be preying" is ALLOWED (modal + be + v-ing is correct), but "can prey" → "can praying" is FORBIDDEN. Similarly, "can rely" → "can relying", "can consist" → "can consisting", "can fill" → "can filling" are FORBIDDEN. **CRITICAL:** When transforming a verb that comes after a modal verb, you MUST maintain the modal + base verb structure. You can transform it to "modal + be + v-ing" or "modal + have + p.p" or swap modals, but you CANNOT simply change the base verb to v-ing form).
+- **🚨 CRITICAL: Transforming passive voice (be + past participle) to progressive form (be + verb-ing) is ABSOLUTELY FORBIDDEN** (e.g., "was completed" → "was completing", "is done" → "is doing", "were finished" → "were finishing", "has been written" → "has been writing" are ABSOLUTELY FORBIDDEN - passive voice (be + past participle) cannot be transformed to progressive form (be + verb-ing) as they have completely different meanings and grammatical structures. Passive voice indicates that the subject receives the action, while progressive form indicates ongoing action. **ALLOWED:** Tense changes like "was completed" → "is completed" or "has been completed" are allowed, but changing from passive to progressive is FORBIDDEN).
 `;
 
 /**
@@ -41,13 +42,14 @@ export const FORBIDDEN_EXAMPLES_PROMPT = `
 - **"to + 동사원형" → "to + 동사ing" 변형:** "to continue" → "to continuing" is FORBIDDEN (e.g., "to rely" → "to relying", "to fill" → "to filling" are FORBIDDEN - this pattern does not exist in English). **✅ ALLOWED:** "to continue" → "continuing" (to 제거), "to continue" → "to be continuing", "to continue" → "to have been continued" are ALLOWED.
 - **Coordinating Conjunctions Selection:** Selecting "or", "and", "but", "nor", "for", "so", "yet" for grammar transformation is FORBIDDEN (e.g., "or" → "and", "and" → "or" are FORBIDDEN - these are simple word swaps, not meaningful grammar errors that require interpretation or judgment).
 - **Breaking Basic Grammar Rules After Modal Verbs:** "can prey" → "can praying" is FORBIDDEN (e.g., "can prey" → "can praying" breaks the basic rule that modal verbs must be followed by the base form of the verb). Similarly, "can rely" → "can relying", "can consist" → "can consisting", "can fill" → "can filling" are FORBIDDEN. **CRITICAL:** When transforming a verb that comes after a modal verb, you MUST maintain the modal + base verb structure. **ALLOWED:** "can prey" → "can be preying" is ALLOWED (modal + be + v-ing is correct), "can prey" → "can have preyed" is ALLOWED (modal + have + p.p is correct), or you can swap modals (e.g., "can prey" → "should prey", "may prey" → "might prey"). But you CANNOT simply change the base verb to v-ing form without a be-verb helper.
+- **Passive Voice to Progressive Form:** "was completed" → "was completing" is FORBIDDEN (e.g., "was completed" → "was completing", "is done" → "is doing", "were finished" → "were finishing", "has been written" → "has been writing" are FORBIDDEN - passive voice (be + past participle) cannot be transformed to progressive form (be + verb-ing) as they have completely different meanings and grammatical structures. Passive voice indicates that the subject receives the action, while progressive form indicates ongoing action). **ALLOWED:** Tense changes like "was completed" → "is completed" or "has been completed" are allowed, but changing from passive to progressive is FORBIDDEN.
 - **Creating Non-Existent Words:** "however" → "howeverly" is FORBIDDEN (e.g., "however" → "howeverly" creates a word that does not exist in English). Similarly, "rather" → "ratherly", "what" → "whatly", "why" → "whyly", "where" → "wherely", "how" → "howly", "whatever" → "whateverly" are FORBIDDEN. **CRITICAL:** You MUST NOT create words that do not exist in English by adding "-ly" to words that are already adverbs/conjunctions/wh-words. "however", "rather", "what", "why", "where", "how", "whatever" are already adverbs/conjunctions/wh-words and cannot be made into adverbs again. These words ("whatly", "whyly", "wherely", "howly", "whateverly", "howeverly") are never used in English and must not be created.
 `;
 
 /**
  * 후보 단어 추출 프롬프트용 제외 규칙 텍스트
  */
-export const EXCLUDE_RULES_PROMPT = `**제외:** 조동사+동사원형, 규칙과거형(-ed), 3인칭-s/-es(동사원형+-s/-es), 단순 단복수, 기본 관사(a/an/the), 단순 전치사, 초급 시제, be동사 단순형(it was/were, they was/were 등), 주어-동사 시제일치(1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es), 고유명사, **🚨 to 부정사 단순 변형 절대 금지**(to+동사원형 → to+동사ing, 예: to rely → to relying, to fill → to filling 등 - 이 패턴은 영어에 존재하지 않음), **🚨 주어-be동사 수일치 깨는 변형 절대 금지**(they are → they am, I am → I is, you are → you am, he is → he am, she is → she am, that is → that are, this is → this am 등 - 시제 변경은 허용되지만 수일치는 유지되어야 함), **🚨 존재하지 않는 단어 생성 절대 금지**(however → howeverly, rather → ratherly, what → whatly, why → whyly, where → wherely, how → howly, whatever → whateverly 등 - 이미 부사/접속사/wh-단어인 단어에 "-ly"를 추가하는 것은 금지. 이런 단어들(whatly, whyly, wherely, howly, whateverly, howeverly)은 영어에 존재하지 않고 사용되지도 않으므로 억지로 만들지 말 것), **🚨 주어 대명사를 다른 주어 대명사로 변형 절대 금지**(they → those, this → that, these → those, I → you, he → she 등 - 단순한 대명사 교체는 의미 있는 문법 오류가 아님), **🚨 be동사를 단순히 "being"으로 변형 절대 금지**(is → being, are → being, there is → there being, Language is → Language being 등 - 너무 단순하고 기계적인 변형), **🚨 일반동사를 주어+동사ing로 변경 절대 금지**(work → working, rely → relying, consist → consisting 등 - 주어+동사ing 구조는 be동사가 필요함. "they work" → "they are working"는 허용되지만 "they work" → "they working"는 금지), **🚨 조동사 다음 동사를 단순히 동사ing로 변형 절대 금지**(can prey → can praying, can rely → can relying, can consist → can consisting 등 - 조동사 다음에는 동사원형이 와야 하는 기본 어법을 무시함. "can prey" → "can be preying"는 허용되지만 "can prey" → "can praying"는 금지), **🚨 등위접속사 선택 절대 금지**(or, and, but, nor, for, so, yet 등 - 단순한 단어 교체이며 의미 있는 문법 오류가 아님)`;
+export const EXCLUDE_RULES_PROMPT = `**제외:** 조동사+동사원형, 규칙과거형(-ed), 3인칭-s/-es(동사원형+-s/-es), 단순 단복수, 기본 관사(a/an/the), 단순 전치사, 초급 시제, be동사 단순형(it was/were, they was/were 등), 주어-동사 시제일치(1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es), 고유명사, **🚨 to 부정사 단순 변형 절대 금지**(to+동사원형 → to+동사ing, 예: to rely → to relying, to fill → to filling 등 - 이 패턴은 영어에 존재하지 않음), **🚨 주어-be동사 수일치 깨는 변형 절대 금지**(they are → they am, I am → I is, you are → you am, he is → he am, she is → she am, that is → that are, this is → this am 등 - 시제 변경은 허용되지만 수일치는 유지되어야 함), **🚨 수동태를 진행형으로 변형 절대 금지**(was completed → was completing, is done → is doing, were finished → were finishing, has been written → has been writing 등 - 수동태(be+과거분사)는 진행형(be+동사ing)으로 변형할 수 없음. 수동태는 주어가 행동을 받는 것을 나타내고, 진행형은 지속적인 행동을 나타내므로 완전히 다른 의미와 문법 구조임), **🚨 존재하지 않는 단어 생성 절대 금지**(however → howeverly, rather → ratherly, what → whatly, why → whyly, where → wherely, how → howly, whatever → whateverly 등 - 이미 부사/접속사/wh-단어인 단어에 "-ly"를 추가하는 것은 금지. 이런 단어들(whatly, whyly, wherely, howly, whateverly, howeverly)은 영어에 존재하지 않고 사용되지도 않으므로 억지로 만들지 말 것), **🚨 주어 대명사를 다른 주어 대명사로 변형 절대 금지**(they → those, this → that, these → those, I → you, he → she 등 - 단순한 대명사 교체는 의미 있는 문법 오류가 아님), **🚨 be동사를 단순히 "being"으로 변형 절대 금지**(is → being, are → being, there is → there being, Language is → Language being 등 - 너무 단순하고 기계적인 변형), **🚨 일반동사를 주어+동사ing로 변경 절대 금지**(work → working, rely → relying, consist → consisting 등 - 주어+동사ing 구조는 be동사가 필요함. "they work" → "they are working"는 허용되지만 "they work" → "they working"는 금지), **🚨 조동사 다음 동사를 단순히 동사ing로 변형 절대 금지**(can prey → can praying, can rely → can relying, can consist → can consisting 등 - 조동사 다음에는 동사원형이 와야 하는 기본 어법을 무시함. "can prey" → "can be preying"는 허용되지만 "can prey" → "can praying"는 금지), **🚨 등위접속사 선택 절대 금지**(or, and, but, nor, for, so, yet 등 - 단순한 단어 교체이며 의미 있는 문법 오류가 아님)`;
 
 /**
  * 코드 레벨 검증 함수들
@@ -287,6 +289,33 @@ export function validateTransformation(
       isValid: false,
       errorMessage: `조동사 다음 동사를 단순히 동사ing로 변형("${originalWord}" → "${transformedWord}")은 절대 금지됩니다. 조동사 다음에는 동사원형이 와야 하는 기본 어법을 무시합니다. "can ${originalWord}" → "can be ${transformedWord}"는 허용되지만, "can ${originalWord}" → "can ${transformedWord}"는 금지됩니다.`
     };
+  }
+
+  // 12. 수동태(be + 과거분사)를 진행형(be + 동사ing)으로 변형하는 것 금지
+  // 수동태와 진행형은 완전히 다른 의미와 문법 구조를 가짐
+  // 수동태: 주어가 행동을 받음 (was completed, is done, were finished 등)
+  // 진행형: 지속적인 행동 (was completing, is doing, were finishing 등)
+  // 일반적인 과거분사 형태 (completed, done, finished, written, made, taken 등)
+  const commonPastParticiples = ['completed', 'done', 'finished', 'written', 'made', 'taken', 'given', 'seen', 'found', 'left', 'called', 'tried', 'asked', 'needed', 'wanted', 'used', 'helped', 'played', 'run', 'moved', 'liked', 'lived', 'believed', 'brought', 'happened', 'set', 'learned', 'changed', 'led', 'understood', 'watched', 'followed', 'stopped', 'created', 'spoken', 'read', 'allowed', 'added', 'spent', 'grown', 'opened', 'walked', 'won', 'offered', 'remembered', 'loved', 'considered', 'appeared', 'bought', 'waited', 'served', 'died', 'sent', 'built', 'stayed', 'fallen', 'cut', 'reached', 'killed', 'raised', 'passed', 'sold', 'decided', 'returned', 'explained', 'developed', 'carried', 'broken', 'received', 'agreed', 'supported', 'hit', 'produced', 'eaten', 'covered', 'caught', 'drawn', 'chosen', 'replied', 'consisted', 'filled', 'preyed'];
+  
+  // 원본이 과거분사 형태이고 변형이 동사ing 형태인 경우
+  // "was completed" → "was completing" 같은 수동태 → 진행형 변형일 수 있음
+  const originalIsPastParticiple = commonPastParticiples.includes(original);
+  const transformedIsVerbIngFromParticiple = commonVerbs.some(verb => transformed === verb + 'ing');
+  
+  if (originalIsPastParticiple && transformedIsVerbIngFromParticiple) {
+    // 과거분사와 동사ing 형태가 같은 동사에서 나온 경우 (completed → completing, done → doing 등)
+    // 이는 수동태를 진행형으로 변형한 것으로 볼 수 있음
+    const baseVerb = original.replace(/ed$/, '').replace(/en$/, '').replace(/n$/, '');
+    const transformedBase = transformed.replace(/ing$/, '');
+    
+    // 동일한 동사에서 파생된 경우 (completed → completing, done → doing 등)
+    if (baseVerb === transformedBase || original === transformedBase + 'ed' || original === transformedBase + 'en' || original === transformedBase + 'n') {
+      return {
+        isValid: false,
+        errorMessage: `수동태(be + 과거분사)를 진행형(be + 동사ing)으로 변형("${originalWord}" → "${transformedWord}")은 절대 금지됩니다. 수동태와 진행형은 완전히 다른 의미와 문법 구조를 가집니다. 수동태는 주어가 행동을 받는 것을 나타내고, 진행형은 지속적인 행동을 나타냅니다. "was ${originalWord}" → "is ${originalWord}" 같은 시제 변경은 허용되지만, "was ${originalWord}" → "was ${transformedWord}"는 금지됩니다.`
+      };
+    }
   }
 
   return { isValid: true };

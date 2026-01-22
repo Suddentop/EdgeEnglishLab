@@ -2403,7 +2403,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
           </div>
           <div className="a4-page-content">
             <div className="problem-instruction" data-work-type="06" style={{fontWeight:800, fontSize:'1rem !important', background:'#f5f5f5', color:'#000', padding:'0.7rem 0.5rem', borderRadius:'0', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-              <span>아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
+              <span>글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.</span>
               <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#06</span>
             </div>
             <div className="missing-sentence-box" style={{border:'1px solid #222', borderRadius:'6px', background:'#ffffff', backgroundColor:'#ffffff', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', marginLeft:'auto', marginRight:'auto', fontWeight:700, fontSize:'1rem !important', width:'98%'}}>
@@ -2431,7 +2431,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
             <div className="a4-page-content">
               <div className="quiz-content">
                 <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#f5f5f5', color:'#000', padding:'0.7rem 0.5rem', borderRadius:'0', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                  <span>아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
+                  <span>글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.</span>
                   <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#06</span>
                 </div>
                 <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#ffffff', backgroundColor:'#ffffff', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>
@@ -2460,7 +2460,7 @@ const PrintFormatPackage01Work06: React.FC<PrintFormatPackage01Work06Props> = ({
             </div>
             <div className="a4-page-content">
               <div className="problem-instruction" style={{fontWeight:800, fontSize:'1rem !important', background:'#f5f5f5', color:'#000', padding:'0.7rem 0.5rem', borderRadius:'0', marginBottom:'1.2rem', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%'}}>
-                <span>아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.</span>
+                <span>글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.</span>
                 <span style={{fontSize:'1rem', fontWeight:'700', color:'#000'}}>유형#06</span>
               </div>
                 <div className="missing-sentence-box" style={{border:'2px solid #222', borderRadius:'6px', background:'#ffffff', backgroundColor:'#ffffff', padding:'0.8em 1.2em', marginTop:'1rem', marginBottom:'1rem', fontWeight:700, fontSize:'1rem !important'}}>

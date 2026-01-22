@@ -550,7 +550,7 @@ const Work_06_SentencePosition: React.FC = () => {
                     borderTop: '1px solid #e0e0e0',
                     borderBottom: '1px solid #e0e0e0'
                   }}>
-                    아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                    글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.
                   </div>
 
                   <div className="missing-sentence-box work06-missing-sentence" style={{

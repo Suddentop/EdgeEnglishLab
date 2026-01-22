@@ -2018,7 +2018,7 @@ ${passage}`;
   };
 
   // 개별 유형 생성 함수 (병렬 처리용)
-  const generateSingleWorkTypeQuiz = async (workType: any, inputText: string): Promise<PackageQuizItem | null> => {
+  const generateSingleWorkTypeQuiz = async (workType: any, inputText: string, sharedTranslation: string = ''): Promise<PackageQuizItem | null> => {
     try {
       console.log(`🔄 ${workType.name} (유형#${workType.id}) 생성 시작...`);
       
@@ -2030,8 +2030,11 @@ ${passage}`;
           quizData = await generateWork01Quiz(inputText, useAI);
           // 유형#01의 경우, quizData.translation은 A, B, C 단락의 번역만 포함
           // 전체 본문 번역은 originalText를 번역해야 함
-          // originalText를 번역한 전체 본문 번역 생성
-          if (quizData.originalText) {
+          // 최적화: 공유 번역이 있으면 사용, 없으면 originalText 번역
+          if (sharedTranslation && quizData.originalText && quizData.originalText === inputText) {
+            translatedText = sharedTranslation;
+            console.log('✅ 유형#01 전체 본문 번역 재사용 (공유 번역)');
+          } else if (quizData.originalText) {
             try {
               translatedText = await translateToKorean(quizData.originalText);
               console.log('✅ 유형#01 전체 본문 번역 완료');
@@ -2048,37 +2051,44 @@ ${passage}`;
           
         case '02': // 독해 문제
           quizData = await generateWork02Quiz(inputText);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '03': // 빈칸 단어 문제
           quizData = await generateWork03Quiz(inputText);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '04': // 빈칸 구 문제
           quizData = await generateWork04Quiz(inputText);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '05': // 빈칸 문장 문제
           quizData = await generateWork05QuizService(inputText); // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 이전 선택 없음
-          translatedText = quizData.translation || '';
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation || '';
           break;
           
         case '06': // 문장 위치 찾기 문제
           quizData = await generateWork06Quiz(inputText);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '07': // 주제 추론 문제
           quizData = await generateWork07Quiz(inputText);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '08': // 제목 추론 문제
           quizData = await generateWork08Quiz(inputText);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '09': // 어법 변형 문제
@@ -2090,7 +2100,8 @@ ${passage}`;
           //    - validateTransformation() (코드 레벨 검증)
           // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined
           quizData = await generateWork09QuizService(inputText, undefined);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '10': // 다중 어법 오류 문제
@@ -2100,22 +2111,26 @@ ${passage}`;
           //    - validateTransformation() (코드 레벨 검증, work09Service.ts의 transformWord 함수 재사용)
           // 패키지는 동일 본문으로 여러 번 생성하지 않으므로 previouslySelectedWords는 undefined
           quizData = await generateWork10QuizService(inputText, undefined);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '11': // 문장별 해석 문제
           quizData = await generateWork11Quiz(inputText);
+          // 유형#11은 문장별 해석이므로 공유 번역을 사용할 수 없음 (각 문장별로 번역됨)
           translatedText = quizData.translations.join(' ');
           break;
           
         case '13': // 빈칸 채우기 문제 (단어-주관식)
           quizData = await generateWork13Quiz(inputText);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         case '14': // 빈칸 채우기 문제 (문장-주관식)
           quizData = await generateWork14Quiz(inputText);
-          translatedText = quizData.translation;
+          // 최적화: 공유 번역이 있으면 사용, 없으면 서비스에서 생성한 번역 사용
+          translatedText = sharedTranslation || quizData.translation;
           break;
           
         default:
@@ -2163,13 +2178,32 @@ ${passage}`;
     setProgressInfo({
       completed: 0,
       total: selectedTypes.length,
+      currentType: '번역 중...',
+      currentTypeId: ''
+    });
+    
+    // 최적화: 입력 본문을 한 번만 번역하여 모든 유형에 공유
+    console.log('🌐 전체 본문 번역 시작 (한 번만 수행)...');
+    let sharedTranslation = '';
+    try {
+      sharedTranslation = await translateToKorean(inputText);
+      console.log('✅ 전체 본문 번역 완료 (모든 유형에 공유)');
+    } catch (error) {
+      console.warn('⚠️ 전체 본문 번역 실패, 각 유형에서 개별 번역 수행:', error);
+      // 번역 실패 시 각 유형에서 개별 번역 수행하도록 빈 문자열 전달
+    }
+    
+    // 진행 상황 업데이트
+    setProgressInfo({
+      completed: 0,
+      total: selectedTypes.length,
       currentType: '병렬 처리 중...',
       currentTypeId: ''
     });
     
     // 병렬로 모든 유형 생성 (실시간 진행 상황 업데이트)
     const quizPromises = selectedTypes.map(async (workType, index) => {
-      const result = await generateSingleWorkTypeQuiz(workType, inputText);
+      const result = await generateSingleWorkTypeQuiz(workType, inputText, sharedTranslation);
       
       // 각 유형이 완료될 때마다 진행 상황 업데이트
       setProgressInfo(prev => ({
@@ -3647,7 +3681,7 @@ ${passage}`;
                     borderTop: '1px solid #e0e0e0',
                     borderBottom: '1px solid #e0e0e0'
                   }}>
-                    아래 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.
+                    글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.
                   </div>
 
                   {/* 빠진 문장 표시 */}

@@ -174,16 +174,21 @@ export async function generateWork10Quiz(
       const selectedIndices = difficultyResults.slice(0, wrongCount).map(r => r.index);
       console.log(`🎯 변형할 단어 선정: ${wrongCount}개 (인덱스: ${selectedIndices.join(', ')})`);
 
-      // Step 4: 선택된 단어들을 각각 변형
+      // Step 4: 선택된 단어들을 각각 변형 (순차 처리로 어법 유형 중복 방지)
+      // 병렬 처리 시 어법 유형 중복을 방지하기 어려우므로 순차 처리로 변경
       const transformedWords = [...words];
       const grammarTypes: string[] = [];
+      const usedGrammarTypes: string[] = [];
       
+      // 순차 처리로 각 변형이 이전 어법 유형을 피하도록 함
       for (const index of selectedIndices) {
         try {
-          const transformation = await transformWord(words, index);
+          const transformation = await transformWord(words, index, usedGrammarTypes);
           transformedWords[index] = transformation.transformedWords[index];
           grammarTypes.push(transformation.grammarType);
+          usedGrammarTypes.push(transformation.grammarType); // 사용된 어법 유형 추적
           console.log(`✅ 인덱스 ${index} 변형 완료: "${words[index]}" → "${transformedWords[index]}" (${transformation.grammarType})`);
+          console.log(`📋 현재까지 사용된 어법 유형: ${usedGrammarTypes.join(', ')}`);
         } catch (error) {
           console.warn(`⚠️ 인덱스 ${index} 변형 실패, 원본 유지:`, error);
           // 변형 실패 시 원본 유지

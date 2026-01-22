@@ -629,7 +629,8 @@ ${passage}
  */
 export async function transformWord(
   words: string[],
-  answerIndex: number
+  answerIndex: number,
+  usedGrammarTypes: string[] = []
 ): Promise<{
   transformedWords: string[];
   answerIndex: number;
@@ -655,11 +656,33 @@ export async function transformWord(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     console.log(`어법 변형 시도 ${attempt}/${maxRetries}...`);
     
+    // 이미 사용된 어법 유형을 피하도록 프롬프트 구성
+    const usedGrammarTypesText = usedGrammarTypes.length > 0 ? `
+**🚨 CRITICAL - Grammar Type Diversity (ABSOLUTELY MANDATORY):**
+The following grammar types have ALREADY been used in previous transformations. You MUST NOT use these types again:
+${usedGrammarTypes.map((type, idx) => `${idx + 1}. ${type}`).join('\n')}
+
+**You MUST select a DIFFERENT grammar type from the list below that is NOT in the above list.**
+If all grammar types have been used, prioritize the least recently used types.
+
+**Available grammar types (choose one that is NOT in the used list above):**
+${grammarTypes.filter(type => !usedGrammarTypes.includes(type)).map((type, idx) => `${idx + 1}. ${type}`).join('\n')}
+
+**If all types are used, you may reuse the least recently used type, but try to create a variation that is distinct from previous uses.**
+` : `
+**🚨 CRITICAL - Grammar Type Diversity (ABSOLUTELY MANDATORY):**
+You must select a grammar type from the list below. If this is part of a series of transformations, ensure each transformation uses a DIFFERENT grammar type.
+
+**Available grammar types:**
+${grammarTypes.map((type, idx) => `${idx + 1}. ${type}`).join('\n')}
+`;
+    
     const prompt = `Transform exactly ONE word to create a **High-Level Grammar Error** for Korean CSAT (high school) level.
 
 Original words: ${JSON.stringify(words)}
 Target word index: ${answerIndex} (word: "${words[answerIndex]}")
 Grammar types: ${grammarTypes.join(', ')}
+${usedGrammarTypesText}
 
 **IMPORTANT:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). Do NOT transform any other word.
 
@@ -684,6 +707,7 @@ When transforming a word, you MUST NOT break basic grammar rules:
 - **Modal verbs (can, could, should, would, may, might, must, will, shall) must be followed by base verb form**
   - ❌ FORBIDDEN: "can prey" → "can praying" (breaks modal + base verb rule)
   - ✅ ALLOWED: "can prey" → "can be preying" (modal + be + v-ing is correct)
+  - ✅ **ALLOWED: Modal verb swapping is ENCOURAGED** (e.g., "would" → "should", "should" → "could", "could" → "would" are ALLOWED - swapping modal verbs creates meaningful grammar errors and is a valid CSAT-level grammar transformation)
 - **Subject + verb structure requires proper verb form**
   - ❌ FORBIDDEN: "they work" → "they working" (needs be-verb helper)
   - ✅ ALLOWED: "they work" → "they are working" (be-verb + v-ing is correct)
@@ -698,8 +722,14 @@ ${FORBIDDEN_TRANSFORMATIONS_PROMPT}
 **Prioritize:** Errors that change meaning, confuse logic, cause ambiguity - Relative pronouns/adverbs, participles, subjunctive, parallelism, S-V agreement (complex), pronouns, conjunctions vs prepositions, logical subject errors, **complex infinitive structures** (to+be+v-ing, to+have been+p.p, etc.).
 
 **CRITICAL - Grammar Type Diversity (MUST):**
-Each of the 5 words must create a DIFFERENT grammar error type. Do NOT repeat the same grammar type.
-- All 5 errors must be UNIQUE grammar types from the Grammar types list above
+${usedGrammarTypes.length > 0 ? `
+**🚨 ABSOLUTELY FORBIDDEN - Do NOT use these already-used grammar types:**
+${usedGrammarTypes.map((type, idx) => `- ${type}`).join('\n')}
+
+**You MUST select a DIFFERENT grammar type that is NOT in the list above.**
+` : ''}
+Each word must create a DIFFERENT grammar error type. Do NOT repeat the same grammar type.
+- All errors must be UNIQUE grammar types from the Grammar types list above
 - **Prioritize these grammar types for maximum diversity:**
   * Relative pronouns/adverbs (where, when, how)
   * Adjective vs Adverb

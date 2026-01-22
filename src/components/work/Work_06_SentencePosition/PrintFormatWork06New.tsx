@@ -43,7 +43,7 @@ const PrintFormatWork06New: React.FC<PrintFormatWork06NewProps> = ({ quizzes, is
     sections.push({
       type: 'instruction',
       key: `instruction-${index}`,
-      text: '다음 본문에서 빠진 주제 문장을 가장 적절한 위치에 넣으시오.',
+      text: '글의 흐름으로 보아, 주어진 문장이 들어가기에 가장 적절한 곳을 고르시오.',
       meta: { workTypeId }
     });
 

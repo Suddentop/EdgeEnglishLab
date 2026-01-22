@@ -110,8 +110,7 @@ const checkUserListEmailExists = async (email: string): Promise<boolean | null> 
  * 이메일로 로그인
  */
 export const signInWithEmail = async (email: string, password: string, rememberMe: boolean = false) => {
-  // 로그인 시도 전에 이메일 존재 여부 확인 (더 정확한 오류 메시지를 위해)
-  // catch 블록에서도 접근 가능하도록 함수 스코프에 선언
+  // 로그인 실패 시에만 이메일 존재 여부 확인 (더 정확한 오류 메시지를 위해)
   let emailExistsBeforeLogin: boolean | null = null;
   
   try {
@@ -119,43 +118,26 @@ export const signInWithEmail = async (email: string, password: string, rememberM
     const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
     await setPersistence(auth, persistence);
 
-    // 로그인 시도 전에 이메일 존재 여부 확인
-    console.log('🔐 로그인 시도 전 이메일 확인:', email);
-    emailExistsBeforeLogin = await checkAuthEmailExists(email);
-    console.log('🔐 이메일 존재 여부 (로그인 전):', emailExistsBeforeLogin);
-
-    // Firebase Auth 로그인 시도
+    // Firebase Auth 로그인 시도 (이메일 확인 제거로 로그인 시간 단축)
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-    // 로그인 성공 후 잠금 상태 확인 및 실패 횟수 리셋
-    try {
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        const lockedUntil = data.lockedUntil;
-        
-        // 잠금 상태 확인 (로그인 성공했으므로 잠금이었다면 해제)
-        if (lockedUntil) {
-          const lockedUntilTime = lockedUntil.toMillis();
-          const now = Date.now();
-          
-          // 잠금 시간이 지났거나 로그인 성공했으므로 잠금 해제
-          await updateDoc(doc(db, 'users', userCredential.user.uid), {
-            loginAttempts: 0,
-            lockedUntil: null
-          });
-        } else {
-          // 실패 횟수 리셋
+    // 로그인 성공 후 잠금 상태 확인 및 실패 횟수 리셋 (비동기 처리로 로그인 응답 지연 최소화)
+    // Firestore 업데이트는 백그라운드에서 처리하여 로그인 응답을 빠르게 반환
+    (async () => {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        if (userDoc.exists()) {
+          // 실패 횟수 리셋 (로그인 성공했으므로 잠금 해제)
           await updateDoc(doc(db, 'users', userCredential.user.uid), {
             loginAttempts: 0,
             lockedUntil: null
           });
         }
+      } catch (updateError) {
+        // Firestore 업데이트 실패해도 로그인은 성공한 상태이므로 무시
+        console.warn('로그인 성공 후 실패 횟수 리셋 실패:', updateError);
       }
-    } catch (updateError) {
-      // Firestore 업데이트 실패해도 로그인은 성공한 상태이므로 계속 진행
-      console.warn('로그인 성공 후 실패 횟수 리셋 실패:', updateError);
-    }
+    })();
 
     // 로그인 시점 기록 (재인증/자동로그인 만료 체크용)
     markLoginSession(rememberMe);
@@ -169,17 +151,9 @@ export const signInWithEmail = async (email: string, password: string, rememberM
     if (error.code === 'auth/invalid-credential') {
       console.log('❌ auth/invalid-credential 오류 발생');
       
-      // 로그인 시도 전에 확인한 결과를 우선 사용
-      let authEmailExists = emailExistsBeforeLogin;
-      
-      // 만약 로그인 전 확인이 실패했거나 null이면 재확인
-      if (authEmailExists === null || authEmailExists === undefined) {
-        console.log('⚠️ 로그인 전 확인 실패 → 재확인 시도');
-        authEmailExists = await checkAuthEmailExists(email);
-        console.log('❌ 재확인 결과:', authEmailExists);
-      } else {
-        console.log('✅ 로그인 전 확인 결과 사용:', authEmailExists);
-      }
+      // 로그인 실패 시에만 이메일 존재 여부 확인 (성능 최적화)
+      const authEmailExists = await checkAuthEmailExists(email);
+      console.log('❌ 이메일 존재 여부 확인 결과:', authEmailExists);
       
       if (authEmailExists === true) {
         // 이메일이 Firebase Auth에 등록되어 있음 → 비밀번호 오류
