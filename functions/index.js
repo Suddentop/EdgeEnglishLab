@@ -1096,7 +1096,7 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
       console.log(`Firebase Auth 사용자 생성 완료: ${userRecord.uid}`);
       
       // 4. Firestore에 사용자 정보 저장
-      const defaultPoints = 30000; // 신규 회원가입 시 기본 포인트
+      const defaultPoints = 10000; // 신규 회원가입 시 기본 포인트
       const defaultPrintHeader = 'EdgeEnglishLab | AI 영어 문제 생성 플랫폼';
       
       await admin.firestore().collection('users').doc(userRecord.uid).set({
@@ -1179,7 +1179,7 @@ exports.batchCreateUsersByAdmin = functions.https.onRequest((req, res) => {
         return;
       }
 
-      const defaultPoints = 30000;
+      const defaultPoints = 10000;
       const defaultPrintHeader = 'EdgeEnglishLab | AI 영어 문제 생성 플랫폼';
 
       const results = {

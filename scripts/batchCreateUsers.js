@@ -42,7 +42,7 @@ const users = [
   { email: 'edgeuser22@naver.com', password: '@testpw00', name: '테스트유저 #22', nickname: 'edgeuser22' }
 ];
 
-const defaultPoints = 30000;
+const defaultPoints = 10000;
 const defaultPrintHeader = 'EdgeEnglishLab | AI 영어 문제 생성 플랫폼';
 const adminUid = 'YOUR_ADMIN_UID'; // 관리자 UID를 여기에 입력하세요
 
