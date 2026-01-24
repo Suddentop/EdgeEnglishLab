@@ -23,28 +23,60 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
         
         // Work_01: 문단 순서 맞추기
         if (quizItem.workTypeId === '01') {
-          const quizData = quizItem.quiz || quizItem.data?.quiz || quizItem.data;
+          // 패키지 문제의 경우 work01Data도 확인
+          const work01Data = quizItem.work01Data || quizItem.data?.work01Data;
+          const quizData = work01Data || quizItem.quiz || quizItem.data?.quiz || quizItem.data;
+          
+          // 모의고사 형식인지 확인
+          const isExamFormat = quizData?.format === 'exam';
+          const fixedParagraph = quizData?.fixedParagraph;
+          const instruction = quizData?.instruction || (isExamFormat 
+            ? '주어진 글 다음에 이어질 글의 순서로 가장 적절한 것을 고르시오.' 
+            : '다음 단락들을 원래 순서대로 배열한 것을 고르세요');
+          const choiceSeparator = isExamFormat ? ' - ' : ' → ';
+          
           return (
             <div key={`quiz-01-${index}`} className="quiz-item">
               <h3>문제 {index + 1} : 문단 순서 맞추기</h3>
-              <div className="instruction">다음 단락들을 원래 순서대로 배열한 것을 고르세요</div>
+              <div className="instruction">{instruction}</div>
+              
+              {/* 모의고사 형식: 고정된 첫 번째 단락을 박스 안에 표시 */}
+              {isExamFormat && fixedParagraph && (
+                <div 
+                  className="fixed-paragraph-box" 
+                  style={{
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    padding: '0.6rem 1rem',
+                    marginTop: '1rem',
+                    marginBottom: '1.5rem',
+                    backgroundColor: '#fff',
+                    fontSize: '1.1rem',
+                    lineHeight: '1.6',
+                    color: '#333'
+                  }}
+                >
+                  {fixedParagraph}
+                </div>
+              )}
+              
               <div className="paragraphs">
                 {quizData?.shuffledParagraphs?.map((para: any, pIndex: number) => (
                   <div key={pIndex} className="paragraph-item">
-                    <strong>{para.label}:</strong> {para.content}
+                    <strong>{isExamFormat ? `(${para.label})` : `${para.label}:`}</strong> {para.content}
                   </div>
                 ))}
               </div>
               <div className="options">
                 {quizData?.choices?.map((choice: string[], cIndex: number) => (
                   <div key={cIndex} className="option">
-                    {['①', '②', '③', '④'][cIndex]} {choice.join(' → ')}
+                    {['①', '②', '③', '④'][cIndex]} {choice.join(choiceSeparator)}
                   </div>
                 ))}
               </div>
               {isAnswerMode && (
                 <div className="answer">
-                  <strong>정답:</strong> {['①', '②', '③', '④'][quizData?.answerIndex]} {quizData?.choices?.[quizData?.answerIndex]?.join(' → ')}
+                  <strong>정답:</strong> {['①', '②', '③', '④'][quizData?.answerIndex]} {quizData?.choices?.[quizData?.answerIndex]?.join(choiceSeparator)}
                 </div>
               )}
             </div>
