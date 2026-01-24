@@ -550,10 +550,10 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
           return (
             <div key={`quiz-11-${index}`} className="quiz-item">
               <h3>문제 {index + 1} : 본문 문장별 해석                    유형#11</h3>
-              <div className="instruction">다음 문장들의 해석을 고르세요</div>
+              <div className="instruction">다음 본문의 각 문장을 한국어로 해석하세요.</div>
               <div className="passage">
                 {work11Data?.sentences?.map((sentence: any, sIndex: number) => (
-                  <div key={sIndex} style={{ marginBottom: '10px' }}>
+                  <div key={sIndex} style={{ marginBottom: '25px' }}>
                     <strong>{sIndex + 1}.</strong> {typeof sentence === 'string' ? sentence : sentence.english}
                   </div>
                 ))}
