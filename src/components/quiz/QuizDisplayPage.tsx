@@ -135,8 +135,125 @@ const QuizDisplayPage: React.FC = () => {
           }
         `;
       }
+    } else if (packageType === 'P02') {
+      // Package#02: 수정된 인쇄 스타일 적용
+      style.textContent = `
+        @page {
+          margin: 0;
+          size: 29.7cm 21cm;
+        }
+        @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 29.7cm !important;
+            min-width: 29.7cm !important;
+            height: auto !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+          body > *:not(#print-root-package02) {
+            display: none !important;
+          }
+          body * {
+            visibility: hidden;
+          }
+          .print-container, .print-container * {
+            visibility: visible;
+          }
+          .print-container {
+            display: block !important;
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-width: 0 !important;
+            max-width: 29.7cm !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+          .print-container:has(> .a4-landscape-page-template.last-page:only-child),
+          .print-container.single-page-container {
+            height: 21cm !important;
+            min-height: 21cm !important;
+            max-height: 21cm !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            page-break-inside: avoid !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `;
+    } else if (packageType === 'P03') {
+      // Package#03: 수정된 인쇄 스타일 적용
+      style.textContent = `
+        @page {
+          margin: 0;
+          size: 29.7cm 21cm;
+        }
+        @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 29.7cm !important;
+            min-width: 29.7cm !important;
+            height: auto !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
+          }
+          /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+          body > *:not(#print-root-package03) {
+            display: none !important;
+          }
+          body * {
+            visibility: hidden;
+          }
+          .print-container, .print-container * {
+            visibility: visible;
+          }
+          .print-container {
+            display: block !important;
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-width: 0 !important;
+            max-width: 29.7cm !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+          .print-container:has(> .a4-landscape-page-template.last-page:only-child),
+          .print-container.single-page-container {
+            height: 21cm !important;
+            min-height: 21cm !important;
+            max-height: 21cm !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            page-break-inside: avoid !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `;
     } else {
-      // Package#02, #03, 유형#01, #02, #03, #04, #05, #06, #07, #08, #13, #14: A4 가로
+      // 유형#01, #02, #03, #04, #05, #06, #07, #08, #13, #14: A4 가로
       // 유형#07, #08, #09, #10, #11, #13, #14는 PrintFormatWork07New, PrintFormatWork08New, PrintFormatWork09New, PrintFormatWork10New, PrintFormatWork11New, PrintFormatWork13New, PrintFormatWork14New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
       if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10' || typeId === '11' || typeId === '13' || typeId === '14')) {
         // 유형#07, #08: 원래 인쇄 방식과 동일하게 간단한 스타일만 적용
@@ -315,11 +432,11 @@ const QuizDisplayPage: React.FC = () => {
     
     document.body.appendChild(printContainer);
 
-    // 기존 화면 숨기기 (DOC 저장인 경우에는 숨기지 않음)
+    // 기존 화면 숨기기 (PDF 저장인 경우에만 숨김) -> 사용자 요청으로 숨김 해제
     const appRoot = document.getElementById('root');
-    if (appRoot && fileFormat !== 'doc') {
-      appRoot.style.display = 'none';
-    }
+    // if (appRoot && fileFormat === 'pdf') {
+    //   appRoot.style.display = 'none';
+    // }
 
     // React 18 방식으로 렌더링 (패키지/단일 유형에 따라)
     const root = ReactDOM.createRoot(printContainer);
@@ -2036,19 +2153,71 @@ const QuizDisplayPage: React.FC = () => {
             styleElement.remove();
           }
         }, 100);
-      }, 500);
+      }, 200);
       return; // 유형#07, #08, #09, #10, #13, #14 (PDF만)는 여기서 종료
     }
 
     // 렌더링 완료 후 인쇄 및 파일 생성
-    // DOC 저장은 렌더링 시간이 더 필요함 (특히 Work_06, Work_02)
+    // DOC 저장은 렌더링 시간이 더 필요함 (특히 Work_06, Work_02, Work_15)
+    // PDF 저장은 렌더링 완료 확인 후 실행하지만, 안전을 위해 최소 대기 시간 부여
     const renderDelay = fileFormat === 'doc' 
       ? ((packageType === '06' || (isSingleWork && typeId === '06')) ? 2000 : 
-         (packageType === '02' || (isSingleWork && typeId === '02')) ? 2000 : 1500)
-      : ((packageType === '01' || isType01Single) ? 1000 : 500);
+         (packageType === '02' || (isSingleWork && typeId === '02')) ? 2000 :
+         (packageType === '15' || (isSingleWork && typeId === '15')) ? 2000 : 1500)
+      : ((packageType === '01' || isType01Single) ? 1000 : 1000); // 1초 대기 (안정성 확보)
     
+    console.log('⏰ setTimeout 실행 예정 (문제):', { renderDelay, fileFormat, packageType, typeId });
     setTimeout(async () => {
-      // 파일 생성 및 Firebase Storage 업로드
+      console.log('⏰ setTimeout 실행됨 (문제):', { fileFormat, packageType, typeId });
+
+      // PDF인 경우 렌더링 완료 확인 후 인쇄
+      if (fileFormat === 'pdf') {
+        const checkRenderingAndPrint = (attempts = 0) => {
+          const element = document.getElementById(containerId);
+          // 실제 콘텐츠 요소가 있는지 확인 (페이지 템플릿 등)
+          const pageElements = element?.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .a4-page-template-work12, .print-page');
+          const hasContent = element && (
+            (pageElements && pageElements.length > 0) ||
+            element.innerText.trim().length > 50
+          );
+
+          // 패키지#02, #03의 경우 단일 페이지인지 확인하여 클래스 추가 (빈 페이지 방지)
+          if (element && pageElements && pageElements.length === 1 && (packageType === 'P02' || packageType === 'P03')) {
+            element.classList.add('single-page-container');
+            console.log('📄 [인쇄 문제] 단일 페이지 감지됨 - single-page-container 클래스 추가');
+          }
+
+          console.log(`🔍 [인쇄 문제] 렌더링 확인 (시도 ${attempts + 1}):`, { 
+            hasElement: !!element, 
+            hasContent,
+            children: element?.children.length 
+          });
+
+          if (hasContent && attempts > 5) { // 최소 0.5초(5회) 추가 대기 후 인쇄 (안정성 확보)
+            console.log('✅ 렌더링 확인 완료, 인쇄 실행');
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                window.print();
+              });
+            });
+          } else if (attempts > 30) { // 최대 3초 대기
+             if (!hasContent) console.warn('⚠️ 렌더링 확인 실패하였으나 인쇄 강제 실행');
+             else console.log('✅ 최대 대기 시간 도달, 인쇄 실행');
+            
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                window.print();
+              });
+            });
+          } else {
+            setTimeout(() => checkRenderingAndPrint(attempts + 1), 100);
+          }
+        };
+        
+        checkRenderingAndPrint();
+      }
+
+      // 파일 생성 및 Firebase Storage 업로드 (백그라운드 처리)
       try {
         // 유형#01, #02, #03의 경우 실제 렌더링된 컨테이너 ID 사용
         let elementId = containerId;
@@ -2358,10 +2527,10 @@ const QuizDisplayPage: React.FC = () => {
             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
             console.log(`📁 ${workTypeName} ${formatName} 저장 완료:`, result.fileName);
             
-            // PDF인 경우에만 브라우저 인쇄
-            if (fileFormat === 'pdf') {
-              window.print();
-            }
+            // PDF인 경우에만 브라우저 인쇄 (이미 위에서 실행했으므로 제거)
+            // if (fileFormat === 'pdf') {
+            //   window.print();
+            // }
           }
         }
       } catch (error) {
@@ -2469,8 +2638,120 @@ const QuizDisplayPage: React.FC = () => {
           }
         `;
       }
+    } else if (packageType === 'P02') {
+      // Package#02: 수정된 인쇄 스타일 적용
+      style.textContent = `
+        @page {
+          margin: 0;
+          size: 29.7cm 21cm;
+        }
+        @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 29.7cm !important;
+            min-width: 29.7cm !important;
+            height: auto !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
+          }
+          /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+          body > *:not(#print-root-package02-answer) {
+            display: none !important;
+          }
+          .print-container-answer, .print-container-answer * {
+            visibility: visible;
+          }
+          .print-container-answer {
+            display: block !important;
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-width: 0 !important;
+            max-width: 29.7cm !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+          .print-container-answer:has(> .a4-landscape-page-template.last-page:only-child),
+          .print-container-answer.single-page-container {
+            height: 21cm !important;
+            min-height: 21cm !important;
+            max-height: 21cm !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            page-break-inside: avoid !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `;
+    } else if (packageType === 'P03') {
+      // Package#03: 수정된 인쇄 스타일 적용
+      style.textContent = `
+        @page {
+          margin: 0;
+          size: 29.7cm 21cm;
+        }
+        @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 29.7cm !important;
+            min-width: 29.7cm !important;
+            height: auto !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
+          }
+          /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+          body > *:not(#print-root-package03-answer) {
+            display: none !important;
+          }
+          .print-container-answer, .print-container-answer * {
+            visibility: visible;
+          }
+          .print-container-answer {
+            display: block !important;
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-width: 0 !important;
+            max-width: 29.7cm !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+          .print-container-answer:has(> .a4-landscape-page-template.last-page:only-child),
+          .print-container-answer.single-page-container {
+            height: 21cm !important;
+            min-height: 21cm !important;
+            max-height: 21cm !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            page-break-inside: avoid !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `;
     } else {
-      // Package#02, #03, 유형#01: A4 가로
+      // 유형#01: A4 가로
       // 유형#07, #08, #09, #10는 PrintFormatWork07New, PrintFormatWork08New, PrintFormatWork09New, PrintFormatWork10New 컴포넌트가 자체 스타일을 가지고 있으므로 간단한 스타일만 적용
       if (isSingleWork && (typeId === '07' || typeId === '08' || typeId === '09' || typeId === '10')) {
         // 유형#07, #08: 원래 인쇄 방식과 동일하게 간단한 스타일만 적용
@@ -2647,11 +2928,11 @@ const QuizDisplayPage: React.FC = () => {
     
     document.body.appendChild(printContainer);
 
-    // 기존 화면 숨기기 (DOC 저장인 경우에는 숨기지 않음)
+    // 기존 화면 숨기기 (PDF 저장인 경우에만 숨김) -> 사용자 요청으로 숨김 해제
     const appRoot = document.getElementById('root');
-    if (appRoot && fileFormat !== 'doc') {
-      appRoot.style.display = 'none';
-    }
+    // if (appRoot && fileFormat === 'pdf') {
+    //   appRoot.style.display = 'none';
+    // }
 
     // React 18 방식으로 렌더링 (정답 모드, 패키지/단일 유형에 따라)
     const root = ReactDOM.createRoot(printContainer);
@@ -4463,22 +4744,71 @@ const QuizDisplayPage: React.FC = () => {
           }
           console.log('✅ 인쇄(정답) 완료');
         }, 100);
-      }, 500);
+      }, 200);
       return; // 유형#07, #08, #09, #10, #13, #14는 여기서 종료
     }
 
     // 렌더링 완료 후 인쇄 및 파일 생성
     // DOC 저장은 렌더링 시간이 더 필요함 (특히 Work_06, Work_02, Work_15)
+    // PDF 저장은 렌더링 완료 확인 후 실행하지만, 안전을 위해 최소 대기 시간 부여
     const renderDelay = fileFormat === 'doc' 
       ? ((packageType === '06' || (isSingleWork && typeId === '06')) ? 2000 : 
          (packageType === '02' || (isSingleWork && typeId === '02')) ? 2000 :
          (packageType === '15' || (isSingleWork && typeId === '15')) ? 2000 : 1500)
-      : ((packageType === '01' || isType01Single) ? 1000 : 500);
+      : ((packageType === '01' || isType01Single) ? 1000 : 1000); // 1초 대기 (안정성 확보)
     
     console.log('⏰ setTimeout 실행 예정 (정답):', { renderDelay, fileFormat, packageType, typeId });
     setTimeout(async () => {
       console.log('⏰ setTimeout 실행됨 (정답):', { fileFormat, packageType, typeId });
-      // 파일 생성 및 Firebase Storage 업로드
+      
+    // PDF인 경우 렌더링 완료 확인 후 인쇄
+      if (fileFormat === 'pdf') {
+        const checkRenderingAndPrint = (attempts = 0) => {
+          const element = document.getElementById(containerId);
+          // 실제 콘텐츠 요소가 있는지 확인 (페이지 템플릿 등)
+          const pageElements = element?.querySelectorAll('.a4-landscape-page-template, .a4-page-template, .print-page, .a4-landscape-page-template-work15');
+          const hasContent = element && (
+            (pageElements && pageElements.length > 0) ||
+            element.innerText.trim().length > 50
+          );
+
+          // 패키지#02, #03의 경우 단일 페이지인지 확인하여 클래스 추가 (빈 페이지 방지)
+          if (element && pageElements && pageElements.length === 1 && (packageType === 'P02' || packageType === 'P03')) {
+            element.classList.add('single-page-container');
+            console.log('📄 [인쇄 정답] 단일 페이지 감지됨 - single-page-container 클래스 추가');
+          }
+
+          console.log(`🔍 [인쇄 정답] 렌더링 확인 (시도 ${attempts + 1}):`, { 
+            hasElement: !!element, 
+            hasContent,
+            children: element?.children.length 
+          });
+
+          if (hasContent && attempts > 5) { // 최소 0.5초(5회) 추가 대기 후 인쇄 (안정성 확보)
+            console.log('✅ 렌더링 확인 완료, 인쇄 실행');
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                window.print();
+              });
+            });
+          } else if (attempts > 30) { // 최대 3초 대기
+             if (!hasContent) console.warn('⚠️ 렌더링 확인 실패하였으나 인쇄 강제 실행');
+             else console.log('✅ 최대 대기 시간 도달, 인쇄 실행');
+            
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                window.print();
+              });
+            });
+          } else {
+            setTimeout(() => checkRenderingAndPrint(attempts + 1), 100);
+          }
+        };
+        
+        checkRenderingAndPrint();
+      }
+
+      // 파일 생성 및 Firebase Storage 업로드 (백그라운드 처리)
       try {
         // 유형#01, #02, #03의 경우 실제 렌더링된 컨테이너 ID 사용
         let elementId = containerId;
@@ -4933,10 +5263,10 @@ const QuizDisplayPage: React.FC = () => {
             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
             console.log(`📁 ${workTypeName} ${formatName} 저장 완료:`, result.fileName);
             
-            // PDF인 경우에만 브라우저 인쇄
-            if (fileFormat === 'pdf') {
-              window.print();
-            }
+            // PDF인 경우에만 브라우저 인쇄 (이미 위에서 실행했으므로 제거)
+            // if (fileFormat === 'pdf') {
+            //   window.print();
+            // }
           }
         }
       } catch (error) {

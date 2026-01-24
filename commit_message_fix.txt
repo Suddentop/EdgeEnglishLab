@@ -1,2 +1,7 @@
-fix: 유형#12 단어 학습 문제 생성 개선
+fix: Resolve print layout issues for Package #02 & #03
 
+- Fix blank 2nd page issue when 1-2 types are selected in Package #02 and #03
+- Fix right column cutoff in 2-column print layout
+- Improve print preview stability in 'My Problem List' (prevent blank page on first load)
+- Update CSS to strictly enforce A4 landscape dimensions and handle single-page overflow
+- Optimize rendering delay and content checking logic before printing

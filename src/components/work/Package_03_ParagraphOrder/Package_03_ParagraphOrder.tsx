@@ -785,14 +785,46 @@ const Package_03_ParagraphOrder: React.FC = () => {
     style.textContent = `
       @page {
         margin: 0;
-        size: A4 landscape;
+        size: 29.7cm 21cm;
       }
       @media print {
         html, body {
           margin: 0 !important;
           padding: 0 !important;
+          width: 29.7cm !important;
+          min-width: 29.7cm !important;
+          height: auto !important;
+          overflow: visible !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
+        }
+        /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+        body > *:not(#print-root-package03) {
+          display: none !important;
+        }
+        .print-container {
+          display: block !important;
+          position: relative !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: auto !important;
+          min-width: 0 !important;
+          max-width: 29.7cm !important;
+          background: white !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          page-break-after: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+        .print-container:has(> .a4-landscape-page-template.last-page:only-child) {
+          height: 21cm !important;
+          min-height: 21cm !important;
+          max-height: 21cm !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+          page-break-inside: avoid !important;
         }
         * {
           -webkit-print-color-adjust: exact;
@@ -810,14 +842,23 @@ const Package_03_ParagraphOrder: React.FC = () => {
     document.body.appendChild(printContainer);
 
     const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
+    // if (appRoot) {
+    //   appRoot.style.display = 'none';
+    // }
 
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} />);
 
     setTimeout(async () => {
+      // PDF인 경우에만 브라우저 인쇄 (미리보기 창 빠르게 띄우기)
+      if (fileFormat === 'pdf') {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.print();
+          });
+        });
+      }
+
       // 파일 생성 및 Firebase Storage 업로드
       try {
         const element = document.getElementById('print-root-package03');
@@ -847,11 +888,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
 
-      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
-       if (fileFormat === 'pdf') {
-         window.print();
-      }
-
       setTimeout(() => {
         root.unmount();
         document.body.removeChild(printContainer);
@@ -867,7 +903,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
 
         console.log('✅ 인쇄(문제) 완료 - 가로 A4 페이지');
       }, 100);
-    }, 500);
+    }, 1000);
   };
 
   // 인쇄(정답) 핸들러 - 가로 A4 페이지
@@ -911,15 +947,47 @@ const Package_03_ParagraphOrder: React.FC = () => {
       }
       @page {
         margin: 0;
-        size: A4 landscape;
+        size: 29.7cm 21cm;
       }
       @media print {
         html, body {
           margin: 0 !important;
           padding: 0 !important;
+          width: 29.7cm !important;
+          min-width: 29.7cm !important;
+          height: auto !important;
+          overflow: visible !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
           font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
+        }
+        /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+        body > *:not(#print-root-package03-answer) {
+          display: none !important;
+        }
+        .print-container-answer {
+          display: block !important;
+          position: relative !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: auto !important;
+          min-width: 0 !important;
+          max-width: 29.7cm !important;
+          background: white !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          page-break-after: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+        .print-container-answer:has(> .a4-landscape-page-template.last-page:only-child) {
+          height: 21cm !important;
+          min-height: 21cm !important;
+          max-height: 21cm !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+          page-break-inside: avoid !important;
         }
         * {
           -webkit-print-color-adjust: exact;
@@ -938,14 +1006,23 @@ const Package_03_ParagraphOrder: React.FC = () => {
     document.body.appendChild(printContainer);
 
     const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
+    // if (appRoot) {
+    //   appRoot.style.display = 'none';
+    // }
 
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} isAnswerMode={true} />);
 
     setTimeout(async () => {
+      // PDF인 경우에만 브라우저 인쇄 (미리보기 창 빠르게 띄우기)
+      if (fileFormat === 'pdf') {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.print();
+          });
+        });
+      }
+
       // 파일 생성 및 Firebase Storage 업로드
       try {
         const element = document.getElementById('print-root-package03-answer');
@@ -975,11 +1052,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
 
-      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
-       if (fileFormat === 'pdf') {
-         window.print();
-      }
-
       setTimeout(() => {
         root.unmount();
         document.body.removeChild(printContainer);
@@ -1000,7 +1072,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
 
         console.log('✅ 인쇄(정답) 완료 - 가로 A4 페이지');
       }, 100);
-    }, 500);
+    }, 1000);
   };
 
   // 문제 생성 후 화면
