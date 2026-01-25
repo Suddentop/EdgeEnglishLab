@@ -771,12 +771,66 @@ const Package_03_ParagraphOrder: React.FC = () => {
   };
 
 
+  // 블러 오버레이 생성 및 제거 헬퍼 함수 (메인 영역만)
+  const showBlurOverlay = () => {
+    // 기존 오버레이가 있으면 제거
+    const existing = document.getElementById('print-blur-overlay');
+    if (existing) {
+      existing.remove();
+    }
+    
+    // 메인 콘텐츠 영역 찾기 (문제 생성 후: quiz-display, 문제 생성 전: quiz-generator)
+    const mainContent = document.querySelector('.quiz-display') || document.querySelector('.quiz-generator') || document.querySelector('.package-quiz-container');
+    
+    if (!mainContent) {
+      console.warn('메인 콘텐츠 영역을 찾을 수 없습니다.');
+      return null;
+    }
+    
+    // 메인 영역의 위치와 크기 계산
+    const rect = mainContent.getBoundingClientRect();
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'print-blur-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: ${rect.top}px;
+      left: ${rect.left}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background-color: rgba(255, 255, 255, 0.3);
+      z-index: 999999;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      border-radius: 16px;
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+  };
+
+  const removeBlurOverlay = () => {
+    const overlay = document.getElementById('print-blur-overlay');
+    if (overlay) {
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.remove();
+      }, 300); // transition 시간과 맞춤
+    }
+  };
+
   // 인쇄 핸들러 - 가로 A4 페이지
   const handlePrintProblem = async () => {
     if (!packageQuiz || packageQuiz.length === 0) {
       alert('인쇄할 문제가 없습니다.');
       return;
     }
+
+    console.log('🖨️ 인쇄(문제) 시작');
+    
+    // 블러 오버레이 표시
+    const blurOverlay = showBlurOverlay();
 
     console.log('🖨️ 인쇄(문제) 시작 - 가로 A4 페이지');
     
@@ -785,14 +839,46 @@ const Package_03_ParagraphOrder: React.FC = () => {
     style.textContent = `
       @page {
         margin: 0;
-        size: A4 landscape;
+        size: 29.7cm 21cm;
       }
       @media print {
         html, body {
           margin: 0 !important;
           padding: 0 !important;
+          width: 29.7cm !important;
+          min-width: 29.7cm !important;
+          height: auto !important;
+          overflow: visible !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
+        }
+        /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+        body > *:not(#print-root-package03) {
+          display: none !important;
+        }
+        .print-container {
+          display: block !important;
+          position: relative !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: auto !important;
+          min-width: 0 !important;
+          max-width: 29.7cm !important;
+          background: white !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          page-break-after: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+        .print-container:has(> .a4-landscape-page-template.last-page:only-child) {
+          height: 21cm !important;
+          min-height: 21cm !important;
+          max-height: 21cm !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+          page-break-inside: avoid !important;
         }
         * {
           -webkit-print-color-adjust: exact;
@@ -810,14 +896,25 @@ const Package_03_ParagraphOrder: React.FC = () => {
     document.body.appendChild(printContainer);
 
     const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
+    // if (appRoot) {
+    //   appRoot.style.display = 'none';
+    // }
 
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} />);
 
     setTimeout(async () => {
+      // PDF인 경우에만 브라우저 인쇄 (미리보기 창 빠르게 띄우기)
+      if (fileFormat === 'pdf') {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
+            window.print();
+          });
+        });
+      }
+
       // 파일 생성 및 Firebase Storage 업로드
       try {
         const element = document.getElementById('print-root-package03');
@@ -847,9 +944,9 @@ const Package_03_ParagraphOrder: React.FC = () => {
         console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
       }
 
-      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
-       if (fileFormat === 'pdf') {
-         window.print();
+      // DOC/HWP는 파일 생성이 완료되면 블러 오버레이 제거
+      if (fileFormat !== 'pdf') {
+        removeBlurOverlay();
       }
 
       setTimeout(() => {
@@ -867,7 +964,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
 
         console.log('✅ 인쇄(문제) 완료 - 가로 A4 페이지');
       }, 100);
-    }, 500);
+    }, 1000);
   };
 
   // 인쇄(정답) 핸들러 - 가로 A4 페이지
@@ -878,6 +975,9 @@ const Package_03_ParagraphOrder: React.FC = () => {
     }
 
     console.log('🖨️ 인쇄(정답) 시작 - 가로 A4 페이지');
+    
+    // 블러 오버레이 표시
+    const blurOverlay = showBlurOverlay();
     
     // 폰트 미리 로드
     const fontPreload = document.createElement('link');
@@ -911,15 +1011,47 @@ const Package_03_ParagraphOrder: React.FC = () => {
       }
       @page {
         margin: 0;
-        size: A4 landscape;
+        size: 29.7cm 21cm;
       }
       @media print {
         html, body {
           margin: 0 !important;
           padding: 0 !important;
+          width: 29.7cm !important;
+          min-width: 29.7cm !important;
+          height: auto !important;
+          overflow: visible !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
           font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif !important;
+        }
+        /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+        body > *:not(#print-root-package03-answer) {
+          display: none !important;
+        }
+        .print-container-answer {
+          display: block !important;
+          position: relative !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: auto !important;
+          min-width: 0 !important;
+          max-width: 29.7cm !important;
+          background: white !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          page-break-after: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+        .print-container-answer:has(> .a4-landscape-page-template.last-page:only-child) {
+          height: 21cm !important;
+          min-height: 21cm !important;
+          max-height: 21cm !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+          page-break-inside: avoid !important;
         }
         * {
           -webkit-print-color-adjust: exact;
@@ -935,72 +1067,196 @@ const Package_03_ParagraphOrder: React.FC = () => {
     
     const printContainer = document.createElement('div');
     printContainer.id = 'print-root-package03-answer';
+    // 레이아웃 계산을 위해 명시적으로 너비 설정 (화면 밖으로 보내면 너비가 0이 됨)
+    printContainer.style.width = '29.7cm';
+    printContainer.style.minWidth = '29.7cm';
+    printContainer.style.position = 'absolute';
+    printContainer.style.left = '0';
+    printContainer.style.top = '0';
+    printContainer.style.visibility = 'hidden'; // 화면에 보이지 않지만 레이아웃은 계산됨
     document.body.appendChild(printContainer);
 
     const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
+    // if (appRoot) {
+    //   appRoot.style.display = 'none';
+    // }
 
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} isAnswerMode={true} />);
 
-    setTimeout(async () => {
-      // 파일 생성 및 Firebase Storage 업로드
-      try {
-        const element = document.getElementById('print-root-package03-answer');
-        if (element && userData?.uid) {
-          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+    // 렌더링 완료 후 인쇄 및 파일 생성
+    // 문제생성 직후 렌더링 지연을 방지하기 위해 폴링 메커니즘 사용
+    let attempts = 0;
+    const maxAttempts = 50; // 50ms * 50 = 2500ms (2.5초 최대 대기, 더 빠른 반응)
+    let uploadPromise: Promise<void> | null = null; // window.onafterprint에서 접근 가능하도록 외부 스코프에 선언
+    
+    const checkRenderAndPrint = async () => {
+      // 파일 생성 및 Firebase Storage 업로드 (백그라운드 처리)
+      const uploadTask = async () => {
+        try {
+          const element = document.getElementById('print-root-package03-answer');
+          if (element && userData?.uid) {
+            const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+            
+            const result = await generateAndUploadFile(
+              element as HTMLElement,
+              userData.uid,
+              `package03_answer_${Date.now()}`,
+              '패키지#03_정답',
+              { isAnswerMode: true, orientation: 'landscape', fileFormat }
+            );
+            
+            // 패키지 내역에 파일 URL 저장
+            const { getQuizHistory } = await import('../../../services/quizHistoryService');
+            const history = await getQuizHistory(userData.uid, { limit: 10 });
+            const packageHistory = history.find(h => h.workTypeId === 'P03');
+            
+            if (packageHistory) {
+              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
+               const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              console.log(`📁 패키지#03 정답 ${formatName} 저장 완료:`, result.fileName);
+            }
+          }
+        } catch (error) {
+          console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+        }
+      };
+
+      if (fileFormat === 'pdf') {
+        // 마운트 포인트 내에서 첫 번째 페이지 찾기 (패키지#03은 last-page 클래스 없음)
+        const firstPage = printContainer.querySelector('.a4-landscape-page-template') as HTMLElement;
+        
+        // 렌더링 완료 조건: 첫 번째 페이지가 존재하고 높이가 0보다 커야 함
+        if (firstPage && firstPage.offsetHeight > 0) {
+          // PDF: 인쇄 대화상자 닫힐 때 cleanup (afterprint). 그 전까지 DOM 유지해야 미리보기에 내용 표시됨.
+          // 업로드 작업은 인쇄 후에 시작 (인쇄 속도에 영향 없도록)
+          // requestAnimationFrame으로 즉시 처리 시작
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // 업로드 작업 시작 (인쇄와 병렬 처리)
+              uploadPromise = uploadTask();
+            });
+          });
           
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `package03_answer_${Date.now()}`,
-            '패키지#03_정답',
-            { isAnswerMode: true, orientation: 'landscape', fileFormat }
-          );
-          
-          // 패키지 내역에 파일 URL 저장
-          const { getQuizHistory } = await import('../../../services/quizHistoryService');
-          const history = await getQuizHistory(userData.uid, { limit: 10 });
-          const packageHistory = history.find(h => h.workTypeId === 'P03');
-          
-          if (packageHistory) {
-            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 패키지#03 정답 ${formatName} 저장 완료:`, result.fileName);
+          // 렌더링 완료 후 즉시 인쇄 처리 (requestAnimationFrame 사용)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // 미리보기 창이 열리기 직전 블러 오버레이 제거
+              removeBlurOverlay();
+              window.print();
+            });
+          });
+          // window.onafterprint에서 cleanup 처리
+          const doCleanup = async () => {
+            // 업로드 완료 대기 후 cleanup
+            try {
+              if (uploadPromise) {
+                await uploadPromise;
+                console.log('✅ 파일 업로드 완료 확인 (정답)');
+              }
+            } catch (e) {
+              console.error('❌ 파일 업로드 중 오류 발생 (정답):', e);
+            }
+            
+            root.unmount();
+            document.body.removeChild(printContainer);
+            
+            const styleElement = document.getElementById('print-style-package03-answer');
+            if (styleElement) {
+              document.head.removeChild(styleElement);
+            }
+            
+            const fontPreloadElement = document.querySelector('link[href*="NotoSansKR-Regular.woff2"]');
+            if (fontPreloadElement) {
+              document.head.removeChild(fontPreloadElement);
+            }
+
+            if (appRoot) {
+              appRoot.style.display = 'block';
+            }
+
+            console.log('✅ 인쇄(정답) 완료 - 가로 A4 페이지');
+            window.onafterprint = null;
+          };
+
+          window.onafterprint = doCleanup;
+        } else {
+          // 렌더링 미완료 - 재시도 (폴링 메커니즘)
+          attempts++;
+          if (attempts >= maxAttempts) {
+            console.error('인쇄 렌더링 타임아웃 (정답모드)');
+            // 타임아웃 시에도 인쇄 시도
+            const doCleanup = async () => {
+              try {
+                if (uploadPromise) {
+                  await uploadPromise;
+                }
+              } catch (e) {
+                console.error('❌ 파일 업로드 중 오류 발생 (정답):', e);
+              }
+              
+              root.unmount();
+              document.body.removeChild(printContainer);
+              
+              const styleElement = document.getElementById('print-style-package03-answer');
+              if (styleElement) {
+                document.head.removeChild(styleElement);
+              }
+              
+              const fontPreloadElement = document.querySelector('link[href*="NotoSansKR-Regular.woff2"]');
+              if (fontPreloadElement) {
+                document.head.removeChild(fontPreloadElement);
+              }
+
+              if (appRoot) {
+                appRoot.style.display = 'block';
+              }
+
+              console.log('✅ 인쇄(정답) 완료 - 가로 A4 페이지');
+              window.onafterprint = null;
+            };
+            
+            window.onafterprint = doCleanup;
+            removeBlurOverlay();
+            window.print();
+          } else {
+            setTimeout(checkRenderAndPrint, 50); // 50ms 후 재시도 (더 빠른 반응)
           }
         }
-      } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+      } else {
+        // DOC/HWP: 인쇄 대화상자 없음 → 곧바로 cleanup
+        // DOC/HWP는 파일 생성이 완료되면 블러 오버레이 제거
+        removeBlurOverlay();
+        setTimeout(async () => {
+          await uploadTask();
+          root.unmount();
+          document.body.removeChild(printContainer);
+          
+          const styleElement = document.getElementById('print-style-package03-answer');
+          if (styleElement) {
+            document.head.removeChild(styleElement);
+          }
+          
+          const fontPreloadElement = document.querySelector('link[href*="NotoSansKR-Regular.woff2"]');
+          if (fontPreloadElement) {
+            document.head.removeChild(fontPreloadElement);
+          }
+
+          if (appRoot) {
+            appRoot.style.display = 'block';
+          }
+
+          console.log('✅ 인쇄(정답) 완료 - 가로 A4 페이지');
+        }, 100);
       }
+    };
 
-      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
-       if (fileFormat === 'pdf') {
-         window.print();
-      }
-
-      setTimeout(() => {
-        root.unmount();
-        document.body.removeChild(printContainer);
-        
-        const styleElement = document.getElementById('print-style-package03-answer');
-        if (styleElement) {
-          document.head.removeChild(styleElement);
-        }
-        
-        const fontPreloadElement = document.querySelector('link[href*="NotoSansKR-Regular.woff2"]');
-        if (fontPreloadElement) {
-          document.head.removeChild(fontPreloadElement);
-        }
-
-        if (appRoot) {
-          appRoot.style.display = 'block';
-        }
-
-        console.log('✅ 인쇄(정답) 완료 - 가로 A4 페이지');
-      }, 100);
-    }, 500);
+    // 폴링 시작 - requestAnimationFrame으로 즉시 시작 (더 빠른 반응)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        checkRenderAndPrint();
+      });
+    });
   };
 
   // 문제 생성 후 화면

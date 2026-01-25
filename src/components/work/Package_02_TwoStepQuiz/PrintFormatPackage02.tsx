@@ -529,14 +529,15 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
               lastWorkTypeId: packageQuiz.length > 0 ? packageQuiz[packageQuiz.length - 1].workTypeId : 'unknown'
             });
           } else {
-            // 오른쪽 단에 들어갈 수 없으면 다음 페이지의 왼쪽 단에 추가
+            // 오른쪽 단에 들어갈 수 없으면 -> 새 페이지의 왼쪽 단에 추가
             const newPage: NormalizedQuizItem[][] = [[], []];
             newPage[0].push(translationItem);
             distributedPages.push(newPage);
             
-            console.log('✅ 마지막 유형의 한글해석 섹션을 다음 페이지의 왼쪽 단에 추가 (오른쪽 단 공간 부족):', {
+            console.log('✅ 오른쪽 단 공간 부족 -> 새 페이지의 왼쪽 단에 한글해석 섹션 추가:', {
               newPageIndex: distributedPages.length - 1,
               columnIndex: 0,
+              lastItemColumn: lastItemColumnIndex,
               rightColumnHeight: rightColumnCurrentHeight.toFixed(2) + 'cm',
               translationHeight: translationHeight.toFixed(2) + 'cm',
               availableHeight: availableHeight.toFixed(2) + 'cm',
@@ -544,28 +545,23 @@ const PrintFormatPackage02: React.FC<PrintFormatPackage02Props> = ({ packageQuiz
             });
           }
         } else {
-          // 마지막 유형이 오른쪽 단에 있으면 -> 다음 페이지의 왼쪽 단에 추가
+          // 마지막 유형이 오른쪽 단에 있으면 -> 항상 새 페이지의 왼쪽 단에 추가 (새 페이지/단 보장)
           const newPage: NormalizedQuizItem[][] = [[], []];
           newPage[0].push(translationItem);
           distributedPages.push(newPage);
           
-          console.log('✅ 마지막 유형의 한글해석 섹션을 다음 페이지의 왼쪽 단에 추가 (마지막 유형이 오른쪽 단에 있음):', {
+          console.log('✅ 마지막 유형이 오른쪽 단에 있어 -> 새 페이지의 왼쪽 단에 한글해석 섹션 추가:', {
             newPageIndex: distributedPages.length - 1,
             columnIndex: 0,
             lastItemColumn: lastItemColumnIndex,
+            rightColumnHeight: rightColumnHeight.toFixed(2) + 'cm',
             translationHeight: translationHeight.toFixed(2) + 'cm',
             lastWorkTypeId: packageQuiz.length > 0 ? packageQuiz[packageQuiz.length - 1].workTypeId : 'unknown'
           });
         }
       } else {
-        // 페이지가 없으면 새 페이지 생성
-        const newPage: NormalizedQuizItem[][] = [[], []];
-        newPage[0].push(translationItem);
-        distributedPages.push(newPage);
-        
-        console.log('✅ 마지막 유형의 한글해석 섹션을 새 페이지에 추가 (페이지 없음):', {
-          newPageIndex: distributedPages.length - 1,
-          columnIndex: 0,
+        // 페이지가 없으면 -> 해석 생략
+        console.log('🚫 페이지가 없어 한글해석 섹션 추가 생략:', {
           lastWorkTypeId: packageQuiz.length > 0 ? packageQuiz[packageQuiz.length - 1].workTypeId : 'unknown'
         });
       }

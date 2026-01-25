@@ -81,12 +81,43 @@
   body {
     margin: 0;
     padding: 0;
+    width: 29.7cm !important;
+    min-width: 29.7cm !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* 컨테이너 스타일 추가 */
+  .print-container,
+  .print-container-answer {
+    display: block !important;
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 29.7cm !important;
+    height: auto !important;
+    background: white !important;
+  }
+
+  /* 단일 페이지 시: 높이 21cm 고정 */
+  .print-container:has(> .a4-landscape-page-template.last-page:only-child),
+  .print-container-answer:has(> .a4-landscape-page-template.last-page:only-child) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 29.7cm !important;
+    height: 21cm !important;
+    max-height: 21cm !important;
+    overflow: hidden !important;
   }
 
   /* 가로 A4 페이지 템플릿 */
   .a4-landscape-page-template {
-    width: 29.7cm;
-    height: 21cm;
+    width: 29.7cm !important;
+    height: 21cm !important;
     margin: 0;
     padding: 0;
     background: white;

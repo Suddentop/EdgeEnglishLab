@@ -980,6 +980,55 @@ const Package_02_TwoStepQuiz: React.FC = () => {
   };
 
   // 인쇄(문제) 핸들러
+  // 블러 오버레이 생성 및 제거 헬퍼 함수 (메인 영역만)
+  const showBlurOverlay = () => {
+    // 기존 오버레이가 있으면 제거
+    const existing = document.getElementById('print-blur-overlay');
+    if (existing) {
+      existing.remove();
+    }
+    
+    // 메인 콘텐츠 영역 찾기 (문제 생성 후: quiz-display, 문제 생성 전: quiz-generator)
+    const mainContent = document.querySelector('.quiz-display') || document.querySelector('.quiz-generator') || document.querySelector('.package-quiz-container');
+    
+    if (!mainContent) {
+      console.warn('메인 콘텐츠 영역을 찾을 수 없습니다.');
+      return null;
+    }
+    
+    // 메인 영역의 위치와 크기 계산
+    const rect = mainContent.getBoundingClientRect();
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'print-blur-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: ${rect.top}px;
+      left: ${rect.left}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background-color: rgba(255, 255, 255, 0.3);
+      z-index: 999999;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      border-radius: 16px;
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+  };
+
+  const removeBlurOverlay = () => {
+    const overlay = document.getElementById('print-blur-overlay');
+    if (overlay) {
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.remove();
+      }, 300); // transition 시간과 맞춤
+    }
+  };
+
   const handlePrintProblem = async () => {
     if (!packageQuiz || packageQuiz.length === 0) {
       alert('인쇄할 문제가 없습니다.');
@@ -988,18 +1037,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
     console.log('🖨️ 인쇄(문제) 시작');
     
+    // 블러 오버레이 표시
+    const blurOverlay = showBlurOverlay();
+    
     // 가로 페이지 스타일 동적 추가
     const style = document.createElement('style');
     style.id = 'print-style-package02';
     style.textContent = `
       @page {
         margin: 0;
-        size: A4 landscape;
+        size: 29.7cm 21cm;
       }
       @media print {
-        body {
-          margin: 0;
-          padding: 0;
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 29.7cm !important;
+          min-width: 29.7cm !important;
+          height: auto !important; /* 21cm 고정 해제 -> 내용만큼 늘어나도록 변경 */
+          overflow: visible !important; /* hidden 해제 -> 다중 페이지 인쇄 가능하도록 변경 */
+        }
+        /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+        body > *:not(#print-root-package02) {
+          display: none !important;
         }
         body * {
           visibility: hidden;
@@ -1009,11 +1069,27 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         }
         .print-container {
           display: block !important;
-          position: absolute !important;
+          position: relative !important;
           top: 0 !important;
           left: 0 !important;
           width: 100% !important;
+          height: auto !important; /* 21cm 고정 해제 */
+          min-width: 0 !important;
+          max-width: 29.7cm !important;
           background: white !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          page-break-after: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        /* 단일 페이지: 빨간 컨테이너 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+        .print-container:has(> .a4-landscape-page-template.last-page:only-child) {
+          height: 21cm !important;
+          min-height: 21cm !important;
+          max-height: 21cm !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+          page-break-inside: avoid !important;
         }
       }
     `;
@@ -1024,11 +1100,11 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     printContainer.id = 'print-root-package02';
     document.body.appendChild(printContainer);
 
-    // 기존 화면 숨기기
+    // 기존 화면 숨기기 (JS로 숨기지 않음 - CSS로 처리)
     const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
+    // if (appRoot) {
+    //   appRoot.style.display = 'none';
+    // }
 
     // 디버깅을 위한 원본 데이터 보관
     (window as any).__PACKAGE02_LAST_PACKAGE_QUIZ__ = packageQuiz;
@@ -1048,56 +1124,427 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     };
     activatePrintContainer();
 
+    const doCleanup = () => {
+      try { root.unmount(); } catch (_) {}
+      if (printContainer.parentNode) document.body.removeChild(printContainer);
+      if (appRoot) appRoot.style.display = 'block';
+      const styleEl = document.getElementById('print-style-package02');
+      if (styleEl?.parentNode) styleEl.parentNode.removeChild(styleEl);
+      console.log('✅ 인쇄(문제) 완료');
+      window.onafterprint = null;
+    };
+
     // 렌더링 완료 후 인쇄 및 파일 생성
-    setTimeout(async () => {
-      // 파일 생성 및 Firebase Storage 업로드
-      try {
-        const element = document.getElementById('print-root-package02');
-        if (element && userData?.uid) {
-          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+    // 문제생성 직후 렌더링 지연을 방지하기 위해 폴링 메커니즘 사용
+    let attempts = 0;
+    const maxAttempts = 50; // 50ms * 50 = 2500ms (2.5초 최대 대기, 더 빠른 반응)
+    let uploadPromise: Promise<void> | null = null; // window.onafterprint에서 접근 가능하도록 외부 스코프에 선언
+    
+    const checkRenderAndPrint = async () => {
+      // 파일 생성 및 Firebase Storage 업로드 (백그라운드 처리)
+      const uploadTask = async () => {
+        try {
+          const element = document.getElementById('print-root-package02');
+          if (element && userData?.uid) {
+            const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+            
+            const result = await generateAndUploadFile(
+              element as HTMLElement,
+              userData.uid,
+              `package02_problem_${Date.now()}`,
+              '패키지#02_문제',
+              { isAnswerMode: false, orientation: 'landscape', fileFormat }
+            );
+            
+            // 패키지 내역에 파일 URL 저장
+            const { getQuizHistory } = await import('../../../services/quizHistoryService');
+            const history = await getQuizHistory(userData.uid, { limit: 10 });
+            const packageHistory = history.find(h => h.workTypeId === 'P02');
+            
+            if (packageHistory) {
+              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
+               const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              console.log(`📁 패키지#02 문제 ${formatName} 저장 완료:`, result.fileName);
+            }
+          }
+        } catch (error) {
+          console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+        }
+      };
+
+      if (fileFormat === 'pdf') {
+        // 마운트 포인트 내에서 last-page 찾기
+        const lastPage = printContainer.querySelector('.a4-landscape-page-template.last-page') as HTMLElement;
+        
+        // 렌더링 완료 조건: 마지막 페이지가 존재하고 높이가 0보다 커야 함
+        if (lastPage && lastPage.offsetHeight > 0) {
+          // PDF: 인쇄 대화상자 닫힐 때 cleanup (afterprint). 그 전까지 DOM 유지해야 미리보기에 내용 표시됨.
+          // 업로드 작업은 인쇄 후에 시작 (인쇄 속도에 영향 없도록)
+          // requestAnimationFrame으로 즉시 처리 시작 (300ms 대기 제거)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // 업로드 작업 시작 (인쇄와 병렬 처리)
+              uploadPromise = uploadTask();
+            });
+          });
           
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `package02_problem_${Date.now()}`,
-            '패키지#02_문제',
-            { isAnswerMode: false, orientation: 'landscape', fileFormat }
-          );
+          // 렌더링 완료 후 즉시 인쇄 처리 (requestAnimationFrame 사용)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+          // printContainer 상태 상세 로그
+          const containerComputed = window.getComputedStyle(printContainer);
+          const containerRect = printContainer.getBoundingClientRect();
+          console.log(`[PKG02-PRINT] 📦 printContainer 상태:`, {
+            id: printContainer.id,
+            위치: `(${containerRect.left.toFixed(0)}px, ${containerRect.top.toFixed(0)}px)`,
+            크기: `${containerRect.width.toFixed(0)}px × ${containerRect.height.toFixed(0)}px`,
+            display: containerComputed.display,
+            position: containerComputed.position,
+            visibility: containerComputed.visibility,
+            overflow: containerComputed.overflow,
+            height: containerComputed.height,
+            maxHeight: containerComputed.maxHeight,
+            클래스: printContainer.className,
+            자식수: printContainer.children.length
+          });
+
+          const lastPage = printContainer.querySelector('.a4-landscape-page-template.last-page') as HTMLElement;
           
-          // 패키지 내역에 파일 URL 저장
-          const { getQuizHistory } = await import('../../../services/quizHistoryService');
-          const history = await getQuizHistory(userData.uid, { limit: 10 });
-          const packageHistory = history.find(h => h.workTypeId === 'P02');
-          
-          if (packageHistory) {
-            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
-             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 패키지#02 문제 ${formatName} 저장 완료:`, result.fileName);
+          if (lastPage) {
+            // lastPage 상태 상세 로그
+            const pageComputed = window.getComputedStyle(lastPage);
+            const pageRect = lastPage.getBoundingClientRect();
+            const pageOffsetHeight = lastPage.offsetHeight;
+            const pageScrollHeight = lastPage.scrollHeight;
+            const pageClientHeight = lastPage.clientHeight;
+            
+            // 부모 요소 확인
+            const parent = lastPage.parentElement;
+            const parentComputed = parent ? window.getComputedStyle(parent) : null;
+            const parentRect = parent ? parent.getBoundingClientRect() : null;
+            
+            console.log(`[PKG02-PRINT] 📄 lastPage 요소 상세 상태:`, {
+              id: lastPage.id,
+              클래스: lastPage.className,
+              위치: `(${pageRect.left.toFixed(0)}px, ${pageRect.top.toFixed(0)}px)`,
+              크기_getBoundingClientRect: `${pageRect.width.toFixed(2)}px × ${pageRect.height.toFixed(2)}px`,
+              크기_offsetHeight: `${pageOffsetHeight.toFixed(2)}px (${(pageOffsetHeight / 37.8).toFixed(2)}cm)`,
+              크기_scrollHeight: `${pageScrollHeight.toFixed(2)}px (${(pageScrollHeight / 37.8).toFixed(2)}cm)`,
+              크기_clientHeight: `${pageClientHeight.toFixed(2)}px (${(pageClientHeight / 37.8).toFixed(2)}cm)`,
+              CSS_height: pageComputed.height,
+              CSS_maxHeight: pageComputed.maxHeight,
+              CSS_minHeight: pageComputed.minHeight,
+              CSS_overflow: pageComputed.overflow,
+              CSS_pageBreakAfter: pageComputed.pageBreakAfter,
+              CSS_breakAfter: pageComputed.breakAfter,
+              CSS_display: pageComputed.display,
+              CSS_position: pageComputed.position,
+              CSS_boxSizing: pageComputed.boxSizing,
+              인라인스타일_height: lastPage.style.height || '(없음)',
+              인라인스타일_maxHeight: lastPage.style.maxHeight || '(없음)',
+              인라인스타일_overflow: lastPage.style.overflow || '(없음)',
+              부모요소: parent ? {
+                tag: parent.tagName,
+                id: parent.id,
+                클래스: parent.className,
+                크기: parentRect ? `${parentRect.width.toFixed(0)}px × ${parentRect.height.toFixed(0)}px` : 'N/A',
+                overflow: parentComputed?.overflow || 'N/A'
+              } : '없음'
+            });
+
+            // 자식 요소들 확인
+            const pageHeader = lastPage.querySelector('.a4-landscape-page-header') as HTMLElement;
+            const pageContent = lastPage.querySelector('.a4-landscape-page-content') as HTMLElement;
+            const twoColumnContainer = lastPage.querySelector('.print-two-column-container') as HTMLElement;
+            
+            if (pageHeader) {
+              const headerRect = pageHeader.getBoundingClientRect();
+              const headerComputed = window.getComputedStyle(pageHeader);
+              console.log(`[PKG02-PRINT]   ↳ 헤더(.a4-landscape-page-header):`, {
+                높이: `${headerRect.height.toFixed(2)}px (${(headerRect.height / 37.8).toFixed(2)}cm)`,
+                CSS_height: headerComputed.height,
+                CSS_overflow: headerComputed.overflow
+              });
+            }
+            
+            if (pageContent) {
+              const contentRect = pageContent.getBoundingClientRect();
+              const contentComputed = window.getComputedStyle(pageContent);
+              console.log(`[PKG02-PRINT]   ↳ 콘텐츠(.a4-landscape-page-content):`, {
+                높이: `${contentRect.height.toFixed(2)}px (${(contentRect.height / 37.8).toFixed(2)}cm)`,
+                CSS_height: contentComputed.height,
+                CSS_flex: contentComputed.flex,
+                CSS_overflow: contentComputed.overflow
+              });
+            }
+            
+            if (twoColumnContainer) {
+              const containerRect = twoColumnContainer.getBoundingClientRect();
+              const containerComputed = window.getComputedStyle(twoColumnContainer);
+              console.log(`[PKG02-PRINT]   ↳ 2단컨테이너(.print-two-column-container):`, {
+                높이: `${containerRect.height.toFixed(2)}px (${(containerRect.height / 37.8).toFixed(2)}cm)`,
+                CSS_height: containerComputed.height,
+                CSS_maxHeight: containerComputed.maxHeight,
+                CSS_overflow: containerComputed.overflow
+              });
+            }
+
+            // 총 높이 계산
+            const headerHeight = pageHeader ? pageHeader.getBoundingClientRect().height : 0;
+            const contentHeight = pageContent ? pageContent.getBoundingClientRect().height : 0;
+            const containerHeight = twoColumnContainer ? twoColumnContainer.getBoundingClientRect().height : 0;
+            const totalCalculatedHeight = headerHeight + (containerHeight || contentHeight);
+            const totalCalculatedHeightCm = totalCalculatedHeight / 37.8;
+            
+            console.log(`[PKG02-PRINT] 📊 높이 합계 계산:`, {
+              헤더높이: `${(headerHeight / 37.8).toFixed(2)}cm`,
+              컨테이너높이: `${(containerHeight / 37.8).toFixed(2)}cm`,
+              콘텐츠높이: `${(contentHeight / 37.8).toFixed(2)}cm`,
+              계산된총높이: `${totalCalculatedHeightCm.toFixed(2)}cm`,
+              A4가로높이: '21cm',
+              초과여부: totalCalculatedHeightCm > 21 ? `⚠️ ${(totalCalculatedHeightCm - 21).toFixed(2)}cm 초과!` : '✅ 21cm 이하'
+            });
+
+            // ---------- 2페이지 원인 상세 로그 ----------
+            const pxToCm = (px: number) => (px / 37.8);
+            const parsePx = (s: string): number => (typeof s === 'string' && s.endsWith('px')) ? parseFloat(s) || 0 : 0;
+
+            const redEl = printContainer.querySelector('.print-container') as HTMLElement | null;
+            const redComputed = redEl ? window.getComputedStyle(redEl) : null;
+            const redRect = redEl ? redEl.getBoundingClientRect() : null;
+
+            const headerCssPx = pageHeader ? parsePx(window.getComputedStyle(pageHeader).height) : 0;
+            const twoColCssPx = twoColumnContainer ? parsePx(window.getComputedStyle(twoColumnContainer).height) : 0;
+            const contentPaddingBottom = pageContent ? parsePx(window.getComputedStyle(pageContent).paddingBottom) : 0;
+            const cssBasedTotalPx = headerCssPx + twoColCssPx + contentPaddingBottom;
+            const cssBasedTotalCm = pxToCm(cssBasedTotalPx);
+            const a4HeightPx = 21 * 37.8;
+
+            const onlyChild = lastPage?.parentElement?.children?.length === 1;
+            const hasLastOnly = !!lastPage && !!lastPage.parentElement && onlyChild && lastPage.classList.contains('last-page');
+            const singlePageSelectorMatch = hasLastOnly && lastPage!.parentElement!.querySelector('.a4-landscape-page-template.last-page:only-child') === lastPage;
+
+            console.log(`[PKG02-PRINT] 🔴 빨간 테두리(.print-container) 상태:`, {
+              찾음: !!redEl,
+              width: redComputed?.width ?? 'N/A',
+              height: redComputed?.height ?? 'N/A',
+              minHeight: redComputed?.minHeight ?? 'N/A',
+              maxHeight: redComputed?.maxHeight ?? 'N/A',
+              overflow: redComputed?.overflow ?? 'N/A',
+              getBoundingClientRect: redRect ? `${redRect.width.toFixed(1)}px × ${redRect.height.toFixed(1)}px` : 'N/A',
+              A4기준: '29.7cm × 21cm',
+              가로일치: redComputed?.width === '1122.52px' || (redRect && Math.abs(redRect.width - 29.7 * 37.8) < 5) ? '✅' : '❌',
+              세로일치: redComputed?.height === '793.7px' || (redRect && Math.abs(redRect.height - 21 * 37.8) < 5) ? '✅' : '❌'
+            });
+
+            console.log(`[PKG02-PRINT] 📐 CSS 기반 높이 (px→cm):`, {
+              헤더_CSS: `${headerCssPx.toFixed(1)}px → ${pxToCm(headerCssPx).toFixed(2)}cm`,
+              '2단컨테이너_CSS': `${twoColCssPx.toFixed(1)}px → ${pxToCm(twoColCssPx).toFixed(2)}cm`,
+              콘텐츠_paddingBottom: `${contentPaddingBottom.toFixed(1)}px`,
+              합계: `${cssBasedTotalPx.toFixed(1)}px → ${cssBasedTotalCm.toFixed(2)}cm`,
+              '21cm(px)': `${a4HeightPx.toFixed(0)}px`,
+              '초과(px)': cssBasedTotalPx > a4HeightPx ? `⚠️ +${(cssBasedTotalPx - a4HeightPx).toFixed(0)}px` : '없음',
+              '초과(cm)': cssBasedTotalCm > 21 ? `⚠️ +${(cssBasedTotalCm - 21).toFixed(2)}cm` : '없음'
+            });
+
+            console.log(`[PKG02-PRINT] 🧩 단일페이지 :has(> .last-page:only-child) 매칭:`, {
+              lastPage부모자식수: lastPage?.parentElement?.children?.length ?? 'N/A',
+              lastPage만유일자식: onlyChild,
+              lastPage에lastPage클래스: !!lastPage?.classList.contains('last-page'),
+              ':only-child 매칭': singlePageSelectorMatch,
+              결론: singlePageSelectorMatch ? '✅ 단일페이지로 인식됨' : '❌ 단일페이지 미매칭 → 21cm 고정 적용 안 됐을 수 있음'
+            });
+
+            const reasons: string[] = [];
+            if (cssBasedTotalCm > 21) reasons.push(`콘텐츠 CSS 높이 초과 (${cssBasedTotalCm.toFixed(2)}cm > 21cm)`);
+            if (!singlePageSelectorMatch) reasons.push('단일페이지 선택자 미매칭으로 컨테이너 21cm 고정 미적용');
+            if (redComputed && redComputed.overflow !== 'hidden') reasons.push('빨간 컨테이너 overflow ≠ hidden');
+            if (redRect && redRect.height > a4HeightPx + 2) reasons.push(`빨간 테두리 실제 높이 ${(redRect.height / 37.8).toFixed(2)}cm > 21cm`);
+
+            console.log(`[PKG02-PRINT] 🖨️ 2페이지 원인 추정:`, {
+              가능원인: reasons.length ? reasons : ['측정 시점(스크린)과 인쇄(@media print) 스타일 불일치', 'getBoundingClientRect=0 등 측정 한계'],
+              요약: reasons.length ? `⚠️ ${reasons.join('; ')}` : '인쇄 시 @media print 적용 여부·브라우저 페이지 나누기 동작 확인 필요'
+            });
+
+            // CSS에서 이미 21cm로 고정. 인라인 스타일 추가 보강 (디버그 테두리 제거 후 21cm)
+            lastPage.style.height = '21cm';
+            lastPage.style.maxHeight = '21cm';
+            lastPage.style.minHeight = '21cm';
+            lastPage.style.overflow = 'hidden';
+            lastPage.style.pageBreakAfter = 'avoid';
+            lastPage.style.breakAfter = 'avoid';
+            lastPage.style.boxSizing = 'border-box';
+
+            // 빨간 컨테이너(.print-container)도 21cm·overflow hidden 강제 (2페이지 오버플로우 방지)
+            if (singlePageSelectorMatch && redEl) {
+              redEl.style.height = '21cm';
+              redEl.style.maxHeight = '21cm';
+              redEl.style.minHeight = '21cm';
+              redEl.style.overflow = 'hidden';
+              redEl.style.boxSizing = 'border-box';
+              // outline 대신 box-shadow 사용 (공간 차지 X, 내부 그림자)
+              redEl.style.outline = 'none';
+              // redEl.style.boxShadow = 'inset 0 0 0 3px #e00'; // 디버깅 테두리 제거
+
+              
+              console.log(`[PKG02-PRINT] ✅ 빨간 컨테이너(.print-container) 인라인 강제 적용:`, {
+                height: redEl.style.height,
+                maxHeight: redEl.style.maxHeight,
+                overflow: redEl.style.overflow
+              });
+            }
+            
+            console.log(`[PKG02-PRINT] ✅ 마지막 페이지 CSS 강제 적용 완료:`, {
+              height: lastPage.style.height,
+              maxHeight: lastPage.style.maxHeight,
+              minHeight: lastPage.style.minHeight,
+              overflow: lastPage.style.overflow,
+              pageBreakAfter: lastPage.style.pageBreakAfter,
+              breakAfter: lastPage.style.breakAfter,
+              boxSizing: lastPage.style.boxSizing
+            });
+
+            // 인라인 스타일 적용 후 렌더링 완료 대기 (브라우저가 스타일 적용을 완료할 시간 확보)
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                // 한 번 더 확인 및 강제 적용
+                if (singlePageSelectorMatch && redEl) {
+                  const computed = window.getComputedStyle(redEl);
+                  const rect = redEl.getBoundingClientRect();
+                  const inlineHeight = redEl.style.height;
+                  const inlineMaxHeight = redEl.style.maxHeight;
+                  const inlineOverflow = redEl.style.overflow;
+                  
+                  console.log(`[PKG02-PRINT] 🔍 window.print() 직전 빨간 컨테이너 최종 상태:`, {
+                    인라인_height: inlineHeight || '(없음)',
+                    인라인_maxHeight: inlineMaxHeight || '(없음)',
+                    인라인_overflow: inlineOverflow || '(없음)',
+                    computed_height: computed.height,
+                    computed_maxHeight: computed.maxHeight,
+                    computed_minHeight: computed.minHeight,
+                    computed_overflow: computed.overflow,
+                    computed_boxSizing: computed.boxSizing,
+                    computed_position: computed.position,
+                    computed_display: computed.display,
+                    getBoundingClientRect: `${rect.width.toFixed(1)}px × ${rect.height.toFixed(1)}px`,
+                    getBoundingClientRect_cm: `${(rect.width / 37.8).toFixed(2)}cm × ${(rect.height / 37.8).toFixed(2)}cm`,
+                    offsetHeight: `${redEl.offsetHeight}px (${(redEl.offsetHeight / 37.8).toFixed(2)}cm)`,
+                    scrollHeight: `${redEl.scrollHeight}px (${(redEl.scrollHeight / 37.8).toFixed(2)}cm)`,
+                    clientHeight: `${redEl.clientHeight}px (${(redEl.clientHeight / 37.8).toFixed(2)}cm)`,
+                    A4기준: '29.7cm × 21cm',
+                    높이초과여부: rect.height > 793.8 ? `⚠️ ${((rect.height - 793.8) / 37.8).toFixed(2)}cm 초과!` : '✅ 21cm 이하',
+                    overflow적용여부: computed.overflow === 'hidden' ? '✅ hidden' : `❌ ${computed.overflow}`
+                  });
+
+                  if (computed.height !== '793.7px' && computed.height !== '21cm' && computed.height !== '793.698px') {
+                    redEl.style.setProperty('height', '21cm', 'important');
+                    redEl.style.setProperty('max-height', '21cm', 'important');
+                    redEl.style.setProperty('overflow', 'hidden', 'important');
+                    // redEl.style.setProperty('box-shadow', 'inset 0 0 0 3px #e00', 'important'); // 디버깅 테두리 제거
+                    redEl.style.setProperty('outline', 'none', 'important');
+                    console.log(`[PKG02-PRINT] 🔧 빨간 컨테이너 재강제 적용 (computed: ${computed.height} → 21cm)`);
+                    
+                    // 재강제 적용 후 다시 확인
+                    const recomputed = window.getComputedStyle(redEl);
+                    const rerect = redEl.getBoundingClientRect();
+                    console.log(`[PKG02-PRINT] 🔍 재강제 적용 후 확인:`, {
+                      computed_height: recomputed.height,
+                      computed_overflow: recomputed.overflow,
+                      getBoundingClientRect: `${rerect.width.toFixed(1)}px × ${rerect.height.toFixed(1)}px`,
+                      높이초과여부: rerect.height > 793.8 ? `⚠️ ${((rerect.height - 793.8) / 37.8).toFixed(2)}cm 초과!` : '✅ 21cm 이하'
+                    });
+                  }
+                }
+                
+                // window.print() 호출 직전 최종 확인
+                if (redEl) {
+                  const finalComputed = window.getComputedStyle(redEl);
+                  const finalRect = redEl.getBoundingClientRect();
+                  console.log(`[PKG02-PRINT] 🖨️ window.print() 호출 직전 최종 체크:`, {
+                    computed_height: finalComputed.height,
+                    computed_maxHeight: finalComputed.maxHeight,
+                    computed_overflow: finalComputed.overflow,
+                    getBoundingClientRect: `${finalRect.width.toFixed(1)}px × ${finalRect.height.toFixed(1)}px`,
+                    높이초과여부: finalRect.height > 793.8 ? `⚠️ ${((finalRect.height - 793.8) / 37.8).toFixed(2)}cm 초과 → 2페이지 가능성!` : '✅ 21cm 이하',
+                    overflow적용여부: finalComputed.overflow === 'hidden' ? '✅ hidden' : `❌ ${finalComputed.overflow} → 2페이지 가능성!`
+                  });
+                }
+                
+                window.onafterprint = async () => {
+                  // 인쇄 미리보기 닫힌 후 실제 적용된 스타일 확인
+                  if (redEl) {
+                    const afterComputed = window.getComputedStyle(redEl);
+                    const afterRect = redEl.getBoundingClientRect();
+                    console.log(`[PKG02-PRINT] 📋 window.onafterprint - 인쇄 미리보기 후 상태:`, {
+                      computed_height: afterComputed.height,
+                      computed_maxHeight: afterComputed.maxHeight,
+                      computed_overflow: afterComputed.overflow,
+                      getBoundingClientRect: `${afterRect.width.toFixed(1)}px × ${afterRect.height.toFixed(1)}px`,
+                      높이초과여부: afterRect.height > 793.8 ? `⚠️ ${((afterRect.height - 793.8) / 37.8).toFixed(2)}cm 초과!` : '✅ 21cm 이하',
+                      '2페이지원인추정': afterRect.height > 793.8 || afterComputed.overflow !== 'hidden' 
+                        ? '빨간 컨테이너 높이 초과 또는 overflow ≠ hidden' 
+                        : '다른 원인 (브라우저 페이지 나누기 로직 등)'
+                    });
+                  }
+                  // 업로드 완료 대기 후 cleanup
+                  try {
+                    if (uploadPromise) {
+                      await uploadPromise;
+                      console.log('✅ 파일 업로드 완료 확인');
+                    }
+                  } catch (e) {
+                    console.error('❌ 파일 업로드 중 오류 발생:', e);
+                  }
+                  doCleanup();
+                };
+                // 미리보기 창이 열리기 직전 블러 오버레이 제거
+                removeBlurOverlay();
+                window.print();
+              });
+            });
+          } else {
+            console.warn(`[PKG02-PRINT] ⚠️ 마지막 페이지 요소를 찾을 수 없습니다.`, {
+              printContainer_자식수: printContainer.children.length,
+              printContainer_자식들: Array.from(printContainer.children).map(c => ({
+                tag: c.tagName,
+                id: c.id,
+                클래스: c.className
+              }))
+            });
+            window.onafterprint = doCleanup;
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
+            window.print();
+          }
+            });
+          });
+        } else {
+          // 렌더링 미완료 - 재시도 (폴링 메커니즘)
+          attempts++;
+          if (attempts >= maxAttempts) {
+            console.error('인쇄 렌더링 타임아웃 (문제모드)');
+            window.onafterprint = doCleanup;
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
+            window.print(); // 타임아웃 시에도 인쇄 시도
+          } else {
+            setTimeout(checkRenderAndPrint, 50); // 50ms 후 재시도 (더 빠른 반응)
           }
         }
-      } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+      } else {
+        // DOC/HWP: 인쇄 대화상자 없음 → 곧바로 cleanup
+        // DOC/HWP는 파일 생성이 완료되면 블러 오버레이 제거
+        removeBlurOverlay();
+        setTimeout(doCleanup, 100);
       }
+    };
 
-      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
-       if (fileFormat === 'pdf') {
-         window.print();
-      }
-      
-      // 인쇄 후 정리
-      setTimeout(() => {
-              root.unmount();
-        document.body.removeChild(printContainer);
-            if (appRoot) {
-              appRoot.style.display = 'block';
-        }
-        const styleElement = document.getElementById('print-style-package02');
-        if (styleElement) {
-          document.head.removeChild(styleElement);
-        }
-        console.log('✅ 인쇄(문제) 완료');
-            }, 100);
-    }, 1000);
+    // 폴링 시작 - requestAnimationFrame으로 즉시 시작 (더 빠른 반응)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        checkRenderAndPrint();
+      });
+    });
   };
 
   const handlePrintAnswer = async () => {
@@ -1108,18 +1555,29 @@ const Package_02_TwoStepQuiz: React.FC = () => {
 
     console.log('🖨️ 인쇄(정답) 시작');
     
+    // 블러 오버레이 표시
+    const blurOverlay = showBlurOverlay();
+    
     // A4 가로 페이지 스타일 동적 추가
     const style = document.createElement('style');
     style.id = 'print-style-package02-answer';
     style.textContent = `
       @page {
         margin: 0;
-        size: A4 landscape;
+        size: 29.7cm 21cm;
       }
       @media print {
-        body {
-          margin: 0;
-          padding: 0;
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 29.7cm !important;
+          min-width: 29.7cm !important;
+          height: auto !important; /* 21cm 고정 해제 */
+          overflow: visible !important; /* hidden 해제 */
+        }
+        /* #root와 그 자식들을 인쇄에서 제외 (공간 차지 방지) */
+        body > *:not(#print-root-package02-answer) {
+          display: none !important;
         }
         body * {
           visibility: hidden;
@@ -1129,45 +1587,53 @@ const Package_02_TwoStepQuiz: React.FC = () => {
         }
         .print-container-answer {
           display: block !important;
-          position: absolute !important;
+          position: relative !important;
           top: 0 !important;
           left: 0 !important;
           width: 100% !important;
+          height: auto !important; /* 21cm 고정 해제 */
+          min-width: 0 !important;
+          max-width: 29.7cm !important;
           background: white !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          page-break-after: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        /* 단일 페이지: 빨간 컨테이너 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
+        .print-container-answer:has(> .a4-landscape-page-template.last-page:only-child) {
+          height: 21cm !important;
+          min-height: 21cm !important;
+          max-height: 21cm !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+          page-break-inside: avoid !important;
         }
         .no-print {
           display: none !important;
         }
       }
-      @media screen {
-        .print-container-answer {
-          display: none !important;
-        }
-        .print-container-answer.pdf-generation-active {
-          display: block !important;
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          z-index: 9999 !important;
-          background: white !important;
-          overflow: auto !important;
-        }
-      }
+      /* @media screen 스타일 제거: 인쇄(문제)처럼 화면에서 printContainer를 숨기고 메인 화면이 그대로 보이도록 함 */
     `;
     document.head.appendChild(style);
-
+    
     // 인쇄용 컨테이너 생성 (문제 모드와 동일한 구조로 변경)
     const printContainer = document.createElement('div');
     printContainer.id = 'print-root-package02-answer';
+    // 레이아웃 계산을 위해 명시적으로 너비 설정 (화면 밖으로 보내면 너비가 0이 됨)
+    printContainer.style.width = '29.7cm';
+    printContainer.style.minWidth = '29.7cm';
+    printContainer.style.position = 'absolute';
+    printContainer.style.left = '0';
+    printContainer.style.top = '0';
+    printContainer.style.visibility = 'hidden'; // 화면에 보이지 않지만 레이아웃은 계산됨
     document.body.appendChild(printContainer);
 
     // 기존 화면 숨기기
     const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
+    // if (appRoot) {
+    //   appRoot.style.display = 'none';
+    // }
 
     // React 18 방식으로 렌더링 - PrintFormatPackage02 컴포넌트 사용
     const root = ReactDOM.createRoot(printContainer);
@@ -1189,75 +1655,412 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     };
     activateAnswerContainer();
 
+    const doCleanup = () => {
+      try { root.unmount(); } catch (_) {}
+      if (printContainer.parentNode) document.body.removeChild(printContainer);
+      if (appRoot) appRoot.style.display = 'block';
+      const styleEl = document.getElementById('print-style-package02-answer');
+      if (styleEl?.parentNode) styleEl.parentNode.removeChild(styleEl);
+      console.log('✅ 인쇄(정답) 완료');
+      window.onafterprint = null;
+    };
+
     // 렌더링 완료 후 인쇄 및 파일 생성
-    setTimeout(async () => {
-      // 파일 생성 및 Firebase Storage 업로드
-      try {
-        // 정답 모드: 문제 모드와 동일하게 래퍼 요소 직접 사용
-        const element = document.getElementById('print-root-package02-answer');
-        if (element && userData?.uid) {
-          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-          
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `package02_answer_${Date.now()}`,
-            '패키지#02_정답',
-            { isAnswerMode: true, orientation: 'landscape', fileFormat }
-          );
-          
-          // 패키지 내역에 파일 URL 저장
-          try {
-          const { getQuizHistory } = await import('../../../services/quizHistoryService');
-          const history = await getQuizHistory(userData.uid, { limit: 10 });
-          const packageHistory = history.find(h => h.workTypeId === 'P02');
-          
-          if (packageHistory) {
-            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 패키지#02 정답 ${formatName} 저장 완료:`, result.fileName);
-            }
-          } catch (historyError: any) {
-            // 인덱스 오류는 이미 처리되었으므로 조용히 넘어감
-            if (historyError?.code === 'failed-precondition' || historyError?.message?.includes('index')) {
-              if (process.env.NODE_ENV === 'development') {
-                console.warn('⚠️ 문제 내역 조회 중 인덱스 오류 (무시됨):', historyError?.message);
+    // 인쇄(문제)와 동일하게 렌더링 완료를 폴링으로 확인 (고정 대기 시간 제거)
+    let attempts = 0;
+    const maxAttempts = 50; // 50ms * 50 = 2500ms (2.5초 최대 대기, 더 빠른 반응)
+    let uploadPromise: Promise<void> | null = null; // window.onafterprint에서 접근 가능하도록 외부 스코프에 선언
+    
+    const checkRenderAndPrint = async () => {
+      // 파일 생성 및 Firebase Storage 업로드 (백그라운드 처리)
+      const uploadTask = async () => {
+        try {
+          const element = document.getElementById('print-root-package02-answer');
+          if (element && userData?.uid) {
+            const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+            const result = await generateAndUploadFile(
+              element as HTMLElement,
+              userData.uid,
+              `package02_answer_${Date.now()}`,
+              '패키지#02_정답',
+              { isAnswerMode: true, orientation: 'landscape', fileFormat }
+            );
+            try {
+              const { getQuizHistory } = await import('../../../services/quizHistoryService');
+              const history = await getQuizHistory(userData.uid, { limit: 10 });
+              const packageHistory = history.find(h => h.workTypeId === 'P02');
+              if (packageHistory) {
+                await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
+                const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+                console.log(`📁 패키지#02 정답 ${formatName} 저장 완료:`, result.fileName);
               }
-              // 파일은 이미 생성되었으므로 정상 완료로 처리
-              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-              console.log(`📁 패키지#02 정답 ${formatName} 생성 완료 (내역 저장 스킵):`, result.fileName);
-            } else {
-              // 다른 에러는 정상적으로 로그 출력
-              console.error('문제 내역 조회 실패:', historyError);
+            } catch (historyError: any) {
+              if (historyError?.code === 'failed-precondition' || historyError?.message?.includes('index')) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('⚠️ 문제 내역 조회 중 인덱스 오류 (무시됨):', historyError?.message);
+                }
+                const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+                console.log(`📁 패키지#02 정답 ${formatName} 생성 완료 (내역 저장 스킵):`, result.fileName);
+              } else {
+                console.error('문제 내역 조회 실패:', historyError);
+              }
             }
           }
+        } catch (error) {
+          console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
         }
-      } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
-      }
+      };
 
-      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
-       if (fileFormat === 'pdf') {
-         window.print();
-      }
-      
-      // 인쇄 후 정리
-      setTimeout(() => {
-              root.unmount();
-        document.body.removeChild(printContainer);
-            if (appRoot) {
-              appRoot.style.display = 'block';
+      if (fileFormat === 'pdf') {
+        // 마운트 포인트 내에서 last-page 찾기
+        const lastPage = printContainer.querySelector('.a4-landscape-page-template.last-page') as HTMLElement;
+        
+        // 렌더링 완료 조건: 마지막 페이지가 존재하고 높이가 0보다 커야 함
+        if (lastPage && lastPage.offsetHeight > 0) {
+          // PDF: 인쇄 대화상자 닫힐 때 cleanup (afterprint). 그 전까지 DOM 유지해야 미리보기에 내용 표시됨.
+          // 업로드 작업은 인쇄 후에 시작 (인쇄 속도에 영향 없도록)
+          // requestAnimationFrame으로 즉시 처리 시작 (300ms 대기 제거)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // 업로드 작업 시작 (인쇄와 병렬 처리)
+              uploadPromise = uploadTask();
+            });
+          });
+          
+          // 렌더링 완료 후 즉시 인쇄 처리 (requestAnimationFrame 사용)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+          // printContainer 상태 상세 로그
+          const containerComputed = window.getComputedStyle(printContainer);
+          const containerRect = printContainer.getBoundingClientRect();
+          console.log(`[PKG02-PRINT] 📦 printContainer 상태 (정답모드):`, {
+            id: printContainer.id,
+            위치: `(${containerRect.left.toFixed(0)}px, ${containerRect.top.toFixed(0)}px)`,
+            크기: `${containerRect.width.toFixed(0)}px × ${containerRect.height.toFixed(0)}px`,
+            display: containerComputed.display,
+            position: containerComputed.position,
+            visibility: containerComputed.visibility,
+            overflow: containerComputed.overflow,
+            height: containerComputed.height,
+            maxHeight: containerComputed.maxHeight,
+            클래스: printContainer.className,
+            자식수: printContainer.children.length
+          });
+
+          const lastPage = printContainer.querySelector('.a4-landscape-page-template.last-page') as HTMLElement;
+          
+          if (lastPage) {
+            // lastPage 상태 상세 로그
+            const pageComputed = window.getComputedStyle(lastPage);
+            const pageRect = lastPage.getBoundingClientRect();
+            const pageOffsetHeight = lastPage.offsetHeight;
+            const pageScrollHeight = lastPage.scrollHeight;
+            const pageClientHeight = lastPage.clientHeight;
+            
+            // 부모 요소 확인
+            const parent = lastPage.parentElement;
+            const parentComputed = parent ? window.getComputedStyle(parent) : null;
+            const parentRect = parent ? parent.getBoundingClientRect() : null;
+            
+            console.log(`[PKG02-PRINT] 📄 lastPage 요소 상세 상태 (정답모드):`, {
+              id: lastPage.id,
+              클래스: lastPage.className,
+              위치: `(${pageRect.left.toFixed(0)}px, ${pageRect.top.toFixed(0)}px)`,
+              크기_getBoundingClientRect: `${pageRect.width.toFixed(2)}px × ${pageRect.height.toFixed(2)}px`,
+              크기_offsetHeight: `${pageOffsetHeight.toFixed(2)}px (${(pageOffsetHeight / 37.8).toFixed(2)}cm)`,
+              크기_scrollHeight: `${pageScrollHeight.toFixed(2)}px (${(pageScrollHeight / 37.8).toFixed(2)}cm)`,
+              크기_clientHeight: `${pageClientHeight.toFixed(2)}px (${(pageClientHeight / 37.8).toFixed(2)}cm)`,
+              CSS_height: pageComputed.height,
+              CSS_maxHeight: pageComputed.maxHeight,
+              CSS_minHeight: pageComputed.minHeight,
+              CSS_overflow: pageComputed.overflow,
+              CSS_pageBreakAfter: pageComputed.pageBreakAfter,
+              CSS_breakAfter: pageComputed.breakAfter,
+              CSS_display: pageComputed.display,
+              CSS_position: pageComputed.position,
+              CSS_boxSizing: pageComputed.boxSizing,
+              인라인스타일_height: lastPage.style.height || '(없음)',
+              인라인스타일_maxHeight: lastPage.style.maxHeight || '(없음)',
+              인라인스타일_overflow: lastPage.style.overflow || '(없음)',
+              부모요소: parent ? {
+                tag: parent.tagName,
+                id: parent.id,
+                클래스: parent.className,
+                크기: parentRect ? `${parentRect.width.toFixed(0)}px × ${parentRect.height.toFixed(0)}px` : 'N/A',
+                overflow: parentComputed?.overflow || 'N/A'
+              } : '없음'
+            });
+
+            // 자식 요소들 확인
+            const pageHeader = lastPage.querySelector('.a4-landscape-page-header') as HTMLElement;
+            const pageContent = lastPage.querySelector('.a4-landscape-page-content') as HTMLElement;
+            const twoColumnContainer = lastPage.querySelector('.print-two-column-container') as HTMLElement;
+            
+            if (pageHeader) {
+              const headerRect = pageHeader.getBoundingClientRect();
+              const headerComputed = window.getComputedStyle(pageHeader);
+              console.log(`[PKG02-PRINT]   ↳ 헤더(.a4-landscape-page-header):`, {
+                높이: `${headerRect.height.toFixed(2)}px (${(headerRect.height / 37.8).toFixed(2)}cm)`,
+                CSS_height: headerComputed.height,
+                CSS_overflow: headerComputed.overflow
+              });
             }
             
-            // 동적으로 추가한 스타일 제거
-            const styleElement = document.getElementById('print-style-package02-answer');
-            if (styleElement && styleElement.parentNode) {
-                styleElement.parentNode.removeChild(styleElement);
-        }
+            if (pageContent) {
+              const contentRect = pageContent.getBoundingClientRect();
+              const contentComputed = window.getComputedStyle(pageContent);
+              console.log(`[PKG02-PRINT]   ↳ 콘텐츠(.a4-landscape-page-content):`, {
+                높이: `${contentRect.height.toFixed(2)}px (${(contentRect.height / 37.8).toFixed(2)}cm)`,
+                CSS_height: contentComputed.height,
+                CSS_flex: contentComputed.flex,
+                CSS_overflow: contentComputed.overflow
+              });
+            }
+            
+            if (twoColumnContainer) {
+              const containerRect = twoColumnContainer.getBoundingClientRect();
+              const containerComputed = window.getComputedStyle(twoColumnContainer);
+              console.log(`[PKG02-PRINT]   ↳ 2단컨테이너(.print-two-column-container):`, {
+                높이: `${containerRect.height.toFixed(2)}px (${(containerRect.height / 37.8).toFixed(2)}cm)`,
+                CSS_height: containerComputed.height,
+                CSS_maxHeight: containerComputed.maxHeight,
+                CSS_overflow: containerComputed.overflow
+              });
+            }
 
-        console.log('✅ 인쇄(정답) 완료');
-            }, 100);
-    }, 1000);
+            // 총 높이 계산
+            const headerHeight = pageHeader ? pageHeader.getBoundingClientRect().height : 0;
+            const contentHeight = pageContent ? pageContent.getBoundingClientRect().height : 0;
+            const containerHeight = twoColumnContainer ? twoColumnContainer.getBoundingClientRect().height : 0;
+            const totalCalculatedHeight = headerHeight + (containerHeight || contentHeight);
+            const totalCalculatedHeightCm = totalCalculatedHeight / 37.8;
+            
+            console.log(`[PKG02-PRINT] 📊 높이 합계 계산 (정답모드):`, {
+              헤더높이: `${(headerHeight / 37.8).toFixed(2)}cm`,
+              컨테이너높이: `${(containerHeight / 37.8).toFixed(2)}cm`,
+              콘텐츠높이: `${(contentHeight / 37.8).toFixed(2)}cm`,
+              계산된총높이: `${totalCalculatedHeightCm.toFixed(2)}cm`,
+              A4가로높이: '21cm',
+              초과여부: totalCalculatedHeightCm > 21 ? `⚠️ ${(totalCalculatedHeightCm - 21).toFixed(2)}cm 초과!` : '✅ 21cm 이하'
+            });
+
+            // ---------- 2페이지 원인 상세 로그 (정답모드) ----------
+            const _pxToCm = (px: number) => (px / 37.8);
+            const _parsePx = (s: string): number => (typeof s === 'string' && s.endsWith('px')) ? parseFloat(s) || 0 : 0;
+            const _redEl = printContainer.querySelector('.print-container-answer') as HTMLElement | null;
+            const _redComputed = _redEl ? window.getComputedStyle(_redEl) : null;
+            const _redRect = _redEl ? _redEl.getBoundingClientRect() : null;
+            const _headerCssPx = pageHeader ? _parsePx(window.getComputedStyle(pageHeader).height) : 0;
+            const _twoColCssPx = twoColumnContainer ? _parsePx(window.getComputedStyle(twoColumnContainer).height) : 0;
+            const _contentPadBottom = pageContent ? _parsePx(window.getComputedStyle(pageContent).paddingBottom) : 0;
+            const _cssTotalPx = _headerCssPx + _twoColCssPx + _contentPadBottom;
+            const _cssTotalCm = _pxToCm(_cssTotalPx);
+            const _a4Px = 21 * 37.8;
+            const _onlyChild = lastPage?.parentElement?.children?.length === 1;
+            const _hasLastOnly = !!lastPage && !!lastPage.parentElement && _onlyChild && lastPage.classList.contains('last-page');
+            const _singleMatch = _hasLastOnly && lastPage!.parentElement!.querySelector('.a4-landscape-page-template.last-page:only-child') === lastPage;
+            console.log(`[PKG02-PRINT] 🔴 빨간 테두리(.print-container-answer) 상태:`, {
+              찾음: !!_redEl,
+              width: _redComputed?.width ?? 'N/A', height: _redComputed?.height ?? 'N/A',
+              minHeight: _redComputed?.minHeight ?? 'N/A', maxHeight: _redComputed?.maxHeight ?? 'N/A',
+              overflow: _redComputed?.overflow ?? 'N/A',
+              getBoundingClientRect: _redRect ? `${_redRect.width.toFixed(1)}px × ${_redRect.height.toFixed(1)}px` : 'N/A',
+              A4기준: '29.7cm × 21cm'
+            });
+            console.log(`[PKG02-PRINT] 📐 CSS 기반 높이 (정답모드):`, {
+              헤더_CSS: `${_headerCssPx.toFixed(1)}px → ${_pxToCm(_headerCssPx).toFixed(2)}cm`,
+              '2단컨테이너_CSS': `${_twoColCssPx.toFixed(1)}px → ${_pxToCm(_twoColCssPx).toFixed(2)}cm`,
+              합계: `${_cssTotalPx.toFixed(1)}px → ${_cssTotalCm.toFixed(2)}cm`,
+              '21cm(px)': `${_a4Px.toFixed(0)}px`,
+              '초과(cm)': _cssTotalCm > 21 ? `⚠️ +${(_cssTotalCm - 21).toFixed(2)}cm` : '없음'
+            });
+            console.log(`[PKG02-PRINT] 🧩 단일페이지 :has 매칭 (정답):`, {
+              lastPage만유일자식: _onlyChild,
+              ':only-child 매칭': _singleMatch,
+              결론: _singleMatch ? '✅ 단일페이지' : '❌ 단일페이지 미매칭'
+            });
+            const _reasons: string[] = [];
+            if (_cssTotalCm > 21) _reasons.push(`콘텐츠 CSS 높이 초과 (${_cssTotalCm.toFixed(2)}cm > 21cm)`);
+            if (!_singleMatch) _reasons.push('단일페이지 선택자 미매칭');
+            if (_redRect && _redRect.height > _a4Px + 2) _reasons.push(`빨간 테두리 높이 ${(_redRect.height / 37.8).toFixed(2)}cm > 21cm`);
+            console.log(`[PKG02-PRINT] 🖨️ 2페이지 원인 추정 (정답):`, {
+              가능원인: _reasons.length ? _reasons : ['측정 시점 vs @media print 불일치'],
+              요약: _reasons.length ? `⚠️ ${_reasons.join('; ')}` : '인쇄 시 @media print·페이지 나누기 확인 필요'
+            });
+
+            // CSS에서 이미 21cm로 고정했지만, 인라인 스타일로 추가 보강
+            lastPage.style.height = '21cm';
+            lastPage.style.maxHeight = '21cm';
+            lastPage.style.minHeight = '21cm';
+            lastPage.style.overflow = 'hidden';
+            lastPage.style.pageBreakAfter = 'avoid';
+            lastPage.style.breakAfter = 'avoid';
+            lastPage.style.boxSizing = 'border-box';
+
+            if (_singleMatch && _redEl) {
+              _redEl.style.height = '21cm';
+              _redEl.style.maxHeight = '21cm';
+              _redEl.style.minHeight = '21cm';
+              _redEl.style.overflow = 'hidden';
+              _redEl.style.boxSizing = 'border-box';
+              // outline 대신 box-shadow 사용
+              _redEl.style.outline = 'none';
+              // _redEl.style.boxShadow = 'inset 0 0 0 3px #e00'; // 디버깅 테두리 제거
+
+              console.log(`[PKG02-PRINT] ✅ 빨간 컨테이너(.print-container-answer) 인라인 강제 적용`);
+            }
+            
+            console.log(`[PKG02-PRINT] ✅ 마지막 페이지 CSS 강제 적용 완료 (정답모드):`, {
+              height: lastPage.style.height,
+              maxHeight: lastPage.style.maxHeight,
+              minHeight: lastPage.style.minHeight,
+              overflow: lastPage.style.overflow,
+              pageBreakAfter: lastPage.style.pageBreakAfter,
+              breakAfter: lastPage.style.breakAfter,
+              boxSizing: lastPage.style.boxSizing
+            });
+
+            // 인라인 스타일 적용 후 렌더링 완료 대기 (브라우저가 스타일 적용을 완료할 시간 확보)
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                // 한 번 더 확인 및 강제 적용
+                if (_singleMatch && _redEl) {
+                  const computed = window.getComputedStyle(_redEl);
+                  const rect = _redEl.getBoundingClientRect();
+                  const inlineHeight = _redEl.style.height;
+                  const inlineMaxHeight = _redEl.style.maxHeight;
+                  const inlineOverflow = _redEl.style.overflow;
+                  
+                  console.log(`[PKG02-PRINT] 🔍 window.print() 직전 빨간 컨테이너 최종 상태 (정답):`, {
+                    인라인_height: inlineHeight || '(없음)',
+                    인라인_maxHeight: inlineMaxHeight || '(없음)',
+                    인라인_overflow: inlineOverflow || '(없음)',
+                    computed_height: computed.height,
+                    computed_maxHeight: computed.maxHeight,
+                    computed_minHeight: computed.minHeight,
+                    computed_overflow: computed.overflow,
+                    computed_boxSizing: computed.boxSizing,
+                    computed_position: computed.position,
+                    computed_display: computed.display,
+                    getBoundingClientRect: `${rect.width.toFixed(1)}px × ${rect.height.toFixed(1)}px`,
+                    getBoundingClientRect_cm: `${(rect.width / 37.8).toFixed(2)}cm × ${(rect.height / 37.8).toFixed(2)}cm`,
+                    offsetHeight: `${_redEl.offsetHeight}px (${(_redEl.offsetHeight / 37.8).toFixed(2)}cm)`,
+                    scrollHeight: `${_redEl.scrollHeight}px (${(_redEl.scrollHeight / 37.8).toFixed(2)}cm)`,
+                    clientHeight: `${_redEl.clientHeight}px (${(_redEl.clientHeight / 37.8).toFixed(2)}cm)`,
+                    A4기준: '29.7cm × 21cm',
+                    높이초과여부: rect.height > 793.8 ? `⚠️ ${((rect.height - 793.8) / 37.8).toFixed(2)}cm 초과!` : '✅ 21cm 이하',
+                    overflow적용여부: computed.overflow === 'hidden' ? '✅ hidden' : `❌ ${computed.overflow}`
+                  });
+
+                  if (computed.height !== '793.7px' && computed.height !== '21cm' && computed.height !== '793.698px') {
+                    _redEl.style.setProperty('height', '21cm', 'important');
+                    _redEl.style.setProperty('max-height', '21cm', 'important');
+                    _redEl.style.setProperty('overflow', 'hidden', 'important');
+                    // _redEl.style.setProperty('box-shadow', 'inset 0 0 0 3px #e00', 'important'); // 디버깅 테두리 제거
+                    _redEl.style.setProperty('outline', 'none', 'important');
+                    console.log(`[PKG02-PRINT] 🔧 빨간 컨테이너 재강제 적용 (정답, computed: ${computed.height} → 21cm)`);
+                    
+                    // 재강제 적용 후 다시 확인
+                    const recomputed = window.getComputedStyle(_redEl);
+                    const rerect = _redEl.getBoundingClientRect();
+                    console.log(`[PKG02-PRINT] 🔍 재강제 적용 후 확인 (정답):`, {
+                      computed_height: recomputed.height,
+                      computed_overflow: recomputed.overflow,
+                      getBoundingClientRect: `${rerect.width.toFixed(1)}px × ${rerect.height.toFixed(1)}px`,
+                      높이초과여부: rerect.height > 793.8 ? `⚠️ ${((rerect.height - 793.8) / 37.8).toFixed(2)}cm 초과!` : '✅ 21cm 이하'
+                    });
+                  }
+                }
+                
+                // window.print() 호출 직전 최종 확인
+                if (_redEl) {
+                  const finalComputed = window.getComputedStyle(_redEl);
+                  const finalRect = _redEl.getBoundingClientRect();
+                  console.log(`[PKG02-PRINT] 🖨️ window.print() 호출 직전 최종 체크 (정답):`, {
+                    computed_height: finalComputed.height,
+                    computed_maxHeight: finalComputed.maxHeight,
+                    computed_overflow: finalComputed.overflow,
+                    getBoundingClientRect: `${finalRect.width.toFixed(1)}px × ${finalRect.height.toFixed(1)}px`,
+                    높이초과여부: finalRect.height > 793.8 ? `⚠️ ${((finalRect.height - 793.8) / 37.8).toFixed(2)}cm 초과 → 2페이지 가능성!` : '✅ 21cm 이하',
+                    overflow적용여부: finalComputed.overflow === 'hidden' ? '✅ hidden' : `❌ ${finalComputed.overflow} → 2페이지 가능성!`
+                  });
+                }
+                
+                window.onafterprint = async () => {
+                  // 인쇄 미리보기 닫힌 후 실제 적용된 스타일 확인
+                  if (_redEl) {
+                    const afterComputed = window.getComputedStyle(_redEl);
+                    const afterRect = _redEl.getBoundingClientRect();
+                    console.log(`[PKG02-PRINT] 📋 window.onafterprint - 인쇄 미리보기 후 상태 (정답):`, {
+                      computed_height: afterComputed.height,
+                      computed_maxHeight: afterComputed.maxHeight,
+                      computed_overflow: afterComputed.overflow,
+                      getBoundingClientRect: `${afterRect.width.toFixed(1)}px × ${afterRect.height.toFixed(1)}px`,
+                      높이초과여부: afterRect.height > 793.8 ? `⚠️ ${((afterRect.height - 793.8) / 37.8).toFixed(2)}cm 초과!` : '✅ 21cm 이하',
+                      '2페이지원인추정': afterRect.height > 793.8 || afterComputed.overflow !== 'hidden' 
+                        ? '빨간 컨테이너 높이 초과 또는 overflow ≠ hidden' 
+                        : '다른 원인 (브라우저 페이지 나누기 로직 등)'
+                    });
+                  }
+                  // 업로드 완료 대기 후 cleanup (인쇄(문제)와 동일)
+                  try {
+                    if (uploadPromise) {
+                      await uploadPromise;
+                      console.log('✅ 파일 업로드 완료 확인 (정답)');
+                    }
+                  } catch (e) {
+                    console.error('❌ 파일 업로드 중 오류 발생 (정답):', e);
+                  }
+                  doCleanup();
+                };
+                // 미리보기 창이 열리기 직전 블러 오버레이 제거
+                removeBlurOverlay();
+                window.print();
+              });
+            });
+          } else {
+            console.warn(`[PKG02-PRINT] ⚠️ 마지막 페이지 요소를 찾을 수 없습니다. (정답모드)`, {
+              printContainer_자식수: printContainer.children.length,
+              printContainer_자식들: Array.from(printContainer.children).map(c => ({
+                tag: c.tagName,
+                id: c.id,
+                클래스: c.className
+              }))
+            });
+            window.onafterprint = doCleanup;
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
+            window.print();
+          }
+            });
+          });
+        } else {
+          // 렌더링 미완료 - 재시도 (인쇄(문제)와 동일한 폴링 메커니즘)
+          attempts++;
+          if (attempts >= maxAttempts) {
+            console.error('인쇄 렌더링 타임아웃 (정답모드)');
+            window.onafterprint = doCleanup;
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
+            window.print(); // 타임아웃 시에도 인쇄 시도
+          } else {
+            setTimeout(checkRenderAndPrint, 50); // 50ms 후 재시도 (더 빠른 반응)
+          }
+        }
+      } else {
+        // DOC/HWP: 인쇄 대화상자 없음 → 곧바로 cleanup
+        // DOC/HWP는 파일 생성이 완료되면 블러 오버레이 제거
+        removeBlurOverlay();
+        setTimeout(doCleanup, 100);
+      }
+    };
+
+    // 폴링 시작 - requestAnimationFrame으로 즉시 시작 (더 빠른 반응)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        checkRenderAndPrint();
+      });
+    });
   };
 
   // 문제 생성 후 화면

@@ -1,43 +1,40 @@
-.print-two-column-container {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
-  -webkit-box-pack: justify;
-  -ms-flex-pack: justify;
-  justify-content: space-between;
-  -webkit-box-align: stretch;
-  -ms-flex-align: stretch;
-  align-items: stretch;
-  gap: 0.6cm;
-  width: 100%;
-  position: relative;
-  /* 페이지 높이 고정: 컨테이너가 항상 19.3cm 높이로 고정됨 */
-  height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
-  min-height: 19.3cm !important;
-  max-height: 19.3cm !important;
-  overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
-}
+  /* 2단 레이아웃 컨테이너 - CSS Grid 사용 */
+  .print-two-column-container {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between; /* 양쪽 정렬 */
+    align-items: stretch; /* 높이 맞춤 */
+    gap: 0.6cm;
+    width: 100%;
+    position: relative;
+    /* 페이지 높이 고정: 컨테이너가 항상 19.3cm 높이로 고정됨 */
+    height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    min-height: 19.3cm !important;
+    max-height: 19.3cm !important;
+    overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
+  }
 
-.print-column {
-  -webkit-box-flex: 1;
-  -ms-flex: 1 1 50%;
-  flex: 1 1 50%;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  gap: 0.35cm;
-  /* 페이지 높이 고정: 컬럼이 항상 19.3cm 높이로 고정됨 */
-  height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
-  min-height: 19.3cm !important;
-  max-height: 19.3cm !important;
-  overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
-}
+  .print-column {
+    flex: 1 1 0%; /* 50% 대신 0%로 설정하여 정확히 등분 */
+    width: 0; /* flex-basis가 0일 때 width도 0으로 설정해야 안전 */
+    min-width: 0; /* flexbox overflow 방지 */
+    display: flex;
+    flex-direction: column;
+    gap: 0.35cm;
+    /* 페이지 높이 고정: 컬럼이 항상 19.3cm 높이로 고정됨 */
+    height: 19.3cm !important; 
+    min-height: 19.3cm !important;
+    max-height: 19.3cm !important;
+    overflow: hidden !important;
+  }
+
+  /* 정답 모드에서도 동일하게 적용 */
+  .print-container-answer .print-column {
+    flex: 1 1 0% !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    gap: 0.3cm !important;
+  }
 
 /* 패키지#02 인쇄 전용 스타일 - A4 가로 페이지 */
 
@@ -59,7 +56,25 @@
 
 @page {
   margin: 0;
-  size: A4 landscape; /* 가로 페이지 설정 */
+  size: 29.7cm 21cm; /* A4 가로: 명시적 크기 지정 (빈 페이지 방지) */
+}
+
+/* 빈 페이지 숨기기 (브라우저가 자동으로 추가하는 빈 페이지 방지) */
+@page :blank {
+  @top-center { content: ""; }
+  @bottom-center { content: ""; }
+}
+
+/* 첫 번째 페이지만 있는 경우 빈 2페이지 방지 */
+@page :first {
+  size: 29.7cm 21cm;
+  margin: 0;
+}
+
+/* 마지막 페이지 다음 빈 페이지 방지 */
+@page :last {
+  size: 29.7cm 21cm;
+  margin: 0;
 }
 
 /* 화면에서 숨김 (PDF 생성 시에는 보이도록 예외 처리) */
@@ -222,12 +237,12 @@
   color: #666;
 }
 
-/* A4 가로 페이지 템플릿 */
-.a4-landscape-page-template {
-  width: 29.7cm; /* 가로 길이 */
-  height: 21cm;  /* 세로 길이 */
-  margin: 0;
-  padding: 0;
+  /* A4 가로 페이지 템플릿 */
+  .a4-landscape-page-template {
+    width: 29.7cm !important; /* 100% 대신 29.7cm로 명시적 고정 */
+    height: 21cm;  /* 세로 길이 */
+    margin: 0;
+    padding: 0;
   background: white;
   box-sizing: border-box;
   page-break-inside: avoid;
@@ -300,17 +315,23 @@
   body {
     margin: 0;
     padding: 0;
+    width: 29.7cm !important; /* 인쇄 시 body 너비 강제 확장 */
+    min-width: 29.7cm !important;
   }
 
+  /* 빨간 테두리 컨테이너 = 너비 100% (최대 29.7cm) */
   .print-container,
   .print-container-answer {
     display: block !important;
-    position: absolute !important;
+    position: relative !important; /* absolute -> relative 변경 (페이지 매김 안전성 확보) */
     top: 0 !important;
     left: 0 !important;
     visibility: visible !important;
     opacity: 1 !important;
     width: 100% !important;
+    min-width: 0 !important;
+    max-width: 29.7cm !important;
+    height: auto !important;
     background: white !important;
   }
 
@@ -319,28 +340,78 @@
     position: static !important;
     top: auto !important;
     left: auto !important;
-    width: 100% !important;
-    min-width: 100% !important;
+    width: 100% !important; /* 29.7cm -> 100% */
+    min-width: 0 !important;
+    max-width: 29.7cm !important;
     height: auto !important;
     min-height: auto !important;
   }
-  
-  /* 정답 모드: 마지막 페이지 다음 빈 페이지 방지 */
+
+  /* 단일 페이지 시: 빨간 테두리 = 높이 21cm 고정 */
+  .print-container:has(> .a4-landscape-page-template.last-page:only-child),
+  .print-container-answer:has(> .a4-landscape-page-template.last-page:only-child) {
+    width: 100% !important; /* 29.7cm -> 100% */
+    min-width: 0 !important;
+    max-width: 29.7cm !important;
+    height: 21cm !important;
+    max-height: 21cm !important;
+    overflow: hidden !important;
+  }
+
+  /* 정답 모드: 마지막 페이지 다음 빈 페이지 방지 — 정확히 21cm 고정 */
   .print-container-answer .a4-landscape-page-template:last-child,
   .print-container-answer .a4-landscape-page-template.last-page {
     page-break-after: avoid !important;
     break-after: avoid !important;
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+    height: 21cm !important;
+    min-height: 21cm !important;
+    max-height: 21cm !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 문제 모드: 마지막 페이지 다음 빈 페이지 방지 — 정확히 21cm 고정 */
+  .print-container .a4-landscape-page-template:last-child,
+  .print-container .a4-landscape-page-template.last-page {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    height: 21cm !important;
+    min-height: 21cm !important;
+    max-height: 21cm !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 마지막 페이지의 모든 자식 요소도 overflow 제한 */
+  .print-container .a4-landscape-page-template.last-page > *,
+  .print-container-answer .a4-landscape-page-template.last-page > * {
+    max-height: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  /* 마지막 페이지 다음 모든 요소 숨기기 (빈 페이지 방지) */
+  .a4-landscape-page-template.last-page::after {
+    content: '';
+    display: none !important;
+  }
+  
+  .a4-landscape-page-template.last-page ~ * {
+    display: none !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   /* 페이지 템플릿 크기 강제 */
   .a4-landscape-page-template {
     display: flex !important;
     flex-direction: column !important;
-    width: 29.7cm !important;
+    width: 100% !important; /* 29.7cm -> 100% */
     height: 21cm !important;
-    min-width: 29.7cm !important;
+    min-width: 0 !important;
     min-height: 21cm !important;
     max-width: 29.7cm !important;
     position: relative !important;
@@ -429,54 +500,40 @@
 
   /* 2단 레이아웃 컨테이너 - CSS Grid 사용 */
   .print-two-column-container {
-    display: -webkit-box;
-    display: -ms-flexbox;
     display: flex;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
-  -webkit-box-pack: start;
-  -ms-flex-pack: start;
-  justify-content: flex-start;
-  -webkit-box-align: start;
-  -ms-flex-align: start;
-  align-items: flex-start;
+    flex-wrap: nowrap;
+    justify-content: space-between; /* 양쪽 정렬 */
+    align-items: stretch; /* 높이 맞춤 */
     gap: 0.6cm;
     width: 100%;
     position: relative;
     /* 페이지 높이 고정: 컨테이너가 항상 19.3cm 높이로 고정됨 */
     height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
     min-height: 19.3cm !important;
-    max-height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    max-height: 19.3cm !important;
     overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
   }
 
   .print-column {
-    -webkit-box-flex: 1;
-    -ms-flex: 1 1 50%;
-    flex: 1 1 50%;
-    display: -webkit-box;
-    display: -ms-flexbox;
+    flex: 1 1 0%; /* 50% 대신 0%로 설정하여 정확히 등분 */
+    width: 0; /* flex-basis가 0일 때 width도 0으로 설정해야 안전 */
+    min-width: 0; /* flexbox overflow 방지 */
     display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -ms-flex-direction: column;
     flex-direction: column;
     gap: 0.35cm;
-  min-width: 0;
     /* 페이지 높이 고정: 컬럼이 항상 19.3cm 높이로 고정됨 */
-    height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
+    height: 19.3cm !important; 
     min-height: 19.3cm !important;
-    max-height: 19.3cm !important; /* 21cm (페이지 높이) - 1.2cm (헤더) - 0.5cm (하단 패딩) */
-    overflow: hidden !important; /* 페이지 높이를 넘는 내용 숨김 */
+    max-height: 19.3cm !important;
+    overflow: hidden !important;
   }
 
+  /* 정답 모드에서도 동일하게 적용 */
   .print-container-answer .print-column {
-    gap: 0.3cm !important;
-    /* 컬럼 내부 요소들이 전체 너비를 차지하도록 보장 */
-    width: 100% !important;
+    flex: 1 1 0% !important;
+    width: 0 !important;
     min-width: 0 !important;
-    flex: 1 1 50% !important;
-    box-sizing: border-box !important;
+    gap: 0.3cm !important;
   }
 
   /* 정답 모드: 컬럼 내부의 모든 요소가 전체 너비를 차지하도록 강제 */
@@ -1912,6 +1969,7 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
 }
 
 
