@@ -71,16 +71,12 @@ const Work_12_WordStudy: React.FC = () => {
       size: A4 portrait !important;
       margin: 0 !important;
     }
-    html, body {
-      width: 21cm !important;
-      height: 29.7cm !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+    /* 오버레이 내부의 컨텐츠만 스타일 적용 - 메인 영역의 html/body에는 영향 없음 */
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
     @media print {
+      /* 인쇄 시에만 html/body 크기 고정 */
       html, body {
         width: 21cm !important;
         height: 29.7cm !important;
@@ -91,20 +87,26 @@ const Work_12_WordStudy: React.FC = () => {
       .a4-page-template-work12 {
         width: 21cm !important;
         max-width: 21cm !important;
+        min-width: 21cm !important;
         height: 29.7cm !important;
         max-height: 29.7cm !important;
+        min-height: 29.7cm !important;
         margin: 0 !important;
         padding: 0 !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
       }
     }
     .a4-page-template-work12 {
       width: 21cm !important;
       max-width: 21cm !important;
+      min-width: 21cm !important;
       height: 29.7cm !important;
       max-height: 29.7cm !important;
+      min-height: 29.7cm !important;
       box-sizing: border-box;
       padding: 0;
       margin: 0;
@@ -1664,17 +1666,84 @@ ${englishWords.join(', ')}
 
     const overlay = document.createElement('div');
     overlay.id = overlayId;
+    // 오버레이를 화면에서는 중앙에 배치하되, 인쇄 시에는 전체 페이지를 차지하도록 설정
     Object.assign(overlay.style, {
       position: 'fixed',
-      inset: '0',
+      top: '0',
+      left: '0',
+      right: '0',
+      bottom: '0',
       backgroundColor: '#ffffff',
       zIndex: '9999',
-      overflow: 'hidden'
+      overflow: 'auto',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
     } as Partial<CSSStyleDeclaration>);
 
     // 오버레이에 인쇄용 스타일 + 마크업 주입
+    // 오버레이 내부의 스타일이 메인 영역에 영향을 주지 않도록 오버레이 ID로 스코프 제한
+    // html, body 선택자를 오버레이 내부로만 제한하고, 오버레이 자체가 A4 크기를 가지도록 설정
+    const scopedStyles = PRINT_STYLES
+      .replace(/html, body\s*\{/g, `#${overlayId} {`)
+      .replace(/@media print\s*\{\s*html, body/g, `@media print { #${overlayId}`)
+      + `
+      /* 화면: 오버레이 내부 컨텐츠 A4 비율로 중앙 표시 */
+      #${overlayId} { width: 100%; height: 100%; margin: 0; padding: 0; }
+      #${overlayId} .a4-page-template-work12 {
+        width: 21cm !important;
+        max-width: 21cm !important;
+        height: 29.7cm !important;
+        max-height: 29.7cm !important;
+        margin: 0 auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      }
+      @media print {
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 21cm !important;
+          height: 29.7cm !important;
+          min-width: 21cm !important;
+          min-height: 29.7cm !important;
+        }
+        body#work12-print-active > *:not(#${overlayId}) {
+          display: none !important;
+        }
+        #${overlayId} {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 21cm !important;
+          height: 29.7cm !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          display: block !important;
+          overflow: visible !important;
+        }
+        #${overlayId} .only-print-work12 {
+          width: 21cm !important;
+          height: 29.7cm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #${overlayId} .a4-page-template-work12 {
+          width: 21cm !important;
+          max-width: 21cm !important;
+          min-width: 21cm !important;
+          height: 29.7cm !important;
+          max-height: 29.7cm !important;
+          min-height: 29.7cm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-shadow: none !important;
+          box-sizing: border-box !important;
+        }
+      }
+      `;
     overlay.innerHTML = `
-      <style>${PRINT_STYLES}</style>
+      <style>${scopedStyles}</style>
       ${markup}
     `;
 
@@ -1719,8 +1788,17 @@ ${englishWords.join(', ')}
         // 폰트 크기 조정 실행
         adjustFontSizeForPrint();
         
-        // 추가 지연 후 인쇄 (폰트 크기 조정 완료 대기)
+        // 추가 지연 후 인쇄 (렌더링 및 폰트 크기 조정 완료 대기)
         setTimeout(() => {
+          // 인쇄 전에 오버레이가 올바른 크기를 가지도록 확인
+          const pageTemplate = overlay.querySelector('.a4-page-template-work12') as HTMLElement;
+          if (pageTemplate) {
+            // 화면에서 A4 비율로 표시되도록 설정
+            pageTemplate.style.width = '21cm';
+            pageTemplate.style.height = '29.7cm';
+            pageTemplate.style.margin = '0 auto';
+          }
+          
           window.print();
 
           // window.print() 호출 직후 즉시 오버레이 숨기기
@@ -1734,7 +1812,7 @@ ${englishWords.join(', ')}
           overlay.style.width = '0';
           overlay.style.height = '0';
           overlay.style.overflow = 'hidden';
-        }, 50);
+        }, 100);
 
       // 인쇄 후 오버레이 정리
       setTimeout(() => {
