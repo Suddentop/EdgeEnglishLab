@@ -552,22 +552,48 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
                 lastTranslatedText = firstItemTranslatedText || '';
               }
             } else {
-              // 여러 유형 선택한 경우: 마지막 아이템의 translatedText 사용
-              const lastItem = packageQuiz[packageQuiz.length - 1];
-              const lastQuizData = lastItem.quiz || lastItem.data;
-              lastTranslatedText = 
-                lastItem.translatedText ||
-                lastQuizData?.translatedText ||
-                lastQuizData?.translation ||
-                (lastQuizData as any)?.koreanTranslation ||
-                (lastQuizData as any)?.korean ||
-                (lastQuizData as any)?.koreanText ||
-                (lastQuizData as any)?.korTranslation ||
-                (lastQuizData as any)?.koText ||
-                (lastQuizData as any)?.korean_text ||
-                (lastQuizData as any)?.passageTranslation ||
-                (lastQuizData as any)?.korean_passage ||
-                '';
+              // 여러 유형 선택한 경우: 모든 아이템을 순회하며 translatedText 찾기
+              // 마지막 아이템부터 역순으로 확인하고, 없으면 첫 번째 아이템 확인
+              for (let i = packageQuiz.length - 1; i >= 0; i--) {
+                const item = packageQuiz[i];
+                const quizData = item.quiz || item.data;
+                const itemTranslatedText = 
+                  item.translatedText ||
+                  quizData?.translatedText ||
+                  quizData?.translation ||
+                  (quizData as any)?.koreanTranslation ||
+                  (quizData as any)?.korean ||
+                  (quizData as any)?.koreanText ||
+                  (quizData as any)?.korTranslation ||
+                  (quizData as any)?.koText ||
+                  (quizData as any)?.korean_text ||
+                  (quizData as any)?.passageTranslation ||
+                  (quizData as any)?.korean_passage ||
+                  '';
+                
+                if (itemTranslatedText && itemTranslatedText.trim()) {
+                  lastTranslatedText = itemTranslatedText;
+                  break; // 찾으면 중단
+                }
+              }
+              
+              // 여전히 찾지 못한 경우, 첫 번째 아이템의 originalText 관련 번역 확인
+              if (!lastTranslatedText || !lastTranslatedText.trim()) {
+                const firstItem = packageQuiz[0];
+                const firstQuizData = firstItem.quiz || firstItem.data;
+                lastTranslatedText = 
+                  firstItem.translatedText ||
+                  firstQuizData?.translatedText ||
+                  (firstQuizData as any)?.koreanTranslation ||
+                  (firstQuizData as any)?.korean ||
+                  (firstQuizData as any)?.koreanText ||
+                  (firstQuizData as any)?.korTranslation ||
+                  (firstQuizData as any)?.koText ||
+                  (firstQuizData as any)?.korean_text ||
+                  (firstQuizData as any)?.passageTranslation ||
+                  (firstQuizData as any)?.korean_passage ||
+                  '';
+              }
             }
           }
           

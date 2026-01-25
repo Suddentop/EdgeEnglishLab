@@ -980,6 +980,55 @@ const Package_02_TwoStepQuiz: React.FC = () => {
   };
 
   // 인쇄(문제) 핸들러
+  // 블러 오버레이 생성 및 제거 헬퍼 함수 (메인 영역만)
+  const showBlurOverlay = () => {
+    // 기존 오버레이가 있으면 제거
+    const existing = document.getElementById('print-blur-overlay');
+    if (existing) {
+      existing.remove();
+    }
+    
+    // 메인 콘텐츠 영역 찾기 (문제 생성 후: quiz-display, 문제 생성 전: quiz-generator)
+    const mainContent = document.querySelector('.quiz-display') || document.querySelector('.quiz-generator') || document.querySelector('.package-quiz-container');
+    
+    if (!mainContent) {
+      console.warn('메인 콘텐츠 영역을 찾을 수 없습니다.');
+      return null;
+    }
+    
+    // 메인 영역의 위치와 크기 계산
+    const rect = mainContent.getBoundingClientRect();
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'print-blur-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: ${rect.top}px;
+      left: ${rect.left}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background-color: rgba(255, 255, 255, 0.3);
+      z-index: 999999;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      border-radius: 16px;
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+  };
+
+  const removeBlurOverlay = () => {
+    const overlay = document.getElementById('print-blur-overlay');
+    if (overlay) {
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.remove();
+      }, 300); // transition 시간과 맞춤
+    }
+  };
+
   const handlePrintProblem = async () => {
     if (!packageQuiz || packageQuiz.length === 0) {
       alert('인쇄할 문제가 없습니다.');
@@ -987,6 +1036,9 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     }
 
     console.log('🖨️ 인쇄(문제) 시작');
+    
+    // 블러 오버레이 표시
+    const blurOverlay = showBlurOverlay();
     
     // 가로 페이지 스타일 동적 추가
     const style = document.createElement('style');
@@ -1083,39 +1135,62 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     };
 
     // 렌더링 완료 후 인쇄 및 파일 생성
-    setTimeout(async () => {
-      // 파일 생성 및 Firebase Storage 업로드
-      try {
-        const element = document.getElementById('print-root-package02');
-        if (element && userData?.uid) {
-          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-          
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `package02_problem_${Date.now()}`,
-            '패키지#02_문제',
-            { isAnswerMode: false, orientation: 'landscape', fileFormat }
-          );
-          
-          // 패키지 내역에 파일 URL 저장
-          const { getQuizHistory } = await import('../../../services/quizHistoryService');
-          const history = await getQuizHistory(userData.uid, { limit: 10 });
-          const packageHistory = history.find(h => h.workTypeId === 'P02');
-          
-          if (packageHistory) {
-            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
-             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 패키지#02 문제 ${formatName} 저장 완료:`, result.fileName);
+    // 문제생성 직후 렌더링 지연을 방지하기 위해 폴링 메커니즘 사용
+    let attempts = 0;
+    const maxAttempts = 50; // 50ms * 50 = 2500ms (2.5초 최대 대기, 더 빠른 반응)
+    let uploadPromise: Promise<void> | null = null; // window.onafterprint에서 접근 가능하도록 외부 스코프에 선언
+    
+    const checkRenderAndPrint = async () => {
+      // 파일 생성 및 Firebase Storage 업로드 (백그라운드 처리)
+      const uploadTask = async () => {
+        try {
+          const element = document.getElementById('print-root-package02');
+          if (element && userData?.uid) {
+            const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+            
+            const result = await generateAndUploadFile(
+              element as HTMLElement,
+              userData.uid,
+              `package02_problem_${Date.now()}`,
+              '패키지#02_문제',
+              { isAnswerMode: false, orientation: 'landscape', fileFormat }
+            );
+            
+            // 패키지 내역에 파일 URL 저장
+            const { getQuizHistory } = await import('../../../services/quizHistoryService');
+            const history = await getQuizHistory(userData.uid, { limit: 10 });
+            const packageHistory = history.find(h => h.workTypeId === 'P02');
+            
+            if (packageHistory) {
+              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
+               const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+              console.log(`📁 패키지#02 문제 ${formatName} 저장 완료:`, result.fileName);
+            }
           }
+        } catch (error) {
+          console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
         }
-      } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
-      }
+      };
 
       if (fileFormat === 'pdf') {
-        // PDF: 인쇄 대화상자 닫힐 때 cleanup (afterprint). 그 전까지 DOM 유지해야 미리보기에 내용 표시됨.
-        setTimeout(() => {
+        // 마운트 포인트 내에서 last-page 찾기
+        const lastPage = printContainer.querySelector('.a4-landscape-page-template.last-page') as HTMLElement;
+        
+        // 렌더링 완료 조건: 마지막 페이지가 존재하고 높이가 0보다 커야 함
+        if (lastPage && lastPage.offsetHeight > 0) {
+          // PDF: 인쇄 대화상자 닫힐 때 cleanup (afterprint). 그 전까지 DOM 유지해야 미리보기에 내용 표시됨.
+          // 업로드 작업은 인쇄 후에 시작 (인쇄 속도에 영향 없도록)
+          // requestAnimationFrame으로 즉시 처리 시작 (300ms 대기 제거)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // 업로드 작업 시작 (인쇄와 병렬 처리)
+              uploadPromise = uploadTask();
+            });
+          });
+          
+          // 렌더링 완료 후 즉시 인쇄 처리 (requestAnimationFrame 사용)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
           // printContainer 상태 상세 로그
           const containerComputed = window.getComputedStyle(printContainer);
           const containerRect = printContainer.getBoundingClientRect();
@@ -1395,7 +1470,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   });
                 }
                 
-                window.onafterprint = () => {
+                window.onafterprint = async () => {
                   // 인쇄 미리보기 닫힌 후 실제 적용된 스타일 확인
                   if (redEl) {
                     const afterComputed = window.getComputedStyle(redEl);
@@ -1411,8 +1486,19 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                         : '다른 원인 (브라우저 페이지 나누기 로직 등)'
                     });
                   }
+                  // 업로드 완료 대기 후 cleanup
+                  try {
+                    if (uploadPromise) {
+                      await uploadPromise;
+                      console.log('✅ 파일 업로드 완료 확인');
+                    }
+                  } catch (e) {
+                    console.error('❌ 파일 업로드 중 오류 발생:', e);
+                  }
                   doCleanup();
                 };
+                // 미리보기 창이 열리기 직전 블러 오버레이 제거
+                removeBlurOverlay();
                 window.print();
               });
             });
@@ -1426,14 +1512,39 @@ const Package_02_TwoStepQuiz: React.FC = () => {
               }))
             });
             window.onafterprint = doCleanup;
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
             window.print();
           }
-        }, 300); // DOM 렌더링 완료 대기
+            });
+          });
+        } else {
+          // 렌더링 미완료 - 재시도 (폴링 메커니즘)
+          attempts++;
+          if (attempts >= maxAttempts) {
+            console.error('인쇄 렌더링 타임아웃 (문제모드)');
+            window.onafterprint = doCleanup;
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
+            window.print(); // 타임아웃 시에도 인쇄 시도
+          } else {
+            setTimeout(checkRenderAndPrint, 50); // 50ms 후 재시도 (더 빠른 반응)
+          }
+        }
       } else {
         // DOC/HWP: 인쇄 대화상자 없음 → 곧바로 cleanup
+        // DOC/HWP는 파일 생성이 완료되면 블러 오버레이 제거
+        removeBlurOverlay();
         setTimeout(doCleanup, 100);
       }
-    }, 1000);
+    };
+
+    // 폴링 시작 - requestAnimationFrame으로 즉시 시작 (더 빠른 반응)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        checkRenderAndPrint();
+      });
+    });
   };
 
   const handlePrintAnswer = async () => {
@@ -1443,6 +1554,9 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     }
 
     console.log('🖨️ 인쇄(정답) 시작');
+    
+    // 블러 오버레이 표시
+    const blurOverlay = showBlurOverlay();
     
     // A4 가로 페이지 스타일 동적 추가
     const style = document.createElement('style');
@@ -1499,28 +1613,20 @@ const Package_02_TwoStepQuiz: React.FC = () => {
           display: none !important;
         }
       }
-      @media screen {
-        .print-container-answer {
-          display: none !important;
-        }
-        .print-container-answer.pdf-generation-active {
-          display: block !important;
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          z-index: 9999 !important;
-          background: white !important;
-          overflow: auto !important;
-        }
-      }
+      /* @media screen 스타일 제거: 인쇄(문제)처럼 화면에서 printContainer를 숨기고 메인 화면이 그대로 보이도록 함 */
     `;
     document.head.appendChild(style);
     
     // 인쇄용 컨테이너 생성 (문제 모드와 동일한 구조로 변경)
     const printContainer = document.createElement('div');
     printContainer.id = 'print-root-package02-answer';
+    // 레이아웃 계산을 위해 명시적으로 너비 설정 (화면 밖으로 보내면 너비가 0이 됨)
+    printContainer.style.width = '29.7cm';
+    printContainer.style.minWidth = '29.7cm';
+    printContainer.style.position = 'absolute';
+    printContainer.style.left = '0';
+    printContainer.style.top = '0';
+    printContainer.style.visibility = 'hidden'; // 화면에 보이지 않지만 레이아웃은 계산됨
     document.body.appendChild(printContainer);
 
     // 기존 화면 숨기기
@@ -1560,46 +1666,70 @@ const Package_02_TwoStepQuiz: React.FC = () => {
     };
 
     // 렌더링 완료 후 인쇄 및 파일 생성
-    setTimeout(async () => {
-      try {
-        const element = document.getElementById('print-root-package02-answer');
-        if (element && userData?.uid) {
-          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `package02_answer_${Date.now()}`,
-            '패키지#02_정답',
-            { isAnswerMode: true, orientation: 'landscape', fileFormat }
-          );
-          try {
-            const { getQuizHistory } = await import('../../../services/quizHistoryService');
-            const history = await getQuizHistory(userData.uid, { limit: 10 });
-            const packageHistory = history.find(h => h.workTypeId === 'P02');
-            if (packageHistory) {
-              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-              console.log(`📁 패키지#02 정답 ${formatName} 저장 완료:`, result.fileName);
-            }
-          } catch (historyError: any) {
-            if (historyError?.code === 'failed-precondition' || historyError?.message?.includes('index')) {
-              if (process.env.NODE_ENV === 'development') {
-                console.warn('⚠️ 문제 내역 조회 중 인덱스 오류 (무시됨):', historyError?.message);
+    // 인쇄(문제)와 동일하게 렌더링 완료를 폴링으로 확인 (고정 대기 시간 제거)
+    let attempts = 0;
+    const maxAttempts = 50; // 50ms * 50 = 2500ms (2.5초 최대 대기, 더 빠른 반응)
+    let uploadPromise: Promise<void> | null = null; // window.onafterprint에서 접근 가능하도록 외부 스코프에 선언
+    
+    const checkRenderAndPrint = async () => {
+      // 파일 생성 및 Firebase Storage 업로드 (백그라운드 처리)
+      const uploadTask = async () => {
+        try {
+          const element = document.getElementById('print-root-package02-answer');
+          if (element && userData?.uid) {
+            const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
+            const result = await generateAndUploadFile(
+              element as HTMLElement,
+              userData.uid,
+              `package02_answer_${Date.now()}`,
+              '패키지#02_정답',
+              { isAnswerMode: true, orientation: 'landscape', fileFormat }
+            );
+            try {
+              const { getQuizHistory } = await import('../../../services/quizHistoryService');
+              const history = await getQuizHistory(userData.uid, { limit: 10 });
+              const packageHistory = history.find(h => h.workTypeId === 'P02');
+              if (packageHistory) {
+                await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
+                const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+                console.log(`📁 패키지#02 정답 ${formatName} 저장 완료:`, result.fileName);
               }
-              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-              console.log(`📁 패키지#02 정답 ${formatName} 생성 완료 (내역 저장 스킵):`, result.fileName);
-            } else {
-              console.error('문제 내역 조회 실패:', historyError);
+            } catch (historyError: any) {
+              if (historyError?.code === 'failed-precondition' || historyError?.message?.includes('index')) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('⚠️ 문제 내역 조회 중 인덱스 오류 (무시됨):', historyError?.message);
+                }
+                const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+                console.log(`📁 패키지#02 정답 ${formatName} 생성 완료 (내역 저장 스킵):`, result.fileName);
+              } else {
+                console.error('문제 내역 조회 실패:', historyError);
+              }
             }
           }
+        } catch (error) {
+          console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
         }
-      } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
-      }
+      };
 
       if (fileFormat === 'pdf') {
-        // PDF: 인쇄 대화상자 닫힐 때 cleanup (afterprint). 그 전까지 DOM 유지해야 미리보기에 내용 표시됨.
-        setTimeout(() => {
+        // 마운트 포인트 내에서 last-page 찾기
+        const lastPage = printContainer.querySelector('.a4-landscape-page-template.last-page') as HTMLElement;
+        
+        // 렌더링 완료 조건: 마지막 페이지가 존재하고 높이가 0보다 커야 함
+        if (lastPage && lastPage.offsetHeight > 0) {
+          // PDF: 인쇄 대화상자 닫힐 때 cleanup (afterprint). 그 전까지 DOM 유지해야 미리보기에 내용 표시됨.
+          // 업로드 작업은 인쇄 후에 시작 (인쇄 속도에 영향 없도록)
+          // requestAnimationFrame으로 즉시 처리 시작 (300ms 대기 제거)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // 업로드 작업 시작 (인쇄와 병렬 처리)
+              uploadPromise = uploadTask();
+            });
+          });
+          
+          // 렌더링 완료 후 즉시 인쇄 처리 (requestAnimationFrame 사용)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
           // printContainer 상태 상세 로그
           const containerComputed = window.getComputedStyle(printContainer);
           const containerRect = printContainer.getBoundingClientRect();
@@ -1856,7 +1986,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                   });
                 }
                 
-                window.onafterprint = () => {
+                window.onafterprint = async () => {
                   // 인쇄 미리보기 닫힌 후 실제 적용된 스타일 확인
                   if (_redEl) {
                     const afterComputed = window.getComputedStyle(_redEl);
@@ -1872,8 +2002,19 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                         : '다른 원인 (브라우저 페이지 나누기 로직 등)'
                     });
                   }
+                  // 업로드 완료 대기 후 cleanup (인쇄(문제)와 동일)
+                  try {
+                    if (uploadPromise) {
+                      await uploadPromise;
+                      console.log('✅ 파일 업로드 완료 확인 (정답)');
+                    }
+                  } catch (e) {
+                    console.error('❌ 파일 업로드 중 오류 발생 (정답):', e);
+                  }
                   doCleanup();
                 };
+                // 미리보기 창이 열리기 직전 블러 오버레이 제거
+                removeBlurOverlay();
                 window.print();
               });
             });
@@ -1887,13 +2028,39 @@ const Package_02_TwoStepQuiz: React.FC = () => {
               }))
             });
             window.onafterprint = doCleanup;
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
             window.print();
           }
-        }, 300); // DOM 렌더링 완료 대기
+            });
+          });
+        } else {
+          // 렌더링 미완료 - 재시도 (인쇄(문제)와 동일한 폴링 메커니즘)
+          attempts++;
+          if (attempts >= maxAttempts) {
+            console.error('인쇄 렌더링 타임아웃 (정답모드)');
+            window.onafterprint = doCleanup;
+            // 미리보기 창이 열리기 직전 블러 오버레이 제거
+            removeBlurOverlay();
+            window.print(); // 타임아웃 시에도 인쇄 시도
+          } else {
+            setTimeout(checkRenderAndPrint, 50); // 50ms 후 재시도 (더 빠른 반응)
+          }
+        }
       } else {
+        // DOC/HWP: 인쇄 대화상자 없음 → 곧바로 cleanup
+        // DOC/HWP는 파일 생성이 완료되면 블러 오버레이 제거
+        removeBlurOverlay();
         setTimeout(doCleanup, 100);
       }
-    }, 1000);
+    };
+
+    // 폴링 시작 - requestAnimationFrame으로 즉시 시작 (더 빠른 반응)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        checkRenderAndPrint();
+      });
+    });
   };
 
   // 문제 생성 후 화면
