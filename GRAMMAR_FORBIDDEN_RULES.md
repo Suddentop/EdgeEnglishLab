@@ -1,5 +1,17 @@
 # 유형#09, 10 및 패키지#01, 02-유형#09, 10 공통 어법 문제 금지 목록
 
+## 가장 중요한 원칙 (최우선)
+
+**변형된 어법(오답)은 반드시 그럴듯한 어법이어야 한다.**  
+즉, **영어 문법에서 실제로 사용되는 형태**여야 하며, **영어 문법에 전혀 사용되지 않는 어법을 창조하면 안 된다.**
+
+- ✅ **허용:** 문맥에서는 틀리지만, 다른 문맥에서는 쓰이는 **실제 영어 형태** (예: "I was"는 현재 맥락에서는 틀리지만 "was"는 영어에 존재하는 형태)
+- ❌ **금지:** 영어에 존재하지 않는 형태를 만드는 것 (예: "coulding", "to continuing", "of be", "to to reinvent" — 이런 패턴은 영어에 없음)
+
+오답은 "이 문맥에서는 틀린 선택"이어야 할 뿐, "세상에 없는 문법을 만든 것"이면 안 된다.
+
+---
+
 ## 개요
 
 이 문서는 **유형#09 (어법 오류 찾기)**, **유형#10 (다중 어법 오류 찾기)**, 그리고 **패키지#01, 패키지#02의 유형#09, 10**에 공통으로 적용되는 어법 문제 금지 목록을 정리한 것입니다.
@@ -95,23 +107,23 @@
 
 ---
 
-### 1.6 주어-be동사 수일치 깨는 변형 금지
+### 1.6 주어-be동사 수일치 깨는 변형 금지 (시제만 변경)
 - **금지**: 주어와 be동사의 수일치를 깨는 변형
 - **예시**:
   - `"they are" → "they am"` ❌
-  - `"I am" → "I is"` ❌
+  - `"I am" → "I is"`, `"I am" → "I are"`, **`"I am" → "I were"`** ❌
   - `"you are" → "you am"` ❌
-  - `"he is" → "he am"` ❌
-  - `"she is" → "she am"` ❌
+  - `"he is" → "he am"`, `"he is" → "he are"` ❌
+  - `"she is" → "she am"`, `"she is" → "she are"` ❌
   - `"that is" → "that are"` ❌
   - `"this is" → "this am"` ❌
   - `"they are" → "they is"` ❌
-  - `"I am" → "I are"` ❌
-- **허용**: 시제 변경은 허용되지만 수일치는 유지되어야 함
-  - `"is" → "was"` ✅
-  - `"are" → "were"` ✅
+- **허용 (시제만 변경, 수일치 유지)**:
+  - `"I am" → "I was"` ✅ (I were 금지)
+  - `"he/she/it is" → "he/she/it was"` ✅ (am, are 금지)
   - `"they are" → "they were"` ✅
-- **이유**: 기본 주어-동사 일치 규칙을 깨는 것은 너무 단순한 오류
+  - `"is" → "was"`, `"are" → "were"` ✅
+- **이유**: 주어+동사 변형 시 인칭 변환 없이 **시제만** 변경해야 함
 
 ---
 
@@ -152,9 +164,16 @@
 
 ---
 
-### 1.9 3인칭 복수 주어(They, We 등) + 단수동사(-s/-es) 금지
+### 1.9 주어+동사 변형 시 인칭 변환 금지 — 시제만 변경
 
-- **금지**: `"They suggest" → "They suggests"`, `"We believe" → "We believes"` 등 (난이도 너무 낮음)
+- **금지**: 주어+동사에서 동사를 **인칭/수에 맞춰** 변형하는 것
+  - `"We buy" → "We buys"` ❌
+  - `"They suggest" → "They suggests"` ❌
+  - `"We believe" → "We believes"` ❌
+- **허용**: **시제만** 변경
+  - `"We buy" → "We bought"` ✅
+  - `"They suggest" → "They suggested"` ✅
+- **be동사**: 위 1.6 참조 — `I am` → `I was` (I were 금지), `he/she/it is` → `he/she/it was` (am, are 금지)
 
 ---
 
@@ -171,6 +190,21 @@
   - `"to continue" → "to be continuing"` ✅ (진행형)
   - `"to continue" → "to have been continued"` ✅ (완료 수동태)
 - **이유**: "to + 동사ing" 패턴은 영어에 존재하지 않음
+
+---
+
+### 1.10a "to + 동사원형" → "to + to + 동사원형" 변형 금지
+- **금지**: to 부정사에서 "to + 동사원형"을 변형할 때 "to + to + 동사원형"으로 만드는 것
+- **예시**:
+  - `"to reinvent" → "to to reinvent"` ❌
+  - `"to rely" → "to to rely"` ❌
+  - `"to fill" → "to to fill"` ❌
+- **허용**: to 부정사 변형 시 올바른 형태만 사용
+  - `"to reinvent" → "to be reinventing"` ✅ (to+be+~ing)
+  - `"to reinvent" → "to be reinvented"` ✅ (to+be+~ed)
+  - `"to continue" → "continuing"` ✅ (to 제거)
+  - `"to continue" → "to have been continued"` ✅
+- **이유**: "to+to+동사원형"은 영어 문법에 존재하지 않는 형태이며, to 부정사를 변형할 때는 반드시 "to+be+~ing", "to+be+~ed" 등 올바른 형태로만 변형해야 함
 
 ---
 
@@ -201,6 +235,34 @@
 
 ---
 
+### 1.13 전치사+동명사(of being 등) → 전치사+동사원형(of be) 변형 금지
+- **금지**: 전치사 뒤의 동명사를 동사원형으로 변형하여 "전치사+동사원형" 비문 생성
+- **예시**:
+  - `"of being" → "of be"` ❌
+  - `"for being" → "for be"` ❌
+  - `"The thought of being" → "The thought of be"` ❌
+- **이유**: 전치사(of, for 등) 뒤에는 명사 또는 동명사(gerund)가 와야 하며, 동사원형(be, have, do)을 쓸 수 없음. "being" → "be" 변형은 "of be" 등 비문을 만듦
+
+---
+
+### 1.13a "of being" → "of been", "of being being" 변형 금지
+- **금지**: "of being"을 "of been" 또는 "of being being"으로 변형
+- **예시**:
+  - `"of being" → "of been"` ❌ ("of been"은 영어에 없는 형태)
+  - `"of being" → "of being being"` ❌ ("of being being"은 영어에 없는 형태)
+- **허용**: "of + 동명사" 변형 시 **of+being+과거분사** 또는 **of+being+~ing** 형태만 사용
+  - `"of being" → "of being seen"`, `"of being done"` ✅
+- **이유**: "of been", "of being being"은 영어 문법에 존재하지 않음
+
+---
+
+### 1.13b "of+동사ing" → "of+과거형" 변형 금지
+- **금지**: "of + 일반동사ing"(of being, of having, of doing 등)를 "of + 과거형/과거분사"(of been, of had, of did 등)로 변형
+- **허용**: "of + 동명사" 변형 시 **of+being+pp** 또는 **of+being+~ing** 형태만 사용 (of+being+과거분사, of+being+동사ing 등)
+- **이유**: 전치사 "of" 뒤에는 명사/동명사가 와야 하며, 과거형 단독은 올 수 없음
+
+---
+
 ## 2. 단어 선택 시 제외 규칙 (EXCLUDE_RULES_PROMPT)
 
 단어 선택 단계에서 다음 규칙들은 자동으로 제외됩니다:
@@ -219,6 +281,7 @@
 
 ### 2.2 특별 금지 규칙 (단어 선택 시)
 - **to 부정사 단순 변형**: `to+동사원형 → to+동사ing` (예: `to rely → to relying`)
+- **to+to+동사원형 금지**: `to+동사원형 → to+to+동사원형` (예: `to reinvent → to to reinvent`) — 문법에 없는 형태. 변형 시 `to+be+~ing`, `to+be+~ed` 등만 사용
 - **주어-be동사 수일치 깨는 변형**: `they are → they am`, `I am → I is` 등
 - **존재하지 않는 단어 생성**: `however → howeverly`, `what → whatly` 등
 - **주어 대명사를 다른 주어 대명사로 변형**: `they → those`, `this → that` 등
@@ -227,6 +290,9 @@
 - **3인칭 복수 주어(They, We) + 단수동사(-s)**: `They suggest → They suggests`, `We believe → We believes` (난이도 너무 낮음)
 - **조동사 다음 동사를 단순히 동사ing로 변형**: `can prey → can praying` 등
 - **등위접속사 선택**: `or`, `and`, `but`, `nor`, `for`, `so`, `yet` 등
+- **전치사+동명사 → 전치사+동사원형**: `of being → of be`, `for being → for be` 등 (전치사 뒤에는 명사/동명사만 가능)
+- **of being → of been, of being being**: 금지 (영어에 없는 형태). of+동명사 변형 시 of+being+pp, of+being+~ing 만 허용
+- **of+동사ing → of+과거형**: `of being → of been` 등 금지. of+being+과거분사 또는 of+being+~ing 만 허용
 
 ---
 
@@ -245,6 +311,10 @@
 8. 주어-be동사 수일치 깨는 변형 검증
 9. 완전히 다른 단어인지 확인
 10. "to + 동사ing" 패턴 검증
+10a. **"to+to+동사원형" 패턴 검증**: 변형 결과가 "to to + 동사원형"으로 시작하면 절대 금지
+10b. **전치사+동명사 → 전치사+동사원형 검증**: "being" → "be" 변형 금지 (of be, for be 등 비문 방지)
+10c. **"of being" → "of been" 검증**: "being" → "been" 변형 금지 (of been 비문 방지)
+10d. **"of being being" 검증**: 변형 결과에 "being being" 포함 시 금지
 11. 등위접속사 선택 검증
 12. 조동사 다음 동사를 단순히 동사ing로 변형 검증
 
@@ -287,6 +357,8 @@
 
 ### 5.3 동사 형태 관련
 - ✅ `"they work" → "they are working"` (be동사 포함)
+- ✅ **주어+동사 시제만 변경:** `"We buy" → "We bought"`, `"They suggest" → "They suggested"` (인칭 변환 금지)
+- ✅ **be동사 시제만 변경:** `"I am" → "I was"`, `"he is" → "he was"`, `"they are" → "they were"`
 - ✅ `"to continue" → "continuing"` (to 제거)
 - ✅ `"to continue" → "to be continued"` (수동태)
 - ✅ `"to continue" → "to be continuing"` (진행형)
@@ -303,10 +375,15 @@
 | 3 | 부사/접속사/wh-단어에 "-ly" 추가 | `however → howeverly` | 존재하지 않는 단어 |
 | 4 | 주어 대명사 → 소유격 | `it → its` | 너무 단순한 변형 |
 | 5 | 주어 대명사 → 다른 주어 대명사 | `they → those` | 단순 교체 |
-| 6 | 주어-be동사 수일치 깨기 | `they are → they am` | 기본 규칙 위반 |
+| 6 | 주어-be동사 수일치 깨기 / I am→I were 금지 | `they are → they am`, `I am → I were` | 시제만 변경: I am→I was, he is→he was |
+| 6a | 주어+동사 인칭 변환 금지 | `We buy → We buys` | 시제만 변경: We buy→We bought |
 | 7 | be동사 → "being" | `is → being` | 너무 단순한 변형 |
 | 8 | 주어+동사 → 주어+동사ing (be동사 없이) | `they work → they working` | 비문법적 구조 |
 | 9 | to+동사원형 → to+동사ing | `to continue → to continuing` | 존재하지 않는 패턴 |
+| 9a | to+동사원형 → to+to+동사원형 | `to reinvent → to to reinvent` | 문법에 없는 형태; to+be+~ing, to+be+~ed 등만 사용 |
+| 9b | 전치사+동명사 → 전치사+동사원형 | `of being → of be` | 전치사 뒤에는 명사/동명사만 가능 |
+| 9c | of being → of been, of being being | `of being → of been` | 영어에 없는 형태; of+being+pp, of+being+~ing 만 허용 |
+| 9d | of+동사ing → of+과거형 | `of being → of been` | of+being+pp 또는 of+being+~ing 만 허용 |
 | 10 | 등위접속사 선택 | `or → and` | 단순 교체 |
 | 11 | 조동사+동사 → 조동사+동사ing (be동사 없이) | `can prey → can praying` | 기본 어법 위반 |
 

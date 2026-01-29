@@ -5,7 +5,7 @@
 
 import { callOpenAI, translateToKorean } from './common';
 import { transformWord } from './work09Service';
-import { EXCLUDE_RULES_PROMPT } from './workGrammarRules';
+import { EXCLUDE_RULES_PROMPT, CANDIDATE_SELECTION_RULES } from './workGrammarRules';
 
 /**
  * 다중 어법 오류 문제 타입 정의
@@ -274,7 +274,9 @@ async function selectWordsForWork10(
   // Step 1: 후보 단어 추출
   const candidatePrompt = `**수능 고난도 다중 어법 오류 문제용 단어 후보 추출**
 
-본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다.
+${CANDIDATE_SELECTION_RULES}
+
+본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다. 동사·동사구·절 단위·수식어를 우선 추출하고, 단순 명사·형용사만 나열하지 마세요.
 
 ${EXCLUDE_RULES_PROMPT}
 
@@ -415,6 +417,8 @@ ${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
 아래 목록에서 **수능 1등급 수준**의 어법 오류 찾기 문제를 위한 단어 ${targetWordCount}개를 선정하세요.
 
 **⚠️ 필수 규칙 (엄격히 준수 - 위반 시 자동 실패):**
+${CANDIDATE_SELECTION_RULES}
+
 - **목록에 있는 단어만 선택** (목록 외 단어 절대 금지 - 위반 시 재시도됨)
 - 단어 단위만 (구/절 금지)
 - **🚨 절대 금지: "prior to", "because of", "instead of", "due to" 같은 전치사구를 "prior"와 "to"로 분리하여 선택하는 것**

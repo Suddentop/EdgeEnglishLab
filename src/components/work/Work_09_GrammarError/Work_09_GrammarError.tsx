@@ -297,12 +297,20 @@ const Work_09_GrammarError: React.FC = () => {
               id: item.id
             };
             
-            // 생성된 문제의 정답 단어를 이전 선택 목록에 추가
-            // 유형#09는 original 필드가 정답 단어(변형 전 원본 단어)
-            const selectedWord = quizData.original;
-            if (selectedWord && !group.selectedWords.includes(selectedWord)) {
-              group.selectedWords.push(selectedWord);
-              console.log(`  ✅ 정답 단어 "${selectedWord}" 선택됨 (이제 제외 목록에 추가됨)`);
+            // 생성된 문제에 사용된 5개 단어 전부를 이전 선택 목록에 추가 (동일 본문 재생성 시 다른 단어 선택)
+            if (quizData.selectedWords && quizData.selectedWords.length > 0) {
+              quizData.selectedWords.forEach(word => {
+                if (word && !group.selectedWords.includes(word)) {
+                  group.selectedWords.push(word);
+                }
+              });
+              console.log(`  ✅ 선택된 단어들 "${quizData.selectedWords.join(', ')}" 제외 목록에 추가됨`);
+            } else {
+              const selectedWord = quizData.original;
+              if (selectedWord && !group.selectedWords.includes(selectedWord)) {
+                group.selectedWords.push(selectedWord);
+                console.log(`  ✅ 정답 단어 "${selectedWord}" 제외 목록에 추가됨`);
+              }
             }
             
             generatedQuizzes.push(quizDataWithId);

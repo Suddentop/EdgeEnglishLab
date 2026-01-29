@@ -3412,7 +3412,7 @@ const Package_02_TwoStepQuiz: React.FC = () => {
                       pointerEvents: 'none',
                       userSelect: 'none'
                     }}>
-                      {['①', '②', '③', '④', '⑤', '⑥'][optionIndex]} {option}개
+                      {['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'][optionIndex] ?? `${optionIndex + 1}.`} {option}개
                       {quizItem.work10Data && quizItem.work10Data.answerIndex === optionIndex && (
                         <span style={{color:'#1976d2', fontWeight:800, marginLeft:8, fontSize:'0.9rem'}}> (정답)</span>
                       )}
