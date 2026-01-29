@@ -531,7 +531,7 @@ const SimpleQuizDisplay: React.FC<SimpleQuizDisplayProps> = ({ packageQuiz, isAn
               <div className="options">
                 {options.map((option: any, oIndex: number) => (
                   <div key={oIndex} className="option">
-                    {['①', '②', '③', '④', '⑤', '⑥'][oIndex]} {option}{typeof option === 'number' ? '개' : ''}
+                    {['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'][oIndex] ?? `${oIndex + 1}.`} {option}{typeof option === 'number' ? '개' : ''}
                   </div>
                 ))}
               </div>

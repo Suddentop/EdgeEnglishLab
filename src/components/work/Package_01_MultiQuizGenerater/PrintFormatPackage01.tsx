@@ -3867,7 +3867,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
                   fontFamily: 'inherit',
                   color: '#222'
                 }}>
-                  {`①②③④⑤⑥`[index] || `${index + 1}`} {option}개
+                  {`①②③④⑤⑥⑦⑧`[index] || `${index + 1}`} {option}개
                 </div>
               ))}
             </div>
@@ -3936,7 +3936,7 @@ const PrintFormatPackage01Work10: React.FC<PrintFormatPackage01Work10Props> = ({
               </div>
               {work10Data.options.map((option, index) => (
                 <div key={index} className="option" style={{fontSize:'1rem', marginTop:'0.5rem', paddingLeft:'0.3rem', paddingRight:'0.3rem', marginBottom: index === work10Data.options.length - 1 ? '1rem' : '0', display:'block', width:'100%', clear:'both' as const}}>
-                  {`①②③④⑤⑥`[index] || `${index + 1}`} {option}개
+                  {`①②③④⑤⑥⑦⑧`[index] || `${index + 1}`} {option}개
                   {printMode === 'with-answer' && work10Data.answerIndex === index && (
                     <span className="print-answer-mark" style={{color:'#1976d2', fontWeight:800, marginLeft:8}}> (정답)</span>
                   )}

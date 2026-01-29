@@ -1,9 +1,10 @@
 /**
  * Work_09 (어법 오류 찾기) 문제 생성 로직
- * 원본: src/components/work/Work_09_GrammarError/Work_09_GrammarError.tsx
- * 
- * 이 파일은 원본 컴포넌트에서 문제 생성 로직만 추출한 것입니다.
- * 원본 파일은 수정하지 않았으며, 로직을 복사하여 독립적으로 사용합니다.
+ *
+ * **전체 흐름 (필수 로직):**
+ * 1. 본문에서 어법문제로 적합하고 수준 높은 단어 5개를 선택한다.
+ * 2. 그 5개 중 **어느 한 개를 변형할지**는 AI가 "어법문제를 위해 가장 어울리는 단어"로 선택한다.
+ * 3. 선택된 그 한 개만 어법 변형한다. 선택된 단어가 to 부정사(to + 동사원형)이면 to 부정사 변형 규칙( to be + 동사ing / to be + 과거분사만 허용)을 따른다.
  */
 
 import { callOpenAI, translateToKorean } from './common';
@@ -11,7 +12,12 @@ import {
   FORBIDDEN_TRANSFORMATIONS_PROMPT, 
   FORBIDDEN_EXAMPLES_PROMPT, 
   EXCLUDE_RULES_PROMPT,
-  validateTransformation 
+  PREFERRED_ERROR_PATTERNS,
+  CANDIDATE_SELECTION_RULES,
+  getDifficultyErrorListPrompt,
+  DEFAULT_GRAMMAR_DIFFICULTY,
+  validateTransformation,
+  validatePassageForForbiddenPatterns,
 } from './workGrammarRules';
 
 /**
@@ -23,6 +29,8 @@ export interface GrammarQuiz {
   answerIndex: number;
   original: string;
   translation: string;
+  /** 동일 본문 재생성 시 제외할 단어 목록(이번 문제에 사용된 5개 단어) */
+  selectedWords: string[];
 }
 
 /**
@@ -72,9 +80,12 @@ export async function generateWork09Quiz(
     let grammarDiversityValid = false;
     let grammarDiversityRetryCount = 0;
     const maxGrammarDiversityRetries = 5;
+    /** 변형 시 사용할 단어별 어법 유형 (to 부정사 외 유형에서 오답 생성에 사용) */
+    let grammarTypesForWords: Array<{ index: number; word: string; grammarType: string }> = [];
     
     while (!grammarDiversityValid && grammarDiversityRetryCount < maxGrammarDiversityRetries) {
       const grammarTypesResult = await evaluateGrammarTypesForWords(words, passage);
+      grammarTypesForWords = grammarTypesResult;
       console.log('📋 선택된 단어들의 어법 유형:', grammarTypesResult);
       
       // 중복된 어법 유형이 있는지 확인
@@ -114,15 +125,22 @@ export async function generateWork09Quiz(
     
     if (!grammarDiversityValid) {
       console.warn(`⚠️ 어법 유형 다양성 검증 실패 (${maxGrammarDiversityRetries}회 재시도 후). 계속 진행합니다.`);
+      if (grammarTypesForWords.length === 0) {
+        grammarTypesForWords = await evaluateGrammarTypesForWords(words, passage);
+      }
     }
 
-    // Step 2: 난이도 평가 (선택된 5개 단어 중 가장 난이도 높은 단어 선정)
+    // Step 2: 5개 중 변형할 1개 선정 — AI가 "어법문제로 가장 어울리는 단어" 1개 선택
     const difficultyResult = await evaluateDifficulty(words, passage);
-    console.log('✅ 난이도 평가 결과:', difficultyResult);
-    console.log(`🎯 정답 단어 선정: 인덱스 ${difficultyResult.answerIndex}, 단어 "${difficultyResult.original}", 난이도 ${difficultyResult.difficulty}`);
+    console.log('✅ 변형 대상 단어 선정 결과:', difficultyResult);
+    console.log(`🎯 변형할 단어: 인덱스 ${difficultyResult.answerIndex}, "${difficultyResult.original}" (어법문제로 가장 적합한 1개)`);
 
-    // Step 3: 어법 변형 (난이도 평가로 선정된 단어를 변형)
-    const transformation = await transformWord(words, difficultyResult.answerIndex);
+    // 변형 대상 단어의 어법 유형 (to 부정사 외 유형에서 해당 유형에 맞는 오답 생성용)
+    const targetGrammarType = grammarTypesForWords.find(g => g.index === difficultyResult.answerIndex)?.grammarType ?? '';
+
+    // Step 3: 선정된 1개만 어법 변형 (to 부정사면 to 부정사 규칙 적용, 그 외는 targetGrammarType에 맞는 오답 생성)
+    console.log('[generateWork09Quiz] transformWord 호출:', { answerIndex: difficultyResult.answerIndex, targetWord: words[difficultyResult.answerIndex], targetGrammarType, passage있음: !!passage, passage길이: passage?.length ?? 0, passage앞80자: passage?.slice(0, 80) ?? '(없음)' });
+    const transformation = await transformWord(words, difficultyResult.answerIndex, [], passage, targetGrammarType);
     console.log('✅ 어법 변형 결과:', transformation);
 
     // Step 4: 원본 단어를 변형된 단어로 교체하면서 번호/밑줄 적용
@@ -157,7 +175,8 @@ export async function generateWork09Quiz(
       options: optionsInOrder,
       answerIndex: newAnswerIndex,
       original: transformation.original,
-      translation
+      translation,
+      selectedWords: words
     };
 
     console.log('✅ Work_09 문제 생성 완료:', result);
@@ -182,7 +201,9 @@ async function selectWords(
   // Step 1: 본문에서 어법 변형 가능한 단어 후보를 먼저 추출 (재시도 불필요, 한 번만 수행)
   const candidatePrompt = `**수능 고난도 어법 오류 문제용 단어 후보 추출**
 
-본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다.
+${CANDIDATE_SELECTION_RULES}
+
+본문에서 어법 변형 가능한 단어들을 추출하세요. **형태보다 해석과 판단이 필요한 문법**만 대상으로 합니다. 동사·동사구·절 단위·수식어(분사, 관계대명사 등)를 우선 추출하고, 단순 명사·형용사만 나열하지 마세요.
 
 ${EXCLUDE_RULES_PROMPT}
 
@@ -279,6 +300,10 @@ ${previouslySelectedWords && previouslySelectedWords.length > 0 ? `
       const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
       if (regex.test(sentence)) {
+        // 전치사 뒤 "being"(of being, for being 등)은 단일 단어 변형이 거의 불가 → 후보 제외
+        if (word.toLowerCase().trim() === 'being' && /\b(of|for|about|by|with|without)\s+being\b/i.test(sentence)) {
+          continue;
+        }
         candidates.push(word);
       }
     }
@@ -316,6 +341,8 @@ ${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
 
       const selectionPrompt = `**수능 고난도 어법 오류 문제용 단어 5개 선정**${errorContext}
 
+${CANDIDATE_SELECTION_RULES}
+
 아래 목록에서 **수능 1등급 수준**의 어법 오류 찾기 문제를 위한 단어 5개를 선정하세요.
 
 **⚠️ 필수 규칙 (엄격히 준수 - 위반 시 자동 실패):**
@@ -323,6 +350,7 @@ ${previousErrors.map((err, idx) => `${idx + 1}. ${err}`).join('\n')}
 - 단어 단위만 (구/절 금지)
 - 중복 불가
 - 관계사/접속사(that, which, what, when, where 등)는 **최대 1개만** (2개 이상 시 실패)
+- **"being"이 "of being", "for being" 등 전치사 뒤에 나오는 문장에서는 "being"을 선택하지 마세요.** (해당 위치의 "being"은 단일 단어로 유효한 변형이 없음)
 - **🚨 CRITICAL: 각 문장에서 최대 1개만 선택** (한 문장에서 여러 단어 선택 시 자동 실패 및 재시도)
 - **5개 문제는 모두 다른 어법 유형**으로 생성해야 함 (동일 어법 반복 금지)
 - **주어-동사 시제일치 문제 절대 금지** (1인칭/2인칭+동사원형, 3인칭+동사원형+s/-es 등)
@@ -735,37 +763,23 @@ export async function evaluateDifficulty(
 
 다음 5개 단어 중에서 **수능 최고난도 수준**의 어법 오류 문제를 만들기에 가장 적합한 단어 1개를 선정하세요.
 
-**선택된 단어들:**
+**선택된 5개 단어:**
 ${words.map((word, idx) => `${idx + 1}. "${word}"`).join('\n')}
 
 **본문:**
 ${passage}
 
-**난이도 평가 기준:**
-1. **어법 복잡도**: 복잡한 구문 구조 내에서 판단이 필요한 어법일수록 높은 난이도
-   - 관계사절, 분사구문, 가정법, 도치 등 복잡한 구문 구조
-   - 단순 시제 변화, 기본 관사, 단순 전치사 등은 낮은 난이도
-2. **의미 해석 영향**: 틀리면 문장 의미 해석에 큰 영향을 미치는 단어일수록 높은 난이도
-3. **문맥 판단 필요**: 문맥과 문장 구조를 종합적으로 분석해야 판단 가능한 단어일수록 높은 난이도
-4. **수능 출제 빈도**: 수능 고난도 문제에 자주 출제되는 어법 유형일수록 높은 난이도
-   - 분사구문, 관계사, 가정법, 병렬구조, 수일치(복잡), 준동사 등
+**🎯 목표:** 위 5개 단어 중 **어법문제를 위해 가장 어울리는 단어 1개**를 골라, 그 단어를 변형할 대상으로 선택하세요.
+- "가장 어울리는" = 변형했을 때 수능/고난도 어법 오류 문항으로 적합한 단어 (어법 복잡도·의미 영향·문맥 판단 필요·출제 빈도 고려).
+- to 부정사(예: 본문에 "to create", "to reinvent")인 단어도 선택 가능합니다. 선택 시 변형은 반드시 "to be + 동사ing" 또는 "to be + 과거분사"만 사용됩니다.
+- 각 단어의 난이도를 1–10점으로 매긴 뒤, **가장 높은 점수의 단어 1개**를 선택하세요.
 
-**우선 순위 (높은 난이도 순):**
-1. 분사구문 (능동/수동 판단, 의미상 주어)
-2. 관계사 (관계대명사 vs 관계부사, 전치사+관계대명사)
-3. 가정법 (시제 불일치, if 생략)
-4. 병렬구조 (형태 일치, 품사 일치)
-5. 준동사 (동명사 vs 부정사, 분사 형태 판단)
-6. 수일치 (복잡한 주어-동사 일치)
-7. 능동/수동 (목적어 유무, 의미 판단)
-8. 형용사 vs 부사 (보어 vs 수식어)
-9. 전치사 (문맥 판단)
-10. 기타
-
-**결정 방법:**
-- 위 기준에 따라 각 단어의 난이도를 평가하고 (1-10점, 10점이 가장 높음)
-- 가장 높은 난이도 점수를 받은 단어 1개를 선택
-- 동점인 경우, 어법 복잡도 > 의미 해석 영향 > 문맥 판단 필요 순서로 우선순위 결정
+**평가 기준 (참고):**
+1. 어법 복잡도 (관계사절, 분사구문, 가정법, 도치 등 → 높은 점수)
+2. 의미 해석 영향 (틀리면 의미에 큰 영향 → 높은 점수)
+3. 문맥 판단 필요 (문장/구조 분석 필요 → 높은 점수)
+4. 수능 출제 빈도 (분사구문, 관계사, 가정법, 병렬, 준동사 등 → 높은 점수)
+동점이면 어법 복잡도 > 의미 영향 > 문맥 판단 순으로 우선순위를 정하세요.
 
 아래 JSON 형식으로만 응답하세요:
 {
@@ -779,11 +793,11 @@ ${passage}
     messages: [
       {
         role: 'system',
-        content: 'You are a grammar expert specializing in Korean CSAT (Suneung) English section. You evaluate the difficulty level of grammar words for creating high-level exam questions.'
+        content: 'You are a grammar expert for the Korean CSAT English section. Your task: given 5 words from a passage, choose exactly ONE word that is most suitable to transform into a grammar error for a high-quality exam item. Consider difficulty, meaning impact, and context. If a word is a to-infinitive (e.g. in "to create"), it can still be chosen; transformation will follow strict rules (to be + V-ing or to be + past participle only).'
       },
       { role: 'user', content: prompt }
     ],
-    temperature: 0.3,
+    temperature: 0.2,
     max_tokens: 500,
   });
 
@@ -846,12 +860,17 @@ ${passage}
  * MCP 3: 어법 변형 서비스 (재시도 로직 포함)
  * @param words - 선택된 단어 배열
  * @param answerIndex - 변형할 단어의 인덱스 (명시적으로 지정)
+ * @param usedGrammarTypes - 이미 사용된 어법 유형 (다양성 강제)
+ * @param passage - 원본 본문 (지정 시 치환 후 "of to V" 등 문맥 검증 수행)
+ * @param targetGrammarType - 변형 대상 단어의 어법 유형 (to 부정사 외 유형에서 해당 유형에 맞는 오답 생성)
  * @returns 변형된 단어들과 정답 정보
  */
 export async function transformWord(
   words: string[],
   answerIndex: number,
-  usedGrammarTypes: string[] = []
+  usedGrammarTypes: string[] = [],
+  passage?: string,
+  targetGrammarType?: string
 ): Promise<{
   transformedWords: string[];
   answerIndex: number;
@@ -877,7 +896,129 @@ export async function transformWord(
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     console.log(`어법 변형 시도 ${attempt}/${maxRetries}...`);
-    
+
+    // to 부정사 문맥이면 AI 호출 없이 "be V-ing" / "be V-ed"만 허용하여 즉시 적용 (비문/엉뚱한 단어 방지)
+    const targetWordForLog = words[answerIndex]?.trim() ?? '';
+    console.log('[transformWord] 진입:', { answerIndex, targetWord: targetWordForLog, passage있음: !!passage, passage길이: passage?.length ?? 0 });
+    if (passage) {
+      const target = words[answerIndex].trim().toLowerCase();
+      const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const toInfinitiveRegex = new RegExp(`\\bto\\s+(?:\\w+\\s+)*${escapedTarget}\\b`, 'i');
+      const patternMatches = !target.includes(' ') && toInfinitiveRegex.test(passage);
+      // "like to imagine", "want to imagine" 등: to 제거 시 "like be imagining" 비문이 되므로 수동태(be V-ed)만 허용
+      const likeToRegex = new RegExp(`\\b(like|want|love|need|expect|prefer|hate|hope|wish)\\s+to\\s+(?:\\w+\\s+)*${escapedTarget}\\b`, 'i');
+      const likeToContext = patternMatches && likeToRegex.test(passage);
+      console.log('[transformWord] 본문 "to ... [대상]" 패턴 검사:', { 대상: target, 매칭됨: patternMatches, likeTo문맥: likeToContext });
+      if (patternMatches) {
+        const ingForm = target.endsWith('e') ? target.slice(0, -1) + 'ing' : target + 'ing';
+        const edForm = target.endsWith('e') ? target + 'd' : target + 'ed';
+        const toVerbRe = new RegExp(`(\\bto\\s+(?:\\w+\\s+)*)(${escapedTarget})(\\b)`, 'i');
+        const toInfinitiveCandidates = likeToContext
+          ? ['be ' + edForm]
+          : ['be ' + ingForm, 'be ' + edForm];
+        console.log('[transformWord] to 부정사 규칙 적용 시도 (AI 생략), 후보:', toInfinitiveCandidates, likeToContext ? '(like to 문맥 → 수동태만)' : '');
+        for (const corrected of toInfinitiveCandidates) {
+          const vt = validateTransformation(words[answerIndex], corrected);
+          const fixed = passage.replace(toVerbRe, (_: string, p1: string, _p2: string, p3: string) => p1 + corrected + (p3 || ''));
+          const vp = validatePassageForForbiddenPatterns(fixed);
+          console.log('[transformWord] 후보 검증:', { corrected, 단어검증: vt.isValid, 단어검증메시지: vt.errorMessage, 지문검증: vp.isValid, 지문검증메시지: vp.errorMessage });
+          if (!vt.isValid) continue;
+          if (vp.isValid) {
+            console.log('✅ to 부정사: AI 호출 없이 규칙 적용 →', corrected);
+            return {
+              transformedWords: words.map((w, i) => (i === answerIndex ? corrected : w)),
+              answerIndex,
+              original: words[answerIndex],
+              grammarType: 'Gerund vs Infinitive',
+            };
+          }
+        }
+        console.warn('[transformWord] to 부정사 규칙 적용 실패: "be V-ing" / "be V-ed" 둘 다 지문 검증 통과 못함 → AI 호출로 진행');
+      }
+
+      // "like to imagine" 등에서 선택 단어가 "to imagine"(두 단어)인 경우: "to" 제거 시 "like be imagining" 비문이 되므로 "to be imagined"만 허용
+      if (target.includes(' ') && target.startsWith('to ')) {
+        const verbPart = target.slice(3).trim();
+        const escapedVerb = verbPart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const likeToTwoWordRe = new RegExp(`\\b(like|want|love|need|expect|prefer|hate|hope|wish)\\s+to\\s+(?:\\w+\\s+)*${escapedVerb}\\b`, 'i');
+        if (likeToTwoWordRe.test(passage)) {
+          const baseFromVerb = verbPart.endsWith('e') ? verbPart.slice(0, -1) : verbPart;
+          const edForm = verbPart.endsWith('e') ? verbPart + 'd' : verbPart + 'ed';
+          const toBeEd = 'to be ' + edForm;
+          const toTwoWordRe = new RegExp(`\\b(${escapedTarget.replace(/\s+/g, '\\s+')})\\b`, 'i');
+          const vt = validateTransformation(words[answerIndex], toBeEd);
+          const fixed = passage.replace(toTwoWordRe, toBeEd);
+          const vp = validatePassageForForbiddenPatterns(fixed);
+          if (vt.isValid && vp.isValid) {
+            console.log('✅ like to + "to V" 규칙 적용 (두 단어) →', toBeEd);
+            return {
+              transformedWords: words.map((w, i) => (i === answerIndex ? toBeEd : w)),
+              answerIndex,
+              original: words[answerIndex],
+              grammarType: 'Gerund vs Infinitive',
+            };
+          }
+        }
+      }
+
+      // 전치사(by/without/of 등) + 동명사(V-ing) 문맥: "by reducing" → "by being reduced"만 허용 (being reducing, of be looking 비문)
+      if (target.endsWith('ing') && !target.includes(' ')) {
+        const prepGerundRegex = new RegExp(`\\b(by|without|before|after|with|through|of)\\s+(?:\\w+\\s+)*${escapedTarget}\\b`, 'i');
+        if (prepGerundRegex.test(passage)) {
+          const baseFromIng = target.slice(0, -3);
+          const base = baseFromIng.length >= 2 && !/[aeiou]/i.test(baseFromIng.slice(-1)) ? baseFromIng + 'e' : baseFromIng;
+          const edForm = base.endsWith('e') ? base + 'd' : base + 'ed';
+          const prepGerundRe = new RegExp(`(\\b(?:by|without|before|after|with|through|of)\\s+(?:\\w+\\s+)*)(${escapedTarget})(\\b)`, 'i');
+          const corrected = 'being ' + edForm;
+          console.log('[transformWord] 전치사+동명사 규칙 적용 시도 (AI 생략), 후보: being + 과거분사만', [corrected]);
+          {
+            const vt = validateTransformation(words[answerIndex], corrected);
+            const fixed = passage.replace(prepGerundRe, (_: string, p1: string, _p2: string, p3: string) => p1 + corrected + (p3 || ''));
+            const vp = validatePassageForForbiddenPatterns(fixed);
+            if (!vt.isValid) continue;
+            if (vp.isValid) {
+              console.log('✅ 전치사+동명사: AI 호출 없이 규칙 적용 →', corrected);
+              return {
+                transformedWords: words.map((w, i) => (i === answerIndex ? corrected : w)),
+                answerIndex,
+                original: words[answerIndex],
+                grammarType: 'Gerund vs Infinitive',
+              };
+            }
+          }
+          console.warn('[transformWord] 전치사+동명사 규칙 적용 실패 → AI 호출로 진행');
+        }
+      }
+
+      // 주어 + be동사(are, is, am, was, were): "be + V-ing" 변형 금지 → 수일치 오류(are→is 등)만 허용
+      const beVerbs = ['are', 'is', 'am', 'was', 'were'];
+      if (beVerbs.includes(target)) {
+        const subjectBeRegex = new RegExp(`\\b([A-Za-z]+(?:\\s+[A-Za-z]+)*)\\s+${escapedTarget}\\b`, 'i');
+        if (subjectBeRegex.test(passage)) {
+          const wrongNumberMap: Record<string, string> = { are: 'is', is: 'are', am: 'is', was: 'were', were: 'was' };
+          const corrected = wrongNumberMap[target];
+          if (corrected) {
+            const subjectBeRe = new RegExp(`(\\b(?:[A-Za-z]+(?:\\s+[A-Za-z]+)*)\\s+)(${escapedTarget})(\\b)`, 'i');
+            const vt = validateTransformation(words[answerIndex], corrected);
+            const fixed = passage.replace(subjectBeRe, (_: string, p1: string, _p2: string, p3: string) => p1 + corrected + (p3 || ''));
+            const vp = validatePassageForForbiddenPatterns(fixed);
+            if (vt.isValid && vp.isValid) {
+              console.log('✅ 주어+be동사: AI 호출 없이 수일치 오류만 적용 (be+V-ing 금지) →', corrected);
+              return {
+                transformedWords: words.map((w, i) => (i === answerIndex ? corrected : w)),
+                answerIndex,
+                original: words[answerIndex],
+                grammarType: 'Subject-Verb Agreement (Far Subject)',
+              };
+            }
+          }
+          console.warn('[transformWord] 주어+be동사 규칙 적용 실패 → AI 호출로 진행 (be+V-ing 출력 시 검증에서 차단됨)');
+        }
+      }
+    } else {
+      console.log('[transformWord] passage 없음 → to 부정사/전치사+동명사 조기 처리 스킵');
+    }
+
     // 이전 시도에서 발생한 에러 메시지 추가
     const previousErrorsText = previousErrors.length > 0 ? `
 **🚨 CRITICAL - Previous Attempt Errors (MUST AVOID):**
@@ -908,6 +1049,27 @@ You must select a grammar type from the list below. If this is part of a series 
 ${grammarTypes.map((type, idx) => `${idx + 1}. ${type}`).join('\n')}
 `;
     
+    const targetWord = words[answerIndex].trim();
+    const targetLower = targetWord.toLowerCase();
+    const looksLikeBaseVerb = !targetLower.includes(' ') && !targetLower.endsWith('ing') && !targetLower.endsWith('ly') && /^[a-z]+$/.test(targetLower);
+    const toInfIngForm = looksLikeBaseVerb ? (targetLower.endsWith('e') ? targetLower.slice(0, -1) + 'ing' : targetLower + 'ing') : '';
+    const toInfEdForm = looksLikeBaseVerb ? (targetLower.endsWith('e') ? targetLower + 'd' : targetLower + 'ed') : '';
+    const toInfinitiveRuleBlock = looksLikeBaseVerb ? `
+**🚨 IF the target word "${targetWord}" appears after "to" in the passage (e.g. "to ${targetWord}"):**
+- Your transformedWords[${answerIndex}] MUST be EXACTLY one of: **"be ${toInfIngForm}"** or **"be ${toInfEdForm}"**.
+- Outputting only **"${toInfIngForm}"** is REJECTED (produces ungrammatical "to ${toInfIngForm}").
+- No other form is accepted for this context.
+` : '';
+
+    const auxContractionRegex = /\b(didn't|don't|doesn't|won't|wouldn't|can't|couldn't|shouldn't|shan't|mightn't|mustn't|needn't|haven't|hasn't|hadn't|isn't|aren't|wasn't|weren't)\s+/i;
+    const escapedTargetForAux = targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const auxPlusTargetContext = passage && looksLikeBaseVerb && new RegExp(`(?:${auxContractionRegex.source})${escapedTargetForAux}\\b`, 'i').test(passage);
+    const auxPlusTargetRuleBlock = auxPlusTargetContext ? `
+**🚨 CRITICAL - The target word "${targetWord}" appears immediately after a contraction (e.g. "didn't ${targetWord}", "don't ${targetWord}"):**
+- You must **NEVER** output **"to ${targetWord}"** (e.g. "to mean"). "didn't to mean", "don't to think" are **completely ungrammatical**.
+- Use a different transformation (e.g. tense/form error: "meant", "meaning", or other plausible wrong form). **Never** insert "to" before the verb in this context.
+` : '';
+
     const prompt = `Transform exactly ONE word to create a **High-Level Grammar Error** for Korean CSAT (high school) level.
 
 Original words: ${JSON.stringify(words)}
@@ -915,6 +1077,15 @@ Target word index: ${answerIndex} (word: "${words[answerIndex]}")
 Grammar types: ${grammarTypes.join(', ')}
 ${usedGrammarTypesText}
 ${previousErrorsText}
+${toInfinitiveRuleBlock}
+${auxPlusTargetRuleBlock}
+${targetGrammarType ? `
+**🎯 TARGET GRAMMAR ERROR TYPE (MANDATORY - NON–TO-INFINITIVE):**
+The word at index ${answerIndex} ("${words[answerIndex]}") was selected to create a **${targetGrammarType}** error. You MUST output the **INCORRECT** form so that the blank shows the wrong answer for the student to find.
+- ❌ FORBIDDEN: Outputting the same word or the correct form (that would mean no error in the question).
+- ✅ REQUIRED: Output a plausible but grammatically WRONG form for this context (e.g. Adjective vs Adverb: "innately"→"innate" or "possible"→"possibly" in wrong place; Participle: "collected"→"collecting" where passive is needed; Voice: active→passive or vice versa; Gerund vs Infinitive: gerund↔infinitive in wrong context).
+- The transformed word at index ${answerIndex} must be the **wrong** option that fits the **${targetGrammarType}** error type.
+` : ''}
 
 **IMPORTANT:** You MUST transform the word at index ${answerIndex} ("${words[answerIndex]}"). Do NOT transform any other word.
 
@@ -960,9 +1131,21 @@ When transforming a word, you MUST NOT break basic grammar rules:
   - ✅ ALLOWED: "They suggest" → "They will suggest" (future)
   - ✅ ALLOWED: "They suggest" → "They would suggest" / "They should suggest" / "They could suggest" (modal + base)
   - ✅ ALLOWED: "they work" → "they are working" (be-verb + v-ing is correct)
-- **"to + base verb" cannot become "to + verb-ing"**
-  - ❌ FORBIDDEN: "to continue" → "to continuing" (this pattern doesn't exist)
-  - ✅ ALLOWED: "to continue" → "to be continuing" (to + be + v-ing is correct)
+- **🚨 to 부정사(to + 동사원형) 변형 규칙 (필수):**
+  - When the target word is a base verb that appears **after "to"** in the passage (e.g. "create" in "to create", "reinvent" in "to reinvent"), you **MUST** output **"be + V-ing"** or **"be + past participle"** so the passage becomes "to be creating" / "to be created" or "to be reinventing" / "to be reinvented".
+  - ❌ **NEVER** output **only** "creating" or "reinventing" (that would produce "to creating" / "to reinventing" — ungrammatical).
+  - ✅ **REQUIRED:** For "create" in "to create" → output **"be creating"** (result: to be creating) or **"be created"** (result: to be created).
+  - ✅ **REQUIRED:** For "reinvent" in "to reinvent" → output **"be reinventing"** or **"be reinvented"**.
+- **🚨 "like to / want to" 등 뒤 동사 변형 (필수):** When the phrase is **"like to V"**, **"want to V"**, **"love to V"** etc. (e.g. "we like to imagine"), you **MUST NOT** remove "to". The result must be **"like to be V-ed"** (수동태). Output **"be + past participle"** only (e.g. "imagine" → **"be imagined"** so the sentence becomes "we like to be imagined"). ❌ **FORBIDDEN:** "like be imagining" (to dropped — ungrammatical). ✅ **REQUIRED:** "like to imagine" → output **"be imagined"** (result: we like to be imagined).
+- **🚨 전치사 + 동명사(by/without/of 등 + V-ing) 변형 규칙 (필수):**
+  - When the target word is a **gerund (V-ing)** that appears **after a preposition** (by, without, of, before, after, with, through) in the passage (e.g. "reducing" in "by reducing", "looking" in "of looking"), you **MUST** output **only "being + past participle"** so the passage becomes "by being reduced", "of being looked".
+  - ❌ **NEVER** output **only** "reduced" or "looked" (that would produce "by reduced" / "of looked" — ungrammatical).
+  - ❌ **NEVER** output **"being + V-ing"** (e.g. "being reducing", "being looking", "of be looking") — these are **ungrammatical**. Only **"being + past participle"** is allowed.
+  - ✅ **REQUIRED:** For "reducing" in "by reducing" → output **"being reduced"** only (result: by being reduced). For "looking" in "of looking" → output **"being looked"** only (result: of being looked).
+
+${PREFERRED_ERROR_PATTERNS}
+
+${getDifficultyErrorListPrompt(DEFAULT_GRAMMAR_DIFFICULTY)}
 
 ${FORBIDDEN_TRANSFORMATIONS_PROMPT}
 
@@ -1010,7 +1193,9 @@ Each word must create a DIFFERENT grammar error type. Do NOT repeat the same gra
   - ❌ **FORBIDDEN:** "They suggest" → "They suggests" (too easy - 3rd plural + singular verb)
   - Same rules apply to ALL verbs: "We work" → "We are worked" / "We will work" / "We would work" ✅, but NOT "We working" ❌
 - **(Gerund vs Infinitive):** Changing a gerund to an infinitive or vice versa in specific contexts. *Example: "I enjoy [reading -> to read] books."*
-- **(Complex Infinitive):** Using complex infinitive structures (to+be+v-ing, to+have been+p.p) instead of simple transformations. *Example: "The goal is [to be improving -> to improve]" or "She seems [to have been injured -> to be injured]". **🚨 ABSOLUTELY FORBIDDEN:** "to + 동사원형" → "to + 동사ing" (e.g., "to continue" → "to continuing" is FORBIDDEN - this pattern does not exist). **✅ ALLOWED:** "to + 동사원형" → "동사+ing" (e.g., "to continue" → "continuing"), "to + 동사원형" → "to be + 과거분사" (e.g., "to continue" → "to be continued"), "to + 동사원형" → "to be + 동사ing" (e.g., "to continue" → "to be continuing"), "to + 동사원형" → "to have been + 과거분사" (e.g., "to continue" → "to have been continued").
+- **(Complex Infinitive / to 부정사):** When the target word is the verb in "to + verb" (e.g. "create" in "to create"), you **MUST** output **"be creating"** or **"be created"** (so the result is "to be creating" or "to be created"). **🚨 FORBIDDEN:** Outputting only "creating" (produces "to creating" — ungrammatical). **✅ ALLOWED:** "create" → "be creating", "create" → "be created"; "reinvent" → "be reinventing", "reinvent" → "be reinvented".
+- **(like to / want to + 동사):** When the phrase is "like to imagine", "want to believe", etc., you **MUST** output **"be + past participle"** (e.g. "be imagined") so the result is "we like to be imagined". **🚨 FORBIDDEN:** Dropping "to" (produces "we like be imagining" — ungrammatical). **✅ REQUIRED:** "imagine" in "we like to imagine" → **"be imagined"** (result: we like to be imagined).
+- **(Preposition + Gerund / 전치사+동명사):** When the target word is a gerund (V-ing) after "by", "without", "of", etc. (e.g. "reducing" in "by reducing them"), you **MUST** output **only "being + past participle"** (e.g. "being reduced"). **🚨 FORBIDDEN:** "by reduced", "of be looking", "being reducing", "being looking" (all ungrammatical). **✅ ALLOWED:** "reducing" → "being reduced"; "looking" → "being looked" only.
 - **(Adjective/Adverb — 반드시 포함 권장):** Changing an adjective complement to an adverb, or adverb to adjective where needed. *Examples: "It remains [possible -> possibly]...", "The result is [clearly -> clear]...", "It is [necessary -> necessarily]..."* 형용사/부사 관련 어법은 5개 선택지에 반드시 1개 이상 포함되어야 함.
 - **(Voice):** Changing active to passive or vice versa incorrectly. *Example: "The problem [was solved -> solved] by the team."*
 - **(Preposition):** Changing a correct preposition to an incorrect one. *Example: "depend [on -> of] something"*
@@ -1049,13 +1234,16 @@ Example 2 (if transforming "which" in a 5-word array):
 5. The transformed word must be a **real English word** that is grammatically incorrect in the sentence context.
 6. Do NOT transform proper nouns or simple nouns unless it's a specific countable/uncountable trick.`;
 
+    const systemContent = targetGrammarType
+      ? `You are a grammar expert for the Korean CSAT English section. You create grammar errors. For to-infinitives: output ONLY "be + V-ing" or "be + past participle". For other types (e.g. ${targetGrammarType}): you MUST output the INCORRECT form so the blank shows the wrong answer—never leave the word unchanged or output the correct form.`
+      : 'You are a grammar expert specializing in the Korean CSAT (Suneung) English section. You create challenging syntax errors. Follow the transformation rules EXACTLY—especially for to-infinitives: output ONLY "be + V-ing" or "be + past participle" of the SAME verb, never a different word.';
     const response = await callOpenAI({
       model: 'gpt-4o',
       messages: [
-        { role: 'system', content: 'You are a grammar expert specializing in the Korean CSAT (Suneung) English section. You create challenging syntax errors.' },
+        { role: 'system', content: systemContent },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.7,
+      temperature: 0.2,
       max_tokens: 1000,
     });
 
@@ -1136,19 +1324,130 @@ Example 2 (if transforming "which" in a 5-word array):
 
       // 단어 관계 검증: 변형된 단어가 원본 단어와 문법적으로 관련되어 있는지 확인
       const originalWord = result.original.trim();
-      const transformedWord = result.transformedWords[result.answerIndex].trim();
-      
-      // 공통 검증 함수 사용
-      const validation = validateTransformation(originalWord, transformedWord);
+      let transformedWord = result.transformedWords[result.answerIndex].trim();
+      const original = originalWord.toLowerCase();
+      const transformed = transformedWord.toLowerCase();
+      console.log('[transformWord] AI 변형 결과:', { original: originalWord, transformed: transformedWord, answerIndex: result.answerIndex });
+
+      // to 부정사 문맥: 본문에 "to [원본]" 또는 "to (부사 등) [원본]"이 있으면 변형은 반드시 같은 동사의 "be + 동사ing" 또는 "be + 과거분사"만 허용
+      const escapedOriginal = originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const toInfinitiveInPassage = passage && !original.includes(' ') &&
+        new RegExp(`\\bto\\s+(?:\\w+\\s+)*${escapedOriginal}\\b`, 'i').test(passage);
+      const allowed1 = !original.includes(' ') ? ('be ' + (original.endsWith('e') ? original.slice(0, -1) + 'ing' : original + 'ing')) : '';
+      const allowed2 = !original.includes(' ') ? ('be ' + (original.endsWith('e') ? original + 'd' : original + 'ed')) : '';
+      console.log('[transformWord] 선검사:', { toInfinitiveInPassage, passage있음: !!passage, 허용형: [allowed1, allowed2], AI변형: transformed });
+      let validation: { isValid: boolean; errorMessage?: string } = { isValid: true };
+      if (toInfinitiveInPassage) {
+        const ingForm = original.endsWith('e') ? original.slice(0, -1) + 'ing' : original + 'ing';
+        const edForm = original.endsWith('e') ? original + 'd' : original + 'ed';
+        const allowed1 = 'be ' + ingForm;
+        const allowed2 = 'be ' + edForm;
+        if (transformed !== allowed1 && transformed !== allowed2) {
+          validation = {
+            isValid: false,
+            errorMessage: `본문에 "to ... ${originalWord}"가 있으므로 변형은 반드시 "${allowed1}" 또는 "${allowed2}"만 허용됩니다. 다른 단어(예: "${transformedWord}")는 금지됩니다.`,
+          };
+        }
+      }
+      if (validation.isValid) {
+        validation = validateTransformation(originalWord, transformedWord);
+      }
+
+      // to 부정사 자동 수정: AI가 "creating"만 반환한 경우 "be creating"으로 보정 후 재검증
+      if (!validation.isValid && passage && validation.errorMessage && (validation.errorMessage.includes('비문이 됩니다') || validation.errorMessage.includes('to 부정사'))) {
+        const baseToIng =
+          transformed === original + 'ing' ||
+          (original.endsWith('e') && transformed === original.slice(0, -1) + 'ing');
+        if (baseToIng && !original.includes(' ')) {
+          const corrected = 'be ' + transformedWord;
+          const recheck = validateTransformation(originalWord, corrected);
+          if (recheck.isValid) {
+            const escapedOriginal = originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const firstOccurrenceRe = new RegExp(`\\b${escapedOriginal}\\b`, 'i');
+            const renderedPassage = passage.replace(firstOccurrenceRe, corrected);
+            const passageValidation = validatePassageForForbiddenPatterns(renderedPassage);
+            if (passageValidation.isValid) {
+              console.log('✅ to 부정사 자동 수정 적용:', transformedWord, '→', corrected);
+              result.transformedWords[result.answerIndex] = corrected;
+              transformedWord = corrected;
+              validation = { isValid: true };
+            }
+          }
+        }
+      }
+
+      // to 부정사 선검사 실패 시: AI 호출 없이 "be V-ing" / "be V-ed"로 로컬 보정 시도 (재시도 전)
+      if (!validation.isValid && toInfinitiveInPassage && passage) {
+        const ingForm = original.endsWith('e') ? original.slice(0, -1) + 'ing' : original + 'ing';
+        const edForm = original.endsWith('e') ? original + 'd' : original + 'ed';
+        const toVerbContextRe = new RegExp(`(\\bto\\s+(?:\\w+\\s+)*)(${escapedOriginal})(\\b)`, 'i');
+        for (const corrected of ['be ' + ingForm, 'be ' + edForm]) {
+          if (!validateTransformation(originalWord, corrected).isValid) continue;
+          const fixedPassage = passage.replace(toVerbContextRe, (_: string, prefix: string, _mid: string, suffix: string) => prefix + corrected + (suffix || ''));
+          if (validatePassageForForbiddenPatterns(fixedPassage).isValid) {
+            result.transformedWords[result.answerIndex] = corrected;
+            console.log('✅ to 부정사 로컬 보정 적용 (선검사 실패 후):', transformedWord, '→', corrected);
+            return result;
+          }
+        }
+      }
+
       if (!validation.isValid) {
         const errorMsg = validation.errorMessage || '변형 검증에 실패했습니다.';
-        console.warn(`⚠️ ${errorMsg} 재시도...`);
+        console.warn(`⚠️ [transformWord] 단어 검증 실패:`, errorMsg, '| original:', originalWord, 'transformed:', transformedWord);
         if (attempt < maxRetries) {
-          // 이전 에러 메시지를 저장하여 다음 시도에서 프롬프트에 포함
           previousErrors.push(errorMsg);
           continue;
         } else {
+          console.error('[transformWord] 최종 실패: 단어 검증 단계에서 throw', { attempt, maxRetries, errorMsg });
           throw new Error(errorMsg);
+        }
+      }
+
+      // 문맥 검증: passage가 주어졌을 때만 치환된 지문에서 "of to V" / "to + 동사ing" 등 금지 패턴 검출
+      if (passage) {
+        const firstOccurrenceRe = new RegExp(`\\b${escapedOriginal}\\b`, 'i');
+        let renderedPassage = passage.replace(firstOccurrenceRe, transformedWord);
+        let passageValidation = validatePassageForForbiddenPatterns(renderedPassage);
+        const snippetStart = renderedPassage.indexOf(transformedWord);
+        const snippet = snippetStart >= 0 ? renderedPassage.slice(Math.max(0, snippetStart - 15), snippetStart + transformedWord.length + 15) : '(없음)';
+        console.log('[transformWord] 지문 검증:', {
+          isValid: passageValidation.isValid,
+          errorMessage: passageValidation.errorMessage,
+          치환후_주변문맥: snippet,
+        });
+        if (!passageValidation.isValid && passageValidation.errorMessage) {
+          console.warn('[transformWord] 지문 검증 실패 — 감지된 내용:', passageValidation.errorMessage);
+        }
+        // "to + 동사ing" 실패 시: "to (부사 등) 원본동사" 구간만 "to ... be V-ing/be V-ed"로 치환 후 재검증
+        if (!passageValidation.isValid && passageValidation.errorMessage?.includes('to + 동사ing') && !original.includes(' ')) {
+          const ingForm = original.endsWith('e') ? original.slice(0, -1) + 'ing' : original + 'ing';
+          const edForm = original.endsWith('e') ? original + 'd' : original + 'ed';
+          const toVerbContextRe = new RegExp(`(\\bto\\s+(?:\\w+\\s+)*)(${escapedOriginal})(\\b)`, 'i');
+          console.log('[transformWord] "to+동사ing" 감지 → 보정 시도:', ['be ' + ingForm, 'be ' + edForm]);
+          for (const corrected of ['be ' + ingForm, 'be ' + edForm]) {
+            const fixedPassage = passage.replace(toVerbContextRe, (_: string, prefix: string, _mid: string, suffix: string) => prefix + corrected + (suffix || ''));
+            const recheck = validatePassageForForbiddenPatterns(fixedPassage);
+            console.log('[transformWord] 보정 후 검증:', { corrected, isValid: recheck.isValid, errorMessage: recheck.errorMessage });
+            if (recheck.isValid) {
+              result.transformedWords[result.answerIndex] = corrected;
+              transformedWord = corrected;
+              passageValidation = { isValid: true };
+              console.log('✅ to 부정사 강제 보정 적용:', transformedWord, '→', corrected);
+              break;
+            }
+          }
+        }
+        if (!passageValidation.isValid) {
+          const errorMsg = passageValidation.errorMessage || '문맥 패턴 검증에 실패했습니다.';
+          console.warn(`⚠️ [transformWord] 지문 검증 실패 (최종):`, errorMsg, '| 치환된 지문 앞 150자:', renderedPassage.slice(0, 150));
+          if (attempt < maxRetries) {
+            previousErrors.push(errorMsg);
+            continue;
+          } else {
+            console.error('[transformWord] 최종 실패: 지문 검증 단계에서 throw', { attempt, maxRetries, errorMsg });
+            throw new Error(errorMsg);
+          }
         }
       }
 
@@ -1156,8 +1455,12 @@ Example 2 (if transforming "which" in a 5-word array):
       return result;
 
     } catch (parseError) {
-      console.warn(`어법 변형 시도 ${attempt} 실패:`, parseError);
+      console.warn(`[transformWord] 어법 변형 시도 ${attempt} 실패:`, parseError);
+      if (parseError instanceof Error) {
+        console.warn('[transformWord] 에러 상세:', { name: parseError.name, message: parseError.message, stack: parseError.stack?.slice(0, 200) });
+      }
       if (attempt === maxRetries) {
+        console.error('[transformWord] 최종 실패: catch 블록 (재시도 소진)', { attempt, maxRetries });
         throw new Error('어법 변형에 실패했습니다.');
       }
     }
