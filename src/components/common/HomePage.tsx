@@ -328,14 +328,18 @@ const HomePage: React.FC<HomePageProps> = ({ setCurrentQuiz }) => {
         <div className="footer-content">
           <div className="footer-left">
             <div className="company-info">
-              <p className="company-name">주식회사 제이커머스</p>
+              {/* 복구 시 "제이커머스" → "주식회사 제이커머스" 로 되돌리기 */}
+              <p className="company-name">제이커머스</p>
               <p className="company-details">
-                인천광역시 연수구 연구단지로55번길 16, 602호<br />
+                {/* 복구 시 "인천광역시 연수구 해송로30번길20, 406-702" → "인천광역시 연수구 연구단지로55번길 16, 602호" 로 되돌리기 */}
+                인천광역시 연수구 해송로30번길20, 406-702<br />
               jcomtax@naver.com
               </p>
               <p className="contact-info">
-                전화번호 : 032-264-0501 / 대표: 김동연 / 사업자등록번호: 751-87-03106<br />
-                통신판매업 신고번호: 2025-인천연수구-1970호
+                {/* 복구 시 "306-17-19399" → "751-87-03106" 로 되돌리기 */}
+                전화번호 : 032-264-0501 / 대표: 김동연 / 사업자등록번호: 306-17-19399<br />
+                {/* 복구 시 "2022-인천연수구-1308호" → "2025-인천연수구-1970호" 로 되돌리기 */}
+                통신판매업 신고번호: 2022-인천연수구-1308호
               </p>
               <p className="copyright">COPYRIGHT(C) JCommerce CO. ALL RIGHTS RESERVED.</p>
             </div>
