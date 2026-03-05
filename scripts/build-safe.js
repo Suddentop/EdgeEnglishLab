@@ -74,7 +74,7 @@ if (missingVars.length > 0) {
   console.log('⚠️  다음 환경 변수가 설정되지 않았습니다:');
   missingVars.forEach(v => console.log(`   - ${v}`));
   console.log('\n💡 PowerShell에서 환경 변수를 설정한 후 다시 빌드하세요.');
-  console.log('   예: $env:REACT_APP_API_PROXY_URL="https://edgeenglish.net/secure-api-proxy.php"\n');
+  console.log('   예: $env:REACT_APP_API_PROXY_URL="https://us-central1-edgeenglishlab.cloudfunctions.net/openaiProxy"\n');
 }
 
 // 3. REACT_APP_OPENAI_API_KEY가 환경 변수에 있는지 확인

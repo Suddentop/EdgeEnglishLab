@@ -54,18 +54,44 @@ export function getProblemGenerationTemperature(customTemperature?: number): num
 }
 
 /**
+ * API 프록시 상대 경로.
+ * 근본 원인: edgeenglish.net 서버가 CORS 헤더를 보내지 않아, 브라우저가 cross-origin 요청을 차단함.
+ * 대응: 브라우저가 같은 origin으로만 요청하도록 상대 경로 사용. (로컬은 개발 서버 프록시 경유)
+ * 자세한 설명: docs/CORS_AND_API_PROXY.md
+ */
+const EDGEENGLISH_PROXY_PATH = '/secure-api-proxy.php';
+
+/**
+ * 실제 요청에 쓸 URL. localhost 또는 edgeenglish.net일 때 상대 경로를 쓰면
+ * 브라우저는 same-origin 요청만 하므로 CORS 차단이 발생하지 않음.
+ */
+export function getEffectiveProxyUrl(proxyUrl: string): string {
+  if (!proxyUrl) return proxyUrl;
+  if (!proxyUrl.startsWith('https://edgeenglish.net/')) return proxyUrl;
+  if (typeof window === 'undefined') return proxyUrl;
+  const origin = window.location.origin;
+  const useRelative =
+    origin === 'https://edgeenglish.net' ||
+    origin === 'https://www.edgeenglish.net' ||
+    origin.startsWith('http://localhost');
+  return useRelative ? EDGEENGLISH_PROXY_PATH : proxyUrl;
+}
+
+/**
  * OpenAI API 호출 헬퍼 함수
  * 보안을 위해 프록시 서버만 사용 (직접 API 호출 제거)
  */
 export async function callOpenAI(requestBody: any): Promise<Response> {
   const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
-  
+  const effectiveUrl = getEffectiveProxyUrl(proxyUrl);
+
   // 환경 변수 확인 로그 (디버깅용)
   console.log('🔍 [callOpenAI] 환경 변수 확인:', {
     'REACT_APP_API_PROXY_URL': proxyUrl ? `설정됨 (${proxyUrl})` : '❌ 없음',
-    '사용 모드': proxyUrl ? '프록시 서버' : '❌ 프록시 미설정'
+    '사용 모드': proxyUrl ? '프록시 서버' : '❌ 프록시 미설정',
+    ...(effectiveUrl !== proxyUrl && { '실제 요청 (CORS 회피)': effectiveUrl }),
   });
-  
+
   // 프록시 URL이 필수로 설정되어야 함 (보안상 직접 API 호출 제거)
   if (!proxyUrl) {
     const errorMessage = '프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.';
@@ -79,9 +105,9 @@ export async function callOpenAI(requestBody: any): Promise<Response> {
     throw new Error(errorMessage);
   }
   
-  // 프록시 서버를 통해서만 API 호출
-  console.log('✅ [프록시 모드] 프록시 서버 사용:', proxyUrl);
-  const response = await fetch(proxyUrl, {
+  // 프록시 서버를 통해서만 API 호출 (localhost 시 상대 경로 → 개발 서버 프록시 경유)
+  console.log('✅ [프록시 모드] 프록시 서버 사용:', effectiveUrl);
+  const response = await fetch(effectiveUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

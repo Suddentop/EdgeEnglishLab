@@ -1,0 +1,14 @@
+# CORS - secure-api-proxy.php 가 있는 디렉터리의 .htaccess 에 추가
+# Apache + AllowOverride 허용 환경에서만 동작. 원인: docs/CORS_AND_API_PROXY.md
+
+<IfModule mod_headers.c>
+    SetEnvIf Origin "^(https?://(localhost(:\d+)?|(www\.)?edgeenglish\.net)$" CORS_ORIGIN=$0
+    Header set Access-Control-Allow-Origin "%{CORS_ORIGIN}e" env=CORS_ORIGIN
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+    Header set Access-Control-Max-Age "86400"
+</IfModule>
+
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]

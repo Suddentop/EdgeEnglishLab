@@ -3,6 +3,8 @@
  * dothome.co.kr의 PHP 프록시 서버를 통해 OpenAI API 호출
  */
 
+import { getEffectiveProxyUrl } from './common';
+
 interface OpenAIRequest {
   model: string;
   messages: Array<{
@@ -51,10 +53,11 @@ class OpenAIProxyService {
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
       let response: Response;
 
-      // 프록시 URL이 설정되어 있으면 프록시 사용 (프로덕션)
+      // 프록시 URL이 설정되어 있으면 프록시 사용 (localhost 시 CORS 회피용 effective URL)
       if (this.proxyUrl) {
+        const effectiveUrl = getEffectiveProxyUrl(this.proxyUrl);
         console.log('🤖 OpenAI 프록시 서버 호출 중...');
-        response = await fetch(this.proxyUrl, {
+        response = await fetch(effectiveUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

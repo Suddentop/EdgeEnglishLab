@@ -40,8 +40,13 @@ npm install
 cd ..
 ```
 
-### 3. Firebase 설정
-`.env` 파일을 프로젝트 루트에 생성:
+### 3. 환경 설정
+- **Firebase**: 프로젝트 루트에 `.env.local` 생성 후 Firebase·API 프록시 변수 설정.
+- **AI API(문제 생성)**: `REACT_APP_API_PROXY_URL` 필수. 예: `https://us-central1-edgeenglishlab.cloudfunctions.net/openaiProxy` (Firebase OpenAI) 또는 `http://localhost:4000` (Ollama 로컬용).
+- 환경별 브랜치·설정 루틴: **`WORK_ENVIRONMENTS.md`** 참고.  
+- CORS·프록시 구현 설명: **`docs/CORS_AND_API_PROXY.md`** 참고.
+
+예시 `.env.local`:
 ```
 REACT_APP_FIREBASE_API_KEY=your_api_key
 REACT_APP_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
@@ -49,6 +54,7 @@ REACT_APP_FIREBASE_PROJECT_ID=your_project_id
 REACT_APP_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=123456789
 REACT_APP_FIREBASE_APP_ID=your_app_id
+REACT_APP_API_PROXY_URL=https://us-central1-edgeenglishlab.cloudfunctions.net/openaiProxy
 ```
 
 ### 4. 개발 서버 실행
