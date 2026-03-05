@@ -285,3 +285,22 @@ function generateOptions(correctAnswer: string, allAnswers: string[]): string[] 
   // 옵션 섞기
   return options.sort(() => Math.random() - 0.5);
 }
+
+/**
+ * 단일 영어 단어의 한글뜻 생성 (단어 편집 시 새 단어 추가용)
+ * @param englishWord - 영어 단어
+ * @returns 한글뜻이 포함된 단어 객체
+ */
+export async function generateSingleWordMeaning(englishWord: string): Promise<WordItem> {
+  try {
+    const words = await generateKoreanMeanings([englishWord]);
+    if (words.length > 0) {
+      return words[0];
+    }
+    return { english: englishWord, korean: '(뜻 없음)' };
+  } catch (error) {
+    console.error('❌ 단일 단어 한글뜻 생성 실패:', error);
+    return { english: englishWord, korean: '(뜻 없음)' };
+  }
+}
+

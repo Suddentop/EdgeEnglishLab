@@ -1120,7 +1120,7 @@ const Work_15_PassageWordStudy: React.FC = () => {
     return (
       <div className="quiz-display">
         <div className="quiz-header no-print">
-          <h2>#15. 본문 단어 학습 (총 {quizzes.length}문제)</h2>
+          <h2>#13. 본문 단어 학습 (총 {quizzes.length}문제)</h2>
           <div className="quiz-header-buttons">
             <button 
               onClick={resetAll} 
@@ -1193,7 +1193,7 @@ const Work_15_PassageWordStudy: React.FC = () => {
                 <div className="quiz-item-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <h3 style={{ margin: 0, color: '#1976d2' }}>문제 {idx + 1}</h3>
-                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#15</span>
+                    <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#eee', fontSize: '0.8rem', color: '#666' }}>유형#13</span>
                   </div>
                   {editingQuizIndex !== idx && (
                     <button
