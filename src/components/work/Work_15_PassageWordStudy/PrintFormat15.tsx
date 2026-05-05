@@ -52,7 +52,7 @@ export const ProblemInstructionWork15: React.FC<ProblemInstructionWork15Props> =
 }) => (
   <div className={`problem-instruction-work15 ${className}`}>
     <span className="problem-instruction-text-work15">{children}</span>
-    <span className="problem-type-label-work15">유형#15</span>
+    <span className="problem-type-label-work15">유형#13</span>
   </div>
 );
 

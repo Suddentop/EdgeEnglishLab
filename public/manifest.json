@@ -1,0 +1,9 @@
+{
+  "short_name": "Edge English Lab",
+  "name": "Edge English Lab - AI 영어 문제 생성",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

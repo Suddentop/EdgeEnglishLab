@@ -1,0 +1,27 @@
+---
+description: 작업 환경(engquiz/dev/ollama) 확인 및 브랜치·API 설정 루틴
+alwaysApply: true
+---
+
+# 작업 환경 루틴
+
+이 프로젝트는 **세 가지 작업 환경**을 사용합니다. 모든 작업 전에 현재 환경을 확인하고, 해당 환경에 맞는 브랜치와 API 설정을 적용하세요.
+
+## 환경 정의 (자세한 내용: `WORK_ENVIRONMENTS.md`)
+
+| 환경 | 목적 | 브랜치 | AI 백엔드 |
+|------|------|--------|-----------|
+| **engquiz** | 빌드·배포용 (edgeenglish.net) | `main` | OpenAI API |
+| **dev** | 변경·테스트 후 engquiz와 동기화 | `dev` | OpenAI API |
+| **ollama** | Ollama(llama 3.2)로 AI 학습·추론 개발 | `ollama` | Ollama |
+
+## 매 작업 시 적용할 루틴
+
+1. **환경 확인**: 사용자가 "engquiz 환경", "dev 환경", "ollama 환경" 중 어떤 환경에서 작업한다고 했는지 확인한다. 명시되지 않았으면 질문한다.
+2. **브랜치 일치**: 해당 환경의 브랜치가 맞는지 확인한다. (engquiz → main, dev → dev, ollama → ollama)
+3. **API 설정**: 코드/설정 제안 시 환경에 맞춘다.
+   - engquiz, dev: `REACT_APP_API_PROXY_URL` = Firebase OpenAI 프록시 (`https://us-central1-edgeenglishlab.cloudfunctions.net/openaiProxy`)
+   - ollama: `REACT_APP_API_PROXY_URL` = `http://localhost:4000`, Ollama 프록시 실행 필요
+4. **환경 전환 요청 시**: `git fetch origin`, `git checkout <브랜치>`, `git pull origin <브랜치>` 및 `.env.local` 안내를 제안한다.
+
+환경 전환 스크립트: `.\scripts\switch-environment.ps1 -Environment engquiz|dev|ollama`
