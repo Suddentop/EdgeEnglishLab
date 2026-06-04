@@ -20,6 +20,12 @@ interface PrintFormatPackage03Props {
   isAnswerMode?: boolean;
 }
 
+const normalizeWorkTypeId = (workTypeId?: string): string => {
+  if (!workTypeId) return '';
+  const raw = String(workTypeId).trim().replace(/^work-?/i, '').replace(/^#/, '');
+  return /^\d+$/.test(raw) ? raw.padStart(2, '0') : raw;
+};
+
 const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz, isAnswerMode = false }) => {
   console.log('🔍 PrintFormatPackage03 렌더링:', { 
     isAnswerMode, 
@@ -93,20 +99,21 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
     
     for (let i = 0; i < packageQuiz.length; i++) {
       const quizItem = packageQuiz[i];
+      const workType = normalizeWorkTypeId(quizItem.workTypeId);
       
       // 데이터 소스 결정 - Package#03은 workXXData 구조 사용
       let quizData: any;
-      if (quizItem.workTypeId === '01') {
+      if (workType === '01') {
         quizData = quizItem.work01Data || quizItem.quiz || quizItem.data;
-      } else if (quizItem.workTypeId === '02') {
+      } else if (workType === '02') {
         quizData = quizItem.work02Data || quizItem.data;
-      } else if (quizItem.workTypeId === '07') {
+      } else if (workType === '07') {
         quizData = quizItem.work07Data || quizItem.data;
-      } else if (quizItem.workTypeId === '08') {
+      } else if (workType === '08') {
         quizData = quizItem.work08Data || quizItem.data;
-      } else if (quizItem.workTypeId === '13') {
+      } else if (workType === '13') {
         quizData = quizItem.work13Data || quizItem.data;
-      } else if (quizItem.workTypeId === '14') {
+      } else if (workType === '14') {
         quizData = quizItem.work14Data || quizItem.data;
       } else {
         quizData = quizItem.work01Data || quizItem.work02Data || quizItem.work07Data || quizItem.work08Data || quizItem.work13Data || quizItem.work14Data || quizItem.quiz || quizItem.data;
@@ -217,8 +224,12 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
     
     // 페이지 렌더링
     distributedItems.forEach((pageItems: PackageQuizItem[], pageIndex: number) => {
+      const isLastDistributedPage = pageIndex === distributedItems.length - 1;
       pages.push(
-        <div key={`page-${pageIndex}`} className="a4-landscape-page-template">
+        <div
+          key={`page-${pageIndex}`}
+          className={`a4-landscape-page-template${isLastDistributedPage ? ' last-page' : ''}`}
+        >
           <div className="a4-landscape-page-header">
             <PrintHeaderPackage03 />
           </div>
@@ -226,36 +237,33 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
           <div className="a4-landscape-page-content">
             <div className="print-two-column-container">
               {pageItems.map((quizItem: PackageQuizItem, index: number) => {
-                // 마지막 페이지에 아이템이 하나만 있고, 현재 아이템이 마지막인 경우 빈 div 추가
-                const isLastPage = pageIndex === distributedItems.length - 1;
-                const isSingleItemOnLastPage = isLastPage && pageItems.length === 1;
-                const isLastItem = index === pageItems.length - 1;
+                const workType = normalizeWorkTypeId(quizItem.workTypeId);
                 // 데이터 소스 결정
                 let quizData: any;
-                if (quizItem.workTypeId === '01') {
+                if (workType === '01') {
                   quizData = quizItem.work01Data || quizItem.quiz || quizItem.data;
-                } else if (quizItem.workTypeId === '02') {
+                } else if (workType === '02') {
                   quizData = quizItem.work02Data || quizItem.data;
-                } else if (quizItem.workTypeId === '07') {
+                } else if (workType === '07') {
                   quizData = quizItem.work07Data || quizItem.data;
-                } else if (quizItem.workTypeId === '08') {
+                } else if (workType === '08') {
                   quizData = quizItem.work08Data || quizItem.data;
-                } else if (quizItem.workTypeId === '13') {
+                } else if (workType === '13') {
                   quizData = quizItem.work13Data || quizItem.data;
-                } else if (quizItem.workTypeId === '14') {
+                } else if (workType === '14') {
                   quizData = quizItem.work14Data || quizItem.data;
                 } else {
                   quizData = quizItem.work01Data || quizItem.work02Data || quizItem.work07Data || quizItem.work08Data || quizItem.work13Data || quizItem.work14Data || quizItem.quiz || quizItem.data;
                 }
                 
                 console.log(`🔍 Package#03 렌더링 아이템 ${index}:`, {
-                  workTypeId: quizItem.workTypeId,
+                  workTypeId: workType,
                   quizData: quizData,
                   hasQuizData: !!quizData
                 });
                 
           // Work_01: 문단 순서 맞추기
-          if (quizItem.workTypeId === '01' && quizData && quizData.shuffledParagraphs) {
+          if (workType === '01' && quizData && quizData.shuffledParagraphs) {
             const isExamFormat = quizData.format === 'exam';
             const instruction = isExamFormat && quizData.instruction 
               ? quizData.instruction 
@@ -320,7 +328,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
           }
 
           // Work_02: 유사단어 독해
-          if (quizItem.workTypeId === '02') {
+          if (workType === '02') {
             console.log('🖨️ 패키지#03 유형#02 렌더링:', { 
               workTypeId: quizItem.workTypeId, 
               hasQuizData: !!quizData,
@@ -390,7 +398,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
           }
 
           // Work_07: 주제 추론
-          if (quizItem.workTypeId === '07' && quizData && quizData.passage) {
+          if (workType === '07' && quizData && quizData.passage) {
             return (
               <div key={`print-07-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -418,7 +426,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
           }
 
           // Work_08: 제목 추론
-          if (quizItem.workTypeId === '08' && quizData && quizData.passage) {
+          if (workType === '08' && quizData && quizData.passage) {
             return (
               <div key={`print-08-${index}`} className="print-question-card">
                 <div className="print-question-title">
@@ -446,7 +454,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
           }
 
           // Work_13: 빈칸 채우기 (단어-주관식)
-          if (quizItem.workTypeId === '13' && quizData && quizData.blankedText) {
+          if (workType === '13' && quizData && quizData.blankedText) {
             console.log('🔍 Work_13 데이터 확인:', {
               blankedText: quizData.blankedText,
               hasBlankedText: !!quizData.blankedText,
@@ -535,7 +543,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
           }
 
           // Work_14: 빈칸 채우기 (문장-주관식)
-          if (quizItem.workTypeId === '14' && quizData && quizData.blankedText) {
+          if (workType === '14' && quizData && quizData.blankedText) {
             console.log('🔍 Work_14 데이터 확인:', {
               blankedText: quizData.blankedText,
               hasBlankedText: !!quizData.blankedText,
@@ -798,7 +806,7 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
           }
 
           // Translation 섹션 (마지막 유형 다음 단에 표시)
-          if (quizItem.workTypeId === 'translation' && quizItem.translatedText) {
+          if (workType === 'translation' && quizItem.translatedText) {
             const isLastPage = pageIndex === distributedItems.length - 1;
             // 마지막 페이지인 경우 "본문해석 :" 제목을 컨테이너 밖 위에 배치
             if (isLastPage) {
@@ -822,6 +830,19 @@ const PrintFormatPackage03: React.FC<PrintFormatPackage03Props> = ({ packageQuiz
             );
           }
 
+                if (workType && workType !== 'translation') {
+                  return (
+                    <div key={`print-missing-${index}`} className="print-question-card">
+                      <div className="print-question-title">
+                        <span>#{workType}. (데이터 없음)</span>
+                        <span className="print-question-type-badge">유형#{workType}</span>
+                      </div>
+                      <div className="print-question-content">
+                        <p>인쇄 데이터를 불러올 수 없습니다.</p>
+                      </div>
+                    </div>
+                  );
+                }
                 return null;
               })}
               {/* 마지막 페이지에 아이템이 하나만 있을 때 빈 div 추가하여 2단 레이아웃 유지 */}

@@ -87,7 +87,7 @@
     overflow: visible !important;
   }
 
-  /* 컨테이너 스타일 추가 */
+  /* 컨테이너 스타일 추가 — 다중 페이지 분할 허용 */
   .print-container,
   .print-container-answer {
     display: block !important;
@@ -101,6 +101,8 @@
     max-width: 29.7cm !important;
     height: auto !important;
     background: white !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
 
   /* 단일 페이지 시: 높이 21cm 고정 */
@@ -204,9 +206,9 @@
   .print-question-card {
     width: calc(50% - 0.3cm);
     flex: 0 0 calc(50% - 0.3cm);
-    break-inside: avoid;
-    page-break-inside: avoid;
-    -webkit-column-break-inside: avoid;
+    break-inside: auto;
+    page-break-inside: auto;
+    -webkit-column-break-inside: auto;
     margin-bottom: 0.3cm;
     border: none;
     padding: 0.5cm;
