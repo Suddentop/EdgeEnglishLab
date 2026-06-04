@@ -2577,6 +2577,341 @@ ${passage}`;
     return resultElements.length > 0 ? resultElements : text;
   };
 
+  const PACKAGE01_PRINT_ROOT_PROBLEM = 'print-root-package01';
+  const PACKAGE01_PRINT_ROOT_ANSWER = 'print-root-package01-answer';
+
+  const getPackage01PrintStyleCss = (rootId: string) => `
+      @page {
+        margin: 0.8cm 0 0.5cm 0;
+        size: A4 portrait;
+      }
+      @media print {
+        html.package01-print-active {
+          font-size: 16pt !important;
+        }
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+        body > *:not(#${rootId}) {
+          display: none !important;
+        }
+        #root {
+          display: none !important;
+        }
+        #${rootId},
+        #${rootId}.package01-continuous-print,
+        #${rootId}.package01-print-mount,
+        #${rootId} .print-container {
+          display: block !important;
+          position: relative !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          margin: 0 !important;
+          padding: 0 0.6cm !important;
+          background: white !important;
+          box-sizing: border-box !important;
+          overflow: visible !important;
+        }
+        html.package01-print-active .only-print .a4-page-content,
+        html.package01-print-active #${rootId} .only-print .a4-page-content,
+        html.package01-print-active #${rootId} .a4-page-content {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        #${rootId} *,
+        #${rootId} *::before,
+        #${rootId} *::after {
+          box-sizing: border-box !important;
+        }
+        #${rootId} .only-print {
+          display: block !important;
+          max-width: 100% !important;
+          overflow: visible !important;
+        }
+        #${rootId} .package01-flow-header {
+          display: block !important;
+          padding: 0.2cm 0 0.35cm 0 !important;
+          box-sizing: border-box !important;
+          max-width: 100% !important;
+        }
+        #${rootId} .package01-flow-header .print-header-package02,
+        #${rootId} .print-header-package02 {
+          border: none !important;
+          border-bottom: 2px solid #000 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        #${rootId}.package01-continuous-print .a4-page-header,
+        #${rootId} .package01-continuous-print .a4-page-header {
+          display: none !important;
+        }
+        #${rootId} .a4-page-template,
+        #${rootId} .work11-dynamic-page-template,
+        #${rootId} .a4-page-template[style] {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+          padding: 0 !important;
+          --print-margin-horizontal: 0 !important;
+          box-sizing: border-box !important;
+          overflow: visible !important;
+        }
+        #${rootId} .a4-page-header {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        #${rootId} .only-print .a4-page-content,
+        #${rootId} .a4-page-content {
+          padding: 0.35cm 0 0.75cm 0 !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          max-width: 100% !important;
+          overflow: visible !important;
+        }
+        #${rootId} .only-print .a4-page-content .problem-instruction,
+        #${rootId} .a4-page-content .problem-instruction,
+        #${rootId} .a4-page-content .problem-instruction[style] {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+          overflow: visible !important;
+        }
+        #${rootId} .problem-instruction > span:first-child {
+          min-width: 0 !important;
+          flex: 1 1 auto !important;
+          overflow-wrap: break-word !important;
+        }
+        #${rootId} .problem-instruction > span:last-child {
+          flex-shrink: 0 !important;
+          white-space: nowrap !important;
+          margin-left: 0.5rem !important;
+        }
+        #${rootId} .package01-work13-problem-text,
+        #${rootId} .package01-work14-problem-text,
+        #${rootId} .package01-work13-passage,
+        #${rootId} .package01-work14-passage,
+        #${rootId} .package01-work13-answer-text,
+        #${rootId} .package01-work14-answer-text,
+        #${rootId} [class*="package01-work13"],
+        #${rootId} [class*="package01-work14"],
+        #${rootId} .sentence-item,
+        #${rootId} .sentences-container {
+          max-width: 100% !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          overflow: visible !important;
+          overflow-x: visible !important;
+        }
+        #${rootId} .only-print.work-11-print .problem-passage,
+        #${rootId} .only-print.work-13-print .problem-passage,
+        #${rootId} .only-print.work-14-print .problem-passage,
+        #${rootId} .only-print.work-11-print .problem-passage[style],
+        #${rootId} .only-print.work-13-print .problem-passage[style],
+        #${rootId} .only-print.work-14-print .problem-passage[style] {
+          padding-left: unset !important;
+          padding-right: unset !important;
+        }
+        #${rootId} .work-11-print,
+        #${rootId} .work-11-print * {
+          overflow: visible !important;
+          overflow-x: visible !important;
+        }
+        #${rootId}.package01-continuous-print .a4-page-template,
+        #${rootId} .package01-continuous-print .a4-page-template {
+          page-break-inside: auto !important;
+          break-inside: auto !important;
+          page-break-after: auto !important;
+          break-after: auto !important;
+        }
+        #${rootId}.package01-continuous-print .a4-page-content,
+        #${rootId} .package01-continuous-print .a4-page-content {
+          page-break-inside: auto !important;
+          break-inside: auto !important;
+        }
+        #${rootId}.package01-continuous-print .problem-instruction,
+        #${rootId} .package01-continuous-print .problem-instruction {
+          page-break-after: avoid !important;
+          break-after: avoid-page !important;
+        }
+        #${rootId}.package01-continuous-print .shuffled-paragraph,
+        #${rootId}.package01-continuous-print .option,
+        #${rootId}.package01-continuous-print .fixed-paragraph-box,
+        #${rootId} .package01-continuous-print .shuffled-paragraph,
+        #${rootId} .package01-continuous-print .option,
+        #${rootId} .package01-continuous-print .fixed-paragraph-box {
+          page-break-inside: avoid !important;
+          break-inside: avoid-page !important;
+        }
+        #${rootId}.package01-continuous-print .problem-passage,
+        #${rootId}.package01-continuous-print .problem-options,
+        #${rootId} .package01-continuous-print .problem-passage,
+        #${rootId} .package01-continuous-print .problem-options {
+          page-break-inside: auto !important;
+          break-inside: auto !important;
+        }
+        #${rootId}.package01-continuous-print .only-print,
+        #${rootId}.package01-continuous-print [data-work-type],
+        #${rootId} .package01-continuous-print .only-print,
+        #${rootId} .package01-continuous-print [data-work-type] {
+          page-break-before: auto !important;
+          break-before: auto !important;
+        }
+        #${rootId} .a4-page-header {
+          flex: none !important;
+          height: auto !important;
+          padding: 0.5cm 0.75cm 0.25cm 0.75cm !important;
+          box-sizing: border-box !important;
+        }
+        #${rootId} .a4-page-content {
+          flex: none !important;
+          flex-grow: 0 !important;
+          height: auto !important;
+          max-height: none !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 0 0 0.4cm 0 !important;
+          box-sizing: border-box !important;
+          font-size: 16pt !important;
+          overflow: visible !important;
+        }
+        #${rootId} .problem-instruction,
+        #${rootId} .problem-instruction[style],
+        #${rootId} .problem-passage,
+        #${rootId} .problem-passage[style],
+        #${rootId} .shuffled-paragraph,
+        #${rootId} .shuffled-paragraph[style],
+        #${rootId} .fixed-paragraph-box,
+        #${rootId} .fixed-paragraph-box[style],
+        #${rootId} .option,
+        #${rootId} .option[style],
+        #${rootId} .problem-options,
+        #${rootId} .problem-options[style] {
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+          overflow-wrap: break-word !important;
+          word-wrap: break-word !important;
+        }
+        #${rootId},
+        #${rootId} .print-container,
+        #${rootId} .a4-page-template,
+        #${rootId} .quiz-content {
+          font-size: 16pt !important;
+        }
+        #${rootId} .only-print .a4-page-template *,
+        #${rootId} .only-print .quiz-content *,
+        #${rootId} .only-print .a4-page-content * {
+          font-size: 16pt !important;
+        }
+        #${rootId} .print-header-text-work01 {
+          font-size: 11pt !important;
+        }
+        #${rootId} .problem-instruction,
+        #${rootId} .problem-instruction[style],
+        #${rootId} .problem-instruction span,
+        #${rootId} .problem-instruction span[style] {
+          font-size: 14pt !important;
+        }
+        #${rootId} .problem-passage,
+        #${rootId} .problem-passage[style],
+        #${rootId} .shuffled-paragraph,
+        #${rootId} .shuffled-paragraph[style],
+        #${rootId} .problem-options,
+        #${rootId} .problem-options[style],
+        #${rootId} .option,
+        #${rootId} .option[style],
+        #${rootId} .fixed-paragraph-box,
+        #${rootId} .fixed-paragraph-box[style],
+        #${rootId} .fixed-paragraph-box *,
+        #${rootId} .work01-fixed-paragraph-print,
+        #${rootId} .work01-fixed-paragraph-print * {
+          font-size: 16pt !important;
+          line-height: 1.65 !important;
+        }
+        #${rootId} .quiz-content,
+        #${rootId} .a4-page-template,
+        #${rootId} .a4-page-content,
+        #${rootId} .only-print,
+        #${rootId} .quiz-item-card,
+        #${rootId} [data-work-type] {
+          box-shadow: none !important;
+          -webkit-box-shadow: none !important;
+          filter: none !important;
+        }
+        #${rootId} .quiz-content {
+          padding: 0 !important;
+          border-radius: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        #${rootId} .problem-options > .option,
+        #${rootId} .problem-options > .option[style],
+        #${rootId} .quiz-content .option,
+        #${rootId} .quiz-content .option[style],
+        #${rootId} .option.option-print,
+        #${rootId} .option.option-print[style] {
+          margin-top: 0.25rem !important;
+          margin-bottom: 0 !important;
+          padding-top: 0.2rem !important;
+          padding-bottom: 0.2rem !important;
+        }
+        #${rootId} .work-07-print .option,
+        #${rootId} .work-07-print .option[style],
+        #${rootId} .work-08-print .option,
+        #${rootId} .work-08-print .option[style] {
+          margin-top: 0.15rem !important;
+          margin-bottom: 0.15rem !important;
+        }
+        #${rootId} .work-04-print .problem-options > .option:last-child {
+          margin-bottom: 1.75rem !important;
+        }
+        #${rootId} .work-05-print .problem-options > .option:last-child,
+        #${rootId} .work-09-print .problem-options > .option:last-child,
+        #${rootId} .work-10-print .problem-options > .option:last-child {
+          margin-bottom: 0.5rem !important;
+        }
+        #${rootId} *,
+        #${rootId} *::before,
+        #${rootId} *::after {
+          box-shadow: none !important;
+          -webkit-box-shadow: none !important;
+        }
+      }
+    `;
+
+  const waitForPackage01PrintReady = async (
+    rootId: string,
+    maxAttempts = 30
+  ): Promise<HTMLElement | null> => {
+    for (let i = 0; i < maxAttempts; i++) {
+      const el = document.getElementById(rootId);
+      if (el) {
+        const pages = el.querySelectorAll('.a4-page-template');
+        const container = el.classList.contains('print-container')
+          ? el
+          : el.querySelector('.print-container');
+        if (pages.length > 0 && container && container.children.length > 0) {
+          return el;
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return document.getElementById(rootId);
+  };
+
   // 인쇄(문제) 함수 - 패키지#01: 모든 유형이 연결된 하나의 인쇄물
   const handlePrintProblem = async () => {
     if (!packageQuiz || packageQuiz.length === 0) {
@@ -2585,41 +2920,28 @@ ${passage}`;
     }
 
     console.log('🖨️ 인쇄(문제) 시작');
-    
-    // A4 세로 페이지 스타일 동적 추가
+
+    const rootId = PACKAGE01_PRINT_ROOT_PROBLEM;
+    const styleId = 'print-style-package01';
+
+    document.getElementById(styleId)?.remove();
+    document.documentElement.classList.add('package01-print-active');
+
     const style = document.createElement('style');
-    style.id = 'print-style-package01';
-    style.textContent = `
-      @page {
-        margin: 0;
-        size: A4;
-      }
-      @media print {
-        body {
-          margin: 0;
-          padding: 0;
-        }
-      }
-    `;
+    style.id = styleId;
+    style.textContent = getPackage01PrintStyleCss(rootId);
     document.head.appendChild(style);
-    
-    // 인쇄용 컨테이너 생성
-    const printContainer = document.createElement('div');
-    printContainer.id = 'print-root-package01';
-    document.body.appendChild(printContainer);
 
-    // 기존 화면 숨기기
-    const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
+    const mountPoint = document.createElement('div');
+    mountPoint.id = rootId;
+    mountPoint.className = 'package01-continuous-print package01-print-mount';
+    document.body.appendChild(mountPoint);
 
-    // React 18 방식으로 렌더링
-    const root = ReactDOM.createRoot(printContainer);
-    root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={false} />);
+    const reactRoot = ReactDOM.createRoot(mountPoint);
+    reactRoot.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={false} />);
 
     const activatePrintContainer = () => {
-      const inner = printContainer.querySelector('.print-container');
+      const inner = mountPoint.querySelector('.print-container');
       if (inner) {
         inner.classList.add('pdf-generation-active');
       } else {
@@ -2628,82 +2950,86 @@ ${passage}`;
     };
     activatePrintContainer();
 
-    // 렌더링 완료 후 인쇄 및 파일 생성
-    const waitForRender = async (maxAttempts = 20): Promise<HTMLElement | null> => {
-      for (let i = 0; i < maxAttempts; i++) {
-        const element = document.getElementById('print-root-package01');
-        if (element) {
-          const printContainer = element.querySelector('.print-container');
-          const hasContent = printContainer && printContainer.children.length > 0;
-          if (hasContent) {
-            console.log(`✅ 렌더링 완료 확인 (시도 ${i + 1}/${maxAttempts})`);
-            return element;
-          }
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
+    const doCleanup = () => {
+      document.documentElement.classList.remove('package01-print-active');
+      try {
+        reactRoot.unmount();
+      } catch {
+        /* ignore */
       }
-      console.warn('⚠️ 렌더링 완료 확인 실패, 최대 시도 횟수 초과');
-      return document.getElementById('print-root-package01');
+      if (mountPoint.parentNode) {
+        mountPoint.parentNode.removeChild(mountPoint);
+      }
+      document.getElementById(styleId)?.remove();
+      window.onafterprint = null;
+      console.log('✅ 인쇄(문제) 완료');
     };
 
-    setTimeout(async () => {
-      // 파일 생성 및 Firebase Storage 업로드
-      try {
-        const element = await waitForRender();
-        if (element && userData?.uid) {
-          console.log('📄 파일 생성 시작:', { elementId: element.id, hasContent: element.children.length > 0 });
-          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-          
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `package01_problem_${Date.now()}`,
-            '패키지#01_문제',
-            { isAnswerMode: false, orientation: 'portrait', fileFormat }
-          );
-          
-          // 패키지 내역에 파일 URL 저장
-          const { getQuizHistory } = await import('../../../services/quizHistoryService');
-          const history = await getQuizHistory(userData.uid, { limit: 10 });
-          const packageHistory = history.find(h => h.workTypeId === 'P01');
-          
-          if (packageHistory) {
-            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
-            const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 패키지#01 문제 ${formatName} 저장 완료:`, result.fileName);
-          }
-        } else {
-          console.error('❌ 인쇄 컨테이너를 찾을 수 없거나 사용자 정보가 없습니다.', {
-            hasElement: !!element,
-            hasUid: !!userData?.uid,
-            elementId: element?.id
-          });
-          alert('파일 생성에 실패했습니다. 다시 시도해주세요.');
+    try {
+      const element = await waitForPackage01PrintReady(rootId);
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+
+      let uploadPromise: Promise<void> | null = null;
+
+      const uploadTask = async () => {
+        if (!element || !userData?.uid) {
+          throw new Error('파일 생성에 필요한 요소 또는 사용자 정보가 없습니다.');
         }
-      } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
-        alert(`파일 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`);
+        const { updateQuizHistoryFile, getQuizHistory } = await import('../../../services/quizHistoryService');
+        const result = await generateAndUploadFile(
+          element as HTMLElement,
+          userData.uid,
+          `package01_problem_${Date.now()}`,
+          '패키지#01_문제',
+          { isAnswerMode: false, orientation: 'portrait', fileFormat }
+        );
+        const history = await getQuizHistory(userData.uid, { limit: 10 });
+        const packageHistory = history.find((h) => h.workTypeId === 'P01');
+        if (packageHistory) {
+          await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
+          const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+          console.log(`📁 패키지#01 문제 ${formatName} 저장 완료:`, result.fileName);
+        }
+      };
+
+      if (element && userData?.uid) {
+        uploadPromise = uploadTask();
+      } else if (!element || !userData?.uid) {
+        alert('파일 생성에 실패했습니다. 다시 시도해주세요.');
       }
 
-      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
       if (fileFormat === 'pdf') {
+        // 미리보기 닫기 전 DOM 유지 → html2canvas 완료 후 cleanup (패키지#02와 동일)
+        window.onafterprint = async () => {
+          try {
+            if (uploadPromise) {
+              await uploadPromise;
+            }
+          } catch (uploadError) {
+            console.error(`❌ 파일 저장 실패 (${fileFormat}):`, uploadError);
+            alert(
+              `파일 생성 중 오류가 발생했습니다: ${
+                uploadError instanceof Error ? uploadError.message : String(uploadError)
+              }`
+            );
+          } finally {
+            doCleanup();
+          }
+        };
         window.print();
+      } else {
+        if (uploadPromise) {
+          await uploadPromise;
+        }
+        doCleanup();
       }
-      
-      // 인쇄 후 정리
-      setTimeout(() => {
-        root.unmount();
-        document.body.removeChild(printContainer);
-        if (appRoot) {
-          appRoot.style.display = 'block';
-        }
-        const styleElement = document.getElementById('print-style-package01');
-        if (styleElement) {
-          document.head.removeChild(styleElement);
-        }
-        console.log('✅ 인쇄(문제) 완료');
-      }, 100);
-    }, 500);
+    } catch (error) {
+      console.error(`❌ 인쇄(문제) 실패 (${fileFormat}):`, error);
+      alert(`파일 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`);
+      doCleanup();
+    }
   };
 
   // 인쇄(정답) 함수 - 패키지#01: 모든 유형이 연결된 하나의 인쇄물
@@ -2714,41 +3040,34 @@ ${passage}`;
     }
 
     console.log('🖨️ 인쇄(정답) 시작');
-    
-    // A4 세로 페이지 스타일 동적 추가
+
+    const rootId = PACKAGE01_PRINT_ROOT_ANSWER;
+    const styleId = 'print-style-package01-answer';
+
+    document.getElementById(styleId)?.remove();
+    document.documentElement.classList.add('package01-print-active');
+
     const style = document.createElement('style');
-    style.id = 'print-style-package01-answer';
-    style.textContent = `
-      @page {
-        margin: 0;
-        size: A4;
-      }
-      @media print {
-        body {
-          margin: 0;
-          padding: 0;
-        }
-      }
-    `;
+    style.id = styleId;
+    style.textContent = getPackage01PrintStyleCss(rootId);
     document.head.appendChild(style);
 
-    // 인쇄용 컨테이너 생성
-    const printContainer = document.createElement('div');
-    printContainer.id = 'print-root-package01-answer';
-    document.body.appendChild(printContainer);
+    const mountPoint = document.createElement('div');
+    mountPoint.id = rootId;
+    mountPoint.className = 'package01-continuous-print package01-print-mount';
+    document.body.appendChild(mountPoint);
 
-    // 기존 화면 숨기기
-    const appRoot = document.getElementById('root');
-    if (appRoot) {
-      appRoot.style.display = 'none';
-    }
-
-    // React 18 방식으로 렌더링
-    const root = ReactDOM.createRoot(printContainer);
-    root.render(<PrintFormatPackage01 packageQuiz={packageQuiz} isAnswerMode={true} translatedText={translatedText} />);
+    const reactRoot = ReactDOM.createRoot(mountPoint);
+    reactRoot.render(
+      <PrintFormatPackage01
+        packageQuiz={packageQuiz}
+        isAnswerMode={true}
+        translatedText={translatedText}
+      />
+    );
 
     const activateAnswerContainer = () => {
-      const inner = printContainer.querySelector('.print-container');
+      const inner = mountPoint.querySelector('.print-container');
       if (inner) {
         inner.classList.add('pdf-generation-active');
       } else {
@@ -2757,100 +3076,98 @@ ${passage}`;
     };
     activateAnswerContainer();
 
-    // 렌더링 완료 후 인쇄 및 파일 생성
-    const waitForRender = async (maxAttempts = 20): Promise<HTMLElement | null> => {
-      for (let i = 0; i < maxAttempts; i++) {
-        const element = document.getElementById('print-root-package01-answer');
-        if (element) {
-          const printContainer = element.querySelector('.print-container');
-          const hasContent = printContainer && printContainer.children.length > 0;
-          if (hasContent) {
-            console.log(`✅ 렌더링 완료 확인 (시도 ${i + 1}/${maxAttempts})`);
-            return element;
-          }
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
+    const doCleanup = () => {
+      document.documentElement.classList.remove('package01-print-active');
+      try {
+        reactRoot.unmount();
+      } catch {
+        /* ignore */
       }
-      console.warn('⚠️ 렌더링 완료 확인 실패, 최대 시도 횟수 초과');
-      return document.getElementById('print-root-package01-answer');
+      if (mountPoint.parentNode) {
+        mountPoint.parentNode.removeChild(mountPoint);
+      }
+      document.getElementById(styleId)?.remove();
+      window.onafterprint = null;
+      console.log('✅ 인쇄(정답) 완료');
     };
 
-    setTimeout(async () => {
-      // 파일 생성 및 Firebase Storage 업로드
-      try {
-        const element = await waitForRender();
-        if (element && userData?.uid) {
-          console.log('📄 파일 생성 시작:', { elementId: element.id, hasContent: element.children.length > 0 });
-          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-          
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `package01_answer_${Date.now()}`,
-            '패키지#01_정답',
-            { isAnswerMode: true, orientation: 'portrait', fileFormat }
-          );
-          
-          // 패키지 내역에 파일 URL 저장
-          try {
-            const { getQuizHistory } = await import('../../../services/quizHistoryService');
-            const history = await getQuizHistory(userData.uid, { limit: 10 });
-            const packageHistory = history.find(h => h.workTypeId === 'P01');
-            
-            if (packageHistory) {
-              await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
-              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-              console.log(`📁 패키지#01 정답 ${formatName} 저장 완료:`, result.fileName);
-            }
-          } catch (historyError: any) {
-            // 인덱스 오류는 이미 처리되었으므로 조용히 넘어감
-            if (historyError?.code === 'failed-precondition' || historyError?.message?.includes('index')) {
-              if (process.env.NODE_ENV === 'development') {
-                console.warn('⚠️ 문제 내역 조회 중 인덱스 오류 (무시됨):', historyError?.message);
-              }
-              // 파일은 이미 생성되었으므로 정상 완료로 처리
-              const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-              console.log(`📁 패키지#01 정답 ${formatName} 생성 완료 (내역 저장 스킵):`, result.fileName);
-            } else {
-              // 다른 에러는 정상적으로 로그 출력
-              console.error('문제 내역 조회 실패:', historyError);
-            }
+    try {
+      const element = await waitForPackage01PrintReady(rootId);
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+
+      let uploadPromise: Promise<void> | null = null;
+
+      const uploadTask = async () => {
+        if (!element || !userData?.uid) {
+          throw new Error('파일 생성에 필요한 요소 또는 사용자 정보가 없습니다.');
+        }
+        const { updateQuizHistoryFile, getQuizHistory } = await import('../../../services/quizHistoryService');
+        const result = await generateAndUploadFile(
+          element as HTMLElement,
+          userData.uid,
+          `package01_answer_${Date.now()}`,
+          '패키지#01_정답',
+          { isAnswerMode: true, orientation: 'portrait', fileFormat }
+        );
+        try {
+          const history = await getQuizHistory(userData.uid, { limit: 10 });
+          const packageHistory = history.find((h) => h.workTypeId === 'P01');
+          if (packageHistory) {
+            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'answer');
+            const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+            console.log(`📁 패키지#01 정답 ${formatName} 저장 완료:`, result.fileName);
           }
-        } else {
-          console.error('❌ 인쇄 컨테이너를 찾을 수 없거나 사용자 정보가 없습니다.', {
-            hasElement: !!element,
-            hasUid: !!userData?.uid,
-            elementId: element?.id
-          });
-          alert('파일 생성에 실패했습니다. 다시 시도해주세요.');
+        } catch (historyError: unknown) {
+          const err = historyError as { code?: string; message?: string };
+          if (err?.code === 'failed-precondition' || err?.message?.includes('index')) {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('⚠️ 문제 내역 조회 중 인덱스 오류 (무시됨):', err?.message);
+            }
+            const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+            console.log(`📁 패키지#01 정답 ${formatName} 생성 완료 (내역 저장 스킵):`, result.fileName);
+          } else {
+            console.error('문제 내역 조회 실패:', historyError);
+          }
         }
-      } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
-        alert(`파일 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`);
+      };
+
+      if (element && userData?.uid) {
+        uploadPromise = uploadTask();
+      } else if (!element || !userData?.uid) {
+        alert('파일 생성에 실패했습니다. 다시 시도해주세요.');
       }
 
-      // PDF인 경우에만 브라우저 인쇄, DOC/HWP는 이미 다운로드됨
       if (fileFormat === 'pdf') {
+        window.onafterprint = async () => {
+          try {
+            if (uploadPromise) {
+              await uploadPromise;
+            }
+          } catch (uploadError) {
+            console.error(`❌ 파일 저장 실패 (${fileFormat}):`, uploadError);
+            alert(
+              `파일 생성 중 오류가 발생했습니다: ${
+                uploadError instanceof Error ? uploadError.message : String(uploadError)
+              }`
+            );
+          } finally {
+            doCleanup();
+          }
+        };
         window.print();
+      } else {
+        if (uploadPromise) {
+          await uploadPromise;
+        }
+        doCleanup();
       }
-      
-      // 인쇄 후 정리
-      setTimeout(() => {
-        root.unmount();
-        document.body.removeChild(printContainer);
-        if (appRoot) {
-          appRoot.style.display = 'block';
-        }
-        
-        // 동적으로 추가한 스타일 제거
-        const styleElement = document.getElementById('print-style-package01-answer');
-        if (styleElement && styleElement.parentNode) {
-          styleElement.parentNode.removeChild(styleElement);
-        }
-
-        console.log('✅ 인쇄(정답) 완료');
-      }, 100);
-    }, 500);
+    } catch (error) {
+      console.error(`❌ 인쇄(정답) 실패 (${fileFormat}):`, error);
+      alert(`파일 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`);
+      doCleanup();
+    }
   };
 
   // 로딩 중이거나 사용자 데이터가 없을 때

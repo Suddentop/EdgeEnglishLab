@@ -133,11 +133,12 @@ const PrintFormatPackage01: React.FC<PrintFormatPackage01Props> = ({
     });
     
     // Package#01의 packageQuiz 데이터를 직접 렌더링 (재귀 호출 방지)
+    // 연속 흐름: 문서 상단 헤더 1회, 문제별 헤더·강제 페이지 나눔 없음
     return (
-      <div 
-        id={isAnswerMode ? "print-root-package01-answer" : "print-root-package01"}
-        className="print-container"
-      >
+      <div className="print-container package01-continuous-print">
+        <div className="package01-flow-header only-print">
+          <PrintHeaderPackage01 />
+        </div>
         {packageQuiz.map((quizItem, index) => {
           // 각 Work 유형별 렌더링 로직
           // Package#01의 경우 각 유형별로 workXXData 필드에 데이터가 저장됨
@@ -2066,7 +2067,7 @@ const PrintFormatPackage01Work05: React.FC<PrintFormatPackage01Work05Props> = ({
   // 선택지 컨테이너 높이
   const optionsHeight = work05Data.options.reduce((total, option) => {
     return total + calculateContainerHeight(option, 14.4, 1.3, 8); // 각 선택지 높이
-  }, 0) + (work05Data.options.length * 8); // 선택지 간 여백
+  }, 0) + (work05Data.options.length * 4); // 선택지 간 여백 (인쇄 간격 50%)
 
   // 정답 표시 높이 (정답 모드에서만)
   const answerHeight = printMode === 'with-answer' ? 30 : 0;
@@ -3991,6 +3992,7 @@ const PrintFormatPackage01Work11: React.FC<{
         includeAnswer={includeAnswer}
         printMode={printMode}
         customHeader={<PrintHeaderPackage01 />}
+        fluidLayout
       />
     </div>
   );
@@ -4538,7 +4540,9 @@ const PrintFormatPackage01Work14: React.FC<{
               whiteSpace: 'pre-wrap',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
-              overflow: 'hidden'
+              overflow: 'visible',
+              boxSizing: 'border-box',
+              maxWidth: '100%'
             }}>
               {(() => {
                 // formatBlankedText로 변환: (_____) → ( _ _ _ _ _ )
@@ -4606,7 +4610,9 @@ const PrintFormatPackage01Work14: React.FC<{
                     whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word',
                     overflowWrap: 'break-word',
-                    overflow: 'hidden'
+                    overflow: 'visible',
+                    boxSizing: 'border-box',
+                    maxWidth: '100%'
                   }}
                   dangerouslySetInnerHTML={{
                     __html: (() => {

@@ -1014,3 +1014,98 @@
 .print-mode-active .only-print {
   display: block !important;
 }
+
+/* ETC#01 인쇄(정답) PDF - pt 고정 (패키지#01 본문 12pt보다 크게 16pt) */
+@media print {
+  html.etc01-print-active {
+    font-size: 16pt !important;
+  }
+
+  #print-root-etc01-answer.etc01-print-root,
+  #print-root-etc01-display.etc01-print-root {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16pt !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+  }
+
+  #print-root-etc01-answer.only-print .a4-page-template * {
+    font-size: inherit !important;
+  }
+
+  #print-root-etc01-answer .a4-page-template.etc01-print-answer,
+  #print-root-etc01-display .a4-page-template.etc01-print-answer {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    display: block !important;
+    font-size: 16pt !important;
+  }
+
+  #print-root-etc01-answer .etc01-print-answer .a4-page-header,
+  #print-root-etc01-display .etc01-print-answer .a4-page-header {
+    padding: 0.5cm 0.75cm 0.25cm 0.75cm !important;
+    height: auto !important;
+    flex: none !important;
+  }
+
+  #print-root-etc01-answer .etc01-print-answer .print-header-text-work01,
+  #print-root-etc01-display .etc01-print-answer .print-header-text-work01 {
+    font-size: 11pt !important;
+    margin-bottom: 0.35rem !important;
+  }
+
+  #print-root-etc01-answer .etc01-print-answer .a4-page-content,
+  #print-root-etc01-display .etc01-print-answer .a4-page-content,
+  #print-root-etc01-answer .etc01-print-answer .quiz-content,
+  #print-root-etc01-display .etc01-print-answer .quiz-content {
+    flex: none !important;
+    flex-grow: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0.35cm 0.75cm 0.65cm 0.75cm !important;
+    font-size: 16pt !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+  }
+
+  #print-root-etc01-answer .etc01-print-answer .problem-instruction,
+  #print-root-etc01-display .etc01-print-answer .problem-instruction {
+    font-size: 14pt !important;
+    margin-top: 0.15cm !important;
+    margin-bottom: 0.65rem !important;
+    padding: 0.55rem 0.65rem !important;
+  }
+
+  #print-root-etc01-answer .etc01-print-answer .print-section-title,
+  #print-root-etc01-display .etc01-print-answer .print-section-title {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    margin-bottom: 8pt !important;
+  }
+
+  #print-root-etc01-answer .etc01-print-answer .print-text-content,
+  #print-root-etc01-display .etc01-print-answer .print-text-content,
+  #print-root-etc01-answer .etc01-print-answer .print-text-content.korean,
+  #print-root-etc01-display .etc01-print-answer .print-text-content.korean,
+  #print-root-etc01-answer .etc01-print-answer .problem-passage,
+  #print-root-etc01-display .etc01-print-answer .problem-passage {
+    font-size: 16pt !important;
+    line-height: 1.65 !important;
+    margin-bottom: 10pt !important;
+  }
+
+  #print-root-etc01-answer .etc01-print-answer .print-content-section:last-child .print-text-content,
+  #print-root-etc01-display .etc01-print-answer .print-content-section:last-child .print-text-content {
+    margin-bottom: 0 !important;
+  }
+
+  #print-root-etc01-answer .etc01-print-answer .print-divider,
+  #print-root-etc01-display .etc01-print-answer .print-divider {
+    margin: 10pt 0 !important;
+  }
+}

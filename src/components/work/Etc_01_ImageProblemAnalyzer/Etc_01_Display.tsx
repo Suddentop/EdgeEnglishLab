@@ -66,8 +66,8 @@ const Etc_01_Display: React.FC = () => {
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          width: 21cm !important;
-          height: 29.7cm !important;
+          width: 100% !important;
+          height: auto !important;
           overflow: visible !important;
         }
         body > *:not(#print-root-etc01-display) {
@@ -81,37 +81,38 @@ const Etc_01_Display: React.FC = () => {
           position: relative !important;
           left: 0 !important;
           top: 0 !important;
-          width: 21cm !important;
-          max-width: 21cm !important;
+          width: 100% !important;
+          max-width: 100% !important;
           height: auto !important;
-          max-height: 29.7cm !important;
+          min-height: 0 !important;
+          max-height: none !important;
           background: white !important;
           visibility: visible !important;
           opacity: 1 !important;
           z-index: 999999 !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
         #print-root-etc01-display * {
           visibility: visible !important;
           opacity: 1 !important;
           max-width: 100% !important;
-          max-height: 100% !important;
         }
         #print-root-etc01-display .a4-page-template {
           display: block !important;
           visibility: visible !important;
           opacity: 1 !important;
           width: 100% !important;
-          max-width: 21cm !important;
+          max-width: 100% !important;
           height: auto !important;
-          max-height: 29.7cm !important;
+          min-height: 0 !important;
+          max-height: none !important;
           margin: 0 !important;
           padding: 0 !important;
           background: white !important;
           page-break-after: auto !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
         #print-root-etc01-display .a4-page-header {
           display: block !important;
@@ -120,19 +121,34 @@ const Etc_01_Display: React.FC = () => {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
-          max-height: 5cm !important;
+          max-height: none !important;
+          padding: 0.5cm 0.75cm 0.25cm 0.75cm !important;
           border: none !important;
           border-bottom: none !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
+          flex: none !important;
         }
         #print-root-etc01-display .print-header-work01 {
           border: none !important;
           border-bottom: none !important;
+          padding: 0.15rem 0 !important;
+          margin: 0 !important;
+        }
+        html.etc01-print-active {
+          font-size: 12pt !important;
+        }
+        #print-root-etc01-display {
+          font-size: 12pt !important;
+        }
+        #print-root-etc01-display .a4-page-template {
+          font-size: 12pt !important;
         }
         #print-root-etc01-display .print-header-text-work01 {
           border: none !important;
           border-bottom: none !important;
+          font-size: 10pt !important;
+          margin-bottom: 0.35rem !important;
         }
         #print-root-etc01-display .a4-page-content {
           display: block !important;
@@ -141,29 +157,54 @@ const Etc_01_Display: React.FC = () => {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
-          max-height: 24.7cm !important;
-          padding-top: 0 !important;
-          padding-left: 1cm !important;
-          padding-right: 1cm !important;
-          padding-bottom: 1cm !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          flex: none !important;
+          flex-grow: 0 !important;
+          padding: 0.35cm 0.75cm 0.65cm 0.75cm !important;
+          margin: 0 !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
+        }
+        #print-root-etc01-display .a4-page-content {
+          font-size: 12pt !important;
         }
         #print-root-etc01-display .problem-instruction {
-          margin-top: 0 !important;
+          font-size: 12pt !important;
+          margin-top: 0.15cm !important;
+          margin-bottom: 0.65rem !important;
+          width: 100% !important;
           box-sizing: border-box !important;
         }
         #print-root-etc01-display .print-content-section {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
-          max-height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
+        }
+        #print-root-etc01-display .print-divider {
+          margin: 10pt 0 !important;
+        }
+        #print-root-etc01-display .print-section-title {
+          font-size: 12pt !important;
+          font-weight: bold !important;
+        }
+        #print-root-etc01-display .print-text-content,
+        #print-root-etc01-display .print-text-content.korean {
+          font-size: 12pt !important;
+          line-height: 1.65 !important;
+          margin-bottom: 10pt !important;
+        }
+        #print-root-etc01-display .print-content-section:last-child .print-text-content {
+          margin-bottom: 0 !important;
         }
         #print-root-etc01-display .print-section-title,
         #print-root-etc01-display .print-text-content {
           max-width: 100% !important;
+          width: 100% !important;
           word-wrap: break-word !important;
           overflow-wrap: break-word !important;
         }
@@ -193,7 +234,8 @@ const Etc_01_Display: React.FC = () => {
     printContainer.style.position = 'absolute';
     printContainer.style.left = '-9999px';
     printContainer.style.top = '0';
-    printContainer.style.width = '21cm';
+    printContainer.style.width = '100%';
+    printContainer.style.maxWidth = '100%';
     printContainer.style.background = 'white';
     printContainer.style.zIndex = '9999';
     printContainer.style.visibility = 'hidden';
@@ -202,7 +244,7 @@ const Etc_01_Display: React.FC = () => {
     // React 렌더링
     const root = ReactDOM.createRoot(printContainer);
     root.render(
-      <div className="a4-page-template">
+      <div className="a4-page-template etc01-print-answer">
         <div className="a4-page-header">
           <PrintHeaderWork01 />
         </div>
@@ -210,12 +252,12 @@ const Etc_01_Display: React.FC = () => {
           <div className="quiz-content">
             <div className="problem-instruction" style={{
               fontWeight: 800,
-              fontSize: '1rem',
+              fontSize: '12pt',
               background: '#222',
               color: '#fff',
-              padding: '0.7rem 0.5rem',
+              padding: '0.55rem 0.65rem',
               borderRadius: '8px',
-              marginBottom: '1.2rem',
+              marginBottom: '0.65rem',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -227,7 +269,7 @@ const Etc_01_Display: React.FC = () => {
 
             <div className="print-content-section">
               <div className="print-section-title" style={{
-                fontSize: '14pt',
+                fontSize: '12pt',
                 fontWeight: 'bold',
                 marginBottom: '8pt',
                 color: '#2d3a60',
@@ -237,10 +279,10 @@ const Etc_01_Display: React.FC = () => {
                 📖 영어 본문
               </div>
               <div className="print-text-content" style={{
-                fontSize: '11pt',
+                fontSize: '12pt',
                 lineHeight: '1.6',
                 textAlign: 'justify',
-                marginBottom: '12pt',
+                marginBottom: '10pt',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word'
               }}>
@@ -248,11 +290,11 @@ const Etc_01_Display: React.FC = () => {
               </div>
             </div>
 
-            <div className="print-divider" style={{ borderTop: '1px solid #ddd', margin: '15pt 0' }}></div>
+            <div className="print-divider" style={{ borderTop: '1px solid #ddd', margin: '10pt 0' }}></div>
 
             <div className="print-content-section">
               <div className="print-section-title" style={{
-                fontSize: '14pt',
+                fontSize: '12pt',
                 fontWeight: 'bold',
                 marginBottom: '8pt',
                 color: '#2d3a60',
@@ -262,10 +304,10 @@ const Etc_01_Display: React.FC = () => {
                 🇰🇷 한글 해석
               </div>
               <div className="print-text-content korean" style={{
-                fontSize: '11pt',
+                fontSize: '12pt',
                 lineHeight: '1.6',
                 textAlign: 'justify',
-                marginBottom: '12pt',
+                marginBottom: 0,
                 color: '#1976d2',
                 fontWeight: '500',
                 whiteSpace: 'pre-wrap',
@@ -344,21 +386,33 @@ const Etc_01_Display: React.FC = () => {
           printElement.style.position = 'absolute';
           printElement.style.left = '0';
           printElement.style.top = '0';
-          printElement.style.width = '21cm';
+          printElement.style.width = '100%';
+          printElement.style.maxWidth = '100%';
           printElement.style.background = 'white';
           printElement.style.zIndex = '999999';
           printElement.style.visibility = 'visible';
           printElement.style.opacity = '1';
         }
-        
-    setTimeout(() => {
-      window.print();
-          
+
+        const onAfterPrint = () => {
+          document.documentElement.classList.remove('etc01-print-active');
+          window.removeEventListener('beforeprint', onBeforePrint);
+          window.removeEventListener('afterprint', onAfterPrint);
           if (printElement) {
             printElement.style.left = '-9999px';
             printElement.style.visibility = 'hidden';
             printElement.style.display = 'none';
           }
+        };
+        const onBeforePrint = () => {
+          document.documentElement.classList.add('etc01-print-active');
+        };
+        window.addEventListener('beforeprint', onBeforePrint);
+        window.addEventListener('afterprint', onAfterPrint);
+        
+        setTimeout(() => {
+          document.documentElement.classList.add('etc01-print-active');
+          window.print();
         }, 100);
       }
       
@@ -372,6 +426,7 @@ const Etc_01_Display: React.FC = () => {
         if (styleElement && document.head.contains(styleElement)) {
           document.head.removeChild(styleElement);
         }
+        document.documentElement.classList.remove('etc01-print-active');
       }, fileFormat === 'pdf' ? 2000 : 100);
       }, 200);
   };
@@ -462,7 +517,7 @@ const Etc_01_Display: React.FC = () => {
             <div className="quiz-content">
               <div className="problem-instruction" style={{
                 fontWeight: 800,
-                fontSize: '1rem',
+                fontSize: '12pt',
                 background: '#222',
                 color: '#fff',
                 padding: '0.7rem 0.5rem',
@@ -479,7 +534,7 @@ const Etc_01_Display: React.FC = () => {
 
               <div className="print-content-section">
                 <div className="print-section-title" style={{
-                  fontSize: '14pt',
+                  fontSize: '12pt',
                   fontWeight: 'bold',
                   marginBottom: '8pt',
                   color: '#2d3a60',
@@ -489,20 +544,20 @@ const Etc_01_Display: React.FC = () => {
                   📖 영어 본문
                 </div>
                 <div className="print-text-content" style={{
-                  fontSize: '11pt',
+                  fontSize: '12pt',
                   lineHeight: '1.6',
                   textAlign: 'justify',
-                  marginBottom: '12pt'
+                  marginBottom: '6pt'
                 }}>
                   {data.englishText}
                 </div>
               </div>
 
-              <div className="print-divider" style={{ borderTop: '1px solid #ddd', margin: '15pt 0' }}></div>
+              <div className="print-divider" style={{ borderTop: '1px solid #ddd', margin: '10pt 0' }}></div>
 
               <div className="print-content-section">
                 <div className="print-section-title" style={{
-                  fontSize: '14pt',
+                  fontSize: '12pt',
                   fontWeight: 'bold',
                   marginBottom: '8pt',
                   color: '#2d3a60',
@@ -512,10 +567,10 @@ const Etc_01_Display: React.FC = () => {
                   🇰🇷 한글 해석
                 </div>
                 <div className="print-text-content korean" style={{
-                  fontSize: '11pt',
+                  fontSize: '12pt',
                   lineHeight: '1.6',
                   textAlign: 'justify',
-                  marginBottom: '12pt',
+                  marginBottom: 0,
                   color: '#1976d2',
                   fontWeight: 500
                 }}>

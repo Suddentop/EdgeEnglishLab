@@ -554,8 +554,8 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          width: 21cm !important;
-          height: 29.7cm !important;
+          width: 100% !important;
+          height: auto !important;
           overflow: visible !important;
         }
         body > *:not(#print-root-etc01-answer) {
@@ -564,44 +564,45 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
         #root {
           display: none !important;
         }
-        /* 최상위 컨테이너 */
+        /* 최상위 컨테이너 - 콘텐츠 높이에 맞춤 */
         #print-root-etc01-answer {
           display: block !important;
           position: relative !important;
           left: 0 !important;
           top: 0 !important;
-          width: 21cm !important;
-          max-width: 21cm !important;
+          width: 100% !important;
+          max-width: 100% !important;
           height: auto !important;
-          max-height: 29.7cm !important;
+          min-height: 0 !important;
+          max-height: none !important;
           background: white !important;
           visibility: visible !important;
           opacity: 1 !important;
           z-index: 999999 !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
         #print-root-etc01-answer * {
           visibility: visible !important;
           opacity: 1 !important;
           max-width: 100% !important;
-          max-height: 100% !important;
         }
-        /* a4-page-template - A4 페이지 전체 */
+        /* a4-page-template - 고정 29.7cm 높이 제거, 콘텐츠만큼만 */
         #print-root-etc01-answer .a4-page-template {
           display: block !important;
           visibility: visible !important;
           opacity: 1 !important;
           width: 100% !important;
-          max-width: 21cm !important;
+          max-width: 100% !important;
           height: auto !important;
-          max-height: 29.7cm !important;
+          min-height: 0 !important;
+          max-height: none !important;
           margin: 0 !important;
           padding: 0 !important;
           background: white !important;
           page-break-after: auto !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
         /* a4-page-header - 헤더 영역 */
         #print-root-etc01-answer .a4-page-header {
@@ -611,22 +612,47 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
-          max-height: 5cm !important;
+          max-height: none !important;
+          padding: 0.5cm 0.75cm 0.25cm 0.75cm !important;
           border: none !important;
           border-bottom: none !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
+          flex: none !important;
         }
-        /* print-header-work01 하위 모든 border 제거 */
         #print-root-etc01-answer .print-header-work01 {
           border: none !important;
           border-bottom: none !important;
+          padding: 0.15rem 0 !important;
+          margin: 0 !important;
+        }
+        html.etc01-print-active {
+          font-size: 16pt !important;
+        }
+        #print-root-etc01-answer.etc01-print-root,
+        #print-root-etc01-answer.etc01-print-root.only-print {
+          width: 100% !important;
+          max-width: 100% !important;
+          font-size: 16pt !important;
+          position: relative !important;
+          left: auto !important;
+          top: auto !important;
+        }
+        #print-root-etc01-answer .a4-page-template {
+          width: 100% !important;
+          max-width: 100% !important;
+          font-size: 16pt !important;
+        }
+        #print-root-etc01-answer.only-print .a4-page-template * {
+          font-size: inherit !important;
         }
         #print-root-etc01-answer .print-header-text-work01 {
           border: none !important;
           border-bottom: none !important;
+          font-size: 11pt !important;
+          margin-bottom: 0.35rem !important;
         }
-        /* a4-page-content - 본문 영역 - 상단 패딩 50% 감소 */
+        /* a4-page-content - 상하좌우 적정 여백 */
         #print-root-etc01-answer .a4-page-content {
           display: block !important;
           visibility: visible !important;
@@ -634,44 +660,64 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
-          max-height: 24.7cm !important;
-          padding-top: 0 !important;
-          padding-left: 1cm !important;
-          padding-right: 1cm !important;
-          padding-bottom: 1cm !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          flex: none !important;
+          flex-grow: 0 !important;
+          padding: 0.35cm 0.75cm 0.65cm 0.75cm !important;
+          margin: 0 !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
-        /* problem-instruction - 문제 제목 - 상단 여백 제거 */
+        #print-root-etc01-answer .a4-page-content,
+        #print-root-etc01-answer .quiz-content {
+          font-size: 16pt !important;
+        }
+        #print-root-etc01-answer .quiz-content {
+          box-shadow: none !important;
+          -webkit-box-shadow: none !important;
+        }
         #print-root-etc01-answer .problem-instruction {
-          margin-top: 0 !important;
+          font-size: 14pt !important;
+          margin-top: 0.15cm !important;
+          margin-bottom: 0.65rem !important;
+          width: 100% !important;
           box-sizing: border-box !important;
         }
-        /* print-content-section - 영어 본문, 한글 해석 섹션 */
         #print-root-etc01-answer .print-content-section {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
-          max-height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
-        /* print-divider - 구분선 */
         #print-root-etc01-answer .print-divider {
+          margin: 10pt 0 !important;
           box-sizing: border-box !important;
         }
-        /* print-section-title - 섹션 제목 */
         #print-root-etc01-answer .print-section-title {
+          font-size: 14pt !important;
+          font-weight: bold !important;
+          margin-bottom: 8pt !important;
           box-sizing: border-box !important;
         }
-        /* print-text-content - 텍스트 내용 */
-        #print-root-etc01-answer .print-text-content {
+        #print-root-etc01-answer .print-text-content,
+        #print-root-etc01-answer .print-text-content.korean,
+        #print-root-etc01-answer .problem-passage {
+          font-size: 16pt !important;
+          line-height: 1.65 !important;
+          margin-bottom: 10pt !important;
           box-sizing: border-box !important;
         }
-        /* 모든 하위 요소도 A4 크기 제한 */
+        #print-root-etc01-answer .print-content-section:last-child .print-text-content {
+          margin-bottom: 0 !important;
+        }
         #print-root-etc01-answer .print-section-title,
         #print-root-etc01-answer .print-text-content {
           max-width: 100% !important;
+          width: 100% !important;
           word-wrap: break-word !important;
           overflow-wrap: break-word !important;
         }
@@ -725,46 +771,36 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
           border: none !important;
           border-bottom: none !important;
         }
-        /* a4-page-content - 본문 영역 - 상단 패딩 50% 감소 */
         #print-root-etc01-answer .a4-page-content {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
-          max-height: 24.7cm !important;
-          padding-top: 0 !important;
-          padding-left: 1cm !important;
-          padding-right: 1cm !important;
-          padding-bottom: 1cm !important;
+          padding: 0.35cm 0.75cm 0.65cm 0.75cm !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
-        /* problem-instruction - 문제 제목 - 상단 여백 제거 */
         #print-root-etc01-answer .problem-instruction {
-          margin-top: 0 !important;
+          font-size: 12pt !important;
+          margin-top: 0.15cm !important;
+          margin-bottom: 0.65rem !important;
           box-sizing: border-box !important;
         }
-        /* print-content-section - 영어 본문, 한글 해석 섹션 */
         #print-root-etc01-answer .print-content-section {
           width: 100% !important;
           max-width: 100% !important;
           height: auto !important;
-          max-height: 100% !important;
           box-sizing: border-box !important;
-          overflow: hidden !important;
+          overflow: visible !important;
         }
-        /* print-divider - 구분선 */
         #print-root-etc01-answer .print-divider {
           box-sizing: border-box !important;
         }
-        /* print-section-title - 섹션 제목 */
         #print-root-etc01-answer .print-section-title {
           box-sizing: border-box !important;
         }
-        /* print-text-content - 텍스트 내용 */
         #print-root-etc01-answer .print-text-content {
           box-sizing: border-box !important;
         }
-        /* 모든 하위 요소도 A4 크기 제한 */
         #print-root-etc01-answer .problem-instruction,
         #print-root-etc01-answer .print-section-title,
         #print-root-etc01-answer .print-text-content {
@@ -781,10 +817,12 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
     // 인쇄용 컨테이너 생성 (화면 밖에 배치하여 보이지 않게)
     const printContainer = document.createElement('div');
     printContainer.id = 'print-root-etc01-answer';
+    printContainer.className = 'only-print print-answer-mode etc01-print-root';
     printContainer.style.position = 'absolute';
     printContainer.style.left = '-9999px';
     printContainer.style.top = '0';
-    printContainer.style.width = '21cm';
+    printContainer.style.width = '100%';
+    printContainer.style.maxWidth = '100%';
     printContainer.style.background = 'white';
     printContainer.style.zIndex = '9999';
     // 화면에서는 보이지 않게, 인쇄 시에만 보이게
@@ -807,27 +845,28 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
     // React 18 방식으로 렌더링 - 중간 컨테이너 제거하고 직접 배치
     const root = ReactDOM.createRoot(printContainer);
     root.render(
-      <div className="a4-page-template">
+      <div className="a4-page-template etc01-print-answer">
         <div className="a4-page-header">
           <PrintHeaderWork01 />
         </div>
         <div className="a4-page-content">
+          <div className="quiz-content">
           {/* 문제 제목 컨테이너 */}
           <div className="problem-instruction" style={{
             fontWeight: 800, 
-            fontSize: '1rem', 
+            fontSize: '14pt', 
             background: '#222', 
             color: '#fff', 
-            padding: '0.7rem 0.5rem', 
+            padding: '0.55rem 0.65rem', 
             borderRadius: '8px', 
-            marginBottom: '1.2rem', 
+            marginBottom: '0.65rem', 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
             width: '100%'
           }}>
             <span>영어 본문 추출 결과 및 한글해석</span>
-            <span style={{fontSize: '0.9rem', fontWeight: '700', color: '#FFD700'}}>ETC#01</span>
+            <span style={{fontSize: '11pt', fontWeight: '700', color: '#FFD700'}}>ETC#01</span>
           </div>
           
           {/* 영어 본문 컨테이너 */}
@@ -842,11 +881,11 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
             }}>
               📖 영어 본문
             </div>
-            <div className="print-text-content" style={{
-              fontSize: '11pt',
-              lineHeight: '1.6',
+            <div className="print-text-content problem-passage" style={{
+              fontSize: '16pt',
+              lineHeight: '1.65',
               textAlign: 'justify',
-              marginBottom: '12pt',
+              marginBottom: '10pt',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word'
             }}>
@@ -856,7 +895,7 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
           
           <div className="print-divider" style={{
             borderTop: '1px solid #ddd',
-            margin: '15pt 0'
+            margin: '10pt 0'
           }}></div>
           
           {/* 한글 해석 컨테이너 */}
@@ -871,11 +910,11 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
             }}>
               🇰🇷 한글 해석
             </div>
-            <div className="print-text-content korean" style={{
-              fontSize: '11pt',
-              lineHeight: '1.6',
+            <div className="print-text-content korean problem-passage" style={{
+              fontSize: '16pt',
+              lineHeight: '1.65',
               textAlign: 'justify',
-              marginBottom: '12pt',
+              marginBottom: 0,
               color: '#1976d2',
               fontWeight: '500',
               whiteSpace: 'pre-wrap',
@@ -883,6 +922,7 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
             }}>
               {analysisResult.koreanTranslation}
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -938,25 +978,76 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
       return finalElement;
     };
 
+    const cleanupEtc01Print = () => {
+      document.documentElement.classList.remove('etc01-print-active');
+      root.unmount();
+      if (document.body.contains(printContainer)) {
+        document.body.removeChild(printContainer);
+      }
+      const styleElement = document.getElementById('print-style-etc01-answer');
+      if (styleElement?.parentNode) {
+        styleElement.remove();
+      }
+    };
+
+    const preparePrintElementForDialog = (printElement: HTMLElement) => {
+      printElement.style.display = 'block';
+      printElement.style.position = 'relative';
+      printElement.style.left = 'auto';
+      printElement.style.top = 'auto';
+      printElement.style.width = '100%';
+      printElement.style.maxWidth = '100%';
+      printElement.style.background = 'white';
+      printElement.style.zIndex = '999999';
+      printElement.style.visibility = 'visible';
+      printElement.style.opacity = '1';
+      const templateEl = printElement.querySelector('.a4-page-template');
+      if (templateEl) {
+        const tpl = templateEl as HTMLElement;
+        tpl.style.display = 'block';
+        tpl.style.visibility = 'visible';
+        tpl.style.opacity = '1';
+      }
+    };
+
     setTimeout(async () => {
       console.log('⏰ [Etc01] setTimeout 콜백 실행 시작');
-      try {
-        const element = await waitForRender();
-        if (!element) {
-          console.error('❌ [Etc01] 인쇄 컨테이너를 찾을 수 없습니다.');
-          // 정리
-          root.unmount();
-          if (document.body.contains(printContainer)) {
-            document.body.removeChild(printContainer);
-          }
-          // appRoot는 숨기지 않았으므로 복원 불필요
-          const styleElement = document.getElementById('print-style-etc01-answer');
-          if (styleElement) {
-            styleElement.remove();
-          }
-          return;
-        }
+      const element = await waitForRender();
+      if (!element) {
+        console.error('❌ [Etc01] 인쇄 컨테이너를 찾을 수 없습니다.');
+        cleanupEtc01Print();
+        return;
+      }
 
+      let removePrintListeners: (() => void) | null = null;
+
+      // PDF: Firebase 업로드 전에 먼저 인쇄 (스타일/DOM 제거 전에 미리보기)
+      if (fileFormat === 'pdf') {
+        const onBeforePrint = () => {
+          document.documentElement.classList.add('etc01-print-active');
+          preparePrintElementForDialog(element);
+        };
+        const onAfterPrint = () => {
+          removePrintListeners?.();
+        };
+        const attachPrintListeners = () => {
+          window.addEventListener('beforeprint', onBeforePrint);
+          window.addEventListener('afterprint', onAfterPrint);
+        };
+        removePrintListeners = () => {
+          window.removeEventListener('beforeprint', onBeforePrint);
+          window.removeEventListener('afterprint', onAfterPrint);
+        };
+        attachPrintListeners();
+
+        preparePrintElementForDialog(element);
+        document.documentElement.classList.add('etc01-print-active');
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        console.log('🖨️ [Etc01] window.print() 호출 (업로드 전)');
+        window.print();
+      }
+
+      try {
         // 요소가 제대로 렌더링되었는지 확인
         const templateElement = element.querySelector('.a4-page-template');
         const headerElement = element.querySelector('.a4-page-header');
@@ -997,20 +1088,7 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
 
         if (!templateElement) {
           console.error('❌ [Etc01] A4 페이지 템플릿을 찾을 수 없습니다.');
-          console.log('🔍 [Etc01] 전체 DOM 구조:', {
-            elementHTML: element.innerHTML.substring(0, 1000),
-            allClasses: Array.from(element.querySelectorAll('*')).map(el => el.className).filter(Boolean)
-          });
-          // 정리
-          root.unmount();
-          if (document.body.contains(printContainer)) {
-            document.body.removeChild(printContainer);
-          }
-          // appRoot는 숨기지 않았으므로 복원 불필요
-          const styleElement = document.getElementById('print-style-etc01-answer');
-          if (styleElement) {
-            styleElement.remove();
-          }
+          cleanupEtc01Print();
           return;
         }
 
@@ -1043,90 +1121,10 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
           errorName: error instanceof Error ? error.name : undefined
         });
         alert(`파일 저장 중 오류가 발생했습니다: ${error}`);
+      } finally {
+        removePrintListeners?.();
+        cleanupEtc01Print();
       }
-
-      // PDF인 경우에만 브라우저 인쇄
-      if (fileFormat === 'pdf') {
-        console.log('🖨️ [Etc01] PDF 인쇄 시작...');
-        
-        // 인쇄 전 최종 상태 확인
-        const printElement = document.getElementById('print-root-etc01-answer');
-        const templateEl = printElement?.querySelector('.a4-page-template');
-        console.log('📊 [Etc01] 인쇄 전 최종 상태 확인:', {
-          containerExists: !!printElement,
-          containerVisible: printElement?.offsetParent !== null,
-          containerDisplay: printElement ? window.getComputedStyle(printElement).display : 'none',
-          containerPosition: printElement ? window.getComputedStyle(printElement).position : 'none',
-          containerWidth: printElement ? window.getComputedStyle(printElement).width : 'none',
-          containerHeight: printElement ? window.getComputedStyle(printElement).height : 'none',
-          hasTemplate: !!templateEl,
-          templateDisplay: templateEl ? window.getComputedStyle(templateEl).display : 'none',
-          templateWidth: templateEl ? window.getComputedStyle(templateEl).width : 'none',
-          templateHeight: templateEl ? window.getComputedStyle(templateEl).height : 'none',
-          templateChildrenCount: templateEl?.children.length || 0,
-          windowPrintAvailable: typeof window.print === 'function',
-          // 인쇄 미디어 쿼리 확인을 위한 추가 정보
-          bodyChildren: Array.from(document.body.children).map(c => ({
-            id: c.id,
-            tagName: c.tagName,
-            display: window.getComputedStyle(c).display
-          }))
-        });
-        
-        // 인쇄 전에 컨테이너가 확실히 보이도록 보장
-        if (printElement) {
-          // 인쇄 시에만 화면에 보이게 설정 (원래는 화면 밖에 있음)
-          printElement.style.display = 'block';
-          printElement.style.position = 'absolute';
-          printElement.style.left = '0';
-          printElement.style.top = '0';
-          printElement.style.width = '21cm';
-          printElement.style.background = 'white';
-          printElement.style.zIndex = '999999';
-          printElement.style.visibility = 'visible';
-          printElement.style.opacity = '1';
-          
-          if (templateEl) {
-            (templateEl as HTMLElement).style.display = 'block';
-            (templateEl as HTMLElement).style.visibility = 'visible';
-            (templateEl as HTMLElement).style.opacity = '1';
-          }
-          
-          console.log('✅ [Etc01] 인쇄 컨테이너 스타일 강제 적용 완료');
-        }
-        
-        // 인쇄 전에 최소한의 지연을 두어 렌더링 완료 보장
-        setTimeout(() => {
-          console.log('🖨️ [Etc01] window.print() 호출');
-          window.print();
-          console.log('✅ [Etc01] window.print() 호출 완료');
-          
-          // window.print() 호출 직후 즉시 컨테이너를 화면 밖으로 이동 (인쇄 미리보기에는 @media print CSS가 적용됨)
-          if (printElement) {
-            printElement.style.left = '-9999px';
-            printElement.style.visibility = 'hidden';
-            printElement.style.display = 'none';
-            console.log('✅ [Etc01] 인쇄용 컨테이너를 즉시 화면 밖으로 이동 완료');
-          }
-        }, 100);
-      }
-      
-      // 정리 (인쇄 다이얼로그가 닫힌 후)
-      setTimeout(() => {
-        console.log('🧹 [Etc01] 정리 작업 시작...');
-        root.unmount();
-        if (document.body.contains(printContainer)) {
-          document.body.removeChild(printContainer);
-          console.log('✅ [Etc01] 인쇄 컨테이너 제거 완료');
-        }
-        // appRoot는 숨기지 않았으므로 복원 불필요
-        const styleElement = document.getElementById('print-style-etc01-answer');
-        if (styleElement && document.head.contains(styleElement)) {
-          document.head.removeChild(styleElement);
-          console.log('✅ [Etc01] 스타일 요소 제거 완료');
-        }
-        console.log('✅ [Etc01] ETC#01 정답 저장 완료');
-      }, fileFormat === 'pdf' ? 2000 : 100);
     }, 200);
     
     console.log('✅ [Etc01] handlePrintAnswer 함수 실행 완료 (비동기 작업 시작)');
@@ -1490,12 +1488,12 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
               <div className="quiz-content">
                 <div className="problem-instruction" style={{
                   fontWeight: 800, 
-                  fontSize: '1rem', 
+                  fontSize: '12pt', 
                   background: '#222', 
                   color: '#fff', 
-                  padding: '0.7rem 0.5rem', 
+                  padding: '0.55rem 0.65rem', 
                   borderRadius: '8px', 
-                  marginBottom: '1.2rem', 
+                  marginBottom: '0.65rem', 
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center', 
@@ -1507,7 +1505,7 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
                 
                 <div className="print-content-section">
                   <div className="print-section-title" style={{
-                    fontSize: '14pt',
+                    fontSize: '12pt',
                     fontWeight: 'bold',
                     marginBottom: '8pt',
                     color: '#2d3a60',
@@ -1517,10 +1515,10 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
                     📖 영어 본문
                   </div>
                   <div className="print-text-content" style={{
-                    fontSize: '11pt',
-                    lineHeight: '1.6',
+                    fontSize: '12pt',
+                    lineHeight: '1.65',
                     textAlign: 'justify',
-                    marginBottom: '12pt'
+                    marginBottom: '10pt'
                   }}>
                     {analysisResult.englishText}
                   </div>
@@ -1528,12 +1526,12 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
                 
                 <div className="print-divider" style={{
                   borderTop: '1px solid #ddd',
-                  margin: '15pt 0'
+                  margin: '10pt 0'
                 }}></div>
                 
                 <div className="print-content-section">
                   <div className="print-section-title" style={{
-                    fontSize: '14pt',
+                    fontSize: '12pt',
                     fontWeight: 'bold',
                     marginBottom: '8pt',
                     color: '#2d3a60',
@@ -1543,10 +1541,10 @@ const Etc_01_ImageProblemAnalyzer: React.FC = () => {
                     🇰🇷 한글 해석
                   </div>
                   <div className="print-text-content korean" style={{
-                    fontSize: '11pt',
-                    lineHeight: '1.6',
+                    fontSize: '12pt',
+                    lineHeight: '1.65',
                     textAlign: 'justify',
-                    marginBottom: '12pt',
+                    marginBottom: 0,
                     color: '#1976d2',
                     fontWeight: '500'
                   }}>

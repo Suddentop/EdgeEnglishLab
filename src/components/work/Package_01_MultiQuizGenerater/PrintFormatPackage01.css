@@ -104,10 +104,15 @@
     display: block;
   }
   
-  /* 브라우저 기본 인쇄 헤더/푸터 완전 숨기기 */
+  /* 인쇄 페이지 여백 (패키지#01 연속 인쇄: JS @page 상·하 + 루트 좌·우 padding) */
   @page {
-    margin: 0;
+    margin: 1cm;
     size: A4 portrait;
+  }
+
+  html.package01-print-active {
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   /* 인쇄 시 상위 컨테이너 여백 제거 */
@@ -131,9 +136,8 @@
       print-color-adjust: exact;
     }
     
-    /* 브라우저 기본 인쇄 헤더/푸터 완전 숨기기 */
     @page {
-      margin: 0;
+      margin: 1cm;
       size: A4 portrait;
     }
     
@@ -144,28 +148,27 @@
     }
   }
   
-  /* 패키지#01 전용 인쇄 헤더 스타일 (패키지#02와 동일) */
+  /* 패키지#01 전용 인쇄 헤더 스타일 (패키지#02와 동일 — 하단 검은 구분선) */
   .print-header-package02 {
     width: 100%;
     padding: 0.2cm 0;
     margin-bottom: 0.25cm;
-    border: none !important;
-    border-bottom: none !important;
+    border: none;
+    border-bottom: 2px solid #000 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Roboto', sans-serif;
   }
   
-  /* 인쇄 모드에서도 헤더 테두리 완전 제거 */
   @media print {
     .print-header-package02,
     .a4-page-header .print-header-package02,
-    .only-print .print-header-package02 {
+    .only-print .print-header-package02,
+    .package01-flow-header .print-header-package02 {
       border: none !important;
-      border-bottom: none !important;
-      border-top: none !important;
-      border-left: none !important;
-      border-right: none !important;
+      border-bottom: 2px solid #000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
   }
   
@@ -181,7 +184,7 @@
       margin: 0;
       margin-bottom: 0.25cm;
       box-sizing: border-box;
-      border-bottom: none !important;
+      border-bottom: 2px solid #000 !important;
     }
   }
   
@@ -1300,8 +1303,8 @@
     padding-bottom: 0.1rem !important;
   }
   
-  /* A4 페이지 템플릿 스타일 */
-  .a4-page-template {
+  /* A4 페이지 템플릿 스타일 (패키지#01 연속 인쇄 제외 — 21cm 고정 시 오른쪽 잘림·좌우 여백 불균형) */
+  html:not(.package01-print-active) .a4-page-template {
     width: 21cm !important;
     height: 29.7cm !important;
     margin: 0;
@@ -1314,8 +1317,21 @@
     flex-direction: column;
     left: 0;
     top: 0;
-    /* 좌우 여백 고정값 */
     --print-margin-horizontal: 0.8cm;
+  }
+
+  html.package01-print-active .a4-page-template,
+  html.package01-print-active .only-print .a4-page-template {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    --print-margin-horizontal: 0 !important;
   }
   
   /* 자동 페이지 분할 설정 - 내용 길이에 따라 동적 분할 */
@@ -1428,27 +1444,22 @@
     break-after: avoid !important;
   }
   
-  /* 페이지 설정 - 브라우저 기본 여백 완전 제거 */
+  /* 페이지 설정 - 모든 물리 페이지 동일 여백 */
   @page {
-    size: A4;
-    margin: 0;
-    padding: 0;
+    size: A4 portrait;
+    margin: 1cm;
   }
   
-  /* 모든 브라우저에서 인쇄 여백 제거 */
   @page :first {
-    margin: 0;
-    padding: 0;
+    margin: 1cm;
   }
   
   @page :left {
-    margin: 0;
-    padding: 0;
+    margin: 1cm;
   }
   
   @page :right {
-    margin: 0;
-    padding: 0;
+    margin: 1cm;
   }
   
   /* A4 템플릿이 새 페이지에 자동 생성되도록 강제 설정 */
@@ -1463,12 +1474,22 @@
   
   /* 브라우저별 페이지 분할 최적화 */
   @media print {
-    html, body {
+    html:not(.package01-print-active),
+    html:not(.package01-print-active) body {
       width: 21cm !important;
       height: 29.7cm !important;
       margin: 0 !important;
       padding: 0 !important;
       overflow: visible;
+    }
+
+    html.package01-print-active,
+    html.package01-print-active body {
+      width: 100% !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
     }
     
     .only-print {
@@ -1508,8 +1529,8 @@
       print-color-adjust: exact !important;
     }
     
-    /* 인쇄 시 자동 페이지 생성을 위한 설정 */
-    .a4-page-template {
+    /* 인쇄 시 자동 페이지 생성을 위한 설정 (패키지#01 연속 인쇄 제외) */
+    html:not(.package01-print-active) .a4-page-template {
       width: 21cm !important;
       height: 29.7cm !important;
       break-inside: auto;
@@ -3192,6 +3213,372 @@
   .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="fontSize"],
   .only-print.print-answer-mode.work-01-print .a4-page-template .a4-page-content .fixed-paragraph-box[style*="font-size"] {
     font-size: 1.0rem !important; /* 폰트 크기 - 모든 규칙 오버라이드 */
+  }
+
+  /* 패키지#01 PDF 미리보기: 21cm 고정 해제, 페이지당 1문제, 본문 16pt */
+  html.package01-print-active {
+    font-size: 16pt !important;
+  }
+
+  #print-root-package01,
+  #print-root-package01-answer,
+  #print-root-package01 .print-container,
+  #print-root-package01-answer .print-container,
+  #print-root-package01 .a4-page-template,
+  #print-root-package01-answer .a4-page-template,
+  #print-root-package01 .a4-page-content,
+  #print-root-package01-answer .a4-page-content,
+  #print-root-package01 .quiz-content,
+  #print-root-package01-answer .quiz-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    font-size: 16pt !important;
+  }
+
+  /* 연속 흐름: 좌·우 여백은 루트 padding 한 곳만 (21cm·@page 이중 여백·오른쪽 잘림 방지) */
+  #print-root-package01.package01-continuous-print,
+  #print-root-package01-answer.package01-continuous-print,
+  #print-root-package01.package01-print-mount,
+  #print-root-package01-answer.package01-print-mount,
+  #print-root-package01 .package01-continuous-print.print-container,
+  #print-root-package01-answer .package01-continuous-print.print-container {
+    padding: 0 0.6cm !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  html.package01-print-active #print-root-package01 *,
+  html.package01-print-active #print-root-package01-answer * {
+    box-sizing: border-box !important;
+  }
+
+  /* 21cm 고정 너비 해제 — 좌·우 여백 불균형·오른쪽 잘림 방지 */
+  html.package01-print-active #print-root-package01 .a4-page-template,
+  html.package01-print-active #print-root-package01-answer .a4-page-template,
+  html.package01-print-active #print-root-package01 .only-print .a4-page-template,
+  html.package01-print-active #print-root-package01-answer .only-print .a4-page-template,
+  html.package01-print-active #print-root-package01 .work11-dynamic-page-template,
+  html.package01-print-active #print-root-package01-answer .work11-dynamic-page-template,
+  .package01-continuous-print .a4-page-template,
+  .package01-continuous-print .work11-dynamic-page-template {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  html.package01-print-active #print-root-package01 .a4-page-content,
+  html.package01-print-active #print-root-package01-answer .a4-page-content,
+  html.package01-print-active .package01-continuous-print .a4-page-content,
+  html.package01-print-active .only-print .a4-page-content,
+  html.package01-print-active .only-print .a4-page-content[style] {
+    padding: 0.35cm 0 0.75cm 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  html.package01-print-active .only-print .a4-page-content .problem-instruction,
+  html.package01-print-active #print-root-package01 .only-print .a4-page-content .problem-instruction {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  html.package01-print-active #print-root-package01 .problem-instruction,
+  html.package01-print-active #print-root-package01 .problem-instruction[style],
+  html.package01-print-active #print-root-package01-answer .problem-instruction,
+  html.package01-print-active #print-root-package01-answer .problem-instruction[style] {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  html.package01-print-active #print-root-package01 .problem-instruction > span:last-child,
+  html.package01-print-active #print-root-package01-answer .problem-instruction > span:last-child {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    margin-left: 0.5rem !important;
+  }
+
+  html.package01-print-active #print-root-package01 .package01-work13-problem-text,
+  html.package01-print-active #print-root-package01 .package01-work14-problem-text,
+  html.package01-print-active #print-root-package01 .package01-work13-passage,
+  html.package01-print-active #print-root-package01 .package01-work14-passage,
+  html.package01-print-active #print-root-package01-answer .package01-work13-problem-text,
+  html.package01-print-active #print-root-package01-answer .package01-work14-problem-text,
+  html.package01-print-active #print-root-package01-answer .package01-work14-passage,
+  html.package01-print-active #print-root-package01-answer .package01-work13-passage,
+  html.package01-print-active #print-root-package01 [class*="package01-work13"],
+  html.package01-print-active #print-root-package01 [class*="package01-work14"],
+  html.package01-print-active #print-root-package01-answer [class*="package01-work13"],
+  html.package01-print-active #print-root-package01-answer [class*="package01-work14"] {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+  }
+
+  html.package01-print-active #print-root-package01 .only-print.work-11-print .problem-passage,
+  html.package01-print-active #print-root-package01 .only-print.work-13-print .problem-passage,
+  html.package01-print-active #print-root-package01 .only-print.work-14-print .problem-passage,
+  html.package01-print-active #print-root-package01-answer .only-print.work-11-print .problem-passage,
+  html.package01-print-active #print-root-package01-answer .only-print.work-13-print .problem-passage,
+  html.package01-print-active #print-root-package01-answer .only-print.work-14-print .problem-passage {
+    padding-left: unset !important;
+    padding-right: unset !important;
+  }
+
+  html.package01-print-active #print-root-package01 .work-11-print,
+  html.package01-print-active #print-root-package01 .work-11-print *,
+  html.package01-print-active #print-root-package01-answer .work-11-print,
+  html.package01-print-active #print-root-package01-answer .work-11-print * {
+    overflow: visible !important;
+    overflow-x: visible !important;
+  }
+
+  .package01-continuous-print .package01-flow-header {
+    display: block !important;
+    padding: 0.2cm 0 0.35cm 0 !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+
+  html.package01-print-active .package01-flow-header .print-header-package02,
+  html.package01-print-active #print-root-package01 .print-header-package02,
+  html.package01-print-active #print-root-package01-answer .print-header-package02 {
+    border-bottom: 2px solid #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .package01-continuous-print .a4-page-content {
+    padding-bottom: 0.4cm !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  #print-root-package01 .problem-instruction,
+  #print-root-package01 .problem-instruction[style],
+  #print-root-package01 .problem-passage,
+  #print-root-package01 .problem-passage[style],
+  #print-root-package01 .shuffled-paragraph,
+  #print-root-package01 .shuffled-paragraph[style],
+  #print-root-package01 .fixed-paragraph-box,
+  #print-root-package01 .fixed-paragraph-box[style],
+  #print-root-package01 .option,
+  #print-root-package01 .option[style],
+  #print-root-package01-answer .problem-instruction,
+  #print-root-package01-answer .problem-instruction[style],
+  #print-root-package01-answer .problem-passage,
+  #print-root-package01-answer .problem-passage[style],
+  #print-root-package01-answer .shuffled-paragraph,
+  #print-root-package01-answer .shuffled-paragraph[style],
+  #print-root-package01-answer .fixed-paragraph-box,
+  #print-root-package01-answer .fixed-paragraph-box[style],
+  #print-root-package01-answer .option,
+  #print-root-package01-answer .option[style] {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+  }
+
+  .package01-continuous-print .a4-page-header {
+    display: none !important;
+  }
+
+  #print-root-package01 .package01-continuous-print .a4-page-template,
+  #print-root-package01-answer .package01-continuous-print .a4-page-template,
+  #print-root-package01.package01-continuous-print .a4-page-template,
+  #print-root-package01-answer.package01-continuous-print .a4-page-template {
+    margin: 0 !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .package01-continuous-print .a4-page-content {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .package01-continuous-print .problem-instruction {
+    page-break-after: avoid !important;
+    break-after: avoid-page !important;
+  }
+
+  .package01-continuous-print .shuffled-paragraph,
+  .package01-continuous-print .option,
+  .package01-continuous-print .fixed-paragraph-box {
+    page-break-inside: avoid !important;
+    break-inside: avoid-page !important;
+  }
+
+  .package01-continuous-print .problem-passage,
+  .package01-continuous-print .problem-options {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .package01-continuous-print .only-print,
+  .package01-continuous-print [data-work-type] {
+    page-break-before: auto !important;
+    break-before: auto !important;
+  }
+
+  .package01-continuous-print .only-print + .only-print,
+  .package01-continuous-print .only-print + [data-work-type],
+  .package01-continuous-print [data-work-type] + .only-print,
+  .package01-continuous-print [data-work-type] + [data-work-type] {
+    margin-top: 0.6cm !important;
+  }
+
+  #print-root-package01 .only-print .a4-page-template *,
+  #print-root-package01 .only-print .quiz-content *,
+  #print-root-package01 .only-print .a4-page-content *,
+  #print-root-package01-answer .only-print .a4-page-template *,
+  #print-root-package01-answer .only-print .quiz-content *,
+  #print-root-package01-answer .only-print .a4-page-content * {
+    font-size: 16pt !important;
+  }
+
+  #print-root-package01 .print-header-text-work01,
+  #print-root-package01-answer .print-header-text-work01 {
+    font-size: 11pt !important;
+  }
+
+  #print-root-package01 .problem-instruction,
+  #print-root-package01 .problem-instruction[style],
+  #print-root-package01 .problem-instruction span,
+  #print-root-package01 .problem-instruction span[style],
+  #print-root-package01-answer .problem-instruction,
+  #print-root-package01-answer .problem-instruction[style],
+  #print-root-package01-answer .problem-instruction span,
+  #print-root-package01-answer .problem-instruction span[style] {
+    font-size: 14pt !important;
+  }
+
+  #print-root-package01 .problem-passage,
+  #print-root-package01 .problem-passage[style],
+  #print-root-package01 .shuffled-paragraph,
+  #print-root-package01 .shuffled-paragraph[style],
+  #print-root-package01 .problem-options,
+  #print-root-package01 .problem-options[style],
+  #print-root-package01 .option,
+  #print-root-package01 .option[style],
+  #print-root-package01 .fixed-paragraph-box,
+  #print-root-package01 .fixed-paragraph-box[style],
+  #print-root-package01 .fixed-paragraph-box *,
+  #print-root-package01 .work01-fixed-paragraph-print,
+  #print-root-package01 .work01-fixed-paragraph-print *,
+  #print-root-package01-answer .problem-passage,
+  #print-root-package01-answer .problem-passage[style],
+  #print-root-package01-answer .shuffled-paragraph,
+  #print-root-package01-answer .shuffled-paragraph[style],
+  #print-root-package01-answer .problem-options,
+  #print-root-package01-answer .problem-options[style],
+  #print-root-package01-answer .option,
+  #print-root-package01-answer .option[style],
+  #print-root-package01-answer .fixed-paragraph-box,
+  #print-root-package01-answer .fixed-paragraph-box[style],
+  #print-root-package01-answer .fixed-paragraph-box *,
+  #print-root-package01-answer .work01-fixed-paragraph-print,
+  #print-root-package01-answer .work01-fixed-paragraph-print * {
+    font-size: 16pt !important;
+    line-height: 1.65 !important;
+  }
+
+  #print-root-package01 .quiz-content,
+  #print-root-package01-answer .quiz-content,
+  #print-root-package01 .a4-page-template,
+  #print-root-package01-answer .a4-page-template,
+  #print-root-package01 .a4-page-content,
+  #print-root-package01-answer .a4-page-content,
+  #print-root-package01 .only-print,
+  #print-root-package01-answer .only-print,
+  #print-root-package01 .quiz-item-card,
+  #print-root-package01-answer .quiz-item-card,
+  #print-root-package01 [data-work-type],
+  #print-root-package01-answer [data-work-type] {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    filter: none !important;
+  }
+
+  #print-root-package01 .quiz-content,
+  #print-root-package01-answer .quiz-content {
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* 패키지#01: 4지선다 항목 간격 50% (margin-top 0.5rem→0.25rem, padding 0.4rem→0.2rem) */
+  html.package01-print-active #print-root-package01 .problem-options > .option,
+  html.package01-print-active #print-root-package01-answer .problem-options > .option,
+  html.package01-print-active #print-root-package01 .quiz-content .option,
+  html.package01-print-active #print-root-package01-answer .quiz-content .option,
+  html.package01-print-active #print-root-package01 .option.option-print,
+  html.package01-print-active #print-root-package01-answer .option.option-print,
+  html.package01-print-active #print-root-package01 .only-print .option,
+  html.package01-print-active #print-root-package01-answer .only-print .option,
+  html.package01-print-active #print-root-package01 .only-print .option[style],
+  html.package01-print-active #print-root-package01-answer .only-print .option[style] {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0 !important;
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+  }
+
+  html.package01-print-active #print-root-package01 .work-07-print .option,
+  html.package01-print-active #print-root-package01-answer .work-07-print .option,
+  html.package01-print-active #print-root-package01 .work-08-print .option,
+  html.package01-print-active #print-root-package01-answer .work-08-print .option {
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.15rem !important;
+  }
+
+  html.package01-print-active #print-root-package01 .work-05-print .option,
+  html.package01-print-active #print-root-package01-answer .work-05-print .option,
+  html.package01-print-active #print-root-package01 .work-10-print .option,
+  html.package01-print-active #print-root-package01-answer .work-10-print .option {
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+  }
+
+  html.package01-print-active #print-root-package01 .work-05-print .problem-options > .option:last-child,
+  html.package01-print-active #print-root-package01-answer .work-05-print .problem-options > .option:last-child,
+  html.package01-print-active #print-root-package01 .work-09-print .problem-options > .option:last-child,
+  html.package01-print-active #print-root-package01-answer .work-09-print .problem-options > .option:last-child,
+  html.package01-print-active #print-root-package01 .work-10-print .problem-options > .option:last-child,
+  html.package01-print-active #print-root-package01-answer .work-10-print .problem-options > .option:last-child {
+    margin-bottom: 0.5rem !important;
+  }
+
+  html.package01-print-active #print-root-package01 .work-04-print .problem-options > .option:last-child,
+  html.package01-print-active #print-root-package01-answer .work-04-print .problem-options > .option:last-child {
+    margin-bottom: 1.75rem !important;
+  }
+
+  #print-root-package01 *,
+  #print-root-package01-answer *,
+  #print-root-package01 *::before,
+  #print-root-package01-answer *::before,
+  #print-root-package01 *::after,
+  #print-root-package01-answer *::after {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
   }
 }
 

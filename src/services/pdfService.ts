@@ -379,19 +379,40 @@ export const generateAndUploadPDF = async (
               html.style.padding = '0';
             }
             
-            // 패키지#01인 경우 추가 스타일 적용
+            // 패키지#01: 21cm(794px) 고정 시 오른쪽 잘림 → 100% + 루트 padding
             if (element.id === 'print-root-package01' || element.id === 'print-root-package01-answer') {
-              clonedEl.style.width = '794px'; // 21cm
-              clonedEl.style.maxWidth = '794px';
-              clonedEl.style.minWidth = '794px';
-              
-              // 내부 .print-container도 조정
+              clonedEl.style.width = '100%';
+              clonedEl.style.maxWidth = '100%';
+              clonedEl.style.minWidth = '0';
+              clonedEl.style.height = 'auto';
+              clonedEl.style.maxHeight = 'none';
+              clonedEl.style.boxSizing = 'border-box';
+              clonedEl.style.padding = '0 0.6cm';
+              clonedEl.style.overflow = 'visible';
+              if (body) {
+                body.style.overflow = 'visible';
+              }
+              if (html) {
+                html.style.overflow = 'visible';
+              }
+
               const printContainer = clonedEl.querySelector('.print-container');
               if (printContainer) {
-                (printContainer as HTMLElement).style.width = '794px';
-                (printContainer as HTMLElement).style.maxWidth = '794px';
-                (printContainer as HTMLElement).style.minWidth = '794px';
+                const pc = printContainer as HTMLElement;
+                pc.style.width = '100%';
+                pc.style.maxWidth = '100%';
+                pc.style.minWidth = '0';
+                pc.style.boxSizing = 'border-box';
+                pc.style.overflow = 'visible';
               }
+
+              clonedEl.querySelectorAll('.a4-page-template, .work11-dynamic-page-template').forEach((node) => {
+                const page = node as HTMLElement;
+                page.style.width = '100%';
+                page.style.maxWidth = '100%';
+                page.style.minWidth = '0';
+                page.style.overflow = 'visible';
+              });
             }
             
             // 유형#15인 경우 추가 스타일 적용
