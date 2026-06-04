@@ -20,6 +20,17 @@ import { formatBlankedText } from '../Package_02_TwoStepQuiz/printNormalization'
 import '../shared/PrintControls.css';
 import FileFormatSelector from '../shared/FileFormatSelector';
 
+const PACKAGE03_ITEMS_PER_PAGE = 2;
+
+const getPackage03ExpectedPageCount = (itemCount: number) =>
+  Math.max(1, Math.ceil(itemCount / PACKAGE03_ITEMS_PER_PAGE));
+
+const isPackage03PrintDomReady = (container: HTMLElement, expectedPages: number) => {
+  const pages = container.querySelectorAll('.a4-landscape-page-template');
+  if (pages.length < expectedPages) return false;
+  return Array.from(pages).every((page) => (page as HTMLElement).offsetHeight > 100);
+};
+
 // 인터페이스 정의
 interface MainIdeaQuiz {
   passage: string;
@@ -868,8 +879,8 @@ const Package_03_ParagraphOrder: React.FC = () => {
           background: white !important;
           margin: 0 !important;
           padding: 0 !important;
-          page-break-after: avoid !important;
-          page-break-inside: avoid !important;
+          page-break-inside: auto !important;
+          break-inside: auto !important;
         }
         /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
         .print-container:has(> .a4-landscape-page-template.last-page:only-child) {
@@ -878,7 +889,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
           max-height: 21cm !important;
           overflow: hidden !important;
           box-sizing: border-box !important;
-          page-break-inside: avoid !important;
         }
         * {
           -webkit-print-color-adjust: exact;
@@ -893,78 +903,113 @@ const Package_03_ParagraphOrder: React.FC = () => {
     
     const printContainer = document.createElement('div');
     printContainer.id = 'print-root-package03';
+    printContainer.style.width = '29.7cm';
+    printContainer.style.minWidth = '29.7cm';
+    printContainer.style.position = 'absolute';
+    printContainer.style.left = '0';
+    printContainer.style.top = '0';
+    printContainer.style.visibility = 'hidden';
     document.body.appendChild(printContainer);
 
     const appRoot = document.getElementById('root');
-    // if (appRoot) {
-    //   appRoot.style.display = 'none';
-    // }
+    const expectedPages = getPackage03ExpectedPageCount(packageQuiz.length);
 
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} />);
 
-    setTimeout(async () => {
-      // PDF인 경우에만 브라우저 인쇄 (미리보기 창 빠르게 띄우기)
-      if (fileFormat === 'pdf') {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            // 미리보기 창이 열리기 직전 블러 오버레이 제거
-            removeBlurOverlay();
-            window.print();
-          });
-        });
-      }
+    let attempts = 0;
+    const maxAttempts = 50;
+    let uploadPromise: Promise<void> | null = null;
 
-      // 파일 생성 및 Firebase Storage 업로드
+    const doCleanup = async () => {
       try {
-        const element = document.getElementById('print-root-package03');
-        if (element && userData?.uid) {
-          const { updateQuizHistoryFile } = await import('../../../services/quizHistoryService');
-          
-          const result = await generateAndUploadFile(
-            element as HTMLElement,
-            userData.uid,
-            `package03_problem_${Date.now()}`,
-            '패키지#03_문제',
-            { isAnswerMode: false, orientation: 'landscape', fileFormat }
-          );
-          
-          // 패키지 내역에 파일 URL 저장
-          const { getQuizHistory } = await import('../../../services/quizHistoryService');
-          const history = await getQuizHistory(userData.uid, { limit: 10 });
-          const packageHistory = history.find(h => h.workTypeId === 'P03');
-          
-          if (packageHistory) {
-            await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
-             const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
-            console.log(`📁 패키지#03 문제 ${formatName} 저장 완료:`, result.fileName);
-          }
-        }
-      } catch (error) {
-        console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+        if (uploadPromise) await uploadPromise;
+      } catch (e) {
+        console.error('❌ 파일 업로드 중 오류 발생:', e);
       }
-
-      // DOC/HWP는 파일 생성이 완료되면 블러 오버레이 제거
-      if (fileFormat !== 'pdf') {
-        removeBlurOverlay();
-      }
-
-      setTimeout(() => {
-        root.unmount();
+      root.unmount();
+      if (printContainer.parentNode) {
         document.body.removeChild(printContainer);
-        
-        const styleElement = document.getElementById('print-style-package03');
-        if (styleElement) {
-          document.head.removeChild(styleElement);
-        }
+      }
+      const styleElement = document.getElementById('print-style-package03');
+      if (styleElement) {
+        document.head.removeChild(styleElement);
+      }
+      if (appRoot) {
+        appRoot.style.display = 'block';
+      }
+      window.onafterprint = null;
+      console.log('✅ 인쇄(문제) 완료 - 가로 A4 페이지');
+    };
 
-        if (appRoot) {
-          appRoot.style.display = 'block';
-        }
+    const uploadTask = async () => {
+      const element = document.getElementById('print-root-package03');
+      if (!element || !userData?.uid) return;
+      const { updateQuizHistoryFile, getQuizHistory } = await import('../../../services/quizHistoryService');
+      const result = await generateAndUploadFile(
+        element as HTMLElement,
+        userData.uid,
+        `package03_problem_${Date.now()}`,
+        '패키지#03_문제',
+        { isAnswerMode: false, orientation: 'landscape', fileFormat }
+      );
+      const history = await getQuizHistory(userData.uid, { limit: 10 });
+      const packageHistory = history.find((h) => h.workTypeId === 'P03');
+      if (packageHistory) {
+        await updateQuizHistoryFile(packageHistory.id, result.url, result.fileName, 'problem');
+        const formatName = fileFormat === 'pdf' ? 'PDF' : 'DOC';
+        console.log(`📁 패키지#03 문제 ${formatName} 저장 완료:`, result.fileName);
+      }
+    };
 
-        console.log('✅ 인쇄(문제) 완료 - 가로 A4 페이지');
-      }, 100);
-    }, 1000);
+    const checkRenderAndPrint = () => {
+      if (isPackage03PrintDomReady(printContainer, expectedPages)) {
+        if (fileFormat === 'pdf') {
+          uploadPromise = uploadTask().catch((error) => {
+            console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+          });
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              removeBlurOverlay();
+              window.onafterprint = () => {
+                void doCleanup();
+              };
+              window.print();
+            });
+          });
+        } else {
+          removeBlurOverlay();
+          uploadTask()
+            .catch((error) => console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error))
+            .finally(() => {
+              void doCleanup();
+            });
+        }
+        return;
+      }
+
+      attempts += 1;
+      if (attempts >= maxAttempts) {
+        console.error('인쇄 렌더링 타임아웃 (문제)');
+        if (fileFormat === 'pdf') {
+          uploadPromise = uploadTask().catch((error) => {
+            console.error(`❌ 파일 저장 실패 (${fileFormat}):`, error);
+          });
+          removeBlurOverlay();
+          window.onafterprint = () => {
+            void doCleanup();
+          };
+          window.print();
+        } else {
+          removeBlurOverlay();
+          void doCleanup();
+        }
+        return;
+      }
+      setTimeout(checkRenderAndPrint, 50);
+    };
+
+    setTimeout(checkRenderAndPrint, 100);
   };
 
   // 인쇄(정답) 핸들러 - 가로 A4 페이지
@@ -1041,8 +1086,8 @@ const Package_03_ParagraphOrder: React.FC = () => {
           background: white !important;
           margin: 0 !important;
           padding: 0 !important;
-          page-break-after: avoid !important;
-          page-break-inside: avoid !important;
+          page-break-inside: auto !important;
+          break-inside: auto !important;
         }
         /* 단일 페이지: 높이 21cm 고정 + overflow hidden (2페이지 오버플로우 방지) */
         .print-container-answer:has(> .a4-landscape-page-template.last-page:only-child) {
@@ -1051,7 +1096,6 @@ const Package_03_ParagraphOrder: React.FC = () => {
           max-height: 21cm !important;
           overflow: hidden !important;
           box-sizing: border-box !important;
-          page-break-inside: avoid !important;
         }
         * {
           -webkit-print-color-adjust: exact;
@@ -1084,11 +1128,12 @@ const Package_03_ParagraphOrder: React.FC = () => {
     const root = ReactDOM.createRoot(printContainer);
     root.render(<PrintFormatPackage03 packageQuiz={packageQuiz} isAnswerMode={true} />);
 
+    const expectedPages = getPackage03ExpectedPageCount(packageQuiz.length);
+
     // 렌더링 완료 후 인쇄 및 파일 생성
-    // 문제생성 직후 렌더링 지연을 방지하기 위해 폴링 메커니즘 사용
     let attempts = 0;
-    const maxAttempts = 50; // 50ms * 50 = 2500ms (2.5초 최대 대기, 더 빠른 반응)
-    let uploadPromise: Promise<void> | null = null; // window.onafterprint에서 접근 가능하도록 외부 스코프에 선언
+    const maxAttempts = 50;
+    let uploadPromise: Promise<void> | null = null;
     
     const checkRenderAndPrint = async () => {
       // 파일 생성 및 Firebase Storage 업로드 (백그라운드 처리)
@@ -1123,11 +1168,7 @@ const Package_03_ParagraphOrder: React.FC = () => {
       };
 
       if (fileFormat === 'pdf') {
-        // 마운트 포인트 내에서 첫 번째 페이지 찾기 (패키지#03은 last-page 클래스 없음)
-        const firstPage = printContainer.querySelector('.a4-landscape-page-template') as HTMLElement;
-        
-        // 렌더링 완료 조건: 첫 번째 페이지가 존재하고 높이가 0보다 커야 함
-        if (firstPage && firstPage.offsetHeight > 0) {
+        if (isPackage03PrintDomReady(printContainer, expectedPages)) {
           // PDF: 인쇄 대화상자 닫힐 때 cleanup (afterprint). 그 전까지 DOM 유지해야 미리보기에 내용 표시됨.
           // 업로드 작업은 인쇄 후에 시작 (인쇄 속도에 영향 없도록)
           // requestAnimationFrame으로 즉시 처리 시작
