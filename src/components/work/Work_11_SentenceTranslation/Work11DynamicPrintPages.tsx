@@ -7,6 +7,8 @@ interface Work11DynamicPrintPagesProps {
   includeAnswer: boolean;
   printMode: 'no-answer' | 'with-answer';
   customHeader?: React.ReactNode;
+  /** 패키지#01 연속 인쇄: 21cm 고정 대신 100% (오른쪽 잘림 방지) */
+  fluidLayout?: boolean;
 }
 
 // A4 페이지 설정 (실제 A4 크기 기준, px 단위)
@@ -110,7 +112,8 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
   translations,
   includeAnswer,
   printMode,
-  customHeader
+  customHeader,
+  fluidLayout = false
 }) => {
   console.log('🖨️ Work11DynamicPrintPages 렌더링:', {
     sentencesCount: sentences.length,
@@ -380,16 +383,19 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
         key={`dynamic-page-${pageIndex + 1}`}
         className="a4-page-template work11-dynamic-page-template"
         style={{
-          width: '21cm',
-          height: '29.7cm',
+          width: fluidLayout ? '100%' : '21cm',
+          height: fluidLayout ? 'auto' : '29.7cm',
+          maxWidth: fluidLayout ? '100%' : undefined,
+          minHeight: fluidLayout ? 0 : undefined,
           margin: '0',
           padding: '0',
           background: 'white',
           boxSizing: 'border-box',
-          pageBreakInside: 'avoid',
+          pageBreakInside: fluidLayout ? 'auto' : 'avoid',
           position: 'relative',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          overflow: fluidLayout ? 'visible' : undefined
         }}
       >
         <div className="a4-page-header" style={{
@@ -404,8 +410,8 @@ const Work11DynamicPrintPages: React.FC<Work11DynamicPrintPagesProps> = ({
 
         <div className="a4-page-content" style={{
           width: '100%',
-          flex: 1,
-          padding: '0 1cm 1cm 1cm',
+          flex: fluidLayout ? 'none' : 1,
+          padding: fluidLayout ? '0.35cm 0 0.75cm 0' : '0 1cm 1cm 1cm',
           boxSizing: 'border-box',
           overflow: 'visible'
         }}>
