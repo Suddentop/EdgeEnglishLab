@@ -330,6 +330,27 @@ const Work_12_WordStudy: React.FC = () => {
     return totalWords;
   };
 
+  const PART_OF_SPEECH_IN_MEANING_REGEX = /^(n\.|v\.|adj\.|adv\.|prep\.|conj\.|pron\.|interj\.)\s+(.+)$/i;
+
+  const parseMeaningPart = (value: string): { partOfSpeech?: string; korean: string } => {
+    const trimmed = value.trim();
+    const match = trimmed.match(PART_OF_SPEECH_IN_MEANING_REGEX);
+    if (match) {
+      return { partOfSpeech: match[1], korean: match[2].trim() };
+    }
+    return { korean: trimmed };
+  };
+
+  const formatWordsForInputText = (words: WordItem[]): string =>
+    words
+      .map(word => {
+        const pos = word.partOfSpeech?.trim();
+        return pos
+          ? `${word.english} : ${pos} ${word.korean}`
+          : `${word.english} : ${word.korean}`;
+      })
+      .join('\n');
+
   // 텍스트에서 현재 단어를 빠르게 파싱하는 함수 (간단한 버전, 콘솔 로그 최소화)
   const parseWordsFromTextSimple = (text: string): WordItem[] => {
     if (!text.trim()) return [];
@@ -343,22 +364,27 @@ const Work_12_WordStudy: React.FC = () => {
       
       let english = '';
       let korean = '';
+      let partOfSpeech: string | undefined;
       
       // 탭으로 구분된 형식
       if (trimmedLine.includes('\t')) {
         const parts = trimmedLine.split('\t').map(p => p.trim()).filter(p => p);
         if (parts.length >= 2) {
           english = parts[0];
-          korean = parts.slice(1).join(' ');
+          const parsed = parseMeaningPart(parts.slice(1).join(' '));
+          korean = parsed.korean;
+          partOfSpeech = parsed.partOfSpeech;
         }
       }
       
-      // 콜론으로 구분된 형식
+      // 콜론으로 구분된 형식 (예: advocate : v. 지지하다, 옹호하다)
       if (!english && !korean) {
         const match = trimmedLine.match(/^(.+?)\s*[:：]\s*(.+)$/);
         if (match) {
           english = match[1].trim();
-          korean = match[2].trim();
+          const parsed = parseMeaningPart(match[2]);
+          korean = parsed.korean;
+          partOfSpeech = parsed.partOfSpeech;
         }
       }
       
@@ -367,7 +393,9 @@ const Work_12_WordStudy: React.FC = () => {
         const match = trimmedLine.match(/^(.+?)\s*-\s*(.+)$/);
         if (match) {
           english = match[1].trim();
-          korean = match[2].trim();
+          const parsed = parseMeaningPart(match[2]);
+          korean = parsed.korean;
+          partOfSpeech = parsed.partOfSpeech;
         }
       }
       
@@ -402,12 +430,40 @@ const Work_12_WordStudy: React.FC = () => {
       
       // 유효한 단어 쌍이면 추가
       if (english && korean && english !== korean) {
-        words.push({ english, korean });
+        words.push({ english, korean, ...(partOfSpeech ? { partOfSpeech } : {}) });
       }
       // 영어 단어만 있는 경우는 문제 생성 시 한글뜻을 생성하므로 여기서는 카운트하지 않음
     }
     
     return words;
+  };
+
+  const applyWordsToInputTextarea = async (words: WordItem[]) => {
+    let displayWords = words;
+    const withoutKorean = displayWords.filter(w => !w.korean || w.korean.trim().length === 0);
+    if (withoutKorean.length > 0) {
+      const koreanMeanings = await generateKoreanMeanings(withoutKorean.map(w => w.english));
+      displayWords = displayWords.map(word => {
+        if (!word.korean || word.korean.trim().length === 0) {
+          const meaning = koreanMeanings.find(
+            m => m.english.toLowerCase() === word.english.toLowerCase()
+          );
+          if (meaning) {
+            return { ...word, ...meaning };
+          }
+        }
+        return word;
+      });
+    }
+    displayWords = await addPartOfSpeechToWords(displayWords);
+    setExtractedWords(displayWords);
+    setInputText(formatWordsForInputText(displayWords));
+    setTimeout(() => {
+      if (textAreaRef.current) {
+        textAreaRef.current.style.height = 'auto';
+        textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+      }
+    }, 0);
   };
 
   // 이미지 파일 업로드
@@ -420,40 +476,10 @@ const Work_12_WordStudy: React.FC = () => {
       setIsLoading(true);
       setIsExtractingText(true);
       try {
-        let words = await extractWordsFromImage(file);
-        
-        // 한글 뜻이 없는 단어가 있는지 확인하고 자동 생성
-        const wordsWithoutKorean = words.filter(w => !w.korean || w.korean.trim().length === 0);
-        if (wordsWithoutKorean.length > 0) {
-          console.log('한글 뜻이 없는 단어 발견, 자동 생성 중...', wordsWithoutKorean.length, '개');
-          const englishOnlyWords = wordsWithoutKorean.map(w => w.english);
-          const koreanMeanings = await generateKoreanMeanings(englishOnlyWords);
-          
-          // 한글 뜻이 생성된 단어들로 업데이트
-          words = words.map(word => {
-            if (!word.korean || word.korean.trim().length === 0) {
-              const meaning = koreanMeanings.find(m => m.english.toLowerCase() === word.english.toLowerCase());
-              if (meaning) {
-                return { ...word, korean: meaning.korean };
-              }
-            }
-            return word;
-          });
-        }
-        
-        // 기존 단어에 새 단어 추가 (60개 제한 적용)
+        const words = await extractWordsFromImage(file);
         const currentWords = parseWordsFromTextSimple(inputText);
         const updatedWords = addWordsWithLimit(words, currentWords);
-        setExtractedWords(updatedWords);
-        // 단어들을 텍스트로 변환하여 textarea에 표시 (기존 텍스트 + 새 텍스트)
-        const wordsText = updatedWords.map(word => `${word.english}: ${word.korean}`).join('\n');
-        setInputText(wordsText);
-        setTimeout(() => {
-          if (textAreaRef.current) {
-            textAreaRef.current.style.height = 'auto';
-            textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
-          }
-        }, 0);
+        await applyWordsToInputTextarea(updatedWords);
       } catch (err: any) {
         const errorMessage = err?.message || '이미지에서 단어를 추출할 수 없어요. 다시 한번 붙여넣어 주세요! 😊';
         alert(errorMessage);
@@ -492,44 +518,10 @@ const Work_12_WordStudy: React.FC = () => {
           setIsLoading(true);
           setIsExtractingText(true);
           try {
-            let newWords = await extractWordsFromImage(file);
-            
-            // 한글 뜻이 없는 단어가 있는지 확인하고 자동 생성
-            const wordsWithoutKorean = newWords.filter(w => !w.korean || w.korean.trim().length === 0);
-            if (wordsWithoutKorean.length > 0) {
-              console.log('한글 뜻이 없는 단어 발견, 자동 생성 중...', wordsWithoutKorean.length, '개');
-              const englishOnlyWords = wordsWithoutKorean.map(w => w.english);
-              const koreanMeanings = await generateKoreanMeanings(englishOnlyWords);
-              
-              // 한글 뜻이 생성된 단어들로 업데이트
-              newWords = newWords.map(word => {
-                if (!word.korean || word.korean.trim().length === 0) {
-                  const meaning = koreanMeanings.find(m => m.english.toLowerCase() === word.english.toLowerCase());
-                  if (meaning) {
-                    return { ...word, korean: meaning.korean };
-                  }
-                }
-                return word;
-              });
-            }
-            
-            // 현재 입력된 텍스트를 파싱해서 기존 단어 목록 가져오기
+            const newWords = await extractWordsFromImage(file);
             const currentWords = parseWordsFromTextSimple(inputText);
-            
-            // 기존 단어에 새 단어 추가 (60개 제한 적용)
             const updatedWords = addWordsWithLimit(newWords, currentWords);
-            setExtractedWords(updatedWords);
-            
-            // 단어들을 텍스트로 변환하여 textarea에 표시 (기존 텍스트 + 새 텍스트)
-            const wordsText = updatedWords.map(word => `${word.english}: ${word.korean}`).join('\n');
-            setInputText(wordsText);
-            
-            setTimeout(() => {
-              if (textAreaRef.current) {
-                textAreaRef.current.style.height = 'auto';
-                textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
-              }
-            }, 0);
+            await applyWordsToInputTextarea(updatedWords);
           } catch (err: any) {
             const errorMessage = err?.message || '이미지에서 단어를 추출할 수 없어요. 다시 한번 붙여넣어 주세요! 😊';
             alert(errorMessage);
@@ -981,6 +973,7 @@ IMPORTANT:
       
       let english = '';
       let korean = '';
+      let partOfSpeech: string | undefined;
       let matchedFormat = '';
       
       // 0. 탭으로 구분된 형식 (가장 먼저 체크) - "영어\t한글"
@@ -988,18 +981,22 @@ IMPORTANT:
         const parts = trimmedLine.split('\t').map(p => p.trim()).filter(p => p);
         if (parts.length >= 2) {
           english = parts[0];
-          korean = parts.slice(1).join(' '); // 여러 탭이 있을 경우 나머지 모두 한글 뜻으로 처리
+          const parsed = parseMeaningPart(parts.slice(1).join(' '));
+          korean = parsed.korean;
+          partOfSpeech = parsed.partOfSpeech;
           matchedFormat = '탭 구분';
           console.log(`✅ [parseWordsFromText] 라인 ${i + 1} (${matchedFormat}): "${english}" → "${korean}"`);
         }
       }
       
-      // 1. "영어: 한글" 또는 "영어：한글" 형식
+      // 1. "영어: 한글" 또는 "영어：한글" 형식 (예: advocate : v. 지지하다, 옹호하다)
       if (!english && !korean) {
         let match = trimmedLine.match(/^(.+?)\s*[:：]\s*(.+)$/);
         if (match) {
           english = match[1].trim();
-          korean = match[2].trim();
+          const parsed = parseMeaningPart(match[2]);
+          korean = parsed.korean;
+          partOfSpeech = parsed.partOfSpeech;
           matchedFormat = '콜론 구분';
           console.log(`✅ [parseWordsFromText] 라인 ${i + 1} (${matchedFormat}): "${english}" → "${korean}"`);
         }
@@ -1009,7 +1006,9 @@ IMPORTANT:
           match = trimmedLine.match(/^(.+?)\s*-\s*(.+)$/);
           if (match) {
             english = match[1].trim();
-            korean = match[2].trim();
+            const parsed = parseMeaningPart(match[2]);
+            korean = parsed.korean;
+            partOfSpeech = parsed.partOfSpeech;
             matchedFormat = '하이픈 구분';
             console.log(`✅ [parseWordsFromText] 라인 ${i + 1} (${matchedFormat}): "${english}" → "${korean}"`);
           }
@@ -1069,7 +1068,7 @@ IMPORTANT:
       
       // 유효한 단어 쌍이면 추가
       if (english && korean && english !== korean) {
-        words.push({ english, korean });
+        words.push({ english, korean, ...(partOfSpeech ? { partOfSpeech } : {}) });
       } else if (english && korean && english === korean) {
         console.log(`⚠️ [parseWordsFromText] 라인 ${i + 1} 영어와 한글이 동일하여 제외: "${english}"`);
       }
@@ -1503,8 +1502,7 @@ ${englishWords.join(', ')}
           alert(`최대 문제생성 가능 개수 60개가 초과됐습니다.\n입력된 단어: ${words.length}개\n60개까지만 사용됩니다.`);
           words = words.slice(0, 60);
           // 입력창 텍스트도 60개까지만 유지
-          const limitedText = words.map(word => `${word.english}: ${word.korean}`).join('\n');
-          setInputText(limitedText);
+          setInputText(formatWordsForInputText(words));
         }
       } else if (inputMode === 'image' && imageFile) {
         console.log('📝 [executeQuizGeneration] 이미지 모드 - 단어 추출 시작');
@@ -1516,8 +1514,7 @@ ${englishWords.join(', ')}
           alert(`최대 문제생성 가능 개수 60개가 초과됐습니다.\n입력된 단어: ${words.length}개\n60개까지만 사용됩니다.`);
           words = words.slice(0, 60);
           // 입력창 텍스트도 60개까지만 유지
-          const limitedText = words.map(word => `${word.english}: ${word.korean}`).join('\n');
-          setInputText(limitedText);
+          setInputText(formatWordsForInputText(words));
           setExtractedWords(words);
         }
       } else if (inputMode === 'capture') {
@@ -1538,8 +1535,7 @@ ${englishWords.join(', ')}
           alert(`최대 문제생성 가능 개수 60개가 초과됐습니다.\n입력된 단어: ${words.length}개\n60개까지만 사용됩니다.`);
           words = words.slice(0, 60);
           // 입력창 텍스트도 60개까지만 유지
-          const limitedText = words.map(word => `${word.english}: ${word.korean}`).join('\n');
-          setInputText(limitedText);
+          setInputText(formatWordsForInputText(words));
           setExtractedWords(words);
         }
       } else {
@@ -2434,7 +2430,7 @@ ${englishWords.join(', ')}
           onChange={handleInputChange}
           placeholder={inputMode === 'text' ? 
             "영어 단어와 한글 뜻을 입력해주세요.\n\n지원하는 형식:\napple: 사과\nbook - 책\ncomputer 컴퓨터\nhappy : 행복한\nstudy - 공부하다\nin the face of: ~에 직면하여\ngive up: 포기하다\nreluctant to do: ~하기를 꺼리다\n\n또는 영어 단어만 입력해도 됩니다:\napple\nbook\ncomputer\nhappy\nstudy\nin the face of\ngive up\nreluctant to do\nreflect on\nturn into" : 
-            "이미지에서 추출된 단어들이 여기에 표시됩니다."}
+            "이미지에서 추출된 단어가 표시됩니다.\n\n예시:\nadvocate : v. 지지하다, 옹호하다\nfatal : adj. 치명적인"}
           className="text-input"
           rows={8}
           style={{overflow: 'hidden', resize: 'none'}}
