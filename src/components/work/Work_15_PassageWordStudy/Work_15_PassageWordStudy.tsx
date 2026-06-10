@@ -1,12 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { generateWork15Quiz, WordQuiz, WordItem, regenerateWork15QuizFromWords, generateSingleWordMeaning } from '../../../services/work15Service';
+import {
+  generateWork15QuizFromInput,
+  WordQuiz,
+  WordItem,
+  regenerateWork15QuizFromWords,
+  generateSingleWordMeaning,
+  generateKoreanMeanings
+} from '../../../services/work15Service';
+import {
+  extractWordsFromImage,
+  formatWordsForInputText,
+  parseWordsFromTextSimple,
+  addWordsWithLimit
+} from '../../../services/wordImageExtractService';
 import ScreenshotHelpModal from '../../modal/ScreenshotHelpModal';
 import PointDeductionModal from '../../modal/PointDeductionModal';
 import { deductUserPoints, refundUserPoints, getWorkTypePoints, getUserCurrentPoints } from '../../../services/pointService';
 import { saveQuizWithPDF, getWorkTypeName } from '../../../utils/quizHistoryHelper';
 import { useAuth } from '../../../contexts/AuthContext';
-import { callOpenAI } from '../../../services/common';
 import { processWithConcurrency } from '../../../utils/concurrency';
 import HistoryPrintWork15 from './HistoryPrintWork15';
 import './Work_15_PassageWordStudy.css';
@@ -25,81 +37,7 @@ interface InputItem {
   error: string;
 }
 
-// 파일 → base64 변환
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-// OpenAI Vision API 호출 (프록시만 사용)
-async function callOpenAIVisionAPI(imageBase64: string, prompt: string): Promise<string> {
-  const proxyUrl = process.env.REACT_APP_API_PROXY_URL || '';
-  
-  if (!proxyUrl) {
-    throw new Error('프록시 서버가 설정되지 않았습니다. REACT_APP_API_PROXY_URL 환경 변수를 설정해주세요.');
-  }
-
-  let imageUrl = imageBase64;
-  
-  if (!imageBase64.startsWith('data:')) {
-    try {
-      imageUrl = imageBase64;
-    } catch (error) {
-      console.warn('⚠️ 이미지 URL 처리 실패, base64 직접 사용:', error);
-    }
-  }
-
-  const proxyRequest = {
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'user' as const,
-        content: [
-          { type: 'text' as const, text: prompt },
-          { type: 'image_url' as const, image_url: { url: imageUrl } }
-        ]
-      }
-    ],
-    max_tokens: 2048
-  };
-
-  let lastError: Error | null = null;
-  const maxRetries = 3;
-  const retryDelay = 1000;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await callOpenAI(proxyRequest);
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error('OpenAI Vision API 호출 실패: ' + errText);
-      }
-      const data = await response.json();
-      return data.choices[0].message.content;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      console.warn(`⚠️ Vision API 호출 실패 (시도 ${attempt}/${maxRetries}):`, lastError.message);
-      
-      if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
-        continue;
-      }
-    }
-  }
-  
-  throw lastError || new Error('OpenAI Vision API 호출 실패: 알 수 없는 오류');
-}
-
-const visionPrompt = `영어문제로 사용되는 본문이야.\n이 이미지의 내용을 수작업으로 정확히 읽고, 영어 본문만 추려내서 보여줘.\n글자는 인쇄글씨체 이외에 손글씨나 원, 밑줄 등 표시되어있는 것은 무시해. 본문중에 원문자 1, 2, 3... 등으로 표시된건 제거해줘. 원문자 제거후 줄을 바꾸거나 문단을 바꾸지말고, 전체가 한 문단으로 구성해줘. 영어 본문만, 아무런 설명이나 안내문 없이, 한 문단으로만 출력해줘.`;
-
-// OpenAI Vision 결과에서 안내문 제거
-function cleanOpenAIVisionResult(text: string): string {
-  return text.replace(/^(Sure!|Here is|Here are|Here's|Here's)[^\n:]*[:：]?\s*/i, '').trim();
-}
+const MAX_WORDS_PER_ITEM = 20;
 
 const Work_15_PassageWordStudy: React.FC = () => {
   // 상태 관리
@@ -181,38 +119,61 @@ const Work_15_PassageWordStudy: React.FC = () => {
     setItems(prev => prev.map(item => item.id === id ? { ...item, isExpanded: !item.isExpanded } : item));
   };
 
-  // Vision API 핸들러 (개별 아이템용)
+  // 이미지에서 영어 단어 추출 → 품사·한글뜻 포함 형식으로 표시
   const handleImageToText = async (id: string, image: File | Blob) => {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
     updateItem(id, { isExtracting: true, error: '' });
-    
+
     try {
-      let previewUrl = null;
       if (image instanceof Blob) {
-        previewUrl = URL.createObjectURL(image);
-        updateItem(id, { pastedImageUrl: previewUrl });
+        updateItem(id, { pastedImageUrl: URL.createObjectURL(image) });
       }
-      
-      const imageBase64 = await fileToBase64(image as File);
-      const resultText = await callOpenAIVisionAPI(imageBase64, visionPrompt);
-      
-      updateItem(id, { 
-        text: cleanOpenAIVisionResult(resultText),
+
+      const newWords = await extractWordsFromImage(image);
+      const currentWords = parseWordsFromTextSimple(item.text);
+      const merged = addWordsWithLimit(newWords, currentWords, MAX_WORDS_PER_ITEM);
+      const needMeanings = merged.filter(w => !w.korean?.trim() || !w.partOfSpeech?.trim());
+
+      let wordsWithMeanings = merged;
+      if (needMeanings.length > 0) {
+        const enriched = await generateKoreanMeanings(needMeanings.map(w => w.english));
+        wordsWithMeanings = merged.map(word => {
+          const match = enriched.find(m => m.english.toLowerCase() === word.english.toLowerCase());
+          return match ? { ...word, korean: match.korean, partOfSpeech: match.partOfSpeech } : word;
+        });
+      }
+
+      const displayWords = wordsWithMeanings.slice(0, MAX_WORDS_PER_ITEM);
+
+      updateItem(id, {
+        text: formatWordsForInputText(displayWords),
         pastedImageUrl: null,
-        isExtracting: false 
+        isExtracting: false
       });
-    } catch (err: any) {
-      updateItem(id, { 
-        error: 'OpenAI Vision API 호출 실패: ' + (err?.message || err),
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : '이미지에서 단어를 추출할 수 없어요. 다시 한번 붙여넣어 주세요! 😊';
+      updateItem(id, {
+        error: message,
         isExtracting: false,
         pastedImageUrl: null
       });
     }
   };
 
-  // 이벤트 핸들러들
   const handlePaste = (id: string, e: React.ClipboardEvent) => {
     const item = items.find(i => i.id === id);
     if (!item || item.inputType !== 'clipboard') return;
+
+    if (parseWordsFromTextSimple(item.text).length >= MAX_WORDS_PER_ITEM) {
+      alert(`최대 ${MAX_WORDS_PER_ITEM}개까지 추가할 수 있습니다.\n추가 이미지를 캡처할 수 없습니다.`);
+      e.preventDefault();
+      return;
+    }
 
     const clipItems = e.clipboardData.items;
     for (let i = 0; i < clipItems.length; i++) {
@@ -290,7 +251,7 @@ const Work_15_PassageWordStudy: React.FC = () => {
         const results = await processWithConcurrency(validItems, 3, async (item) => {
           try {
             console.log(`🔍 문제 생성 시작 (ID: ${item.id})...`);
-            const quiz = await generateWork15Quiz(item.text, quizType);
+            const quiz = await generateWork15QuizFromInput(item.text, quizType);
             return { quiz, input: item.text };
           } catch (err) {
             console.error(`❌ 문제 생성 실패 (ID: ${item.id}):`, err);
@@ -1587,7 +1548,7 @@ const Work_15_PassageWordStudy: React.FC = () => {
                         <img src={item.pastedImageUrl} alt="Preview" className="preview-img" />
                       </div>
                     )}
-                    {item.isExtracting && <div className="loading-text">텍스트 추출 중...</div>}
+                    {item.isExtracting && <div className="loading-text">단어 추출 중...</div>}
                   </div>
                 )}
 
@@ -1599,18 +1560,26 @@ const Work_15_PassageWordStudy: React.FC = () => {
                       onChange={(e) => handleFileChange(item.id, e)}
                       disabled={item.isExtracting}
                     />
-                    {item.isExtracting && <span className="loading-text">추출 중...</span>}
+                    {item.isExtracting && <span className="loading-text">단어 추출 중...</span>}
                   </div>
                 )}
 
                 <textarea
                   value={item.text}
                   onChange={(e) => updateItem(item.id, { text: e.target.value })}
-                  placeholder="영어 본문을 입력하세요. AI가 본문을 분석하여 고3 수준의 단어 15~20개를 추출합니다.
+                  placeholder={
+                    item.inputType === 'text'
+                      ? `영어 본문을 입력하세요. AI가 본문을 분석하여 고3 수준의 단어 15~20개를 추출합니다.
 
-캡처 이미지 붙여넣기를 한 경우 '텍스트 추출 중...'이 완료된 후 '본문 추가하기'를 누르시거나 '일괄생성' 버튼을 눌러주세요.
+직접 본문을 입력하거나 수정할 수 있습니다.`
+                      : `이미지에서 추출된 단어가 표시됩니다.
 
-직접 본문을 입력하거나 추출된 텍스트를 수정할 수 있습니다."
+예시:
+advocate : v. 지지하다, 옹호하다
+fatal : adj. 치명적인
+
+캡처를 연속으로 붙여넣으면 단어가 추가됩니다 (최대 ${MAX_WORDS_PER_ITEM}개).`
+                  }
                   className="text-input"
                   rows={6}
                   style={{ marginTop: '10px', width: '100%' }}
