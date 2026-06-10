@@ -709,7 +709,7 @@ const Work_14_FillSentence: React.FC = () => {
       <div>
         <div className="quiz-display no-print">
           <div className="quiz-header">
-            <h2 className="no-print">#14. 문장 빈칸 채우기 문제</h2>
+            <h2 className="no-print">#15. 문장 빈칸 채우기 문제</h2>
             <div className="quiz-header-buttons no-print">
               <button onClick={resetQuiz} className="reset-button" style={{
                 width: '160px',
@@ -796,7 +796,7 @@ const Work_14_FillSentence: React.FC = () => {
                     color: '#666',
                     fontWeight: '500'
                   }}>
-                    유형#14
+                    유형#15
                   </span>
                 </div>
                 
@@ -915,7 +915,7 @@ const Work_14_FillSentence: React.FC = () => {
   return (
     <div className="quiz-generator no-print">
       <div className="generator-header">
-        <h2>메뉴#14. 빈칸(문장) 채우기 문제 생성</h2>
+        <h2>메뉴#15. 빈칸(문장) 채우기 문제 생성</h2>
         <p>영어 본문을 입력하면 빈칸에 들어갈 문장을 직접 입력하는 문제를 생성합니다.</p>
       </div>
 
