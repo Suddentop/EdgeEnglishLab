@@ -4,6 +4,7 @@
  */
 
 import { callOpenAI } from './common';
+import { isWordListInput, parseWordsFromTextSimple } from './wordImageExtractService';
 
 /**
  * 단어 학습 관련 타입 정의
@@ -93,6 +94,41 @@ export async function generateWork15Quiz(
     console.error('❌ Work_16 문제 생성 실패:', error);
     throw error;
   }
+}
+
+/**
+ * 입력 텍스트 유형에 따라 문제 생성 (단어 목록 또는 본문)
+ */
+export async function generateWork15QuizFromInput(
+  inputText: string,
+  quizType: 'english-to-korean' | 'korean-to-english' = 'english-to-korean'
+): Promise<WordQuiz> {
+  const trimmed = inputText.trim();
+
+  if (isWordListInput(trimmed)) {
+    let words = parseWordsFromTextSimple(trimmed).filter(w => w.english);
+
+    const needMeanings = words.filter(w => !w.korean?.trim() || !w.partOfSpeech?.trim());
+    if (needMeanings.length > 0) {
+      const enriched = await generateKoreanMeanings(needMeanings.map(w => w.english));
+      words = words.map(word => {
+        const match = enriched.find(m => m.english.toLowerCase() === word.english.toLowerCase());
+        return match ? { ...word, ...match } : word;
+      });
+    }
+
+    if (words.length > 20) {
+      words = words.slice(0, 20);
+    }
+
+    if (words.length < 3) {
+      throw new Error('최소 3개 이상의 단어가 필요합니다.');
+    }
+
+    return regenerateWork15QuizFromWords(words, quizType, trimmed.substring(0, 100) + '...');
+  }
+
+  return generateWork15Quiz(trimmed, quizType);
 }
 
 /**
@@ -222,10 +258,11 @@ export async function generateSingleWordMeaning(englishWord: string): Promise<Wo
  * @param englishWords - 영어 단어 배열
  * @returns 한글뜻이 포함된 단어 배열
  */
-async function generateKoreanMeanings(englishWords: string[]): Promise<WordItem[]> {
-  const prompt = `다음 영어 단어들의 한국어 뜻과 품사를 정확하게 제공해주세요. 각 단어의 가장 일반적이고 적절한 한국어 뜻과 품사를 제공해주세요.
+export async function generateKoreanMeanings(englishWords: string[]): Promise<WordItem[]> {
+  const prompt = `다음 영어 단어·숙어들의 한국어 뜻과 품사를 정확하게 제공해주세요. 각 항목의 가장 일반적이고 적절한 한국어 뜻과 품사를 제공해주세요.
 
 **⚠️ 중요:**
+- **숙어·구동사(예: "hand down", "hold down")는 english 필드를 분리하지 말고 입력된 그대로 유지**하고, 해당 숙어 전체의 뜻을 제공해주세요
 - 동사는 원형(기본형)으로 제공되었으므로 원형 단어의 기본 뜻을 제공해주세요
 - 명사는 단수형 또는 불규칙 복수형으로 제공되었으므로 해당 형태의 뜻을 제공해주세요
 - 형용사/부사는 원급 또는 비교급/최상급 형태로 제공되었으므로 해당 형태의 뜻을 제공해주세요
@@ -260,16 +297,16 @@ ${englishWords.join(', ')}
 3. **partOfSpeech 필드가 없거나 빈 문자열이면 안 됩니다**
 4. 각 영어 단어에 대해 가장 적절한 한국어 뜻을 제공해주세요
 5. 각 단어의 품사를 정확하게 판단하여 약자로 제공해주세요
-6. 복합어나 구문이 아닌 단일 단어의 뜻을 제공해주세요
-7. 제공된 단어 형태 그대로의 뜻을 제공해주세요 (동사는 원형, 명사는 단수/불규칙복수, 형용사/부사는 원급/비교급/최상급)
+6. 입력에 공백이 포함된 숙어는 하나의 항목으로 처리해주세요 (예: "hand down" → 물려주다, 전해 주다)
+7. 제공된 단어·숙어 형태 그대로의 뜻을 제공해주세요 (동사는 원형, 명사는 단수/불규칙복수, 형용사/부사는 원급/비교급/최상급)
 8. JSON 형식으로만 응답해주세요
 
 **예시 (이 형식을 정확히 따라주세요):**
-입력: ["assume", "talent", "accomplished"]
+입력: ["assume", "hand down", "hold down"]
 출력: [
   {"english": "assume", "korean": "가정하다", "partOfSpeech": "v."},
-  {"english": "talent", "korean": "재능", "partOfSpeech": "n."},
-  {"english": "accomplished", "korean": "성취한", "partOfSpeech": "adj."}
+  {"english": "hand down", "korean": "물려주다, 전해 주다", "partOfSpeech": "v."},
+  {"english": "hold down", "korean": "참다, 억제하다", "partOfSpeech": "v."}
 ]`;
 
   const response = await callOpenAI({
@@ -277,14 +314,15 @@ ${englishWords.join(', ')}
     messages: [
       { 
         role: 'system', 
-        content: `You are a helpful assistant that provides Korean translations and part of speech information for English words. 
+        content: `You are a helpful assistant that provides Korean translations and part of speech information for English words and phrasal verbs. 
 
 **CRITICAL REQUIREMENTS:**
-1. You MUST include the "partOfSpeech" field for EVERY word in the response.
-2. The partOfSpeech field is MANDATORY and cannot be omitted or left empty.
-3. Use these abbreviations ONLY: "n." (noun), "v." (verb), "adj." (adjective), "adv." (adverb), "prep." (preposition), "conj." (conjunction), "pron." (pronoun), "interj." (interjection).
-4. If you cannot determine the part of speech, use the most likely one based on context.
-5. Your response must be valid JSON with partOfSpeech field for every word.
+1. Keep multi-word phrases (e.g. "hand down", "hold down") as a single english entry — do NOT split them.
+2. You MUST include the "partOfSpeech" field for EVERY entry in the response.
+3. The partOfSpeech field is MANDATORY and cannot be omitted or left empty.
+4. Use these abbreviations ONLY: "n." (noun), "v." (verb), "adj." (adjective), "adv." (adverb), "prep." (preposition), "conj." (conjunction), "pron." (pronoun), "interj." (interjection).
+5. If you cannot determine the part of speech, use the most likely one based on context.
+6. Your response must be valid JSON with partOfSpeech field for every entry.
 
 **Example format (you MUST follow this exactly):**
 [
